@@ -1,0 +1,137 @@
+# restart i3.
+super + alt + r
+
+# reload the configuration file.
+super + shift_R + Escape
+
+# exit i3.
+super + alt + q
+
+# reload sxhkd configuration files.
+super + Escape
+
+# default terminal.
+super + Return
+
+# ranger & ranger as root, search_install.
+super + t ; {r,s}
+
+# urxvt:cmus,htop,jnettop,mixer,ncmpcpp,newsboat,install,youtube.
+super + u ; {c,h,j,m,n,p,r,s,y}
+
+# most used gui applications.
+super + g ; {e,f,v,w}
+
+# dmenu: Wiki,configs,find,man,dmenu,mdp_command,scrots,openvideo.
+super + d ; {a,c,f,h,i,m,s,v}
+
+# rofi: apps,fonts,keys memo,locate,scipt-menu,theme,expose.
+super + r ; {a,f,k,l,s,t,w}
+
+# toggle/restart polybar(s) 1,2,3,all.
+ctrl + {_,shift + }{1,2,3,4}
+
+# volume control.
+xf86Audio{Lower,Raise}Volume
+
+# mute volume.
+xf86AudioMute
+
+# mediacontrol play/pause.
+xf86Audio{Play,Pause}
+
+# mediacontrol stop.
+xf86AudioStop
+
+# mediacontrol next.
+xf86AudioNext
+
+# mediacontrol prev.
+xf86AudioPrev
+
+# switch: between the current/previously focused workspace.
+super + b
+
+# move: floating container in the center of the screen.
+super + c
+
+# layout: split vertically.
+super + h
+
+# changing border style: normal, 1pixel.
+super + {n,y} border
+
+# close focused window.
+super + q
+
+# layout: split horizontally.
+super + v
+
+# scratchpad: show.
+super + z
+
+# switch: to workspace, numpad alternatives.
+super + KP_n
+
+# focus: change.
+super + {Left,Right,Down,Up}
+
+# toggle fullscreen window.
+super + alt + f
+
+# toggle floating.
+super + alt + s
+
+# switch: to previous/next occupied workspace.
+super + alt + {Left,right}
+
+# change gaps: gaps inner current +/- 5.
+super + alt + {plus,minus}
+
+# close all windows with the same class
+super + alt + control + c
+
+# resize: grow height/width 5 px or 1 ppt
+super + alt + control + {Up,Right}
+
+# resize: shrink height/width 5 px or 1 ppt
+super + alt + control + {Down,Left}
+
+# change gaps: size outer current +/- 5.
+super + alt + shift + {plus,minus}
+
+# focus workspace back_and_forth.
+super + control + b
+
+# kill focused window
+super + control + q
+
+# move: focused window to workspace n and follow it.
+super + control + Mod2 KP_n
+
+# move: the whole workspace to the next output.
+super + control + {Right,Left}
+
+# toggle show borders.
+super + shift + b
+
+# kill focused window.
+super + shift + k
+
+# changing border: style: border none.
+super + shift + n
+
+# focus: parent.
+super + shift + p
+
+# focus: child.
+super + shift + x
+
+# scratchpad: floating.
+super + shift + z
+
+# move: floating window or swap position tiled window.
+super + shift + {Up,Down,Left,Right}
+
+# layout: toggle, tabbed, stacking, splitv, splith.
+alt + Tab
