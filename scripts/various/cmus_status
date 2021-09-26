@@ -1,0 +1,68 @@
+#!/bin/bash
+
+output="$XDG_CONFIG_HOME/cmus/cmus_output"
+info="$(cmus-remote -Q 2> /dev/null)"
+duration="$(echo "$info" | grep -v "set " | grep -v "tag " | grep "duration " | cut -d ' ' -f 2)"
+artist=""
+title=""
+file=""
+status="stopped"
+
+if [[ $duration -gt 0 ]]; then
+    dur_minutes=$(printf "%02d" $((duration / 60)))
+    dur_seconds=$(printf "%02d" $((duration % 60)))
+
+    info_dur=" |  $dur_minutes:$dur_seconds"
+fi
+
+while [ "$1" '!=' "" ]; do
+    case "$1" in
+        title) title="$2"
+        ;;
+        artist) artist="$2"
+        ;;
+        status) status="$2"
+        ;;
+        file) file="$2"
+        ;;
+    esac
+    shift
+    shift
+done
+
+msg=""
+
+
+if [ "$status" '=' 'stopped' ]; then
+    msg=""
+else
+    if [ "$status" '=' 'paused' ]; then
+        msg="%{F$(xrdb -query | awk '/color1:/{print $NF}')}$msg"
+    fi
+
+    if [ -n "$artist" ]; then
+        msg="$msg $artist"
+    fi
+
+    if [ -n "$title" ]; then
+        msg="$msg - $title $info_dur"
+    else
+        if [ -n "$file" ]; then
+            msg="$msg $(basename "${file%.*}") $info_dur"
+        else
+            msg=""
+        fi
+    fi
+
+fi
+
+echo "$msg" > "$output"
+
+sleep 0.2;
+
+if [ -n "$(pidof polybar)" ]; then
+    polybar-msg hook cmus-ipc 1 > /dev/null 2>&1
+else
+    notify-send "$(cat $output)"
+fi
+
