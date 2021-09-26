@@ -1,0 +1,30 @@
+local style = require "core.style"
+local common = require "core.common"
+
+style.background = { common.color "#0E161C" }
+style.background2 = { common.color "#1A2833" }
+style.background3 = { common.color "#237986" }
+style.text = { common.color "#9ea7a6" }
+style.caret = { common.color "#84898c" }
+style.accent = { common.color "#b5d8f6" }
+style.dim = { common.color "#6269A6" }
+style.divider = { common.color "#3f4944" }
+style.selection = { common.color "#3e4451" }
+style.line_number = { common.color "#596275" }
+style.line_number2 = { common.color "#5ECD3F" }
+style.line_highlight = { common.color "#000000" }
+style.scrollbar = { common.color "#3d3f43" }
+style.scrollbar2 = { common.color "#595b5f" }
+style.guide = { common.color "#0B2226" } -- indentguide
+
+style.syntax["normal"] = { common.color "#A39A90" }
+style.syntax["symbol"] = { common.color "#6F8BA6" }
+style.syntax["comment"] = { common.color "#576D82" }
+style.syntax["keyword"] = { common.color "#98c875" }
+style.syntax["keyword2"] = { common.color "#CCCCCC" }
+style.syntax["number"] = { common.color "#DD7C19" }
+style.syntax["literal"] = { common.color "#ea5964" }
+style.syntax["string"] = { common.color "#826d57" }
+style.syntax["operator"] = { common.color "#657085" }
+style.syntax["function"] = { common.color "#CA294D" }
+style.syntax["preprocessor"] = { common.color "#98c875" } -- thinking ahead

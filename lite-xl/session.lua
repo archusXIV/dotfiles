@@ -1,0 +1,1 @@
+return {recents={[1]="/home/archangel/.local/bin/xtreamripper",[2]="/home/archangel/.local/bin"}, window={[1]=1908,[2]=1044,[3]=1925,[4]=29,["n"]=4}, window_mode="normal", previous_find={}, previous_replace={}}
