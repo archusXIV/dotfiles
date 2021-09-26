@@ -1,4 +1,5 @@
 #!/bin/bash
+# Never find yourself on empty desktop
 
 bspc subscribe node_remove | \
     while read -r; do
@@ -10,4 +11,3 @@ bspc subscribe node_remove | \
             || bspc desktop -f last.occupied
         fi
     done &
-
