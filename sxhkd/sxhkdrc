@@ -1,0 +1,92 @@
+[reload the hotkeys daemon]
+# reload sxhkd configuration files.
+super + Escape
+    pkill -USR1 -x sxhkd; \
+    notify-send "sxhkd config reloaded"
+
+# Invoke the session managemnt menu.
+ctrl + alt +Delete
+    rofi_run -l
+
+[dmenu/rofi]
+Menu ; {d,r}
+    {dmenu-chooser,rofi-chooser}
+
+[applications bindings]
+# terminal emulators
+super + Return
+    $TERMINAL
+
+# center term in screens.
+super + shift + {KP_End,KP_Down,KP_Next}
+    xdo move -n $TERMINAL {-x 123 -y 108,-x 2043 -y 108,-x 3963 -y 108}
+
+super + t ; {r,s}
+    {\
+    xtranger, \
+    xterm -e 'sudo search_install' \
+    }
+
+# URxvt applications
+super + u ; {b,c,d,e,h,j,m,n,p,r,s,x,y}
+    urxvt_apps -{b,c,d,e,h,j,m,n,p,r,s,x,y}
+
+# gui applications
+super + g ; {e,f,g,v,w}
+    {\
+    $EDITOR, \
+    $FILEMNGR, \
+    geany, \
+    $VIRTMNGR, \
+    $BROWSER \
+    }
+
+# audio-video applications
+super + v ; {e,g,p,q}
+    {\
+    pulseaudio-equalizer-gtk, \
+    qv4l2, \
+    pavucontrol, \
+    qvidcap \
+    }
+
+# script to launch rofi-record or ssr.
+super + shift + v ; {r,s,k}
+    record_options -{r,s,k}
+
+[polycontrol]
+# toggle/restart polybar(s)
+ctrl + {_,shift + }{KP_End,KP_Down,KP_Next,KP_Left}
+    polybar_control -{t,r}{1,2,3,a}
+
+[webcam_rectangle]
+# controls the webcam rectangle position on the screen.
+alt + shift + {Left,Down,Up,Right}
+    webcam_rectangle {1435 0,0 715,0 0,1435 715}
+
+[volume/player control]
+XF86Audio{Lower,Raise}Volume
+    pulsemixer --change-volume {-,+,}5
+
+XF86AudioMute
+    pulsemixer --toggle-mute
+
+#XF86Audio{Play,Pause}
+alt + F11
+    mediacontrol --toggle
+
+#XF86AudioNext
+alt + F12
+    mediacontrol --next
+
+#XF86AudioPrev
+alt + F9
+    mediacontrol --prev
+
+#XF86AudioStop
+alt + F10
+    mediacontrol --stop
+
+[mic control]
+alt + XF86AudioMute
+    amixer set Capture toggle
