@@ -11,7 +11,7 @@ _usage()
                 From a Luke Smith original idea.
                 https://github.com/LukeSmithxyz/voidrice/blob/master/.local/bin/dmenurecord
 
-        DESCRIPTION: $NAME - A dmenu prompt to record audio & video using ffmpeg.
+        DESCRIPTION: $NAME - A rofi prompt to record audio & video using ffmpeg.
 
                 The video output format is set to mkv and audio to mp3.
                 Polybar(s) will be automatically updated (we have 3 of them).
