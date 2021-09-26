@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# Usage: make-package <aur_package_name>
+# $BUILDIR is an environment variable.
+
+[[ -z ${BUILDIR+x} ]] && echo "Your build directory environment variable is not set..." && exit 1
+[[ -z ${VISUAL+x} ]] && echo "Your editor environment variable is not set..." && exit 1
+
+mkdir -p $BUILDIR
+
+echo "https://aur.archlinux.org/$*" > $BUILDIR/url.txt
+
+cd $BUILDIR
+
+git clone "$(cat $BUILDIR/url.txt)"
+
+dir="$(find $pwd -maxdepth 1 -type d | sed 's,.*/,,')"
+dir=$*
+echo "The git directory is:" "$dir"
+
+if [[ -d $dir ]]; then
+    cd "$dir"
+    if [[ -f PKGBUILD ]]; then
+        read -rp 'Edit PKGBUILD? [n/Y]:' ans
+        case "$ans" in
+            Y*|y*) $VISUAL PKGBUILD ;;
+            N*|n*) echo "" ;;
+            *)     $VISUAL PKGBUILD ;;
+        esac
+    fi
+    
+    read -rp 'Only build the package & quit [b], Build & install the package [i]: ' build
+    case "$build" in
+        b)  makepkg --syncdeps --rmdeps
+            cd $HOME
+            rm -rf $HOME/.ccache && exit
+        ;;
+        i)  makepkg --syncdeps --rmdeps
+            for i in $(find . -name "*.zst" -o -name "*.xz"); do
+                echo "Install $i ? [n/Y]:"
+                read -r answer
+                case $answer in
+                    Y|y) sudo pacman -U "$i" --needed --noconfirm ;;
+                    n|*) break ;;
+                esac
+            done
+
+            cd $HOME
+            rm -rf $HOME/.ccache
+            rm -rf $BUILDIR && exit
+        ;;
+        *)  echo "Unknown option, exiting..." && exit 1
+        ;;
+    esac
+else
+    echo "$dir does not exist" && exit 1
+fi
+

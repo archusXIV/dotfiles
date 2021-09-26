@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+locate / | rofi -normal-window -threads 0 -width 50 -dmenu -i -p "locate " | xargs -r -0 xdg-open

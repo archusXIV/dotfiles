@@ -1,0 +1,108 @@
+#!/bin/bash
+
+NAME=$(basename "$0")
+
+_usage() {
+    cat <<- EOF
+
+        AUTHOR: Barret E (2020) <archus@protonmail.com>
+
+        SYNOPSIS: $NAME displays the hexadecimal value of a color defined in $HOME/.Xresources.
+
+        -h,--help   Shows this message.
+                    Without any arguments this message will be displayed.
+
+        USAGE:
+
+            $NAME [COLOR-NUM] | [COLOR-NAME/VARIABLE] | [-a|--all]
+
+        [-a|--all]:
+
+            Prints all colors from the resources file.
+
+        COLOR-NUM/NAME:
+
+            The color numbers are set as: color0, color1 and so on until color15.
+
+            eg: $NAME 10     # Will provide the second green as such *.color10:	#XXXXXX
+
+        COLOR-NAME/VARIABLE:
+
+            ... but you can also set "variables" to recall the colors from different programs and scripts.
+            More help can be found here: https://wiki.archlinux.org/index.php/X_resources#Include_files
+            If you do so, just edit the case statement of this script.
+
+            Xresources example:
+
+                #include ".xfiles/themes/onedark" # set themes directory and the active one.
+                #include ".xfiles/colors"         # this file contains variables and names.
+
+            examples:
+
+                name:     $NAME green2
+                variable: $NAME grn2
+
+EOF
+}
+
+[[ ! -e $HOME/.Xresources ]] && echo "$HOME/.Xresources: no such file or directory" && exit 1
+
+_allcolors() {
+    echo ""
+    echo "Resources     | Values  | Names"
+    echo "---------------------------------"
+    local xres
+
+    xres=("$(xrdb -query | grep 'foreground:')"
+          "$(xrdb -query | grep 'background:')"
+          "$(xrdb -query | grep 'color0:')  black"
+          "$(xrdb -query | grep 'color1:')  red"
+          "$(xrdb -query | grep 'color2:')  green"
+          "$(xrdb -query | grep 'color3:')  yellow"
+          "$(xrdb -query | grep 'color4:')  blue"
+          "$(xrdb -query | grep 'color5:')  magent"
+          "$(xrdb -query | grep 'color6:')  cyan"
+          "$(xrdb -query | grep 'color7:')  white"
+          "$(xrdb -query | grep 'color8:')  black2"
+          "$(xrdb -query | grep 'color9:')  red2"
+          "$(xrdb -query | grep 'color10:')  green2"
+          "$(xrdb -query | grep 'color11:')  yellow2"
+          "$(xrdb -query | grep 'color12:')  blue2"
+          "$(xrdb -query | grep 'color13:')  magenta2"
+          "$(xrdb -query | grep 'color14:')  cyan2"
+          "$(xrdb -query | grep 'color15:')  white2")
+
+   for i in "${xres[@]}"; do
+      echo "$i"
+   done
+
+}
+
+
+if [[ -n "$1" ]]; then
+  color=$1
+fi
+
+
+case "$color" in
+   foreground|fg)    xrdb -query | grep 'foreground:';;
+   background|bg)    xrdb -query | grep 'background:';;
+   black|0|blk)      xrdb -query | grep 'color0:' ;;
+   red|1)            xrdb -query | grep 'color1:' ;;
+   green|2|grn)      xrdb -query | grep 'color2:' ;;
+   yellow|3|ylw)     xrdb -query | grep 'color3:' ;;
+   blue|4|blu)       xrdb -query | grep 'color4:' ;;
+   magenta|5|mag)    xrdb -query | grep 'color5:' ;;
+   cyan|6|cyn)       xrdb -query | grep 'color6:' ;;
+   white|7|wht)      xrdb -query | grep 'color7:' ;;
+   black2|8|blk2)    xrdb -query | grep 'color8:' ;;
+   red2|9)           xrdb -query | grep 'color9:' ;;
+   green2|10|grn2)   xrdb -query | grep 'color10:';;
+   yellow2|11|ylw2)  xrdb -query | grep 'color11:';;
+   blue2|12|blu2)    xrdb -query | grep 'color12:';;
+   magenta2|13|mag2) xrdb -query | grep 'color13:';;
+   cyan2|14|cyn2)    xrdb -query | grep 'color14:';;
+   white2|15|wht2)   xrdb -query | grep 'color15:';;
+   -a|--all)         _allcolors;;
+   -h|--help|*)      _usage;;
+esac
