@@ -1,0 +1,105 @@
+###############################################################################
+##################   connection & music directories   #########################
+###############################################################################
+ncmpcpp_directory =                     ~/.config/ncmpcpp/
+lyrics_directory =                      ~/.cache/lyrics
+mpd_host =                              localhost
+mpd_port =                              6600
+mpd_connection_timeout =                5
+mpd_music_dir =                         ~/Documents/Music/playlists/
+store_lyrics_in_song_dir =              no
+default_place_to_search_in =            "database"
+mpd_crossfade_time =                    "3"
+###############################################################################
+############################  music visualizer ################################
+###############################################################################
+visualizer_data_source =                /run/user/1000/mpd.fifo
+visualizer_output_name =                Visualizer feed
+visualizer_in_stereo =                  yes
+visualizer_fps =                        60
+#visualizer_autoscale =                  yes
+visualizer_spectrum_dft_size =          1
+visualizer_spectrum_gain =              20
+visualizer_spectrum_hz_min =            50
+visualizer_spectrum_hz_max =            2000
+visualizer_autoscale =                  yes
+visualizer_type =                       spectrum
+visualizer_look =                       "●●"
+visualizer_spectrum_smooth_look =       yes
+###############################################################################
+##################################  colors  ###################################
+colors_enabled =                        "yes"
+active_window_border =                  "blue"
+empty_tag_color =                       "red"
+main_window_color =                     "default"
+progressbar_color =                     "red"
+progressbar_elapsed_color =             "cyan"
+header_window_color =                   "green"
+statusbar_color =                       "white"
+visualizer_color =                      blue, cyan, green, yellow, red, magenta
+volume_color =                          "red"
+###############################################################################
+##########################  playlist & other settings  ########################
+###############################################################################
+autocenter_mode =                       "yes"
+ignore_leading_the =                    "yes"
+ignore_diacritics =                     "yes"
+progressbar_look =                      "━━━"
+current_item_inactive_column_prefix =   "$(cyan)$r"
+song_columns_list_format =              "(8)[magenta]{l} | (92)[blue]{f}"
+song_list_format =                      "{$8%f}$R{$2%l}"
+song_library_format =                   "$5%l $5%f$9"
+playlist_display_mode =                 "columns" (classic/columns)
+
+## Alternative Interface ##
+alternative_header_first_line_format =  "$0$aqqu$/a {$6%a$9 - }{$3%t$9}|{$8%f$9} $0$atqq$/a$9"
+alternative_header_second_line_format = "{{$4%b$9}{ [$8%y$9]}}|{%D}"
+user_interface =                        "alternative"
+current_item_prefix =                   $(yellow)$r
+current_item_suffix =                   $/r$(end)
+current_item_inactive_column_suffix =   $/r$(end)
+
+## Classic Interface ##
+#user_interface =                        "classic"
+song_status_format =                    " $6%a %f $7⟫⟫ $3%t $7⟫⟫ "
+browser_sort_mode =                     name
+## Playlist Editor ##
+playlist_editor_display_mode =          "columns"
+
+## Navigation ##
+cyclic_scrolling =                      "no"
+header_text_scrolling =                 "yes"
+jump_to_now_playing_song_at_start =     "yes"
+lines_scrolled = "2"
+
+## Other ##
+system_encoding =                       "utf-8"
+regular_expressions =                   "extended"
+locked_screen_width_part =              57
+volume_change_step =                    1
+## Selected tracks ##
+selected_item_prefix =                  "* "
+discard_colors_if_item_is_selected =    "no"
+
+## Seeking ##
+incremental_seeking =                   "yes"
+seek_time =                             "10"
+
+## Visibility ##
+header_visibility =                     "yes"
+statusbar_visibility =                  "yes"
+titles_visibility =                     "yes"
+
+## Now Playing ##
+now_playing_prefix =                    "$b$2▶ "
+now_playing_suffix =                    "$8$/b"
+centered_cursor =                       "yes"
+playlist_disable_highlight_delay =      5
+
+# Misc
+display_bitrate =                       "yes"
+external_editor =                       "vim"
+use_console_editor =                    "yes"
+enable_window_title =                   "yes"
+empty_tag_marker =
+tags_separator =                        " | "

@@ -1,0 +1,74 @@
+! xterm
+! =====
+
+! Basic settings
+xterm*termName: xterm-256color
+xterm*locale: true
+xterm*utf8: 1
+xterm*utf8Fonts: always
+xterm*dynamicColors: true
+
+! UI components
+xterm*toolBar: false
+xterm*scrollBar: false
+xterm*geometry: 80x24
+xterm*internalBorder: 1
+
+! Cursor
+! Allowing the cursor to use the reverse colour of the background or
+! foreground avoids circumstances, such as in Vim, where the cursor can
+! be virtually impossible to see.  Note that this does not work when the
+! cursor is not a block character (cursorUnderLine: true).
+xterm*cursorColor: reverse
+xterm*cursorBlink: true
+xterm*cursorOffTime: 300
+xterm*cursorOnTime: 800
+xterm*cursorUnderLine: false
+xterm*pointerShape: XTerm
+
+! Bell
+xterm*bellIsUrgent: false
+xterm*bellSupressTime: 100
+xterm*marginBell: false
+xterm*visualBell: true
+
+! Text highlighting
+xterm*highlightColor: XtDefaultForeground
+xterm*highlightReverse: true
+xterm*highlightSelection: true
+xterm*highlightTextColor: XtDefaultBackground
+
+! Font settings
+xterm*faceName: Hack
+xterm*faceSize: 10
+xterm*renderFont: true
+xterm*boldColors: false
+xterm*faceSize1: 10
+xterm*faceSize2: 12
+xterm*faceSize3: 15
+xterm*faceSize4: 18.5
+xterm*faceSize5: 20.5
+xterm*forceBoxChars: false
+xterm*limitFontsets: 5
+xterm*scaleHeight: 1.0
+
+! Scroll and output
+xterm*jumpScroll: true
+xterm*multiScroll: true
+xterm*saveLines: 9999
+xterm*scrollKey: true
+xterm*scrollTtyKeypress: true
+xterm*scrollTtyOutput: false
+
+! Backspace behaviour
+xterm*backarrowKey: false
+xterm*metaSendsEscape: true
+xterm*ttyModes: erase ^?
+
+! Key bindings.  Use C-S-{c,v} to copy/paste as in GNOME terminal.  The
+! keys "Prior" and "Next" represent PgUp and PgDown respectively.
+xterm*selectToClipboard: true
+XTerm.vt100.translations: #override \n\
+    Ctrl <Key>M: maximize() \n\
+    Ctrl <Key>R: restore()
+
