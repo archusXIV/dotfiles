@@ -1,0 +1,21 @@
+! ashes-dark
+#define fg    #abb2bf
+#define bg    #1E1F29
+#define curs  #c7ccd1
+
+#define blk   #1c2023
+#define blk2  #747c84
+#define red   #cc6666
+#define red2  #cc6666
+#define grn   #5AC790
+#define grn2  #5AC790
+#define ylw   #c59820
+#define ylw2  #c59820
+#define blu   #3060A6
+#define blu2  #3060A6
+#define mag   #9564C7
+#define mag2  #9564C7
+#define cyn   #8be9fd
+#define cyn2  #8be9fd
+#define wht   #c7ccd1
+#define wht2  #f3f4f5

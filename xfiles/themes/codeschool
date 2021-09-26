@@ -1,0 +1,23 @@
+! codeschool
+#define fg    #9EA7A6
+#define bg    #1E1F29
+#define curs  #9EA7A6
+
+#define blk   #232C31
+#define blk2  #3F4944
+#define red   #2A5491
+#define red2  #2A5491
+#define grn   #237986
+#define grn2  #237986
+#define ylw   #A03B1E
+#define ylw2  #A03B1E
+#define blu   #484D79
+#define blu2  #484D79
+#define mag   #C59820
+#define mag2  #C59820
+#define cyn   #B02F30
+#define cyn2  #B02F30
+#define wht   #9EA7A6
+#define wht2  #B5D8F6
+
+

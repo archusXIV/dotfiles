@@ -1,0 +1,22 @@
+! pulp
+#define fg    #85B39F
+#define bg    #1E1F29
+#define curs  #85B39F
+
+#define blk   #86817E
+#define blk2  #86817E
+#define red   #D75756
+#define red2  #A63A3A
+#define grn   #688C7D
+#define grn2  #688C7D
+#define ylw   #FFB365
+#define ylw2  #FFB365
+#define blu   #68778C
+#define blu2  #68778C
+#define mag   #FDB3B2
+#define mag2  #8C686A
+#define cyn   #86ABD9
+#define cyn2  #86ABD9
+#define wht   #F7F8F2
+#define wht2  #F7F8F2
+

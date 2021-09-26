@@ -1,0 +1,21 @@
+! dotshare
+#define fg    #ffffff
+#define bg    #1E1F29
+#define curs  #ffffff
+
+#define blk   #101010
+#define blk2  #404040
+#define red   #e84f4f
+#define red2  #d23d3d
+#define grn   #b8d68c
+#define grn2  #a0cf5d
+#define ylw   #e1aa5d
+#define ylx2  #f39d21
+#define blu   #7dc1cf
+#define blu2  #4e9fb1
+#define mag   #9b64fb
+#define mag2  #8542ff
+#define cyn   #6d878d
+#define cyn2  #42717b
+#define wht   #dddddd
+#define wht2  #dddddd

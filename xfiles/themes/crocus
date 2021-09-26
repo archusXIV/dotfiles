@@ -1,0 +1,21 @@
+! crocus
+#define fg    #c7ccd1
+#define bg    #1E1F29
+#define curs  #c7ccd1
+
+#define blk   #3E4B59
+#define blk2  #3E4B59
+#define red   #c7ae95
+#define red2  #c7ae95
+#define grn   #95c7ae
+#define grn2  #95c7ae
+#define ylw   #95c7ae
+#define ylw2  #95c7ae
+#define blu   #5f819d
+#define blu2  #5f819d
+#define mag   #85678f
+#define mag2  #85678f
+#define cyn   #95aec7
+#define cyn2  #95aec7
+#define wht   #c7ccd1
+#define wht2  #f3f4f5

@@ -1,0 +1,21 @@
+! ROFI specials
+#define fnt1 Hack-Regular
+#define fntsz1 11
+rofistyle.font1: fnt1
+rofistyle.fontsz1: fntsz1
+rofistyle.bag: bg
+rofistyle.fog: fg
+rofistyle.black: blk
+rofistyle.redish: red
+rofistyle.green: grn
+rofistyle.yellow: ylw
+rofistyle.blue: blu
+rofistyle.magenta: mag
+rofistyle.cyan: cyn
+rofistyle.white: wht
+
+! DMENU specials
+dmenustyle.DMENU_NB: bg
+dmenustyle.DMENU_NF: ylw
+dmenustyle.DMENU_SB: blk
+dmenustyle.DMENU_SF: fg

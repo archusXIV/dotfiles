@@ -1,0 +1,21 @@
+! rezza
+#define fg    #7F7F7F
+#define bg    #1E1F29
+#define curs  #dddddd
+
+#define blk   #191919
+#define blk2  #404040
+#define red   #803232
+#define red2  #982b2b
+#define grn   #5b762f
+#define grn2  #89b83f
+#define ylw   #aa9943
+#define ylw2  #efef60
+#define blu   #324c80
+#define blu2  #2b4f98
+#define mag   #706c9a
+#define mag2  #826ab1
+#define cyn   #92b19e
+#define cyn2  #a1cdcd
+#define wht   #ffffff
+#define wht2  #dddddd

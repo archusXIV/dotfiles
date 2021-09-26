@@ -1,0 +1,21 @@
+! Fifteen
+#define fg    #bebebe
+#define bg    #1E1F29
+#define curs  #BEBEBE
+
+#define blk   #000000
+#define blk2  #666666
+#define red   #d36265
+#define red2  #ef8171
+#define grn   #aece91
+#define grn2  #e5f779
+#define ylw   #e7e18c
+#define ylw2  #fff799
+#define blu   #7a7ab0
+#define blu2  #4186be
+#define mag   #963c59
+#define mag2  #ef9ebe
+#define cyn   #418179
+#define cyn2  #71bebe
+#define wht   #bebebe
+#define wht2  #ffffff

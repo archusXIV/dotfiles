@@ -1,0 +1,21 @@
+! archlabs
+#define fg    #E1E1E1
+#define bg    #1E1F29
+#define curs  #778899
+
+#define blk   #1C2023
+#define blk2  #919BA0
+#define red   #BF616A
+#define red2  #BF616A
+#define grn   #A3BE8C
+#define grn2  #A3BE8C
+#define ylw   #EBCB8B
+#define ylw2  #EBCB8B
+#define blu   #8FA1B3
+#define blu2  #8FA1B3
+#define mag   #B48EAD
+#define mag2  #B48EAD
+#define cyn   #96B5B4
+#define cyn2  #96B5B4
+#define wht   #E1E1E1
+#define wht2  #C0C5CE

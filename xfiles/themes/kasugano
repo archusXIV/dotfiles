@@ -1,0 +1,21 @@
+! kasugano
+#define fg    #89CFF0
+#define bg    #1E1F29
+#define curs  #ffffff
+
+#define blk   #3d3d3d
+#define blk2  #4d4d4d
+#define red   #6673bf
+#define red2  #899aff
+#define grn   #3ea290
+#define grn2  #52ad91
+#define ylw   #b0ead9
+#define ylw2  #98c9bb
+#define blu   #31658c
+#define blu2  #477ab3
+#define mag   #596196
+#define mag2  #7882bf
+#define cyn   #8292b2
+#define cyn2  #95a7cc
+#define wht   #c8cacc
+#define wht2  #edeff2

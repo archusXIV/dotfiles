@@ -1,0 +1,29 @@
+!
+!               ▗▖                       ▗▄▖
+!               ▐▌                       ▝▜▌
+! ▟██▖ █▟█▌ ▟██▖▐▙██▖ ▟██▖▐▙██▖ ▟█▟▌ ▟█▙  ▐▌
+! ▘▄▟▌ █▘  ▐▛  ▘▐▛ ▐▌ ▘▄▟▌▐▛ ▐▌▐▛ ▜▌▐▙▄▟▌ ▐▌
+!▗█▀▜▌ █   ▐▌   ▐▌ ▐▌▗█▀▜▌▐▌ ▐▌▐▌ ▐▌▐▛▀▀▘ ▐▌
+!▐▙▄█▌ █   ▝█▄▄▌▐▌ ▐▌▐▙▄█▌▐▌ ▐▌▝█▄█▌▝█▄▄▌ ▐▙▄
+! ▀▀▝▘ ▀    ▝▀▀ ▝▘ ▝▘ ▀▀▝▘▝▘ ▝▘ ▞▀▐▌ ▝▀▀   ▀▀
+!                               ▜█▛▘
+!
+
+#include ".config/xfiles/themes/barrett's"
+#include ".config/xfiles/colors"
+#include ".config/xfiles/menus"
+#include ".config/urxvt/urxvt"
+#include ".config/xterm/xterm"
+
+
+! Font settings (for programs that do not support fontconfig)
+! ===========================================================
+Xft*antialias: 1
+Xft*rgba: rgb
+Xft*autohint: 0
+Xft*hinting: 1
+Xft*hintstyle: hintfull
+Xft*lcdfilter: lcddefault
+Xft.dpi: 96
+Xcursor.theme: OpenZone_Black
+Xcursor.size: 22

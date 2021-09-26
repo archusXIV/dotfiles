@@ -1,0 +1,21 @@
+! twilight-dark
+#define fg    #a7a7a7
+#define bg    #1E1F29
+#define curs  #a7a7a7
+
+#define blk   #1e1e1e
+#define blk2  #5f5a60
+#define red   #cf6a4c
+#define red2  #cf6a4c
+#define grn   #8f9d6a
+#define grn2  #8f9d6a
+#define ylw   #f9ee98
+#define ylw2  #f9ee98
+#define blu   #7587a6
+#define blu2  #7587a6
+#define mag   #9b859d
+#define mag2  #9b859d
+#define cyn   #afc4db
+#define cyn2  #afc4db
+#define wht   #a7a7a7
+#define wht2  #ffffff

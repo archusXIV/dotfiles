@@ -1,0 +1,21 @@
+! E5150-blu
+#define fg    #206273
+#define bg    #1E1F29
+#define curs  #dddddd
+
+#define blk   #191919
+#define blk2  #404040
+#define red   #e31a1c
+#define red2  #FF1D1F
+#define grn   #31a354
+#define grn2  #31a354
+#define ylw   #dca060
+#define ylw2  #efef60
+#define blu   #3182bd
+#define blu2  #3182bd
+#define mag   #756BB1
+#define mag2  #826ab1
+#define cyn   #80b1d3
+#define cyn2  #a1cdcd
+#define wht   #ffffff
+#define wht2  #dddddd

@@ -1,0 +1,23 @@
+! default
+#define fg    #D0D0D0
+#define bg    #1E1F29
+#define curs  #D0D0D0
+
+#define blk   #151515
+#define blk2  #505050
+#define red   #AC4142
+#define red2  #AC4142
+#define grn   #90A959
+#define grn2  #90A959
+#define ylw   #F4BF75
+#define ylw2  #F4BF75
+#define blu   #6A9FB5
+#define blu2  #6A9FB5
+#define mag   #AA759F
+#define mag2  #AA759F
+#define cyn   #75B5AA
+#define cyn2  #75B5AA
+#define wht   #D0D0D0
+#define wht2  #F5F5F5
+
+

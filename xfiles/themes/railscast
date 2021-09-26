@@ -1,0 +1,21 @@
+! railscast
+#define fg    #e6e1dc
+#define bg    #1E1F29
+#define curs  #e6e1dc
+
+#define blk   #2b2b2b
+#define blk2  #5a647e
+#define red   #da4939
+#define red2  #da4939
+#define grn   #a5c261
+#define grn2  #a5c261
+#define ylw   #ffc66d
+#define ylw2  #ffc66d
+#define blu   #6d9cbe
+#define blu2  #6d9cbe
+#define mag   #b6b3eb
+#define mag2  #b6b3eb
+#define cyn   #519f50
+#define cyn2  #519f50
+#define wht   #e6e1dc
+#define wht2  #f9f7f3

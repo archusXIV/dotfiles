@@ -1,0 +1,21 @@
+! base16
+#define fg    #d0d0d0
+#define bg    #1E1F29
+#define curs  #d0d0d0
+
+#define blk   #151515
+#define blk2  #505050
+#define red   #ac4142
+#define red2  #ac4142
+#define grn   #90a959
+#define grn2  #90a959
+#define ylw   #f4bf75
+#define ylw2  #f4bf75
+#define blu   #6a9fb5
+#define blu2  #6a9fb5
+#define mag   #aa759f
+#define mag2  #aa759f
+#define cyn   #75b5aa
+#define cyn2  #75b5aa
+#define wht   #d0d0d0
+#define wht2  #f5f5f5

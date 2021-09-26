@@ -1,0 +1,21 @@
+! grayscale
+#define fg    #b9b9b9
+#define bg    #1E1F29
+#define curs  #b9b9b9
+
+#define blk   #101010
+#define blk2  #525252
+#define red   #7c7c7c
+#define red2  #7c7c7c
+#define grn   #8e8e8e
+#define grn2  #8e8e8e
+#define ylw   #a0a0a0
+#define ylw2  #a0a0a0
+#define blu   #686868
+#define blu2  #686868
+#define mag   #747474
+#define mag2  #747474
+#define cyn   #868686
+#define cyn2  #868686
+#define wht   #b9b9b9
+#define wht2  #f7f7f7

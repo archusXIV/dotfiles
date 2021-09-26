@@ -1,0 +1,21 @@
+! papey
+#define fg    #E5E5E5
+#define bg    #1E1F29
+#define curs  #E5E5E5
+
+#define blk   #121212
+#define blk2  #5F5F5F
+#define red   #A35B66
+#define red2  #AB6B74
+#define grn   #99AB6F
+#define grn2  #ACB792
+#define ylw   #CA9733
+#define ylw2  #CCAA69
+#define blu   #495D6E
+#define blu2  #687987
+#define mag   #825969
+#define mag2  #977381
+#define cyn   #839191
+#define cyn2  #98A4A4
+#define wht   #E0E0E0
+#define wht2  #E5E5E5

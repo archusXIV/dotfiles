@@ -1,0 +1,21 @@
+! navy-and-ivory
+#define fg    #e8dfd6
+#define bg    #1E1F29
+#define curs  #e8dfd6
+
+#define blk   #032c36
+#define blk2  #065f73
+#define red   #c2454e
+#define red2  #ef5847
+#define grn   #7cbf9e
+#define grn2  #a2d9b1
+#define ylw   #8a7a63
+#define ylw2  #beb090
+#define blu   #2e3340
+#define blu2  #61778d
+#define mag   #D1486E
+#define mag2  #ff99a1
+#define cyn   #44b5b1
+#define cyn2  #9ed9d8
+#define wht   #f2f1b9
+#define wht2  #f6f6c9

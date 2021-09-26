@@ -1,0 +1,21 @@
+! monochrome-blue
+#define fg    #3D89BF
+#define bg    #1E1F29
+#define curs  #D0D0D0
+
+#define blk   #0B415A
+#define blk2  #105C80
+#define red   #115E83
+#define red2  #1679A8
+#define grn   #167CAC
+#define grn2  #1B97D1
+#define ylw   #1B99D4
+#define ylw2  #20B4FA
+#define blu   #38AEE6
+#define blu2  #3EC1FF
+#define mag   #60BEEB
+#define mag2  #68CEFF
+#define cyn   #89CFF0
+#define cyn2  #92DCFF
+#define wht   #ABDAF0
+#define wht2  #E1EEF5

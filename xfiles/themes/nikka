@@ -1,0 +1,21 @@
+! nikka
+#define fg    #c0a890
+#define bg    #1E1F29
+#define curs  #dddddd
+
+#define blk   #483030
+#define blk2  #483030
+#define red   #907860
+#define red2  #907860
+#define grn   #786048
+#define grn2  #786048
+#define ylw   #c09060
+#define ylw2  #efef60
+#define blu   #a89078
+#define blu2  #a89078
+#define mag   #604848
+#define mag2  #604848
+#define cyn   #c0c0a8
+#define cyn2  #c0c0a8
+#define wht   #d8d8c0
+#define wht2  #d8d8c0

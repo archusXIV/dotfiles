@@ -1,0 +1,21 @@
+! ocean-dark
+#define fg    #c0c5ce
+#define bg    #1E1F29
+#define curs  #c0c5ce
+
+#define blk   #2b303b
+#define blk2  #65737e
+#define red   #bf616a
+#define red2  #bf616a
+#define grn   #a3be8c
+#define grn2  #a3be8c
+#define ylw   #ebcb8b
+#define ylw2  #ebcb8b
+#define blu   #8fa1b3
+#define blu2  #8fa1b3
+#define mag   #b48ead
+#define mag2  #b48ead
+#define cyn   #96b5b4
+#define cyn2  #96b5b4
+#define wht   #c0c5ce
+#define wht2  #eff1f5

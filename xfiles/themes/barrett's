@@ -1,0 +1,21 @@
+! barrett's'
+#define fg    #a5a7a5
+#define bg    #1e1f29
+#define curs  #c5c8c6
+
+#define blk   #000000
+#define blk2  #464A52
+#define red   #D43838
+#define red2  #D43838
+#define grn   #A0CC7A
+#define grn2  #A0CC7A
+#define ylw   #cfb27a
+#define ylw2  #cfb27a
+#define blu   #424D9A
+#define blu2  #424D9A
+#define mag   #85678f
+#define mag2  #85678f
+#define cyn   #8be9fd
+#define cyn2  #8be9fd
+#define wht   #B3B6BF
+#define wht2  #B3B6BF

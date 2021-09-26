@@ -1,0 +1,21 @@
+! eqie6
+#define fg    #cccccc
+#define bg    #1E1F29
+#define curs  #cccccc
+
+#define blk   #222222
+#define blk2  #666666
+#define red   #e84f4f
+#define red2  #d23d3d
+#define grn   #b7ce42
+#define grn2  #bde077
+#define ylw   #fea63c
+#define ylw2  #ffe863
+#define blu   #66a9b9
+#define blu2  #aaccbb
+#define mag   #b7416e
+#define mag2  #e16a98
+#define cyn   #6d878d
+#define cyn2  #42717b
+#define wht   #cccccc
+#define wht2  #ffffff

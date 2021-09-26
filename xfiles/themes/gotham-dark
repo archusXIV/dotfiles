@@ -1,0 +1,21 @@
+! gotham-dark
+#define fg    #98d1ce
+#define bg    #1E1F29
+#define curs  #98d1ce
+
+#define blk   #17222E
+#define blk2  #182029
+#define red   #C33027
+#define red2  #D26939
+#define grn   #26A98B
+#define grn2  #26A98B
+#define ylw   #EDB54B
+#define ylw2  #245361
+#define blu   #195465
+#define blu2  #114b60
+#define mag   #4E5165
+#define mag2  #888BA5
+#define cyn   #33859D
+#define cyn2  #599CAA
+#define wht   #98D1CE
+#define wht2  #D3EBE9

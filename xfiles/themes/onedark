@@ -1,0 +1,21 @@
+! onedark
+#define fg    #ABB2BF
+#define bg    #1E1F29
+#define curs  #ffffff
+
+#define blk   #282C34
+#define blk2  #454C59
+#define red   #E06C75
+#define red2  #FF7B85
+#define grn   #98C379
+#define grn2  #C5FC9D
+#define ylw   #E5C07B
+#define ylw2  #FFD689
+#define blu   #61AFEF
+#define blu2  #67BBFF
+#define mag   #C678DD
+#define mag2  #E48AFF
+#define cyn   #56B6C2
+#define cyn2  #66D7E6
+#define wht   #ABB2BF
+#define wht2  #edeff2

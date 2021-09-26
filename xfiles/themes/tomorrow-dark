@@ -1,0 +1,21 @@
+! tomorrow-dark
+#define fg    #c5c8c6
+#define bg    #1E1F29
+#define curs  #c5c8c6
+
+#define blk   #1d1f21
+#define blk2  #969896
+#define red   #cc6666
+#define red2  #cc6666
+#define grn   #b5bd68
+#define grn2  #b5bd68
+#define ylw   #f0c674
+#define ylw2  #f0c674
+#define blu   #81a2be
+#define blu2  #81a2be
+#define mag   #b294bb
+#define mag2  #b294bb
+#define cyn   #8abeb7
+#define cyn2  #8abeb7
+#define wht   #c5c8c6
+#define wht2  #ffffff

@@ -1,0 +1,22 @@
+! solarized-dark
+#define bg    #1E1F29
+#define fg    #839496
+#define curs  #93A1A1
+
+#define blk   #002B36
+#define blk2  #657b83
+#define red   #dc322f
+#define red2  #dc322f
+#define grn   #859900
+#define grn2  #859900
+#define ylw   #b58900
+#define ylw2  #b58900
+#define blu   #268bd2
+#define blu2  #268bd2
+#define mag   #6c71c4
+#define mag2  #6c71c4
+#define cyn   #2aa198
+#define cyn2  #2aa198
+#define wht   #93a1a1
+#define wht2  #fdf6e3
+

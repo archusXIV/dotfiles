@@ -1,0 +1,21 @@
+! dmenu
+#define fg    #888888
+#define bg    #0C0C0C
+#define curs  #dddddd
+
+#define blk   #222222
+#define blk2  #404040
+#define red   #900000
+#define red2  #982b2b
+#define grn   #00FF00
+#define grn2  #89b83f
+#define ylw   #FFFF00
+#define ylw2  #efef60
+#define blu   #2E9EF4
+#define blu2  #2b4f98
+#define mag   #706c9a
+#define mag2  #826ab1
+#define cyn   #92b19e
+#define cyn2  #a1cdcd
+#define wht   #888888
+#define wht2  #dddddd

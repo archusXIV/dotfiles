@@ -1,0 +1,21 @@
+! mikado
+#define fg    #ffffff
+#define bg    #1E1F29
+#define curs  #ffffff
+
+#define blk   #322a2c
+#define blk2  #46423b
+#define red   #a04363
+#define red2  #ae837a
+#define grn   #9b9329
+#define grn2  #b4aa30
+#define ylw   #bf7a29
+#define ylw2  #c7a551
+#define blu   #6a8c8c
+#define blu2  #74999e
+#define mag   #856774
+#define mag2  #9c818e
+#define cyn   #757978
+#define cyn2  #9fa590
+#define wht   #bcbcaf
+#define wht2  #c1c4bc

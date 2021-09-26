@@ -1,0 +1,20 @@
+! paraiso-dark
+#define bg    #1E1F29
+#define fg    #A39E9B
+
+#define blk   #2f1e2e
+#define blk2  #776e71
+#define red   #ef6155
+#define red2  #ef6155
+#define grn   #48b685
+#define grn2  #48b685
+#define ylw   #fec418
+#define ylw2  #fec418
+#define blu   #06b6ef
+#define blu2  #06b6ef
+#define mag   #815BA4
+#define mag2  #815BA4
+#define cyn   #5BC4BF
+#define cyn2  #5BC4BF
+#define wht   #A39E9B
+#define wht2  #A39E9B

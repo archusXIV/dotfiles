@@ -1,0 +1,21 @@
+! embers-dark
+#define fg    #998C82
+#define bg    #1E1F29
+#define curs  #997A72
+
+#define blk   #16130f
+#define blk2  #5a5047
+#define red   #826d57
+#define red2  #826d57
+#define grn   #57826d
+#define grn2  #57826d
+#define ylw   #787D57
+#define ylw2  #787D57
+#define blu   #6d5782
+#define blu2  #6d5782
+#define mag   #82576d
+#define mag2  #82576d
+#define cyn   #576d82
+#define cyn2  #576d82
+#define wht   #a39a90
+#define wht2  #dbd6d1

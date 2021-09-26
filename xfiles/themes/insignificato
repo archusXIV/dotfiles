@@ -1,0 +1,21 @@
+! insignificato
+#define fg    #99AC9E
+#define bg    #1E1F29
+#define curs  #D0D0D0
+
+#define blk   #3D3E3D
+#define blk2  #5A5B5C
+#define red   #755A5B
+#define red2  #A37679
+#define grn   #68755A
+#define grn2  #87A376
+#define ylw   #756E5A
+#define ylw2  #A39B76
+#define blu   #5B6976
+#define blu2  #758BA3
+#define mag   #755B76
+#define mag2  #9F76A3
+#define cyn   #5B7674
+#define cyn2  #75A3A1
+#define wht   #808080
+#define wht2  #AEAFB0

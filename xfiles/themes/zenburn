@@ -1,0 +1,21 @@
+! zenburn
+#define fg    #4F7AA7
+#define bg    #1E1F29
+#define curs  #ffffff
+
+#define blk   #1E2320
+#define blk2  #709080
+#define red   #C65C5C
+#define red2  #DCA3A3
+#define grn   #60B48A
+#define grn2  #C3BF9F
+#define ylw   #C3BF9F
+#define ylw2  #f0dfaf
+#define blu   #506070
+#define blu2  #94BFF3
+#define mag   #DC8CC3
+#define mag2  #923D9D
+#define cyn   #8CD0D3
+#define cyn2  #93E0E3
+#define wht   #DCDCCC
+#define wht2  #ffffff

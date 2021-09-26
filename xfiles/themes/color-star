@@ -1,0 +1,21 @@
+! color-star
+#define fg    #d3d3d3
+#define bg    #1E1F29
+#define curs  #d3d3d3
+
+#define blk   #03010f
+#define blk2  #ab9e9e
+#define red   #503b43
+#define red2  #b28930
+#define grn   #353b64
+#define grn2  #bbada9
+#define ylw   #8c2424
+#define ylw2  #c37305
+#define blu   #6067ac
+#define blu2  #d0ae58
+#define mag   #624d19
+#define mag2  #d7b559
+#define cyn   #7c83c0
+#define cyn2  #f4e199
+#define wht   #9a600f
+#define wht2  #f6f4df

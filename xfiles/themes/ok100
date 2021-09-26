@@ -1,0 +1,21 @@
+! ok100
+#define fg    #877A70
+#define bg    #1E1F29
+#define curs  #877A70
+
+#define blk   #403F3E
+#define blk2  #666362
+#define red   #91444D
+#define red2  #C78186
+#define grn   #6B853D
+#define grn2  #ABBD80
+#define ylw   #916949
+#define ylw2  #CCA88B
+#define blu   #557282
+#define blu2  #8EABBD
+#define mag   #78516D
+#define mag2  #A8879F
+#define cyn   #58756C
+#define cyn2  #8CA8A2
+#define wht   #94928F
+#define wht2  #CDCDCD
