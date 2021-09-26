@@ -2,7 +2,7 @@
 
 #    Author: Barret E (2020-21) <archus@protonmail.com>
 #    Dependencies: ffmpeg, mediainfo, mpc, mpd. Optional streamripper.
-#
+#    [full version of xtreamripper]
 #    This script rips the selected radio stream from the mpd playlists_directory.
 #    In our case files extensions are m3u and pls, so if you want to rip
 #    from other extensions you will have to edit the ffmpeg subshell command lines yourself.
