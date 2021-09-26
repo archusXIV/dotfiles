@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Author Barret Eric (2021) <archus@protonmail.con>
+# Simple script to concatenate mp4 or mkv video files.
+# First create a new directory, move your media files in it,
+# cd in that directory, then run this script: ffmpeg_concat mymediafile.{mp4,mkv}.
+# If files names contain whitespaces they will be replace with underscores,
+# because ffmpeg will try to treat each term (word) of the filename.
+
+if [[ -n $(find . -name "*.mp4" -o -name "*.mkv") ]]; then
+    if [[ -n $(find . -depth -name "* *") ]]; then
+        find . -depth -name "* *" -exec \
+        bash -c '
+        for f in "$@"; do
+            n="${f##*/}"
+            mv -nv "$f" "${f%/*}/${n// /_}"
+        done
+        ' dummy {} +
+    fi
+
+    find . -name "*.mp4" -o -name "*.mkv" \
+    | sed 's:\ :\ :g;s/^/file /' \
+    | sort -d > files.txt
+    ffmpeg -safe 0 -f concat -i files.txt -c copy "$1"
+    rm files.txt
+    mv "$1" .. >/dev/null
+else
+    echo "No mp4 or mkv file found..." && exit 1
+fi
+
