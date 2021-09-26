@@ -1,0 +1,27 @@
+#!/bin/bash
+
+if [[ -n $(pidof bspwm) ]]; then
+    awk '/^[a-zA-Z]/ \
+    && last {print $0,"\t",last} \
+    {last=""} /^#/{last=$0}' \
+    ~/.config/bspwm/bsp_sxhkdrc_memo \
+    | column -t -s $'\t' \
+    | rofi -normal-window \
+    -dmenu -i -p 'Sxhkd memo ' \
+    -no-show-icons \
+    -width 1200 \
+    -location 0
+elif [[ -n $(pidof i3) ]]; then
+    awk '/^[a-zA-Z]/ \
+    && last {print $0,"\t",last} \
+    {last=""} /^#/{last=$0}' \
+    ~/.config/i3/i3_sxhkdrc_memo \
+    | column -t -s $'\t' \
+    | rofi -normal-window \
+    -dmenu -i -p 'i3_memo ' \
+    -no-show-icons \
+    -width 1200 \
+    -location 0
+else
+    echo "no bspwm or i3 session running" && exit 1
+fi

@@ -1,0 +1,59 @@
+#!/bin/bash
+
+_rip2mp3() {
+
+    if grep -q File1 "$stream"; then
+        ffmpeg -i "$(grep -F File1 "$stream" | sed 's/File1=//')" \
+        -acodec libmp3lame -ar 48000 -ab 320k "$rip_dir"/"$stream"-"$date".mp3
+    elif grep -q '#EXTM3U' "$stream"; then
+        ffmpeg -i "$(grep http "$stream" | sed -n '1p')" \
+        -acodec libmp3lame -ar 48000 -ab 320k "$rip_dir"/"$stream"-"$date".mp3
+    else
+        echo " ${red}$stream, file corrupted" && exit 1
+    fi
+
+}
+
+_rip2flac() {
+
+    if grep -q File1 "$stream"; then
+        ffmpeg -i "$(grep -F File1 "$stream" | sed 's/File1=//')" \
+        -af aformat=s32:48000 "$rip_dir"/"$stream"-"$date".flac
+    elif grep -q '#EXTM3U' "$stream"; then
+        ffmpeg -i "$(grep http "$stream" | sed -n '1p')" \
+        -af aformat=s32:48000 "$rip_dir"/"$stream"-"$date".flac
+    else
+        echo " ${red}$stream, file corrupted" && exit 1
+    fi
+}
+
+_rip2wav() {
+    # Here we redirect the ffmpeg output in a text file,
+    # that will be parsed to grab metadatas because ffmpeg
+    # does not whrite them in wav files.
+    if grep -q File1 "$stream"; then
+        ffmpeg -i "$(grep -F File1 "$stream" | sed 's/File1=//')" \
+        -acodec pcm_s32le -ar 48000 "$rip_dir"/"$stream"-"$date".wav 2>"$rip_dir"/wav_metadata.txt
+    elif grep -q '#EXTM3U' "$stream"; then
+        ffmpeg -i "$(grep http "$stream" | sed -n '1p')" \
+        -acodec pcm_s32le -ar 48000 "$rip_dir"/"$stream"-"$date".wav 2>"$rip_dir"/wav_metadata.txt
+    else
+        echo " ${red}$stream, file corrupted" && exit 1
+    fi
+
+}
+
+_rip2ogg() {
+
+    if grep -q File1 "$stream"; then
+        ffmpeg -i "$(grep -F File1 "$stream" | sed 's/File1=//')" \
+        -acodec libvorbis -ar 48000 -ab 320k "$rip_dir"/"$stream"-"$date".ogg
+    elif grep -q '#EXTM3U' "$stream"; then
+        ffmpeg -i "$(grep http "$stream" | sed -n '1p')" \
+        -acodec libvorbis -ar 48000 -ab 320k "$rip_dir"/"$stream"-"$date".ogg
+    else
+        echo " ${red}$stream, file corrupted" && exit 1
+    fi
+
+}
+

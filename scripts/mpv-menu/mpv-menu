@@ -1,0 +1,44 @@
+#!/bin/bash
+
+##    Author: Barret E (2020-21) <archus@protonmail.com>
+##    Dependencies: ffmpeg, youtube-dl, socat, mpv & mpvc (command line interface for mpv).
+##
+##    This script rips video urls from Youtube and so on.
+##    In our case we use ".m3u" files to store urls in and then be able
+##    to watch from the site itself or download videos or just the audio.
+##    We can save or edit playlists, mpv.conf or this script too (because why not).
+##    It is recommanded to disable mpv cache for better results on direct streaming,
+##    or find a better cache parameter.
+##    I should have renamed this script "echo"...
+
+## colors
+nocolor=$'\e[0m';
+red=$'\e[0;31m';
+green=$'\e[0;32m';
+
+## directories & files
+main_dir="$HOME/Documents/mpv-menu"
+playlists_dir="$main_dir/playlists"
+audios_dir="$main_dir/audios"
+videos_dir="$main_dir/videos"
+tmp_dir="$main_dir/tmp"
+
+queue="$playlists_dir/default.m3u"
+metadatas="$tmp_dir/mpv.txt"
+ytop="$tmp_dir/youtube-dl_output.txt"
+ffop="$tmp_dir/ffmpeg_output.txt"
+
+## First source our functions.
+if [[ -n ${SCRIPTDIR+x} ]]; then
+    for func in $(find $SCRIPTDIR -name "mpv-menu_*"); do
+        source "$func"
+    done
+else
+    echo " ${red}Your scripts directory environment variable is not set...${nocolor}"
+    echo " Just type: ${green}export SCRIPTDIR='/path_to_my_scripts_directory'"
+    echo " To set it permanently put it in your .bash_profile or whatever *.profile you're using."
+    exit 1
+fi
+
+_check_dependencies
+

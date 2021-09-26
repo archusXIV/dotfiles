@@ -1,0 +1,35 @@
+#!/bin/bash
+
+#    Author: Barret E (2020-21) <archus@protonmail.com>
+#    Dependencies: ffmpeg, mediainfo, mpc, mpd. Optional streamripper.
+#
+#    This script rips the selected radio stream from the mpd playlists_directory.
+#    In our case files extensions are m3u and pls, so if you want to rip
+#    from other extensions you will have to edit the ffmpeg subshell command lines yourself.
+#    We can also choose from four different output formats to encode to and rename the file.
+#    If you use mpd with auto_update "yes" and auto_update_depth "3",
+#    generated files will be automatically added to the database.
+
+# global variables
+music="$HOME/Documents/Music"
+playlists_dir="$music/playlists"
+rip_dir="$music/streamripper"
+extensions="(.aac|.flac|.mp3|.ogg|.wav)"
+date="$(date "+%d-%m-%Y_%H:%M:%S")"
+color_off=$'\e[0m';
+red=$'\e[0;31m';
+green=$'\e[0;32m';
+
+# First source our functions.
+if [[ -n ${SCRIPTDIR+x} ]]; then
+    for func in $(find $SCRIPTDIR -name "xtreamripper_*"); do
+        source "$func"
+    done
+else
+    echo " ${red}Your scripts directory environment variable is not set..."
+    sleep 5s
+    exit 1
+fi
+
+_dependencies
+

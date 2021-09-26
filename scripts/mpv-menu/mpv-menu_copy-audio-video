@@ -1,0 +1,131 @@
+#!/bin/bash
+## This is a part of main script: mpv-menu.
+
+_remove_crap() {
+
+    # After some tests it appears that a single link copied from a youtube playlist
+    # causes the download of the entire playlist.
+    # So with the help of sed we cleanup the link to get the direct link to the desired video.
+    # Note that this behavior does not appear during a simple viewing/listening.
+
+    [[ -n $(grep -e '&list' "$queue") ]] && {
+        echo " ${red}Cleaning entries...${nocolor}"
+        sleep 2s
+        sed -i 's/&.*//' "$queue"
+    }
+
+    # Let's remove possible duplicates.
+    [[ -n $(uniq -d "$queue") ]] && {
+        echo " ${red}Removing double entries...${nocolor}"
+        sleep 2s
+        sed -i -n \
+        'G; s/\n/&&/; /^\([ -~]*\n\).*\n\1/d; s/\n//; h; P' \
+        "$queue"
+    }
+
+}
+
+_copy_audio() {
+
+    while (( $(wc -l "$queue" | awk '{print $1}') > 0 )); do
+        echo ""
+        echo "Paste an url to fill the playlist:"
+        read -r url
+        echo "$url" >> "$queue"
+
+        _remove_crap
+
+        clear
+        if (( $(sed '/#EXTM3U/d' "$queue" | wc -l) < 2 )); then
+            echo ""
+            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "url in the list${nocolor}."
+        else
+            echo ""
+            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "urls in the list${nocolor}."
+        fi
+        echo ""
+        echo -e "                                    ::audio options:: "
+        echo -e "                ┌────────────────────────────────────────────────────────────┐"
+        echo -e "                │     1) Add more audio links      4) Play current list      │"
+        echo -e "                │     2) Download current list     5) Check current list     │"
+        echo -e "                │     3) Save playlist as          6) Back to menu           │"
+        echo -e "                └────────────────────────────────────────────────────────────┘"
+        echo -e "                                      ${green}Select an item${nocolor}"
+        echo ""
+        read -r options
+        case $options in
+            1) clear && continue
+               echo "" 
+            ;;
+            2) _get_audio
+               echo ""
+            ;;
+            3) _save_remove
+               echo ""
+            ;;
+            4) _load_audio
+               echo ""
+            ;;
+            5) _check_url
+               echo ""
+            ;;
+            6) _check_queue
+               echo ""
+            ;;
+        esac
+    done
+
+}
+
+_copy_video() {
+
+    while (( $(wc -l "$queue" | awk '{print $1}') > 0 )); do
+        echo ""
+        echo "Paste an url to fill the playlist:"
+        read -r url
+        echo "$url" >> "$queue"
+
+        _remove_crap
+
+        clear
+        if (( $(sed '/#EXTM3U/d' "$queue" | wc -l) < 2 )); then
+            echo ""
+            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "url in the list${nocolor}."
+        else
+            echo ""
+            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "urls in the list${nocolor}."
+        fi
+        echo ""
+        echo -e "                                    ::video options:: "
+        echo -e "                ┌────────────────────────────────────────────────────────────┐"
+        echo -e "                │     1) Add more video links      4) Play current list      │"
+        echo -e "                │     2) Download current list     5) Check current list     │"
+        echo -e "                │     3) Save playlist as          6) Back to menu           │"
+        echo -e "                └────────────────────────────────────────────────────────────┘"
+        echo -e "                                      ${green}Select an item${nocolor}"
+        echo ""
+        read -r options
+        case $options in
+            1) clear && continue
+               echo "" 
+            ;;
+            2) _get_video
+               echo ""
+            ;;
+            3) _save_remove
+               echo ""
+            ;;
+            4) _load_video
+               echo ""
+            ;;
+            5) _check_url
+               echo ""
+            ;;
+            6) _check_queue
+               echo ""
+            ;;
+        esac
+    done
+
+}
+

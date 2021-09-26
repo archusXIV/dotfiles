@@ -1,0 +1,40 @@
+#!/bin/bash
+
+_streamripper() {
+
+    _warning
+    
+    cd "$playlists_dir"
+
+    # We leave PS3 prompt empty for aesthetic reason.
+    PS3=""
+    echo " ${red}For this program to work properly, make sure your playlist files contain"
+    echo " these ocurences: File1 for .pls & #EXTM3U for .m3u.${color_off}"
+    echo ""
+    echo " ${green}Select a stream number to rip (Press '^C' to quit streamripper): ${color_off}"
+    echo ""
+    # Set a clean streams list.
+    select stream in $(find . -name "*.pls" -o -name "*.m3u" | sort -d | sed 's,.*/,,'); do
+        
+        if grep -q File1 "$stream"; then
+            /usr/bin/streamripper "$(grep -F File1 "$stream" | sed 's/File1=//')" \
+            -u "FreeAmp/2.x" \
+            -d "$rip_dir" -s
+        elif grep -q '#EXTM3U' "$stream"; then
+            /usr/bin/streamripper "$(grep http "$stream" | sed -n '1p')" \
+            -u "FreeAmp/2.x" \
+            -d "$rip_dir" -s
+        else
+            echo " ${red}$stream, file corrupted" && exit 1
+        fi
+
+        [[ -d $rip_dir/incomplete ]] && rm -rf "$rip_dir"/incomplete
+
+        break
+
+    done
+
+    _player
+
+}
+

@@ -1,0 +1,54 @@
+#!/bin/bash
+
+_streamripper_choice() {
+    if [[ -n $(command -v streamripper) ]]; then
+        _prompt "Do you want to use regular streamripper?:" || {
+            _main
+        }
+        echo ""
+        _streamripper
+    else
+        _main
+    fi
+}
+
+_warning() {
+    [[ $(find "$rip_dir" -type f) =~ $extensions ]] && {
+        echo " ${red}There is one or more audio files in $rip_dir..."
+        echo " Please move them elsewhere as they might be renamed or accidentally deleted.${color_off}"
+        echo ""
+    }
+}
+
+_dependencies() {
+
+    declare -a dependencies=( "ffmpeg" "mediainfo" "mpd" "mpc" )
+
+    for i in "${dependencies[@]}"; do
+        [[ -z $(command -v "$i") ]] && echo " ${red}Missing dependencies...$i" && exit 1
+    done
+
+    if [[ ! -d $playlists_dir ]]; then
+        echo "Please type the absolute path to the playlists directory:"
+        echo ""
+        read -r path
+        playlists_dir="$path"
+        echo " ${red}If you don't want to be prompted next time,"
+        echo "consider changing playlists_dir variable at the top of this file.${color_off}"
+        echo ""
+        sleep 5s
+        cd "$playlists_dir"
+    elif [[ -z $(command ls -A $playlists_dir) ]]; then
+        echo "$playlists_dir is empty..." && exit 1
+    else
+        cd "$playlists_dir"
+    fi
+    
+    [[ ! -d $rip_dir ]] && mkdir -p "$rip_dir"
+
+    _warning
+
+    _streamripper_choice
+
+}
+

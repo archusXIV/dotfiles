@@ -1,0 +1,84 @@
+#!/bin/bash
+
+_renamer() {
+
+    cd "$rip_dir"
+
+    # For loop to rename the file we've just ripped,
+    # and any file matching the same criterias if present in $rip_dir.
+    # This does not affect files ripped by streamripper.
+    for file in $(find . -type f | grep -e '.pls-' -e '.m3u-'); do
+        if [[ -n $(find . -name "*.wav") ]]; then
+            grep -w StreamTitle wav_metadata.txt \
+            | cut -d '' -f4 \
+            | sed 's/StreamTitle//;s/://;s/^ *[[:space:]]//' \
+            | sed -n '1p' > metadata.txt
+
+            echo "The suggested file name is:" ${green}"$(cat metadata.txt)" ${color_off}
+            echo "Copy/paste it, or pick another one."
+            read newname
+            echo "$newname" > newname.txt
+            mv "$file" "$(cat newname.txt)".wav
+        else
+            for i in $file; do
+                mediainfo "$i" \
+                | grep -w StreamTitle \
+                | sed 's/StreamTitle//;s/://;s/^ *[[:space:]]//'
+            done > metadata.txt
+
+            echo "The suggested file name is:" ${green}"$(cat metadata.txt)" ${color_off}
+            echo "Copy/paste it, or pick another one."
+            read newname
+            echo "$newname" > newname.txt
+
+            if [[ -n $(find . -name "*.mp3") ]]; then
+                mv "$file" "$(cat newname.txt)".mp3
+            elif [[ -n $(find . -name "*.flac") ]]; then
+                mv "$file" "$(cat newname.txt)".flac
+            else
+                mv "$file" "$(cat newname.txt)".ogg
+            fi
+        fi
+
+    done
+
+    _player
+}
+
+_autorenamer() {
+
+    cd "$rip_dir"
+    # For loop to autorename the file we've just ripped from its metadatas,
+    # because mediainfo is unefficiant with untagged .wav files.
+    # If you use this function the file will be automatically renamed
+    # as the last 'StreamTitle' tag was found just before you pressed 'q' to stop ffmpeg.
+    # This does not affect files ripped by streamripper.
+    for file in $(find . -type f | grep -e '.pls-' -e '.m3u-'); do
+        if [[ -n $(find . -name "*.wav") ]]; then
+            grep -w StreamTitle wav_metadata.txt \
+            | cut -d '' -f4 \
+            | sed 's/StreamTitle//;s/://;s/^ *[[:space:]]//' \
+            | sed -n '1p' > newname.txt
+            mv "$file" "$(cat newname.txt)".wav
+        else
+            for i in $file; do
+                mediainfo "$i" \
+                | grep -w StreamTitle \
+                | sed 's/StreamTitle//;s/://;s/^ *[[:space:]]//'
+            done > newname.txt
+
+            if [[ -n $(find . -name "*.mp3") ]]; then
+                mv "$file" "$(cat newname.txt)".mp3
+            elif [[ -n $(find . -name "*.flac") ]]; then
+                mv "$file" "$(cat newname.txt)".flac
+            else
+                mv "$file" "$(cat newname.txt)".ogg
+            fi
+        fi
+
+    done
+
+    _player
+
+}
+

@@ -1,0 +1,38 @@
+#!/bin/bash
+
+
+id="$(xdotool search --pid $(pidof $1))"
+
+
+for i in 1; do
+    xdo move -x 1435 -y 0 "$id"
+    sleep 2
+    xdo move -x 1435 -y 715 "$id"
+    sleep 2
+    xdo move -x 0 -y 715 "$id"
+    sleep 2
+    xdo move -x 0 -y 0 "$id"
+    sleep 2
+
+    for i in 1 2; do
+        xdo move -x 1435 -y 0 "$id"
+        sleep 1
+        xdo move -x 1435 -y 715 "$id"
+        sleep 1
+        xdo move -x 0 -y 715 "$id"
+        sleep 1
+        xdo move -x 0 -y 0 "$id"
+        sleep 1
+
+        for i in 1 2 3 4; do
+            xdo move -x 1435 -y 0 "$id"
+            sleep 0.5
+            xdo move -x 1435 -y 715 "$id"
+            sleep 0.5
+            xdo move -x 0 -y 715 "$id"
+            sleep 0.5
+            xdo move -x 0 -y 0 "$id"
+            sleep 0.5
+        done
+    done
+done

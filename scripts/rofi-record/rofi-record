@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# First source our functions.
+for func in $(find $SCRIPTDIR -name "rofi-record_*"); do
+    source "$func"
+done
+
+# $XDG_RUNTIME_DIR stands for /run/user/1000
+_updateicon() { echo "$1" > "$XDG_RUNTIME_DIR"/recordingicon; }
+
+_if_pid() {
+    if [[ -f "$XDG_RUNTIME_DIR/recordingpid" ]]; then
+        _asktoend
+    else
+        _askrecording
+    fi
+}
+
+[[ -z $(command -v ffmpeg) ]] && notify-send 'ERROR: this program requires "ffmpeg" installed'
+
+date="$(date "+%d-%m-%Y_%H:%M:%S")"
+rc="$HOME/.config/dmenu/dmenurc"
+recordings="$HOME/Documents/Music/recordings"
+webcam="$HOME/Documents/Videos/webcam"
+Xsessions="$HOME/Documents/Videos/Xsessions"
+
+# shellcheck source=/dev/null
+[[ -f "$rc" ]] && . "$rc"
+[[ ! -d "$Xsessions" ]] && mkdir -p "$Xsessions"
+[[ ! -d "$webcam" ]] && mkdir -p "$webcam"
+[[ ! -d "$recordings" ]] && mkdir -p "$recordings"
+
+_if_pid
+

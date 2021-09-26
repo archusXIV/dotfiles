@@ -1,0 +1,95 @@
+#!/bin/bash
+## This is a part of main script: mpv-menu.
+
+_check_queue() {
+
+    ## This looks ugly but everything will fit nicely...
+    if (( $(wc -l "$queue" | awk '{print $1}') > 1 )); then
+        if (( $(wc -l "$queue" | awk '{print $1}') < 11 )); then
+            echo -e "                  ┌──────────────────────────────────────────────┐"
+            echo -e "                  │  ${red} There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "url(s) in default playlist.${nocolor}     │"
+            echo -e "                  │ Consider checking the url(s) list ${green}(option 5) ${nocolor}|"
+            echo -e "                  │ or delete them ${green}(option 6).${nocolor}                   |"
+            echo -e "                  └──────────────────────────────────────────────┘"
+            sleep 6s
+            _menu
+        else
+            echo -e "                  ┌───────────────────────────────────────────────┐"
+            echo -e "                  │  ${red} There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "url(s) in default playlist.${nocolor}     │"
+            echo -e "                  │ Consider checking the url(s) list ${green}(option 5) ${nocolor} |"
+            echo -e "                  │ or delete them ${green}(option 6).${nocolor}                    |"
+            echo -e "                  └───────────────────────────────────────────────┘"
+            sleep 6s
+            _menu
+        fi
+    else
+        _menu
+    fi
+
+}
+
+_check_dependencies() {
+
+    ## Checking dependencies: softwares, directories and files.
+    declare -a deps=( "ffmpeg" "mpv" "mpvc" "socat" "youtube-dl" )
+
+    for i in "${deps[@]}"; do
+        [[ -z $(command -v "$i") ]] \
+            && echo " ${red}$i isn 't installed, bye..." \
+            && exit 165
+    done
+
+    if [[ ! -d "$main_dir" ]]; then
+        mkdir --parents {"$audios_dir","$playlists_dir","$tmp_dir","$videos_dir"}
+    else
+        [[ ! -d "$audios_dir" ]] && mkdir "$audios_dir"
+        [[ ! -d "$playlists_dir" ]] && mkdir "$playlists_dir"
+        [[ ! -d "$tmp_dir" ]] && mkdir "$tmp_dir"
+        [[ ! -d "$videos_dir" ]] && mkdir "$videos_dir"
+    fi
+
+    [[ ! -f $queue ]] && touch "$queue" && echo "#EXTM3U" > "$queue"
+
+    _check_queue
+
+}
+
+_check_editor() {
+
+    for item in $EDITOR $VISUAL; do
+        if [[ -z ${item+x} ]]; then
+            echo " ${red}Your $item environment variable is not set..."
+            echo " ${green}Please consider doing so."
+            echo " Example: ${red}export EDITOR='vim' ${nocolor}"
+            sleep 7s
+            _menu
+        fi
+    done
+
+}
+
+_check_url() {
+
+    if (( $(wc -l "$queue" | awk '{print $1}') > 1 )); then
+        echo " ${green}Default playlist content:${nocolor}"
+        while read -r urls; do
+            echo " ${green}$urls${nocolor}"
+        done < "$queue" | sed 's/#EXTM3U//'
+
+        read -rp 'delete url(s) [d], play url(s) [p], save url(s) as playlist [s] or back to menu [m]: ' opt
+        case $opt in
+            d) _delete_url
+            ;;
+            m) _menu
+            ;;
+            p) _load_main
+            ;;
+            s) _save_remove
+        esac
+    else
+        echo " ${red}Default list is empty ${nocolor}"
+        sleep 2s && _menu
+    fi
+
+}
+

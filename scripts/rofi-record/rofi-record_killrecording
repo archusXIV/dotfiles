@@ -1,0 +1,29 @@
+#!/bin/bash
+
+_killrecording() {
+    killall -q ffmpeg
+    rm -f "$XDG_RUNTIME_DIR"/recordingpid
+    _updateicon ""
+    kill -KILL $(pgrep --full "record_chrono")
+    # polybar clears icons (update with "nothing").
+    polybar-msg hook recording-ipc-1 2 >/dev/null 2>&1
+    sleep 0.5
+    polybar-msg hook chrono-ipc-1 2 >/dev/null 2>&1
+    sleep 0.5
+    polybar-msg hook recording-ipc-2 2 >/dev/null 2>&1
+    sleep 0.5
+    polybar-msg hook chrono-ipc-2 2 >/dev/null 2>&1
+    sleep 0.5
+    polybar-msg hook recording-ipc-3 2 >/dev/null 2>&1
+    sleep 0.5
+    polybar-msg hook chrono-ipc-3 2 >/dev/null 2>&1
+
+    # Uncomment these lines if there is an audio delay.
+    [ -n "$(find "$HOME"/Videos/Xsessions -name "*.mkv")" ] \
+    && _fixdelay
+
+	amixer set Capture,0 0%,0% mute nocap >/dev/null 2>&1
+	polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 1 >/dev/null 2>&1
+    exit
+}
+

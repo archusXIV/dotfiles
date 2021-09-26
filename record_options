@@ -1,0 +1,155 @@
+#!/bin/bash
+
+#  Author: Barret E (2021) <archus@protonmail.com>
+#  Dependencies: ffmpeg, polybar, rofi, simplescreenrecorder.
+#
+#  This script uses two screen grabbing methods:
+#  simplescreenrecorder or anohter of my scripts called rofi-record.
+#  Each time you will be prompt to choose a screen (monitor) to capture.
+#  Of course you will have to set profiles in simplescreenrecorder gui first
+#  to be able to use them later here.
+
+declare -a deps=( "ffmpeg" "polybar" "rofi" "simplescreenrecorder" )
+
+for i in "${deps[@]}"; do
+    [[ -z $(command -v "$i") ]] \
+    && notify-send "$i isn 't installed, bye..." \
+    && exit 165
+done
+
+_main() {
+
+    case "$1" in
+        -r) rofi-record           # external script
+            exit
+        ;;
+        -s) _simplescreenrecorder # calls below function
+            exit
+        ;;
+        -k) if [[ -z $(pidof simplescreenrecorder) ]] \
+                || [[ -z $(pidof -x rofi-record) ]]; then
+                amixer set Capture,0 0%,0% mute nocap >/dev/null 2>&1
+                polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 1 >/dev/null 2>&1
+                exit
+            fi
+        ;;
+    esac
+
+}
+
+_simplescreenrecorder() {
+
+    local triplescreen screen1 screen2 screen3
+    
+    # Profiles:
+    triplescreen="$XDG_CONFIG_HOME/simplescreenrecorder/input-profiles/triplescreen.conf"
+    screen1="$XDG_CONFIG_HOME/simplescreenrecorder/input-profiles/screen1.conf"
+    screen2="$XDG_CONFIG_HOME/simplescreenrecorder/input-profiles/screen2.conf"
+    screen3="$XDG_CONFIG_HOME/simplescreenrecorder/input-profiles/screen3.conf"
+    
+    _all_monitors() (
+
+        amixer set Capture,0 90%,90% unmute cap >/dev/null 2>&1
+        polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 2 >/dev/null 2>&1
+        record_chrono 2 &
+        simplescreenrecorder \
+        --start-hidden \
+        --settingsfile="$triplescreen" \
+        --start-recording && {
+
+            killall record_chrono
+            amixer set Capture,0 0%,0% mute nocap >/dev/null 2>&1
+            polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 1 >/dev/null 2>&1
+            polybar-msg hook chrono-ipc-2 2 >/dev/null 2>&1
+
+        }
+
+    )
+
+    _screencast1() (
+
+        amixer set Capture,0 90%,90% unmute cap >/dev/null 2>&1
+        polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 2 >/dev/null 2>&1
+        record_chrono 1 &
+        simplescreenrecorder \
+        --start-hidden \
+        --settingsfile="$screen1" \
+        --start-recording && {
+
+            killall record_chrono
+            amixer set Capture,0 0%,0% mute nocap >/dev/null 2>&1
+            polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 1 >/dev/null 2>&1
+            polybar-msg hook chrono-ipc-1 2 >/dev/null 2>&1
+
+        }
+
+    )
+
+    _screencast2() (
+
+        amixer set Capture,0 90%,90% unmute cap >/dev/null 2>&1
+        polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 2 >/dev/null 2>&1
+        record_chrono 2 &
+        simplescreenrecorder \
+        --start-hidden \
+        --settingsfile="$screen2" \
+        --start-recording && {
+
+            killall record_chrono
+            amixer set Capture,0 0%,0% mute nocap >/dev/null 2>&1
+            polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 1 >/dev/null 2>&1
+            polybar-msg hook chrono-ipc-2 2 >/dev/null 2>&1
+
+        }
+
+    )
+
+    _screencast3() (
+
+        amixer set Capture,0 90%,90% unmute cap >/dev/null 2>&1
+        polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 2 >/dev/null 2>&1
+        record_chrono 3 &
+        simplescreenrecorder \
+        --start-hidden \
+        --settingsfile="$screen3" \
+        --start-recording && {
+
+            killall record_chrono
+            amixer set Capture,0 0%,0% mute nocap >/dev/null 2>&1
+            polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 1 >/dev/null 2>&1
+            polybar-msg hook chrono-ipc-3 2 >/dev/null 2>&1
+
+        }
+
+    )
+
+    # testing our monitors setup to launch the right options.
+    if [[ $(xrandr | grep -cw connected) -eq 1 ]]; then
+        _screencast1
+    elif [[ $(xrandr | grep -cw connected) -eq 2 ]]; then
+        choice=$(printf "all_monitors\\nmonitor1\\nmonitor2" \
+        | rofi -normal-window -dmenu -i -width 20 -hide-scrollbar \
+        -line-padding 4 -padding 20 -lines 3 -p 'Pick a monitor to capture')
+        case "$choice" in
+            all_monitors) _all_monitors ;;
+            monitor1    ) _screencast1  ;;
+            monitor2    ) _screencast2  ;;
+        esac
+    elif [[ $(xrandr | grep -cw connected) -eq 3 ]]; then
+        choice=$(printf "all_monitors\\nmonitor1\\nmonitor2\\nmonitor3" \
+        | rofi -normal-window -dmenu -i -width 20 -hide-scrollbar \
+        -line-padding 4 -padding 20 -lines 4 -p 'Pick a monitor to capture')
+        case "$choice" in
+            all_monitors) _all_monitors ;;
+            monitor1    ) _screencast1  ;;
+            monitor2    ) _screencast2  ;;
+            monitor3    ) _screencast3  ;;
+        esac
+    else
+        exit
+    fi
+
+}
+
+_main "${@}"
+

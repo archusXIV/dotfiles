@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# Shellcheck will complain about $DMENU_OPTIONS, but this a specific variable.
+# shellcheck disable=SC2086
+_askrecording() {
+    local type
+    type=$(printf "mic\\noutput\nscreencast\\nvideo\\nwebcam\\nQUIT" \
+                    | rofi -normal-window -dmenu -i \
+                    -width 20 -hide-scrollbar -line-padding 4 -padding 20 -lines 6 -p 'Select a recording type')
+    case "$type" in
+        mic       ) _audio_input  ;;
+        output    ) _audio_output ;;
+        screencast) _askmonitor   ;;
+        video     ) _video        ;;
+        webcam    ) _webcam       ;;
+        QUIT      ) record_options -k && exit ;;
+    esac
+}
+
+# shellcheck disable=SC2086
+_askmonitor() {
+    local choice
+    if [[ $(xrandr | grep -cw connected) -eq 1 ]]; then
+        _screencast1
+    elif [[ $(xrandr | grep -cw connected) -eq 2 ]]; then
+        choice=$(printf "all_monitors\\nmonitor1\\nmonitor2" \
+        | rofi -normal-window -dmenu -i -width 20 -hide-scrollbar \
+        -line-padding 4 -padding 20 -lines 3 -p 'Pick a monitor to capture')
+        case "$choice" in
+            all_monitors) _all_monitors ;;
+            monitor1    ) _screencast1  ;;
+            monitor2    ) _screencast2  ;;
+        esac
+    elif [[ $(xrandr | grep -cw connected) -eq 3 ]]; then
+        choice=$(printf "all_monitors\\nmonitor1\\nmonitor2\\nmonitor3" \
+        | rofi -normal-window -dmenu -i -width 20 -hide-scrollbar \
+        -line-padding 4 -padding 20 -lines 4 -p 'Pick a monitor to capture')
+        case "$choice" in
+            all_monitors) _all_monitors ;;
+            monitor1    ) _screencast1  ;;
+            monitor2    ) _screencast2  ;;
+            monitor3    ) _screencast3  ;;
+        esac
+    else
+        exit
+    fi
+}
+
+# shellcheck disable=SC2086
+_asktoend() {
+    local response
+    response=$(printf "No\\nYes" \
+        | rofi -normal-window -dmenu -i -width 15 -hide-scrollbar \
+        -line-padding 4 -padding 20 -lines 2 -p 'End recording?') \
+    && [ "$response" = "Yes" ] && _killrecording
+}
+

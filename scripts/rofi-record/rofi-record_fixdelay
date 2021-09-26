@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# I noticed an audio delay, so I fix it.
+_fixdelay() {
+
+    local all_monitors screen1 screen2 screen3
+
+    all_monitors="$Xsessions/all_monitors.mkv"
+    screen1="$Xsessions/screen1.mkv"
+    screen2="$Xsessions/screen2.mkv"
+    screen3="$Xsessions/screen3.mkv"
+
+    if [[ -f "$all_monitors" ]]; then
+        ffmpeg -y -i "$all_monitors" \
+        -itsoffset -1.195 -i "$all_monitors" -map 0:0 -map 1:1 \
+        -acodec copy -vcodec copy "$all_monitors"_"$date".mkv
+        rm "$all_monitors"
+        exit
+    elif [[ -f "$screen1" ]]; then
+        ffmpeg -y -i "$screen1" -itsoffset -1.195 -i "$screen1" \
+        -map 0:0 -map 1:1 -acodec copy -vcodec copy "$screen1"_"$date".mkv
+        rm "$screen1"
+        exit
+    elif [[ -f "$screen2" ]]; then
+        ffmpeg -y -i "$screen2" -itsoffset -1.183 -i "$screen2" \
+        -map 0:0 -map 1:1 -acodec copy -vcodec copy "$screen2"_"$date".mkv
+        rm "$screen2"
+        exit
+    elif [[ -f "$screen3" ]]; then
+        ffmpeg -y -i "$screen3" -itsoffset -1.195 -i "$screen3" \
+        -map 0:0 -map 1:1 -acodec copy -vcodec copy "$screen3"_"$date".mkv
+        rm "$screen3"
+        exit
+    else
+        echo "no such file or directory" && exit 1
+    fi
+
+}
+

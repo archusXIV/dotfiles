@@ -1,0 +1,98 @@
+#!/bin/bash
+## This is a part of main script: mpv-menu.
+
+_get_audio() {
+
+    cd "$audios_dir"
+
+    for url in $(grep 'https' "$queue"); do
+
+        if (( $(sed '/#EXTM3U/d' "$queue" | wc -l) < 2 )); then
+            echo ""
+            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "audio file left to download.${nocolor}"
+        else
+            echo ""
+            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "audio files left to download.${nocolor}"
+        fi
+
+        youtube-dl -F "$url" | grep -e 'audio only'
+        echo ""
+        echo " ${green}Choose a format code: ${nocolor}"
+        read -rn 3 code
+        echo " ${green}Please be patient while downloading files...${nocolor}"
+        youtube-dl -f "$code" "$url" > $ytop
+        sed -i '2d' "$queue"
+        clear
+
+    done
+
+    echo " ${green}Done${nocolor}"
+    echo ""
+
+    if [[ -n $(find . -iname "*.webm") ]]; then
+        echo " ${green}Please be patient while ffmpeg is working...${nocolor}"
+        find . -iname "*.webm" -exec \
+        bash -c 'FILE="$1"; \
+        ffmpeg -i "${FILE}" \
+        -vn -ab 320k -ar 48000 \
+        -y "${FILE%.webm}.mp3";' _ '{}' \; 2>$ffop
+
+        echo " ${green}Done${nocolor}"
+        sleep 2s
+        rm ./*.webm
+        rm $ffop $ytop
+        _menu
+    else
+        rm $ytop
+        _menu
+    fi
+
+}
+
+_get_video() {
+
+    cd "$videos_dir"
+
+    local webm
+    webm="$(find . -name '*.webm' | sed 's,.*/,,')"
+
+    echo " ${green}Please be patient while downloading files...${nocolor}"
+    for url in $(grep 'https' "$queue"); do
+
+        if (( $(sed '/#EXTM3U/d' "$queue" | wc -l) < 2 )); then
+            echo ""
+            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "video file left to download.${nocolor}"
+        else
+            echo ""
+            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "video files left to download.${nocolor}"
+        fi
+
+        # choosing the very best format first, if available.
+        if [[ -n $(youtube-dl -F "$url" | grep -e '137' -e '251' ) ]]; then
+            youtube-dl -f 137+251 --merge-output-format mp4 "$url" > $ytop
+        else
+            youtube-dl --format best "$url" > $ytop
+        fi
+        sed -i '2d' "$queue"
+        clear
+    
+    done
+
+    echo " ${green}Done${nocolor}"
+    echo ""
+
+    if [[ -n ${webm} ]]; then
+        echo " ${green}Please be patient while ffmpeg is working...${nocolor}"
+        ffmpeg -i "$webm" "$webm".mp4 2>$ffop
+        echo " ${green}All done${nocolor}"
+        sleep 2s
+        rm ./*.webm
+        rm $ffop $ytop
+        _menu
+    else
+        rm $ytop
+        _menu
+    fi
+
+}
+

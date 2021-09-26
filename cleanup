@@ -1,0 +1,12 @@
+#!/bin/bash
+
+find ~/.cache/ -maxdepth 1 -type f -mtime +2 -exec rm -f {} \;
+find ~/.cache/ -maxdepth 2 -type f -mtime +2 -exec rm -f {} \;
+find ~/.cache/ -maxdepth 2 -type d -mtime +2 -exec rm -rf {} \;
+find ~/.cache/ -maxdepth 1 -type d -empty -mtime +2 -exec rmdir {} \;
+find ~/.local/share/xorg/ -type f -mtime +2 | xargs rm -f
+info-trash --clean
+rm -f "$HOME"/.local/share/recently-used.xbel
+rm -f "$HOME"/.local/share/user-places.xbel
+echo "" > $XDG_CONFIG_HOME/zsh/.cache/zsh_history
+

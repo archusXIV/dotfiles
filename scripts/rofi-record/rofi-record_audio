@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# only audio from mic (webcam)
+_audio_input() {
+    amixer set Capture,0 90%,90% unmute cap >/dev/null 2>&1
+    polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 2 >/dev/null 2>&1
+    ffmpeg -f pulse \
+    -i 1 \
+    -map '0' \
+    -c:a mp3 \
+    "$recordings"/audio-input_"$date".mp3 &
+    echo $! > "$XDG_RUNTIME_DIR"/recordingpid
+    _updateicon ""
+    polybar-msg hook recording-ipc-2 1 >/dev/null 2>&1
+    record_chrono 2
+}
+
+# records what we hear from the speakers
+_audio_output() {
+    ffmpeg -f pulse \
+    -i 2 \
+    -map '0' \
+    -acodec libmp3lame \
+    -ar 48000 \
+    -ab 320k \
+    "$recordings"/audio-output_"$date".mp3 &
+    echo $! > "$XDG_RUNTIME_DIR"/recordingpid
+    _updateicon ""
+    polybar-msg hook recording-ipc-2 1 >/dev/null 2>&1
+    record_chrono 2
+}
+

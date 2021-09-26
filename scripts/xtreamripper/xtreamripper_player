@@ -1,0 +1,93 @@
+#!/bin/bash
+
+_player() {
+
+    # Change mpc command line if needed.
+    # We update the mpd database and use mpc for playing recordings.
+
+    local trackname
+    trackname="$rip_dir/tracklist.txt"
+
+    cd "$rip_dir"
+
+    [[ -z $(pidof mpd) ]] && {
+        echo " ${red}Mpd isn't running!${color_off}"
+        echo " ${green}If you want queue up files you ripped,"
+        echo " please consider activate it${color_off}"
+        sleep 5s
+        clear
+        _streamripper_choice
+    }
+
+    [[ $(find . -type f) =~ $extensions ]] && {
+        mpc --quiet update
+        sleep 0.5
+        mpc ls streamripper/ | sed 's/streamripper\///' > "$trackname"
+    }
+
+    _prompt "Finaly, do you wish to listen the recording(s)? :" || {
+        while (( $(wc -l "$trackname" | awk '{print $1}') > 0 )); do
+
+            _prompt "Do you want to keep" "${green}""$(cat $trackname | sed -n '$ p')" "${color_off}""? :" || {
+    
+                echo " ${red}$(cat $trackname | sed -n '$ p')" "deleted.${color_off}"
+                echo ""
+                rm -f "$(cat $trackname | sed -n '$ p')"
+                sed -i '$ d' "$trackname"
+                continue
+    
+            }    
+
+            mv "$(cat $trackname | sed -n '$ p')" "$music"
+            
+            echo " ${green}$(cat $trackname | sed -n '$ p') ${color_off}moved in $music"
+            sleep 3s
+            echo ""
+            sed -i '$ d' "$trackname"
+
+        done
+       
+        rm -f ./*.txt
+        clear
+        echo ""
+        _streamripper_choice
+
+    }
+
+    mpc add streamripper/
+
+    while (( $(wc -l "$trackname" | awk '{print $1}') > 0 )); do
+
+        mpc --quiet play "$(mpc playlist | wc -l)"
+        echo " ${red}Playing a 30 seconds sample of..."
+        echo " ${green}$(mpc --format %file% current | sed 's/streamripper\///')${color_off}"
+        sleep 30s
+        echo ""
+        _prompt "Do you want to keep" "${green}""$(cat $trackname | sed -n '$ p')" "${color_off}""? :" || {
+
+            echo " ${red}$(cat $trackname | sed -n '$ p')" "deleted.${color_off}"
+            echo ""
+            rm -f "$(cat $trackname | sed -n '$ p')"
+            sed -i '$ d' "$trackname"
+            mpc --quiet del "$(mpc --format %position% current)"
+            continue
+
+        }    
+
+        mpc --quiet del "$(mpc --format %position% current)"
+        mv "$(cat $trackname | sed -n '$ p')" "$music"
+        
+        echo " ${green}$(cat $trackname | sed -n '$ p') ${color_off}moved in $music"
+        sleep 3s
+        echo ""
+        sed -i '$ d' "$trackname"
+
+    done
+
+    rm ./*.txt
+    clear
+    echo ""
+    _streamripper_choice
+
+}
+

@@ -1,0 +1,114 @@
+#!/bin/bash
+## This is a part of main script: mpv-menu.
+
+_download_audio() {
+    # We're still in $playlists_dir
+    clear
+
+    for url in $(grep 'https' "$list"); do
+
+        if (( $(sed '/#EXTM3U/d' "$list" | wc -l) < 2 )); then
+            echo ""
+            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$list" | wc -l)" "audio file left to download.${nocolor}"
+        else
+            echo ""
+            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$list" | wc -l)" "audio files left to download.${nocolor}"
+        fi
+
+        echo ""
+        youtube-dl -F "$url" | grep -e 'audio only'
+        echo ""
+        echo " ${green}Choose a format code: ${nocolor}"
+        read -rn 3 code
+        echo " ${green}Please be patient while downloading files...${nocolor}"
+        youtube-dl -f "$code" "$url" > $ytop
+        sed -i '2d' "$list"
+        clear
+
+    done
+
+    mv --force "$list"_origin "$list"
+    echo " ${green}Done${nocolor}"
+    echo ""
+
+    if [[ -n $(find . -iname "*.webm") ]]; then
+        echo " ${green}Please be patient while ffmpeg is working...${nocolor}"
+        find . -iname "*.webm" -exec \
+        bash -c 'FILE="$1"; \
+        ffmpeg -i "${FILE}" \
+        -vn -ab 320k -ar 48000 \
+        -y "${FILE%.webm}.mp3";' _ '{}' \; 2>$ffop
+
+        echo " ${green}All done${nocolor}"
+        sleep 2s
+        rm ./*.webm
+        rm $ffop $ytop
+        mv *.mp3 "$audios_dir"
+        _menu
+    else
+        echo " ${green}Please check out for none mp3 files in $playlists_dir${nocolor}"
+        sleep 5s
+        rm $ytop
+        _menu
+    fi
+
+}
+
+_download_video() {
+    # We're still in $playlists_dir
+    clear
+
+    for url in $(grep 'https' "$list"); do
+
+        if (( $(sed '/#EXTM3U/d' "$list" | wc -l) < 2 )); then
+            echo ""
+            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$list" | wc -l)" "video file left to download.${nocolor}"
+        else
+            echo ""
+            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$list" | wc -l)" "video files left to download.${nocolor}"
+        fi
+
+        echo ""
+        echo " ${green}Please be patient while downloading files...${nocolor}"
+
+        # choosing the very best format first, if available.
+        if [[ -n $(youtube-dl -F "$url" | grep -e '137' -e '251') ]]; then
+            youtube-dl -f 137+251 --merge-output-format mp4 "$url" > $ytop
+        elif [[ -n $(youtube-dl -F "$url" | grep -e 'best') ]]; then
+            youtube-dl -f best "$url" > $ytop
+        else
+            youtube-dl "$url" > $ytop
+        fi
+
+        sed -i '2d' "$list" >/dev/null
+        clear
+
+    done
+
+    mv --force "$list"_origin "$list"
+    echo " ${green}Done${nocolor}"
+    echo ""
+
+    local webm="$(find "$playlists_dir" -name "*.webm" | sed 's,.*/,,')"
+
+    if [[ -n $webm ]]; then
+        echo " ${green}Please be patient while ffmpeg is working...${nocolor}"
+        ffmpeg -i "$webm" "$webm".mp4 2> $ffop
+        rm ./*.webm
+        mv ./{*.mp4,*.mkv} "$videos_dir" > /dev/null 2>&1
+        echo ""
+        echo " ${green}All done${nocolor}"
+        rm ./*.webm
+        rm $ffop $ytop
+        sleep 2s
+        _menu
+    else
+        mv ./{*.mp4,*.mkv} "$videos_dir" > /dev/null 2>&1
+        echo " ${green}All done${nocolor}"
+        sleep 2s
+        rm $ytop
+        _menu
+    fi
+
+}
+

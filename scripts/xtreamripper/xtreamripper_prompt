@@ -1,0 +1,34 @@
+#!/bin/bash
+
+_prompt() {
+
+    local screenprompt key default options status
+
+    default=y
+    options=yn
+
+    [[ $1 =~ -([${options}]) ]] \
+        && default="${BASH_REMATCH[1]}" && shift
+
+    screenprompt="$* [${default^^}/${options/$default/}]"
+
+    if [[ -t 2 ]]; then
+        >&2 echo "$screenprompt"
+
+        while :; do
+            read -rsn 1
+
+            key="${REPLY:-$default}"
+            [[ $key =~ [${options}] ]] || continue
+            break
+        done
+    else
+        key="$default"
+    fi
+
+    [[ ${key,,} = n ]] && status=1
+
+    return "${status:-0}"
+
+}
+

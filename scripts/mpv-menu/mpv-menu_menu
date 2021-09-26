@@ -1,0 +1,64 @@
+#!/bin/bash
+## This is a part of main script: mpv-menu.
+
+_menu() {
+
+    clear
+    while [[ -f $queue ]]; do
+        clear
+        echo ""
+        echo -e "                                    ::mpv-menu options:: "
+        echo -e "                ┌────────────────────────────────────────────────────────────┐"
+        echo -e "                │    1) Add/Get video(s)         6) Clean default playlist   │"
+        echo -e "                │    2) Add/Get audio(s)         7) Edit a playlist          │"
+        echo -e "                │    3) Save/Remove playlist     8) Edit mpv.conf            │"
+        echo -e "                │    4) Load a playlist          9) Edit this script         │"
+        echo -e "                │    5) Check default playlist   0) Exit                     │"
+        echo -e "                └────────────────────────────────────────────────────────────┘"
+        echo -e "                                       ${green}Select an item${nocolor}"
+        echo ""
+        read -r action
+        case $action in
+            1)  _copy_video
+                echo ""
+            ;;
+            2)  _copy_audio
+                echo ""
+            ;;
+            3)  _save_remove
+                echo ""
+            ;;
+            4)  _load_playlist
+                echo ""
+            ;;
+            5)  _check_url
+                echo ""
+            ;;
+            6)  _delete_url
+                echo ""
+            ;;
+            7)  _edit_playlist
+                echo ""
+            ;;
+            8)  _edit_mpv-conf
+                echo ""
+            ;;
+            9)  _edit_script
+                echo ""
+            ;;
+            0)  clear 
+                [[ -z $(systemctl --user list-units | grep -e 'mpv-ipc') ]] \
+                && systemctl --user start mpv-ipc.service
+                exit
+            ;;
+            *)  echo -e " ${red} Wrong option ${nocolor}"
+                echo "Wait and try again..."
+                echo ""
+                sleep 2s
+                clear
+            ;;
+        esac
+    done
+
+}
+

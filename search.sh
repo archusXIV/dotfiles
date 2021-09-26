@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# Gives a dmenu prompt to search DuckDuckGo.
+# Without input, will open DuckDuckGo.com.
+# URLs will be directly handed to the browser.
+# Anything else, it search it.
+browser=${BROWSER:-firefox}
+
+rc="$HOME/.config/dmenu/dmenurc"
+
+[ -f "$rc" ] && source "$rc"
+
+pgrep -x dmenu && exit
+
+choice=$(echo "" | dmenu -i $DMENU_OPTIONS -p "Search ArchWiki:") || exit 1
+
+if [ "$choice" = ""  ]; then
+    $browser "https://duckduckgo.com/"
+else
+    # Detect if url
+    if [[ "$choice" =~ ^(http:\/\/|https:\/\/)?[a-zA-Z0-9]+\.[a-zA-Z]+(/)?.*$ ]]; then
+        $browser "$choice"
+    else
+        $browser "https://duckduckgo.com/?q=&t=ffsb=$choice"
+    fi
+fi

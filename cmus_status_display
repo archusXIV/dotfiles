@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+output="$XDG_CONFIG_HOME/cmus/cmus_output"
+
+while test $# -ge 2; do
+    eval _$1='$2'
+    shift
+    shift
+done
+
+if [[ -n $_title ]]; then
+    op="$_artist - $_title"
+else
+    op="${_file##*/}"
+    op="${op%.*}"
+fi
+
+echo "$op" > "$output"
+
+sleep 0.3
+
+# This sends a polybar hook to execute
+# hook-0
+polybar-msg hook cmus-ipc 1 > /dev/null 2>&1

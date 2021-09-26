@@ -1,0 +1,66 @@
+#!/bin/bash
+
+_main() {
+
+    _warning
+
+    cd "$playlists_dir"
+    # We leave PS3 prompt empty for aesthetic reason.
+    PS3=""
+    echo ""
+    echo " ${green}In this section we will not rip the same way as streamripper does,"
+    echo " here the goal is to let you free to rip for hours if you wish (no separate tracks),"
+    echo " and also choose between 4 output formats."
+    echo ""
+    echo " ${red}For this program to work properly, make sure your playlist files contain"
+    echo " these ocurences: File1 for .pls & #EXTM3U for .m3u."
+    echo ""
+    echo " ${green}Select a stream number to rip (Press 'q' to quit ffmpeg): ${color_off}"
+    echo ""
+    # Set a clean streams list.
+    select stream in $(find "$playlists_dir" -name "*.pls" -o -name "*.m3u" | sort | sed 's,.*/,,'); do
+        echo ""
+        read -rp 'Now select an output format [1 = mp3/320k] [2 = flac/lossless] [3 = wav/~3000k] [4 = ogg/320k]: ' rip2
+
+        # Let's call our encoder functions
+        case $rip2 in
+            1) _rip2mp3  ;;
+            2) _rip2flac ;;
+            3) _rip2wav  ;;
+            4) _rip2ogg  ;;
+            *) echo " ${red}UNKNOWN FORMAT !!! Try again.${color_off}"
+               sleep 3s
+               clear
+               _streamripper_choice
+            ;;
+        esac
+
+        echo ""
+        echo " ${green}---------------------------------- END OF FFMPEG OUTPUT ---------------------------------------- ${color_off}"
+        echo ""
+        read -rp 'Rename the recording manually? [Yes = 1] [No = 2] or autorename [3]: ' name
+
+        # To rename the new file we prompt the user to copy & paste
+        # what we did extracted from the metadata (artist - title) using mediainfo.
+        # If autorename is chosen then the user isn't prompted.
+        case $name in
+            1) _renamer
+            ;;
+            2) _player
+            ;;
+            3) _autorenamer
+            ;;
+            *) echo " ${red}WRONG OPTION${color_off}" 
+               sleep 3s
+               clear
+               _streamripper_choice
+            ;;
+        esac
+
+        echo ""
+        break
+
+    done
+
+}
+

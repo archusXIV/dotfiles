@@ -1,0 +1,27 @@
+#!/bin/bash
+
+choice=$(printf "applications\\nautoscript\\nconfigs\\nfind\\nfonts\\nkeybindings\\npass\\nthemes\\nwindow" \
+        | rofi -normal-window -dmenu -i -p 'Rofi scripts' -no-show-icons -width 500 -lines 8 -location 0)
+
+[[ -z $choice ]] && exit
+
+case "$choice" in
+    applications) rofi_run -r &
+    ;;
+    autoscript) autoscript-menu &
+    ;;
+    configs) rofi_configs &
+    ;;
+    find) locate-files &
+    ;;
+    fonts) fontawesomemenu -f $HOME/Documents/theming/fa4-icon-list.txt &
+    ;;
+    keybindings) rofi_keybindings &
+    ;;
+    pass) passwd_copy &
+    ;;
+    themes) theme-selector &
+    ;;
+    window) rofi -modi window -show window -location 0 -width 850 &
+    ;;
+esac
