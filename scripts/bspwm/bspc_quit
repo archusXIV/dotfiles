@@ -1,0 +1,18 @@
+#!/bin/bash
+
+declare -a proc=("polybar" \
+                "sxhkd" \
+                "sxhkd-watcher" \
+                "bspwm_backnforth" \
+                "bspc-layout" \
+                "python" \
+                "urxvtd")
+
+for i in "${proc[@]}"; do
+    kill -KILL "$(pgrep -f "$i")"
+done
+
+powerline-daemon --kill
+systemctl --user stop {at-spi-dbus-bus,dunst,firefox-profile@xg1a4enm.default,mpd,mpv-ipc,pulseaudio}
+bspc quit
+

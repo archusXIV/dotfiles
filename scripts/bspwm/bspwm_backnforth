@@ -1,0 +1,13 @@
+#!/bin/bash
+
+bspc subscribe node_remove | \
+    while read -r; do
+        if [[ -z $(bspc query -N -n .local.focused) ]]; then
+            for win in $(bspc query -N -n .leaf.local.!window); do
+                bspc node "$win" -k
+            done
+            bspc desktop -f last.local.occupied \
+            || bspc desktop -f last.occupied
+        fi
+    done &
+

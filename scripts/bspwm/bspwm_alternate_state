@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Mnemonics for shorter options:
+# n* == nodes    
+# *f == fullscreen
+# *p == pseudo-tiled
+# *s == floating
+# *t == tiled
+
+case "$1" in
+    -nf|--node-fullscreen)
+        [ -n "$(bspc query -N -n focused.fullscreen)" ] \
+        && bspc node focused -t tiled \
+        || bspc node focused -t fullscreen
+    ;;
+    -np|--node-pseudo_tiled)
+        [ -n "$(bspc query -N -n focused.pseudo_tiled)" ] \
+        && bspc node focused -t tiled \
+        || bspc node focused -t pseudo_tiled
+    ;;
+    -ns|--node-floating)
+        [ -n "$(bspc query -N -n focused.floating)" ] \
+        && bspc node focused -t tiled \
+        || bspc node focused -t floating
+    ;;
+    -nt|--node-tiled)
+        [ -n "$(bspc query -N -n focused.tiled)" ] \
+        && bspc node focused -t pseudo_tiled \
+        || bspc node focused -t tiled
+    ;;
+esac

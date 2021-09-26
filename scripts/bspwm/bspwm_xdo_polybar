@@ -1,0 +1,16 @@
+#!/bin/bash
+
+if [[ -n $(pidof nvidia-persistenced) ]]; then
+
+    xdo below -t "$(xdo id -n root)" "$(xdo id -a polybar-bspwm-bar-1_DP-0)"
+    xdo below -t "$(xdo id -n root)" "$(xdo id -a polybar-bspwm-bar-2_HDMI-0)"
+    xdo below -t "$(xdo id -n root)" "$(xdo id -a polybar-bspwm-bar-3_DVI-D-0)"
+
+else
+
+    xdo below -t "$(xdo id -n root)" "$(xdo id -a polybar-bspwm-bar-1_DP-1)"
+    xdo below -t "$(xdo id -n root)" "$(xdo id -a polybar-bspwm-bar-2_HDMI-1)"
+    xdo below -t "$(xdo id -n root)" "$(xdo id -a polybar-bspwm-bar-3_DVI-D-1)"
+
+fi
+

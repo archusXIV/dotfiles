@@ -1,0 +1,16 @@
+#!/bin/bash
+
+swap="$XDG_RUNTIME_DIR/bspwmdtop_swap"
+
+case "$1" in
+
+    -cd|--copy-desktop)
+        echo "$(bspc query -D -d)" > "$swap"
+        ;;
+    -pd|--paste-desktop)
+        for win in $(bspc query -N -d $(cat "$swap")); do
+            bspc node $win -d $(bspc query -D -d)
+        done
+        ;;
+esac
+
