@@ -1,0 +1,159 @@
+#!/bin/bash
+
+#### BSPWM CONFIGURATION FILE ####
+
+_main() {
+
+    #### MONITORS & DESKTOP SETTINGS ####
+    # In case you want to swap monitors: bspc monitor DP-0 -s HDMI-0
+    # $MONITOR{1,2,3} are environment variables.
+
+    bspc monitor $MONITOR1 -d 1 2 3 4
+    bspc monitor $MONITOR2 -d 5 6 7
+    bspc monitor $MONITOR3 -d 8 9 10
+
+    # External scripts.
+    _check sxhkd-start && sxhkd-start &
+    _check bspwm_xdo_polybar && bspwm_xdo_polybar
+    _check bspwm_backnforth && {
+        if [[ -n $(pidof -x bspwm_backnforth) ]]; then
+            killall -q bspwm_backnforth
+            bspwm_backnforth
+        else
+            bspwm_backnforth
+        fi
+    }
+    _check bspwm_external_rules && \
+        bspc config external_rules_command \
+            "$(command -v bspwm_external_rules)"
+
+    #### DESKTOP LAYOUTS (tiled is the default) ####
+
+    bspc desktop 1 -l monocle
+
+    bsp-layout set wide 8
+    bsp-layout set wide 10
+
+    #### BSPC CONFIG CALLS ####
+
+    for opts in "automatic_scheme alternate" \
+                "border_width 1" \
+                "borderless_monocle true" \
+                "bottom_padding 0" \
+                "click_to_focus button1" \
+                "center_pseudo_tiled true" \
+                "focus_follows_pointer true" \
+                "gapless_monocle true" \
+                "ignore_ewmh_focus false" \
+                "left_padding 0" \
+                "pointer_modifier mod4" \
+                "pointer_follows_monitor true" \
+                "pointer_follows_focus true" \
+                "pointer_action1 move" \
+                "pointer_action2 resize_side" \
+                "pointer_action3 resize_corner" \
+                "presel_feedback true" \
+                "right_padding 0" \
+                "single_monocle false" \
+                "split_ratio 0.52" \
+                "top_padding 24" \
+                "window_gap 5"
+    do
+        # we want term splitting, so we don't quote here.
+        # shellcheck disable=SC2086
+
+        set -- $opts
+        bspc config "$@"
+    done
+
+    #### BSPC CONFIG COLORS (see _getcolors function) ####
+    # RESOURCES_FILE is an environment variable
+
+    [[ -f $RESOURCES_FILE ]] && _getcolors
+
+    #### BSPWM SPECIFIC CURSOR SHAPE ####
+
+    xsetroot -cursor_name left_ptr
+
+    #### APPS RULES & ASSIGNMENTS ####
+    # If refreshing bspwmrc, remove all previous rules
+    # to prevent doubling up.
+    bspc rule -r "*"
+
+    declare -a floating=( "Alacritty" "Confirm" "Five-or-more" "G213colors-gui" \
+                        "mpv" "Nitrogen" "Nm-connection-editor" \
+                        "Pavucontrol" "Pulseaudio-equalizer-gtk" \
+                        "qt5ct" "Rofi" "Sol" "URxvt:pulsemixer" "URxvt:pacman-cli" )
+
+    for i in "${floating[@]}"; do
+        _rules "$i" state=floating focus=on center=on
+    done
+
+    declare -a systemui=( "Lxappearance" "Fpm2" "Gnome-disks" \
+                        "Gufw.py" "GParted" "URxvt:search_install" )
+
+    for i in "${systemui[@]}"; do
+        _rules "$i" desktop=^3 follow=on state=floating center=on
+    done
+
+    # Monitor 1
+    _rules firefox              desktop=^1 follow=on
+    _rules URxvt:mpv-menu       desktop=^1 follow=on
+    _rules Pcmanfm              desktop=^2 follow=on
+    _rules File-roller          desktop=^2 follow=on
+    _rules Filezilla            desktop=^2 follow=on
+    _rules feh                  desktop=^4 follow=on state=fullscreen
+    _rules Nitrogen             desktop=^4 follow=on
+    _rules Zathura              desktop=^4 follow=on
+    _rules SimpleScreenRecorder desktop=^4 follow=on marked=on
+    _rules qv4l2                desktop=^4 follow=on
+    _rules Mumble               desktop=^4 follow=on state=floating
+
+    # Monitor 2
+    _rules Geany                desktop=^5 follow=on
+    _rules lite-xl              desktop=^5 follow=on
+    _rules mpv                  desktop=^6 follow=on
+    _rules URxvt:youtube        desktop=^6 follow=on
+    _rules VirtualBox           desktop=^6 follow=on
+    _rules qvidcap              desktop=^6 follow=on
+    _rules Five-or-more         desktop=^7 follow=on state=floating
+    _rules Sol                  desktop=^7 follow=on state=floating
+
+    # Monitor 3
+    _rules URxvt:ncmpcpp        desktop=^8 follow=on
+    _rules URxvt:ncmpvc         desktop=^8 follow=on
+    _rules URxvt:pulsemixer     desktop=^8 follow=on
+    _rules URxvt:cmus           desktop=^8 follow=on
+    _rules URxvt:ripper         desktop=^8 follow=on
+    _rules URxvt:htop           desktop=^9 follow=on
+    _rules URxvt:jnettop        desktop=^9 follow=on
+    _rules URxvt:newsboat       desktop=^9 follow=on
+    _rules URxvt:mutt           desktop=^9 follow=on
+    _rules URxvt:packagelist    desktop=^10 follow=on
+    _rules XTerm                desktop=^10 follow=on
+
+}
+
+_check() { command -v "$1" >/dev/null; }
+
+_getcolors() {
+
+    local red blu mag cyn
+
+    red="$(xrdb -query | awk '/color1:/{print $NF}')"
+    blu="$(xrdb -query | awk '/color4:/{print $NF}')"
+    mag="$(xrdb -query | awk '/color5:/{print $NF}')"
+    bkg="$(xrdb -query | awk '/background:/{print $NF}')"
+
+    bspc config active_border_color   "$bkg"
+    bspc config focused_border_color  "$blu"
+    bspc config normal_border_color   "$mag"
+    bspc config presel_feedback_color "$red"
+
+}
+
+_rules() { bspc rule -a "$@"; }
+
+_main "${@}"
+
+bspc desktop --focus ^1
