@@ -1,9 +1,0 @@
-#!/bin/sh
-# file-finder and opener based on dmenu
-# deps: dmenu, xdg-utils
-
-rc="$HOME/.config/dmenu/dmenurc"
-
-[ -f "$rc" ] && . "$rc"
-
-find ~ | sed 's/ /\\ /g' | sort -f | dmenu -i -l 20 $DMENU_OPTIONS -p 'finder: '| xargs xdg-open
