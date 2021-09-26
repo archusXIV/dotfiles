@@ -1,0 +1,81 @@
+;#########################################################
+;################   archangel' polybar   #################
+;#########################################################
+;
+;                ▗▖                       ▗▄▖
+;                ▐▌                       ▝▜▌
+;  ▟██▖ █▟█▌ ▟██▖▐▙██▖ ▟██▖▐▙██▖ ▟█▟▌ ▟█▙  ▐▌
+;  ▘▄▟▌ █▘  ▐▛  ▘▐▛ ▐▌ ▘▄▟▌▐▛ ▐▌▐▛ ▜▌▐▙▄▟▌ ▐▌
+; ▗█▀▜▌ █   ▐▌   ▐▌ ▐▌▗█▀▜▌▐▌ ▐▌▐▌ ▐▌▐▛▀▀▘ ▐▌
+; ▐▙▄█▌ █   ▝█▄▄▌▐▌ ▐▌▐▙▄█▌▐▌ ▐▌▝█▄█▌▝█▄▄▌ ▐▙▄
+;  ▀▀▝▘ ▀    ▝▀▀ ▝▘ ▝▘ ▀▀▝▘▝▘ ▝▘ ▞▀▐▌ ▝▀▀   ▀▀
+;                                ▜█▛▘
+;
+;=====================================================
+;     File Includes
+;=====================================================
+
+[section/base]
+include-file = /home/archangel/.config/polybar/bars.conf
+include-file = /home/archangel/.config/polybar/active-modules-wm.conf
+include-file = /home/archangel/.config/polybar/active-modules-bar1.conf
+include-file = /home/archangel/.config/polybar/active-modules-bar2.conf
+include-file = /home/archangel/.config/polybar/active-modules-bar3.conf
+
+;=====================================================
+;     Colors & Settings
+;=====================================================
+[xresources]
+background = ${xrdb:background:#1A2833}
+background-alt = {xrdb:color0:#152028}
+foreground = ${xrdb:foreground:#6296BF}
+foreground-alt = ${xrdb:color15:#CEC7F0}
+blk = ${xrdb:color0:#152028}
+blk2 = ${xrdb:color8}
+red = ${xrdb:color1:#FF4747}
+red2 = ${xrdb:color9}
+grn = ${xrdb:color2:#A6E074}
+grn2 = ${xrdb:color10}
+ylw = ${xrdb:color3:#DCA060}
+ylw2 = ${xrdb:color11}
+blu = ${xrdb:color4:#4F57BF}
+blu2 = ${xrdb:color12}
+mag = ${xrdb:color5:#BF5EAE}
+mag2 = ${xrdb:color13}
+cyn = ${xrdb:color6:#5EA7BF}
+cyn2 = ${xrdb:color14}
+wht = ${xrdb:color7:#CEC7F0}
+wht2 = ${xrdb:color15}
+
+[colors]
+; border color must be set,
+; for polybar to work.
+border = ${xrdb:background:#1A2833}
+muted = #D33C28
+trim = #345066
+background = ${xrdb:background:#1A2833}
+foreground = #6296BF
+black = #152028
+red = #FF4747
+green = #A6E074
+yellow = #DCA060
+blue = #4F57BF
+magenta = #BF5EAE
+cyan = #5EA7BF
+white = #CEC7F0
+
+[settings]
+throttle-output = 5
+throttle-output-for = 10
+;throttle-input-for = 30
+compositing-background = source
+compositing-foreground = source
+compositing-overline = source
+compositing-underline = source
+compositing-border = source
+screenchange-reload = true
+format-foreground = ${xresources.foreground}
+format-foreground-alt = ${xresources.foreground-alt}
+format-background = ${xresources.background}
+format-background-alt = ${xresources.background-alt}
+overline-color = ${xresources.foreground}
