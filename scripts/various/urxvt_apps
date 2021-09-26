@@ -1,0 +1,28 @@
+#!/bin/bash
+
+case "$1" in
+    -c) urxvtc -name cmus -e cmus
+    ;;
+    -d) urxvtc -name mpv-menu -e mpv-menu
+    ;;
+    -e) urxvtc -name mutt -e neomutt
+    ;;
+    -h) urxvtc -name htop -e htop -u archangel -s Command
+    ;;
+    -j) urxvtc -name jnettop -e sudo jnettop -i enp7s0
+    ;;
+    -m) urxvtc -name pulsemixer -e pulsemixer
+    ;;
+    -n) urxvtc -name ncmpcpp -e ncmpcpp -S clock --quiet
+    ;;
+    -p) urxvtc -name packagelist -e packagelist
+    ;;
+    -r) urxvtc -name newsboat -e newsboat
+    ;;
+    -s) urxvtc -name pacman-cli -e pacman-cli
+    ;;
+    -x) urxvtc -name ripper -e xtreamripper
+    ;;
+    -y) urxvtc -name youtube -e youtube-viewer
+    ;;
+esac

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+dmenu_file="$HOME/.config/dmenu/dmenurc"
+dmenuresources="DMENU_NB DMENU_NF DMENU_SB DMENU_SF"
+
+for r in $dmenuresources; do
+  xrvar=$(xrdb -query | awk -v reso=$r '$1~reso{print $2}')
+  sed -i --follow-symlinks "/$r="/c\\$r="$xrvar" "$dmenu_file"
+done

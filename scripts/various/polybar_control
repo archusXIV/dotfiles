@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# Manage polybar instances individually,
+# depending on their pids.
+# -r: Restarts the bar(s).
+# -t: Toggles between the hidden and visible state.
+
+_bsp_fullscreen() {
+    if [[ -n $(bspc query -N -n .focused.tiled) ]]; then
+        bspc node focused -t fullscreen
+    else
+        bspc node focused -t tiled
+    fi
+}
+
+_i3_fullscreen() { i3-msg fullscreen toggle; }
+
+if [[ -n $(pidof bspwm) ]]; then
+    pid1="$(pgrep --full "bspwm-bar-1")"
+    pid2="$(pgrep --full "bspwm-bar-2")"
+    pid3="$(pgrep --full "bspwm-bar-3")"
+
+    case "$1" in
+        -t1) polybar-msg -p "$pid1" cmd toggle && _bsp_fullscreen ;;
+        -t2) polybar-msg -p "$pid2" cmd toggle && _bsp_fullscreen ;;
+        -t3) polybar-msg -p "$pid3" cmd toggle && _bsp_fullscreen ;;
+        -r1) polybar-msg -p "$pid1" cmd restart ;;
+        -r2) polybar-msg -p "$pid2" cmd restart ;;
+        -r3) polybar-msg -p "$pid3" cmd restart ;;
+        -ra) $SCRIPTDIR/launch_polybar & ;;
+    esac
+elif [[ -n $(pidof i3) ]]; then
+    # I use i3 as a second wm choice
+    pid1="$(pgrep --full "i3-bar-1")"
+    pid2="$(pgrep --full "i3-bar-2")"
+    pid3="$(pgrep --full "i3-bar-3")"
+
+    case "$1" in
+        -t1) polybar-msg -p "$pid1" cmd toggle && _i3_fullscreen ;;
+        -t2) polybar-msg -p "$pid2" cmd toggle && _i3_fullscreen ;;
+        -t3) polybar-msg -p "$pid3" cmd toggle && _i3_fullscreen ;;
+        -r1) polybar-msg -p "$pid1" cmd restart ;;
+        -r2) polybar-msg -p "$pid2" cmd restart ;;
+        -r3) polybar-msg -p "$pid3" cmd restart ;;
+        -ra) $SCRIPTDIR/launch_polybar & ;;
+    esac
+else
+    echo "no bspwm or i3 session running" && exit 1
+fi

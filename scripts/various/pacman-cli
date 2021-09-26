@@ -1,0 +1,151 @@
+#!/bin/bash
+
+#    Author: Barret E (2021) <archus@protonmail.com>
+#    Dependencies: fzf, pacdiff, reflector, vim.
+#
+#    This script shows a menu to let you choose over severals pacman tools an options.
+#    In order to install or remove packages it uses fzf utility on the fancy side.
+#    We can also find and purge orphan packages, refresh our mirrorlist, purge the cache,
+#    edit pacman.conf/makepkg.conf and of course update the system.
+
+
+color_off=$'\e[0m';
+red=$'\e[0;31m';
+green=$'\e[0;32m';
+
+declare -a dependencies=( "fzf" "pacdiff" "reflector" "vim" )
+
+for i in "${dependencies[@]}"; do
+    [[ -z $(command -v "$i") ]] \
+    && echo " ${red}Missing dependencies...$i" \
+    && exit 1
+done
+
+_install() {
+    sudo pacman -Sy >/dev/null 2>&1
+    sudo pacman -Fy >/dev/null 2>&1
+    pacman -Slq \
+                | fzf --multi --preview 'cat <(sudo pacman -Si {1}) <(sudo pacman -Fl {1} | awk "{print \$2}")' \
+                | xargs -ro sudo pacman -S
+}
+
+_uninstall() {
+    pacman -Slq \
+                | fzf --multi --preview  'cat <(sudo pacman -Si {1}) <(sudo pacman -Fl {1} | awk "{print \$2}")' \
+                | xargs -ro sudo pacman -Rns
+}
+
+_orphans() {
+    echo ""
+    if [[ -n $(pacman -Qdqt) ]]; then
+        pacman -Qdqt
+        echo ""
+        echo " ${red}Would you like to purge orphan packages? [N/y]:${color_off}"
+        read -r purge
+        case "$purge" in
+            N|n|no ) _menu
+            ;;
+            y|Y|yes) sudo pacman -Rdd $(pacman -Qdqt) && sudo paccache -ruk0
+                    _menu
+            ;;
+            *      ) _menu
+            ;;
+        esac
+    else
+        echo " ${green}No orphan package found.${color_off}"
+        sleep 3s
+        _menu
+    fi
+}
+
+_reflector() {
+    PS3=""
+    echo ""
+    echo " ${green}Select your country code:"
+    echo " Example for France: 20 (FR)"
+    echo " More details in a terminal, type: ${color_off}reflector --list-countries"
+    echo ""
+    select code in $(reflector --list-countries \
+        | sed '1,2 d' \
+        | sed 's/Country//;s/Code//;s/Count//;s/Hong Kong/Hong-Kong/' \
+        | sed 's/New Caledonia/New-Caledonia/;s/New Zealand/New-Zealand/' \
+        | sed 's/South Africa/South-Africa/;s/South Korea/South-Korea/' \
+        | sed 's/United States/United-States/;s/United Kingdom/United-Kingdom/' \
+        | sed 's/North Macedonia/North-Macedonia/;s/Bosnia and Herzegovina/Bosnia-Herzegovina/' \
+        | awk '{print $2}'); do
+        sudo reflector \
+        --country "$code" \
+        --verbose \
+        --latest 10 \
+        --age 24 \
+        --protocol http \
+        --protocol https \
+        --sort rate \
+        --save /etc/pacman.d/mirrorlist
+        echo " ${green}New mirrorlist saved.${color_off}"
+        sleep 3s
+        break
+    done
+}
+
+_menu() {
+
+    clear
+    while [[ -f /etc/pacman.conf ]]; do
+        clear
+        echo ""
+        echo -e "                                           ::pacman options:: "
+        echo -e "                       ┌───────────────────────────────────────────────────────────┐"
+        echo -e "                       │    1) Search & Install          6) Update the system      │"
+        echo -e "                       │    2) Uninstall a package(s)    7) Pacdiff                │"
+        echo -e "                       │    3) List/Purge orphans        8) Edit pacman.conf       │"
+        echo -e "                       │    4) Purge the cache           9) Edit makepkg.conf      │"
+        echo -e "                       │    5) Update mirrors            0) Exit                   │"
+        echo -e "                       └───────────────────────────────────────────────────────────┘"
+        echo -e "                                             ${green}Select an item${color_off}"
+        echo ""
+        read -r option
+        case $option in
+            1)  _install
+                echo ""
+            ;;
+            2)  _uninstall
+                echo ""
+            ;;
+            3)  _orphans
+                echo ""
+            ;;
+            4)  sudo pacman -Scc
+                echo ""
+            ;;
+            5)  _reflector
+                echo ""
+            ;;
+            6)  sudo pacman -Syu
+                echo ""
+            ;;
+            7)  sudo pacdiff
+                echo ""
+            ;;
+            8)  sudo vim /etc/pacman.conf
+                echo ""
+            ;;
+            9)  sudo vim /etc/makepkg.conf
+                echo ""
+            ;;
+            0)  clear
+                exit
+            ;;
+            *)  echo -e " ${red} Wrong option ${color_off}"
+                echo " ${green}Wait and try again...${color_off}"
+                echo ""
+                sleep 2s
+                clear
+            ;;
+        esac
+    done
+
+}
+
+_menu
+

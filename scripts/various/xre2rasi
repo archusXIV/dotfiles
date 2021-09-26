@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+rasi_file="$HOME/.config/rofi/globals.rasi"
+resources="bag fog black redish green yellow blue magenta cyan white font1"
+
+for r in $resources; do
+  xrvar=$(xrdb -query | awk -v reso=$r '$1~reso{print $2}')
+  sed -i --follow-symlinks "/$r:/c\\$r: $xrvar\;" "$rasi_file"
+done
+
+fnt=$(xrdb -query | awk '/font1/{print $2}')
+fntsz=$(xrdb -query | awk '/fontsz1/{print $2}')
+sed -i --follow-symlinks "/font1:/c\font1: \"$fnt $fntsz\"\;" "$rasi_file"
+

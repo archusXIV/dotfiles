@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Dependency: awk, gawk or nawk, vim (set as VISUAL)
+confdir="$HOME/.config/CONFIGS"
+
+[ -d "$confdir" ] && cd "$confdir" || exit 1
+
+PS3="Enter a file number to Edit or Remove (^C to exit): "
+
+# set the configs list using the 'find' command for symbolic links.
+select link in $(find $confdir -type l | sort -d | sed 's,.*/,,'); do
+    echo "[E]dit or [R]emove $link?:"
+    read action
+    case "$action" in
+        E|e) $VISUAL "$link" && break
+        ;;
+        R|r) echo "Do you really want to REMOVE $link? [y/N]:"
+            read del
+            case $del in
+                y|yes|Y) rm "$link" && break
+                ;;
+                n|no|N) echo "Deletion aborted" && break
+                ;;
+                *) echo "Unknown option...deletion aborted" && exit 1
+                ;;
+            esac
+        ;;
+    esac
+done

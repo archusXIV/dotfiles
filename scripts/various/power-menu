@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Dependency: dmenu
+rc="$HOME/.config/dmenu/dmenurc"
+
+[[ -f "$rc" ]] && . "$rc"
+
+_main() {
+    # Possible actions
+    actions=('Lockscreen ' 'WM restart ' 'Exit ' 'Reboot ' 'Power off ')
+
+    choice="$(_list_actions)"
+
+    # Run the selected command.
+    case "$choice" in
+        E*) Xexit            ;;
+        L*) i3lock -c 1A2833 ;;
+        P*) _poweroff        ;;
+        R*) _reboot          ;;
+        W*) restart_wm       ;;
+    esac
+}
+
+_check_systemd() {
+    [[ -d /run/systemd/system ]] \
+        && sudo systemctl "$1" \
+        || sudo "$1"
+}
+
+_reboot() { _check_systemd 'reboot'; }
+
+
+_poweroff() { _check_systemd 'poweroff'; }
+
+
+_dynamic_menu() {
+    [[ -n $(command -v dmenu) ]] \
+        && dmenu -i $DMENU_OPTIONS -p 'Power options' \
+        || echo "dmenu command not found." && return 1
+}
+
+# List actions to choose from.  Output array items on a new line.
+_list_actions() {
+    printf '%s\n' "${actions[@]}" | _dynamic_menu
+}
+
+_main "${@}"

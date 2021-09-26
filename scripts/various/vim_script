@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# Dependencies: awk, gawk or nawk, vim (set as VISUAL).
+# SCRIPTDIR is part of the environment variables.
+
+[[ -d $SCRIPTDIR ]] && cd "$SCRIPTDIR" || exit 1
+
+PS3="Enter a script number to Chmod, Edit, Remove, or Rename: "
+
+# set the scripts list.
+# After edition we will be prompted again.
+
+select file in $(find "$SCRIPTDIR" -maxdepth 1 -type f | sort -d | sed 's,.*/,,'); do
+    echo ""
+    read -rp '[C]hmod, [E]dit, [R]emove, [r]ename the chosen script or QUIT [q]: ' action
+    case "$action" in
+        C|c)    chmod +x "$file" && break
+        ;;
+        E|e)    $VISUAL "$file" && break
+        ;;
+        R  )    echo "remove $file? [y/N]:"
+                read -r del
+                case $del in
+                    y|yes|Y) rm "$file" && echo "$file removed" && break
+                    ;;
+                    n|no|N) echo "Deletion aborted" && break
+                    ;;
+                    *) echo "Unknown option...deletion aborted" && exit 1
+                    ;;
+                esac
+        ;;
+        r  )    echo "rename $file:"
+                read -r name
+                mv "$file" "$name"
+                echo "$file renamed to: $name" && break
+        ;;
+        q)  exit 0
+        ;;
+    esac
+done
+

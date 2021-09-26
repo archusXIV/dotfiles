@@ -1,0 +1,7 @@
+#!/bin/bash
+
+rc="$HOME/.config/dmenu/dmenurc"
+
+[ -f "$rc" ] && . "$rc"
+
+command cd && ls -a | dmenu -i -l 20 $DMENU_OPTIONS | xargs -I {} pcmanfm "{}" &

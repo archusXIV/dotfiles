@@ -1,0 +1,11 @@
+#!/bin/bash
+
+declare -a units=( "at-spi-dbus-bus" "dbus" "dunst" \
+                "firefox-profile@xg1a4enm.default" "gvfs-daemon" \
+                "mpd" "mpv-ipc" "pulseaudio" )
+
+for i in "${units[@]}"; do
+    systemctl --user stop "$i"
+done
+
+pkill -9 -u $USER

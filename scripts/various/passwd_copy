@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# This script will copy your username and password
+# (from a text file) in the clipboard so you can paste them somewhere.
+# Account: username password
+
+list="$HOME/Documents/.admin/pass/pass.txt"
+
+_copy() {
+    cat $list | grep $selected | awk '{print $2" "$3}' | xclip -sel clip
+}
+
+selected=$(awk '{print $1}' $list | rofi \
+                            -normal-window \
+                            -dmenu \
+                            -columns 2 \
+                            -width 30 \
+                            -hide-scrollbar \
+                            -line-padding 2 \
+                            -padding 20 \
+                            -lines 10 \
+                            -p "Choose an account ")
+[[ -z $selected ]] && exit
+
+_copy "$selected"
+

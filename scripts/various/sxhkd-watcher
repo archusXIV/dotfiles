@@ -1,0 +1,18 @@
+#!/bin/bash
+
+pipe="$XDG_RUNTIME_DIR/sxhkd.fifo"
+keys="$XDG_RUNTIME_DIR/keys.txt"
+
+while read line <$pipe
+do
+    if [[ "$line" == 'EEnd chain' ]]; then
+        echo "$line" > "$keys"
+        polybar-msg hook sxhkd-ipc 2 >/dev/null 2>&1
+    elif [[ "$line" == 'BBegin chain' ]]; then
+        echo "$line" > "$keys"
+        polybar-msg hook sxhkd-ipc 1 >/dev/null 2>&1
+    else
+        echo "$line" > "$keys"
+        polybar-msg hook sxhkd-ipc 3 >/dev/null 2>&1
+    fi
+done

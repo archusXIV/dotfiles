@@ -1,0 +1,120 @@
+#!/bin/bash
+
+# Dependencies: pacman-contrib to use rankmirrors.
+# Optional    : polybar, i3blocks
+
+mirr="/etc/pacman.d/mirrorlist"
+bckp="/etc/pacman.d/mirrorlist_bckp"
+criteria="(linux|linux-lts|nvidia|nvidia-lts|mesa|systemd|amd-ucode|xf86-video|xorg)"
+nocolor=$'\e[0m';
+red=$'\e[0;31m';
+green=$'\e[0;32m';
+
+# checking dependencies
+for i in checkupdates polybar prompt_YES prompt_NO; do
+    [[ -z $(command -v $i) ]] && exit 1
+done
+
+_reboot() {
+    cp -f "$mirr" "$bckp"
+    rankmirrors --verbose -n 6 "$bckp" > "$mirr"
+    pacman -Syu
+    grub-mkconfig -o /boot/grub/grub.cfg
+    reboot
+}
+
+_noreboot() {
+    cp -f "$mirr" "$bckp"
+    rankmirrors --verbose -n 6 "$bckp" > "$mirr"
+    pacman -Syu
+    grub-mkconfig -o /boot/grub/grub.cfg
+
+    if [[ -n $(pidof polybar) ]]; then
+        polybar-msg hook updates-ipc 2 > /dev/null 2>&1
+    elif [[ -n $(pidof i3blocks) ]]; then
+        pkill -SIGRTMIN+10 i3blocks > /dev/null 2>&1
+    else
+        echo "no running bars found" && exit 1
+    fi
+    exit
+}
+
+_poweroff() {
+    cp -f "$mirr" "$bckp"
+    rankmirrors --verbose -n 6 "$bckp" > "$mirr"
+    pacman -Syu
+    grub-mkconfig -o /boot/grub/grub.cfg
+    poweroff
+}
+
+_prompt() {
+    local screenprompt key default opts status
+
+    default=y
+    opts=yn
+
+    [[ $1 =~ -([${opts}]) ]] \
+        && default="${BASH_REMATCH[1]}" && shift
+
+    screenprompt="$* [${default^^}/${opts/$default/}]"
+
+    if [[ -t 2 ]]; then
+        >&2 echo "$screenprompt"
+
+        while :; do
+            read -rsn 1
+
+            key="${REPLY:-$default}"
+            [[ $key =~ [${opts}] ]] || continue
+            break
+        done
+    else
+        key="$default"
+    fi
+
+    [[ ${key,,} = n ]] && status=1
+
+    return "${status:-0}"
+}
+
+_criteria() {
+    # default is reboot.
+    # by pressing Enter we will get the default action.
+    echo ""
+    _prompt -n "Do you wish to ${red}poweroff ${nocolor}after updates?" || {
+        _prompt "Do you wish to ${red}reboot ${nocolor}after updates?" || {
+            _noreboot
+        }
+        _reboot
+    }
+    _poweroff
+}
+
+_nocriteria() {
+    # Here the default is '_noreboot'.
+    echo ""
+    _prompt -n "Do you wish to ${red}poweroff ${nocolor}after updates?" || {
+        _noreboot
+    }
+    _poweroff
+}
+
+if [[ ! -f $mirr ]]; then
+    reflector \
+    -c 'France' \
+    -l 10 \
+    -a 24 \
+    --protocol http \
+    --protocol https \
+    --sort rate \
+    --save "$mirr"
+fi
+
+if [[ $(checkupdates) =~ $criteria ]]; then
+    echo " ${red}REBOOT NEEDED !${nocolor}"
+    _criteria
+else
+    echo " ${green}NO REBOOT NEEDED !${nocolor}"
+    _nocriteria
+fi
+
