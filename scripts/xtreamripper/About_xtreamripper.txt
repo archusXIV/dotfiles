@@ -1,4 +1,4 @@
-About rofi-record:
+About xtreamripper:
 
 All files in this folder are functions that call each other so for this program to work properly,
 they must be placed in the same directory.
