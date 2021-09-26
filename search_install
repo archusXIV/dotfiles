@@ -1,6 +1,0 @@
-#!/bin/bash
-
-sudo pacman -Sy
-sudo pacman -Fy
-sudo pacman -Slq | fzf --multi --preview 'cat <(sudo pacman -Si {1}) <(sudo pacman -Fl {1} | awk "{print \$2}")' | xargs -ro sudo pacman -S
-
