@@ -1,0 +1,6 @@
+About rofi-record:
+
+All files in this folder are functions that call each other so for this program to work properly,
+they must be placed in the same directory.
+Only the script should be executable, not necessarily the functions themselves.
+In a terminal just type 'xtreamripper'.
