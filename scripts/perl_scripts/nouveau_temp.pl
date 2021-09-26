@@ -1,5 +1,7 @@
 #!/usr/bin/env perl
 
+# use this script with nouveau driver for nvidia cards
+
 use strict;
 use warnings;
 use utf8;
