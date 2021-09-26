@@ -1,3 +1,3 @@
 # dotfiles
 
-Some configs and scripts (mostly whritten in bash) from my Linux machine.
+Some configs and scripts (mostly written in bash) from my Linux machine.
