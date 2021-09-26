@@ -1,0 +1,13 @@
+* {
+bag: #1e1f29;
+fog: #a5a7a5;
+black: #000000;
+redish: #D43838;
+green: #A0CC7A;
+yellow: #cfb27a;
+blue: #424D9A;
+magenta: #85678f;
+cyan: #8be9fd;
+white: #B3B6BF;
+font1: "Hack-Regular 11";
+}

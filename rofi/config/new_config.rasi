@@ -1,0 +1,131 @@
+/**
+ * Author: Primetoxinz & ManyRoads
+ *
+/**
+
+* {
+    text-color:             #E5E9F0;
+    background-color:       #2E3440;
+    lightbg:                #434C5E;
+    red:                    #BF616A;
+    purple:                 #B48EAD;
+    blue:                   #81A1C1;
+    foreground:				#ECEFF4;
+    background:				#2E3440;
+    width: 					480;
+	lines: 					15;
+
+    selected-normal-foreground:  @foreground;
+    normal-foreground:           @foreground;
+    alternate-normal-background: @background;
+    selected-urgent-foreground:  @foreground;
+    urgent-foreground:           @foreground;
+    alternate-urgent-background: @background;
+    active-foreground:           @foreground;
+    selected-active-foreground:  @foreground;
+    alternate-normal-foreground: @foreground;
+    alternate-active-background: @blue;
+    bordercolor:                 @blue;
+    normal-background:           @background;
+    selected-normal-background:  @blue;
+    separatorcolor:              @purple;
+    spacing:                     5;
+    urgent-background:           @red;
+    alternate-urgent-foreground: @foreground;
+    selected-urgent-background:  @red;
+    alternate-active-foreground: @foreground;
+    selected-active-background:  @blue;
+    active-background:           @purple;
+}
+window {
+    border:     2;
+    text-color: @foreground;
+    padding:    2;
+    text-color: @bordercolor;
+    background-color: @background;
+    border-radius: 10px;  /* works with compositor */
+}
+mainbox {
+    border:  1;
+    padding: 5;
+}
+message {
+    border:     10;
+    text-color: @separatorcolor;
+    padding:    10 ;
+}
+textbox {
+    text-color: @foreground;
+}
+listview {
+    fixed-height: 0;
+    border:       1;
+    padding:      5;
+    text-color: @separatorcolor;
+}
+element {
+    border:       1;
+    padding:      3;
+}
+element-icon {
+  margin: 0 15px 0 10px;
+}
+element-text {
+    background-color: inherit;
+    text-color:       inherit;
+}
+element.normal.normal {
+    text-color: @normal-foreground;
+    background-color: @normal-background;
+}
+element.normal.urgent {
+    text-color: @urgent-foreground;
+    background-color: @urgent-background;
+}
+element.normal.active {
+    text-color: @active-foreground;
+    background-color: @active-background;
+}
+element.selected.normal {
+    text-color: @selected-normal-foreground;
+    background-color: @selected-normal-background;
+}
+element.selected.urgent {
+    text-color: @selected-urgent-foreground;
+    background-color: @selected-urgent-background;
+}
+element.selected.active {
+    text-color: @selected-active-foreground;
+    background-color: @selected-active-background;
+}
+element.alternate.normal {
+    text-color: @alternate-normal-foreground;
+    background-color: @alternate-normal-background;
+}
+element.alternate.urgent {
+    text-color: @alternate-urgent-foreground;
+    background-color: @alternate-urgent-background;
+}
+element.alternate.active {
+    text-color: @alternate-active-foreground;
+    background-color: @alternate-active-background;
+}
+mode-switcher {
+    border: 1px dash 0px 0px ;
+}
+button selected {
+    text-color: @selected-normal-foreground;
+    background-color: @selected-normal-background;
+}
+button normal {
+    text-color: @foreground;
+}
+inputbar {
+     children: [textbox-prompt-colon,entry];
+ }                                                                     
+textbox-prompt-colon {                                                
+     text-color: inherit;                                              
+     expand: true;                                                    
+     margin: 0 0em 0em 0em;                                          
+     str: "Search:";
+ }
