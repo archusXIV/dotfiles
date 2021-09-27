@@ -155,7 +155,7 @@ $Super+$Ctl+q kill
 # close focused window
 $Super+q $ensi xdo close
 
-# close all windows with the same class
+# close all windows with the same WM_CLASS
 $Super+$Alt+$Ctl+c $ensi xdo close -c
 
 # fullscreen window
