@@ -16,10 +16,10 @@ amixer set Capture,0 0%,0% mute nocap >/dev/null 2>&1
 
 # Other settings
 if [[ -n $(pidof bspwm) ]]; then
-    launch_polybar &
+    launch_polybar
     nm-applet &
 elif [[ -n $(pidof i3) ]]; then
-    launch_polybar &
+    launch_polybar
     nm-applet &
 else
     notify-send 'This is Awesome'
