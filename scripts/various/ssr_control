@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Start simplescreenrecorder at least for 30 seconds...
 PIPE="/tmp/ssr-command-pipe"
 
 if [[ -p "$PIPE" ]]; then
