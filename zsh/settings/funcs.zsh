@@ -40,13 +40,13 @@ mano()
 }
 
 # remove a directory/file and refresh viewport
-rmd() { rm -r "$@" && ls -a --color=auto -F; }
+rmd() { rm -rf "$@" && ls -a --color=auto -F; }
 
 por()
 {
     local orphans
     orphans="$(pacman -Qtdq 2>/dev/null)"
-    [[ -z $orphans ]] && printf "System has no orphaned packages\n" || sudo pacman -Rns $orphans
+    [[ -z $orphans ]] && printf "System has no orphaned packages\n" || sudo pacman -Rdd $orphans
 }
 
 # find all webm files that are in the current directory/sub-folders and extract the audio to mp3 format.
