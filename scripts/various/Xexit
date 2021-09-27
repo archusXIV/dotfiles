@@ -8,4 +8,4 @@ for i in "${units[@]}"; do
     systemctl --user stop "$i"
 done
 
-pkill -9 -u $USER
+pkill -15 -u $USER
