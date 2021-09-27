@@ -1,6 +1,7 @@
 #!/bin/bash
 
 <<ABOUT
+ From Budrich, a nice swedish guy.
  This script parses the output of the command:
  pactl list sink-inputs, and echoes the name of the active player.
  If the player is "Corked" it is active but not
