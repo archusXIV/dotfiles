@@ -10,8 +10,8 @@ else
 fi
 ## MULTIMEDIA
 alias \
-        dr='dmenu-record' \
-        drk='dmenu-record -k' \
+        rr='rofi-record' \
+        rrk='rofi-record -k' \
         gif='byzanz-record -x 1090 -w 750 -y 430 -h 480 -v -d 15 ~/Videos/$(date +%a-%d-%S).gif' \
         nc='ncmpcpp -S clock --quiet' \
         mpm='mpv-menu' \
@@ -35,8 +35,8 @@ alias \
         uvl='updates-viewer --list' \
         vc='vim_conf' \
         vs='vim_script' \
-        w='curl -L wttr.in/Le-Perreux-sur-Marne' \
-        w2='curl v2d.wttr.in/Le-Perreux-sur-Marne?format=v2 --output "$XDG_RUNTIME_DIR"/weather && cat "$XDG_RUNTIME_DIR"/weather | grep Weather:' \
+        w='curl -L wttr.in/xxxxxxxxxxxxxxx' \
+        w2='curl v2d.wttr.in/xxxxxxxxxxxxxxx?format=v2 --output "$XDG_RUNTIME_DIR"/weather && cat "$XDG_RUNTIME_DIR"/weather | grep Weather:' \
         x='chmod +x' \
         xp='xprop | grep WM_CLASS'
 
