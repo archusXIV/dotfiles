@@ -11,7 +11,7 @@ red=$'\e[0;31m';
 green=$'\e[0;32m';
 
 # checking dependencies
-for i in checkupdates polybar prompt_YES prompt_NO; do
+for i in checkupdates polybar; do
     [[ -z $(command -v $i) ]] && exit 1
 done
 
