@@ -65,7 +65,7 @@ _reflector() {
     PS3=""
     echo ""
     echo " ${green}Select your country:"
-    echo " Example for France: 20 (FR)"
+    echo " Example for France: 20"
     echo " More details in a terminal, type: ${color_off}reflector --list-countries"
     echo ""
     select code in $(reflector --list-countries \
