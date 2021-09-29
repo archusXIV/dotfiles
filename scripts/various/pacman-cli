@@ -59,7 +59,7 @@ _orphans() {
 }
 
 # This not beautiful code here but if anyone knows how to print strings with spaces throught
-# a select loop and get rid of all the 'elif' lines,
+# a select loop and get rid of 'case statement' lines,
 # I'll be happy to rewrite this part.
 _reflector() {
     PS3=""
@@ -76,26 +76,17 @@ _reflector() {
         | sed 's/United States/United-States/;s/United Kingdom/United-Kingdom/' \
         | sed 's/North Macedonia/North-Macedonia/' | sed '6d' \
         | awk '{print $1}'); do
-        
-        if [[ $code == 'Hong-Kong' ]]; then
-            code='Hong Kong'
-        elif [[ $code == 'New-Caledonia' ]]; then
-            code='New Caledonia'
-        elif [[ $code == 'New-Zealand' ]]; then
-            code='New Zealand'
-        elif [[ $code == 'New-Zealand' ]]; then
-            code='New Zealand'
-        elif [[ $code == 'North-Macedonia' ]]; then
-            code='North Macedonia'
-        elif [[ $code == 'South-Africa' ]]; then
-            code='South Africa'
-        elif [[ $code == 'South-Korea' ]]; then
-            code='South Korea'
-        elif [[ $code == 'United-Kingdom' ]]; then
-            code='United Kingdom'
-        elif [[ $code == 'United-States' ]]; then
-            code='United States'
-        fi
+
+        case "$code" in
+            Hong-Kong      ) code='Hong Kong'       ;;
+            New-Caledonia  ) code='New Caledonia'   ;;
+            New-Zealand    ) code='New Zealand'     ;;
+            North-Macedonia) code='North Macedonia' ;;
+            South-Africa   ) code='South Africa'    ;;
+            South-Korea    ) code='South Korea'     ;;
+            United-Kingdom ) code='United Kingdom'  ;;
+            United-States  ) code='United States'   ;;
+        esac
 
         sudo reflector \
         --country "$code" \
@@ -105,7 +96,7 @@ _reflector() {
         --protocol http \
         --protocol https \
         --sort rate \
-        --save /etc/pacman.d/mirrorslist
+        --save /etc/pacman.d/mirrorlist
         echo " ${green}New mirrorlist saved.${color_off}"
         sleep 3s
         break
