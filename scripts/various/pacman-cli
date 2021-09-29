@@ -58,21 +58,45 @@ _orphans() {
     fi
 }
 
+# This not beautiful code here but if anyone knows how to print strings with spaces throught
+# a select loop and get rid of all the 'elif' lines,
+# I'll be happy to rewrite this part.
 _reflector() {
     PS3=""
     echo ""
-    echo " ${green}Select your country code:"
+    echo " ${green}Select your country:"
     echo " Example for France: 20 (FR)"
     echo " More details in a terminal, type: ${color_off}reflector --list-countries"
     echo ""
     select code in $(reflector --list-countries \
         | sed '1,2 d' \
-        | sed 's/Country//;s/Code//;s/Count//;s/Hong Kong/Hong-Kong/' \
+        | sed 's/Hong Kong/Hong-Kong/' \
         | sed 's/New Caledonia/New-Caledonia/;s/New Zealand/New-Zealand/' \
         | sed 's/South Africa/South-Africa/;s/South Korea/South-Korea/' \
         | sed 's/United States/United-States/;s/United Kingdom/United-Kingdom/' \
-        | sed 's/North Macedonia/North-Macedonia/;s/Bosnia and Herzegovina/Bosnia-Herzegovina/' \
-        | awk '{print $2}'); do
+        | sed 's/North Macedonia/North-Macedonia/' | sed '6d' \
+        | awk '{print $1}'); do
+        
+        if [[ $code == 'Hong-Kong' ]]; then
+            code='Hong Kong'
+        elif [[ $code == 'New-Caledonia' ]]; then
+            code='New Caledonia'
+        elif [[ $code == 'New-Zealand' ]]; then
+            code='New Zealand'
+        elif [[ $code == 'New-Zealand' ]]; then
+            code='New Zealand'
+        elif [[ $code == 'North-Macedonia' ]]; then
+            code='North Macedonia'
+        elif [[ $code == 'South-Africa' ]]; then
+            code='South Africa'
+        elif [[ $code == 'South-Korea' ]]; then
+            code='South Korea'
+        elif [[ $code == 'United-Kingdom' ]]; then
+            code='United Kingdom'
+        elif [[ $code == 'United-States' ]]; then
+            code='United States'
+        fi
+
         sudo reflector \
         --country "$code" \
         --verbose \
@@ -81,7 +105,7 @@ _reflector() {
         --protocol http \
         --protocol https \
         --sort rate \
-        --save /etc/pacman.d/mirrorlist
+        --save /etc/pacman.d/mirrorslist
         echo " ${green}New mirrorlist saved.${color_off}"
         sleep 3s
         break
