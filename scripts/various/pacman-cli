@@ -68,7 +68,7 @@ _reflector() {
     echo " Example for France: 19"
     echo " More details in a terminal, type: ${color_off}reflector --list-countries"
     echo ""
-    select code in $(reflector --list-countries \
+    select country in $(reflector --list-countries \
         | sed '1,2 d' \
         | sed 's/Hong Kong/Hong-Kong/;s/North Macedonia/North-Macedonia/' \
         | sed 's/New Caledonia/New-Caledonia/;s/New Zealand/New-Zealand/' \
@@ -76,7 +76,7 @@ _reflector() {
         | sed 's/United States/United-States/;s/United Kingdom/United-Kingdom/' \
         | sed '6d' | awk '{print $1}'); do
 
-        case "$code" in
+        case "$country" in
             Hong-Kong      ) code='Hong Kong'       ;;
             New-Caledonia  ) code='New Caledonia'   ;;
             New-Zealand    ) code='New Zealand'     ;;
@@ -88,7 +88,7 @@ _reflector() {
         esac
 
         sudo reflector \
-        --country "$code" \
+        --country "$country" \
         --verbose \
         --latest 10 \
         --age 24 \
