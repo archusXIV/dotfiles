@@ -59,8 +59,7 @@ _orphans() {
 }
 
 # This not beautiful code here but if anyone knows how to print strings with spaces throught
-# a select loop and get rid of 'case statement' lines,
-# I'll be happy to rewrite this part.
+# a select loop and get rid of 'sed & case statement' lines, I'll be happy to rewrite this part.
 _reflector() {
     PS3=""
     echo ""
@@ -150,7 +149,7 @@ _menu() {
             0)  clear
                 exit
             ;;
-            *)  echo -e " ${red} Wrong option ${color_off}"
+            *)  echo " ${red} Wrong option ${color_off}"
                 echo " ${green}Wait and try again...${color_off}"
                 echo ""
                 sleep 2s
