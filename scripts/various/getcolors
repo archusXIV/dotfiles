@@ -24,7 +24,7 @@ _usage() {
 
             The color numbers are set as: color0, color1 and so on until color15.
 
-            eg: $NAME 10     # Will provide the second green as such *.color10:	#XXXXXX
+            eg: getcolors 10     # Will provide the second green as such *.color10:	#XXXXXX
 
         COLOR-NAME/VARIABLE:
 
@@ -39,8 +39,8 @@ _usage() {
 
             examples:
 
-                name:     $NAME green2
-                variable: $NAME grn2
+                name:     getcolors green2
+                variable: getcolors grn2
 
 EOF
 }
