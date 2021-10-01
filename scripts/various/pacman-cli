@@ -68,7 +68,7 @@ _reflector() {
     echo " More details in a terminal, type: ${color_off}reflector --list-countries"
     echo ""
     select country in $(reflector --list-countries \
-        | sed '1d:2d;8d' \
+        | sed '1d;2d;8d' \
         | sed 's/Hong Kong/Hong-Kong/;s/North Macedonia/North-Macedonia/' \
         | sed 's/New Caledonia/New-Caledonia/;s/New Zealand/New-Zealand/' \
         | sed 's/South Africa/South-Africa/;s/South Korea/South-Korea/' \
