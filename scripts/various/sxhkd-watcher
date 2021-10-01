@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Another sxhkd listener script
+
 pipe="$XDG_RUNTIME_DIR/sxhkd.fifo"
 keys="$XDG_RUNTIME_DIR/keys.txt"
 
