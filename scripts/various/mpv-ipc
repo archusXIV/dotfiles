@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Run this script in the background
+
 metadata="$XDG_RUNTIME_DIR/mpv.txt"
 
 until [[ -n $(pidof mpv) ]]; do
@@ -13,7 +15,7 @@ until [[ -n $(pidof mpv) ]]; do
     while [[ -n $(pidof mpv) ]]; do
         picom & >/dev/null 2>&1
         [[ ! -f "$metadata" ]] && touch "$metadata"
-        echo '{ "command": ["get_property", "media-title"] }' \
+        echo '{ "command": ["get_property", "force-media-title"] }' \
         | socat - /tmp/mpvsocket | awk -F '"' '{print $4}' > "$metadata"
         polybar-msg hook mpv-ipc 2 >/dev/null 2>&1
         sleep 1s
