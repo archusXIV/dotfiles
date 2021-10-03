@@ -13,11 +13,11 @@ _main() {
 
     # Run the selected command.
     case "$choice" in
-        E*) Xexit            ;;
-        L*) i3lock -c 1A2833 ;;
-        P*) _poweroff        ;;
-        R*) _reboot          ;;
-        W*) restart_wm       ;;
+        E*) Xexit      ;; # external script
+        L*) scrot_lock ;; # external script
+        P*) _poweroff  ;;
+        R*) _reboot    ;;
+        W*) restart_wm ;; # external script
     esac
 }
 
