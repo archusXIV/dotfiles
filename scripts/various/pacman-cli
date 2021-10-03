@@ -76,14 +76,14 @@ _reflector() {
         | awk '{print $1}'); do
 
         case "$country" in
-            Hong-Kong      ) code='Hong Kong'       ;;
-            New-Caledonia  ) code='New Caledonia'   ;;
-            New-Zealand    ) code='New Zealand'     ;;
-            North-Macedonia) code='North Macedonia' ;;
-            South-Africa   ) code='South Africa'    ;;
-            South-Korea    ) code='South Korea'     ;;
-            United-Kingdom ) code='United Kingdom'  ;;
-            United-States  ) code='United States'   ;;
+            Hong-Kong      ) country='Hong Kong'       ;;
+            New-Caledonia  ) country='New Caledonia'   ;;
+            New-Zealand    ) country='New Zealand'     ;;
+            North-Macedonia) country='North Macedonia' ;;
+            South-Africa   ) country='South Africa'    ;;
+            South-Korea    ) country='South Korea'     ;;
+            United-Kingdom ) country='United Kingdom'  ;;
+            United-States  ) country='United States'   ;;
         esac
 
         sudo reflector \
