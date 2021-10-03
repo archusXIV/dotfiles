@@ -1,9 +1,7 @@
 #!/bin/bash
 
 if [[ -n $(pidof bspwm) ]]; then
-    for proc in sxhkd-watcher bspc-layout; do
-        killall -q "$proc"
-    done
+    killall -q bspc-layout
     bspc wm -r
 elif [[ -n $(pidof i3) ]]; then
     i3-msg -q restart
