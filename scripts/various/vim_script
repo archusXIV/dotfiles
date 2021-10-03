@@ -8,7 +8,6 @@
 PS3="Enter a script number to Chmod, Edit, Remove, or Rename: "
 
 # set the scripts list.
-# After edition we will be prompted again.
 
 select file in $(find "$SCRIPTDIR" -maxdepth 1 -type f | sort -d | sed 's,.*/,,'); do
     echo ""
