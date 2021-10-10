@@ -1,0 +1,752 @@
+#!/bin/bash
+
+##    Author: Barret E (2020-21) <archus@protonmail.com>
+##    Dependencies: ffmpeg, youtube-dl, socat, mpv & mpvc (command line interface for mpv).
+##
+##    This script rips video urls from Youtube and so on.
+##    In our case we use ".m3u" files to store urls in and then be able
+##    to watch from the site itself or download videos or just the audio.
+##    We can save or edit playlists, mpv.conf or this script too (because why not).
+##    It is recommanded to disable mpv cache for better results on direct streaming,
+##    or find a better cache parameter.
+##    I should have renamed this script "echo"...
+
+## colors
+nocolor=$'\e[0m';
+red=$'\e[0;31m';
+green=$'\e[0;32m';
+
+## directories & files
+main_dir="$HOME/Documents/mpv-menu"
+playlists_dir="$main_dir/playlists"
+audios_dir="$main_dir/audios"
+videos_dir="$main_dir/videos"
+tmp_dir="$main_dir/tmp"
+
+queue="$playlists_dir/default.m3u"
+metadatas="$tmp_dir/mpv.txt"
+ytop="$tmp_dir/youtube-dl_output.txt"
+ffop="$tmp_dir/ffmpeg_output.txt"
+
+## First source our functions.
+if [[ -n ${SCRIPTDIR+x} ]]; then
+    for func in $(find $SCRIPTDIR -name "mpv-menu_*"); do
+        source "$func"
+    done
+else
+    echo " ${red}Your scripts directory environment variable is not set...${nocolor}"
+    echo " Just type: ${green}export SCRIPTDIR='/path_to_my_scripts_directory'"
+    echo " To set it permanently put it in your .bash_profile or whatever *.profile you're using."
+    exit 1
+fi
+
+_check_dependencies() {
+
+    ## Checking dependencies: softwares, directories and files.
+    declare -a deps=( "ffmpeg" "mpv" "mpvc" "socat" "youtube-dl" )
+
+    for i in "${deps[@]}"; do
+        [[ -z $(command -v "$i") ]] \
+            && echo " ${red}$i isn 't installed, bye..." \
+            && exit 165
+    done
+
+    if [[ ! -d "$main_dir" ]]; then
+        mkdir --parents {"$audios_dir","$playlists_dir","$tmp_dir","$videos_dir"}
+    else
+        [[ ! -d "$audios_dir" ]] && mkdir "$audios_dir"
+        [[ ! -d "$playlists_dir" ]] && mkdir "$playlists_dir"
+        [[ ! -d "$tmp_dir" ]] && mkdir "$tmp_dir"
+        [[ ! -d "$videos_dir" ]] && mkdir "$videos_dir"
+    fi
+
+    [[ ! -f $queue ]] && touch "$queue" && echo "#EXTM3U" > "$queue"
+
+    _check_queue
+
+}
+
+_menu() {
+
+    clear
+    while [[ -f $queue ]]; do
+        clear
+        echo ""
+        echo -e "                                    ::mpv-menu options:: "
+        echo -e "                ┌────────────────────────────────────────────────────────────┐"
+        echo -e "                │    1) Add/Get video(s)         6) Clean default playlist   │"
+        echo -e "                │    2) Add/Get audio(s)         7) Edit a playlist          │"
+        echo -e "                │    3) Save/Remove playlist     8) Edit mpv.conf            │"
+        echo -e "                │    4) Load a playlist          9) Edit this script         │"
+        echo -e "                │    5) Check default playlist   0) Exit                     │"
+        echo -e "                └────────────────────────────────────────────────────────────┘"
+        echo -e "                                       ${green}Select an item${nocolor}"
+        echo ""
+        read -r action
+        case $action in
+            1)  _copy_video
+                echo ""
+            ;;
+            2)  _copy_audio
+                echo ""
+            ;;
+            3)  _save_remove
+                echo ""
+            ;;
+            4)  _load_playlist
+                echo ""
+            ;;
+            5)  _check_url
+                echo ""
+            ;;
+            6)  _delete_url
+                echo ""
+            ;;
+            7)  _edit_playlist
+                echo ""
+            ;;
+            8)  _edit_mpv-conf
+                echo ""
+            ;;
+            9)  _edit_script
+                echo ""
+            ;;
+            0)  clear 
+                [[ -z $(systemctl --user list-units | grep -e 'mpv-ipc') ]] \
+                && systemctl --user start mpv-ipc.service
+                exit
+            ;;
+            *)  echo -e " ${red} Wrong option ${nocolor}"
+                echo "Wait and try again..."
+                echo ""
+                sleep 2s
+                clear
+            ;;
+        esac
+    done
+
+}
+
+_check_editor() {
+
+    for item in $EDITOR $VISUAL; do
+        if [[ -z ${item+x} ]]; then
+            echo " ${red}Your $item environment variable is not set..."
+            echo " ${green}Please consider doing so."
+            echo " Example: ${red}export EDITOR='vim' ${nocolor}"
+            sleep 7s
+            _menu
+        fi
+    done
+
+}
+
+_check_queue() {
+
+    ## This looks ugly but everything will fit nicely...
+    if (( $(wc -l "$queue" | awk '{print $1}') > 1 )); then
+        if (( $(wc -l "$queue" | awk '{print $1}') < 11 )); then
+            echo -e "                  ┌──────────────────────────────────────────────┐"
+            echo -e "                  │  ${red} There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "url(s) in default playlist.${nocolor}     │"
+            echo -e "                  │ Consider checking the url(s) list ${green}(option 5) ${nocolor}|"
+            echo -e "                  │ or delete them ${green}(option 6).${nocolor}                   |"
+            echo -e "                  └──────────────────────────────────────────────┘"
+            sleep 6s
+            _menu
+        else
+            echo -e "                  ┌───────────────────────────────────────────────┐"
+            echo -e "                  │  ${red} There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "url(s) in default playlist.${nocolor}     │"
+            echo -e "                  │ Consider checking the url(s) list ${green}(option 5) ${nocolor} |"
+            echo -e "                  │ or delete them ${green}(option 6).${nocolor}                    |"
+            echo -e "                  └───────────────────────────────────────────────┘"
+            sleep 6s
+            _menu
+        fi
+    else
+        _menu
+    fi
+
+}
+
+_check_url() {
+
+    if (( $(wc -l "$queue" | awk '{print $1}') > 1 )); then
+        echo " ${green}Default playlist content:${nocolor}"
+        while read -r urls; do
+            echo " ${green}$urls${nocolor}"
+        done < "$queue" | sed 's/#EXTM3U//'
+
+        read -rp 'delete url(s) [d], play url(s) [p], save url(s) as playlist [s] or back to menu [m]: ' opt
+        case $opt in
+            d) _delete_url
+            ;;
+            m) _menu
+            ;;
+            p) _load_video
+            ;;
+            s) _save_remove
+        esac
+    else
+        echo " ${red}Default list is empty ${nocolor}"
+        sleep 2s && _menu
+    fi
+
+}
+
+_remove_crap() {
+
+    # After some tests it appears that a single link copied from a youtube playlist
+    # causes the download of the entire playlist.
+    # So with the help of sed we cleanup the link to get the direct link to the desired video.
+    # Note that this behavior does not appear during a simple viewing/listening.
+
+    [[ -n $(grep -e '&list' "$queue") ]] && {
+        echo " ${red}Cleaning entries...${nocolor}"
+        sleep 2s
+        sed -i 's/&.*//' "$queue"
+    }
+
+    # Let's remove possible duplicates.
+    [[ -n $(uniq -d "$queue") ]] && {
+        echo " ${red}Removing double entries...${nocolor}"
+        sleep 2s
+        sed -i -n \
+        'G; s/\n/&&/; /^\([ -~]*\n\).*\n\1/d; s/\n//; h; P' \
+        "$queue"
+    }
+
+}
+
+_copy_audio() {
+
+    while (( $(wc -l "$queue" | awk '{print $1}') > 0 )); do
+        echo ""
+        echo "Paste an url to fill the playlist:"
+        read -r url
+        echo "$url" >> "$queue"
+
+        _remove_crap
+
+        clear
+        if (( $(sed '/#EXTM3U/d' "$queue" | wc -l) < 2 )); then
+            echo ""
+            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "url in the list${nocolor}."
+        else
+            echo ""
+            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "urls in the list${nocolor}."
+        fi
+        echo ""
+        echo -e "                                    ::audio options:: "
+        echo -e "                ┌────────────────────────────────────────────────────────────┐"
+        echo -e "                │     1) Add more audio links      4) Play current list      │"
+        echo -e "                │     2) Download current list     5) Check current list     │"
+        echo -e "                │     3) Save playlist as          6) Back to menu           │"
+        echo -e "                └────────────────────────────────────────────────────────────┘"
+        echo -e "                                      ${green}Select an item${nocolor}"
+        echo ""
+        read -r options
+        case $options in
+            1) clear && continue
+               echo "" 
+            ;;
+            2) _get_audio
+               echo ""
+            ;;
+            3) _save_remove
+               echo ""
+            ;;
+            4) _load_audio
+               echo ""
+            ;;
+            5) _check_url
+               echo ""
+            ;;
+            6) _check_queue
+               echo ""
+            ;;
+        esac
+    done
+
+}
+
+_copy_video() {
+
+    while (( $(wc -l "$queue" | awk '{print $1}') > 0 )); do
+        echo ""
+        echo "Paste an url to fill the playlist:"
+        read -r url
+        echo "$url" >> "$queue"
+
+        _remove_crap
+
+        clear
+        if (( $(sed '/#EXTM3U/d' "$queue" | wc -l) < 2 )); then
+            echo ""
+            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "url in the list${nocolor}."
+        else
+            echo ""
+            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "urls in the list${nocolor}."
+        fi
+        echo ""
+        echo -e "                                    ::video options:: "
+        echo -e "                ┌────────────────────────────────────────────────────────────┐"
+        echo -e "                │     1) Add more video links      4) Play current list      │"
+        echo -e "                │     2) Download current list     5) Check current list     │"
+        echo -e "                │     3) Save playlist as          6) Back to menu           │"
+        echo -e "                └────────────────────────────────────────────────────────────┘"
+        echo -e "                                      ${green}Select an item${nocolor}"
+        echo ""
+        read -r options
+        case $options in
+            1) clear && continue
+               echo "" 
+            ;;
+            2) _get_video
+               echo ""
+            ;;
+            3) _save_remove
+               echo ""
+            ;;
+            4) _load_video
+               echo ""
+            ;;
+            5) _check_url
+               echo ""
+            ;;
+            6) _check_queue
+               echo ""
+            ;;
+        esac
+    done
+
+}
+
+_download_audio() {
+    # We're still in $playlists_dir
+    clear
+
+    for url in $(grep 'https' "$list"); do
+
+        if (( $(sed '/#EXTM3U/d' "$list" | wc -l) < 2 )); then
+            echo ""
+            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$list" | wc -l)" "audio file left to download.${nocolor}"
+        else
+            echo ""
+            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$list" | wc -l)" "audio files left to download.${nocolor}"
+        fi
+
+        echo ""
+        youtube-dl -F "$url" | grep -e 'audio only'
+        echo ""
+        echo " ${green}Choose a format code: ${nocolor}"
+        read -rn 3 code
+        echo " ${green}Please be patient while downloading files...${nocolor}"
+        youtube-dl -f "$code" "$url" > $ytop
+        sed -i '2d' "$list"
+        clear
+
+    done
+
+    mv --force "$list"_origin "$list"
+    echo " ${green}Done${nocolor}"
+    echo ""
+
+    if [[ -n $(find . -iname "*.webm") ]]; then
+        echo " ${green}Please be patient while ffmpeg is working...${nocolor}"
+        find . -iname "*.webm" -exec \
+        bash -c 'FILE="$1"; \
+        ffmpeg -i "${FILE}" \
+        -vn -ab 320k -ar 48000 \
+        -y "${FILE%.webm}.mp3";' _ '{}' \; 2>$ffop
+
+        echo " ${green}All done${nocolor}"
+        sleep 2s
+        rm ./*.webm
+        rm $ffop $ytop
+        mv *.mp3 "$audios_dir"
+        _menu
+    else
+        echo " ${green}Please check out for none mp3 files in $playlists_dir${nocolor}"
+        sleep 5s
+        rm $ytop
+        _menu
+    fi
+
+}
+
+_download_video() {
+    # We're still in $playlists_dir
+    clear
+
+    for url in $(grep 'https' "$list"); do
+
+        if (( $(sed '/#EXTM3U/d' "$list" | wc -l) < 2 )); then
+            echo ""
+            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$list" | wc -l)" "video file left to download.${nocolor}"
+        else
+            echo ""
+            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$list" | wc -l)" "video files left to download.${nocolor}"
+        fi
+
+        echo ""
+        echo " ${green}Please be patient while downloading files...${nocolor}"
+
+        # choosing the very best format first, if available.
+        if [[ -n $(youtube-dl -F "$url" | grep -e '137' -e '251') ]]; then
+            youtube-dl -f 137+251 --merge-output-format mp4 "$url" > $ytop
+        elif [[ -n $(youtube-dl -F "$url" | grep -e 'best') ]]; then
+            youtube-dl -f best "$url" > $ytop
+        else
+            youtube-dl "$url" > $ytop
+        fi
+
+        sed -i '2d' "$list" >/dev/null
+        clear
+
+    done
+
+    mv --force "$list"_origin "$list"
+    echo " ${green}Done${nocolor}"
+    echo ""
+
+    local webm="$(find "$playlists_dir" -name "*.webm" | sed 's,.*/,,')"
+
+    if [[ -n $webm ]]; then
+        echo " ${green}Please be patient while ffmpeg is working...${nocolor}"
+        ffmpeg -i "$webm" "$webm".mp4 2> $ffop
+        rm ./*.webm
+        mv ./{*.mp4,*.mkv} "$videos_dir" > /dev/null 2>&1
+        echo ""
+        echo " ${green}All done${nocolor}"
+        rm ./*.webm
+        rm $ffop $ytop
+        sleep 2s
+        _menu
+    else
+        mv ./{*.mp4,*.mkv} "$videos_dir" > /dev/null 2>&1
+        echo " ${green}All done${nocolor}"
+        sleep 2s
+        rm $ytop
+        _menu
+    fi
+
+}
+
+_edit_playlist() {
+
+    _check_editor
+
+    cd "$playlists_dir"
+    PS3='Choose a playlist to edit: '
+    echo -en "\nAvailable playlists\n\n"
+    select list in $(find . -name "*.m3u" | sort -d | sed 's,.*/,,'); do
+        echo ""
+        $VISUAL "$list"
+        echo " ${green}$list saved${nocolor}"
+        sleep 2s
+        break
+    done
+
+}
+
+_edit_mpv-conf() {
+
+    _check_editor
+
+    $VISUAL $XDG_CONFIG_HOME/mpv/mpv.conf
+    echo " ${green}mpv.conf saved.${nocolor}"
+    sleep 2s
+    clear
+    _menu
+
+}
+
+_edit_script() {
+
+    _check_editor
+
+    PS3="Select a script number to edit: "
+    echo -en "\nAvailable functions\n\n"
+    select func in $(find $SCRIPTDIR/mpv-menu -name "mpv-menu_*"| sort -d | sed 's,.*/,,'); do
+        cd $SCRIPTDIR/mpv-menu
+        $VISUAL "$func"
+        echo " ${green}$func saved.${nocolor}"
+        sleep 2s
+        break
+    done
+
+}
+
+_get_audio() {
+
+    cd "$audios_dir"
+
+    for url in $(grep 'https' "$queue"); do
+
+        if (( $(sed '/#EXTM3U/d' "$queue" | wc -l) < 2 )); then
+            echo ""
+            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "audio file left to download.${nocolor}"
+        else
+            echo ""
+            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "audio files left to download.${nocolor}"
+        fi
+
+        youtube-dl -F "$url" | grep -e 'audio only'
+        echo ""
+        echo " ${green}Choose a format code: ${nocolor}"
+        read -rn 3 code
+        echo " ${green}Please be patient while downloading files...${nocolor}"
+        youtube-dl -f "$code" "$url" > $ytop
+        sed -i '2d' "$queue"
+        clear
+
+    done
+
+    echo " ${green}Done${nocolor}"
+    echo ""
+
+    if [[ -n $(find . -iname "*.webm") ]]; then
+        echo " ${green}Please be patient while ffmpeg is working...${nocolor}"
+        find . -iname "*.webm" -exec \
+        bash -c 'FILE="$1"; \
+        ffmpeg -i "${FILE}" \
+        -vn -ab 320k -ar 48000 \
+        -y "${FILE%.webm}.mp3";' _ '{}' \; 2>$ffop
+
+        echo " ${green}Done${nocolor}"
+        sleep 2s
+        rm ./*.webm
+        rm $ffop $ytop
+        _menu
+    else
+        rm $ytop
+        _menu
+    fi
+
+}
+
+_get_video() {
+
+    cd "$videos_dir"
+
+    local webm
+    webm="$(find . -name '*.webm' | sed 's,.*/,,')"
+
+    echo " ${green}Please be patient while downloading files...${nocolor}"
+    for url in $(grep 'https' "$queue"); do
+
+        if (( $(sed '/#EXTM3U/d' "$queue" | wc -l) < 2 )); then
+            echo ""
+            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "video file left to download.${nocolor}"
+        else
+            echo ""
+            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "video files left to download.${nocolor}"
+        fi
+
+        # choosing the very best format first, if available.
+        if [[ -n $(youtube-dl -F "$url" | grep -e '137' -e '251' ) ]]; then
+            youtube-dl -f 137+251 --merge-output-format mp4 "$url" > $ytop
+        else
+            youtube-dl --format best "$url" > $ytop
+        fi
+        sed -i '2d' "$queue"
+        clear
+    
+    done
+
+    echo " ${green}Done${nocolor}"
+    echo ""
+
+    if [[ -n ${webm} ]]; then
+        echo " ${green}Please be patient while ffmpeg is working...${nocolor}"
+        ffmpeg -i "$webm" "$webm".mp4 2>$ffop
+        echo " ${green}All done${nocolor}"
+        sleep 2s
+        rm ./*.webm
+        rm $ffop $ytop
+        _menu
+    else
+        rm $ytop
+        _menu
+    fi
+
+}
+
+_get_mpv_title() {
+    # mpv --idle --really-quiet --input-ipc-server=/tmp/mpvsocket
+    while [[ -n $(pidof mpv) ]]; do
+        echo '{ "command": ["get_property", "force-media-title"] }' \
+        | socat - /tmp/mpvsocket | awk -F '"' '{print $4}' > $metadatas
+        echo " ${green}Now playing: " "${nocolor}$(tail -n 1 $metadatas)"
+        sleep 2s
+        clear
+    done
+
+}
+
+_stop_mpvipc() {
+    
+    [[ $(systemctl --user list-units | awk '/mpv-ipc/{print $3}') == 'active' ]] \
+    && systemctl --user stop mpv-ipc.service
+
+}
+
+_load_audio() {
+
+    _stop_mpvipc
+
+    mpvc -a -Q "$queue"
+   _get_mpv_title
+
+    rm $metadatas
+    clear
+    _menu
+
+}
+
+_load_video() {
+
+    _stop_mpvipc
+    picom &
+
+    mpvc -a "$queue"
+    _get_mpv_title
+
+    killall -q picom
+    rm $metadatas
+    clear
+    _menu
+
+}
+
+_load_playlist() {
+
+    cd "$playlists_dir"
+
+    PS3="Select a playlist to load (Press 'q' to quit mpv): "
+    select list in $(find . -name "*.m3u" | sort -d | sed 's,.*/,,'); do
+
+        if [[ -z $(grep -e 'https' -e 'http' "$list") ]]; then
+            echo " ${red}$list list is empty...${nocolor}"
+            sleep 3s
+            break
+        fi
+
+        echo ""
+        read -rp 'Just load [l] download audio [a] or download video [v] (Press '^C' to quit youtube-dl): ' letter
+        case "$letter" in
+            a)  cp "$list" "$list"_origin
+                _download_audio
+            ;;
+            l)  _stop_mpvipc
+                echo ""
+                read -rp 'Load audio [a] or video [v] ?: ' load
+                case "$load" in
+                    a)  mpvc -a -Q "$list"
+                        _get_mpv_title
+                    ;;
+                    v)  picom &
+                        mpvc -a "$list"
+                        _get_mpv_title && killall -q picom
+                    ;;
+                    *)  echo -e " ${red} Wrong option! Wait and try again...${nocolor}"
+                        sleep 3s
+                    ;;
+                esac
+
+                rm $metadatas
+                clear
+                _menu
+            ;;
+            v)  cp "$list" "$list"_origin
+                _download_video
+            ;;
+            *)  echo -e " ${red} Wrong option! Wait and try again...${nocolor}"
+                sleep 3s
+            ;;
+        esac
+
+    done
+
+    clear
+    _menu
+
+}
+
+_save_remove() {
+
+    cd "$playlists_dir"
+
+    read -rp 'Save [s] or Remove [r] a playlist?: ' opt
+    echo ""
+    case $opt in
+        s)  echo "Playlists directory content:"
+            echo ""
+            find . -name "*.m3u" | sort -d | sed 's,.*/,,'
+            echo ""
+            echo "Save playlist as:"
+            read list
+            if [[ -f "$list" ]]; then
+                echo ""
+                echo " ${red}This playlist already exists!${nocolor}"
+                echo " ${green}Overwrite $list? [y/N]:${nocolor}"
+                read overwrite
+                case $overwrite in
+                    y)  cp -f "$queue" "$list"
+                        echo " ${green}$list saved ${nocolor}"
+                        sleep 2s
+                        _check_queue
+                    ;;
+                    N)  _check_queue
+                    ;;
+                    *)  _check_queue
+                    ;;
+                esac
+            else
+                cp "$queue" "$list"
+                echo " ${green}$list saved ${nocolor}"
+                sleep 2s
+                _check_queue
+            fi
+        ;;
+        r)  select list in $(find . -name "*.m3u" | sort -d | sed 's,.*/,,'); do
+                echo ""
+                echo " ${red}Are you sure you want to remove $list? [y/N]:${nocolor}"
+                read -r del
+                case $del in
+                    y)  rm "$list"
+                        echo " ${red}$list removed ${nocolor}"
+                        sleep 2s
+                        _menu
+                    ;;
+                    N)  _menu
+                    ;;
+                    *)  echo -e " ${red} Wrong option! Wait and try again...${nocolor}"
+                        sleep 3s
+                        _menu
+                    ;;
+                esac
+            done
+        ;;
+        *)  echo -e " ${red} Wrong option! Wait and try again...${nocolor}"
+            sleep 3s
+            _menu
+        ;;
+    esac
+
+}
+
+_delete_url() {
+    [[ -z $(sed -n '2p' "$queue") ]] \
+    && echo " ${green}Nothing to do here, main list is empty...${nocolor}" \
+    && sleep 2s \
+    && _menu || {
+        sed -i /https/d "$queue" \
+        && echo " ${red}All urls removed ${nocolor}" \
+        && sleep 2s \
+        && _menu
+    }
+}
+
+_check_dependencies
+
