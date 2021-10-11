@@ -2,7 +2,7 @@
 
 # Terminate existing sxhkd scripts instances
 
-if [[ -n $(pidof sxhkd) ]]; then
+if [[ -n $(pidof -x sxhkd) ]]; then
     for proc in sxhkd-watcher sxhkd; do
         killall -q "$proc"
     done
