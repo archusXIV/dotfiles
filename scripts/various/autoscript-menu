@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Here I have merged two little scripts from
+# BudRich https://github.com/budlabs
 # Dependency: rofi
 # Opens a rofi menu to create/edit a script,
 # in your favorite text editor
