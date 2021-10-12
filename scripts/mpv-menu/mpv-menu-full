@@ -29,18 +29,6 @@ metadatas="$tmp_dir/mpv.txt"
 ytop="$tmp_dir/youtube-dl_output.txt"
 ffop="$tmp_dir/ffmpeg_output.txt"
 
-## First source our functions.
-if [[ -n ${SCRIPTDIR+x} ]]; then
-    for func in $(find $SCRIPTDIR -name "mpv-menu_*"); do
-        source "$func"
-    done
-else
-    echo " ${red}Your scripts directory environment variable is not set...${nocolor}"
-    echo " Just type: ${green}export SCRIPTDIR='/path_to_my_scripts_directory'"
-    echo " To set it permanently put it in your .bash_profile or whatever *.profile you're using."
-    exit 1
-fi
-
 _check_dependencies() {
 
     ## Checking dependencies: softwares, directories and files.
