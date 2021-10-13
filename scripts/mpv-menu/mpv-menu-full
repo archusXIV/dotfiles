@@ -453,16 +453,9 @@ _edit_mpv-conf() {
 _edit_script() {
 
     _check_editor
-
-    PS3="Select a script number to edit: "
-    echo -en "\nAvailable functions\n\n"
-    select func in $(find $SCRIPTDIR/mpv-menu -name "mpv-menu_*"| sort -d | sed 's,.*/,,'); do
-        cd $SCRIPTDIR/mpv-menu
-        $VISUAL "$func"
-        echo " ${green}$func saved.${nocolor}"
-        sleep 2s
-        break
-    done
+    $VISUAL ~/.local/bin/mpv-menu-full
+    echo " ${green}mpv-menu-full saved.${nocolor}"
+    sleep 2s
 
 }
 
