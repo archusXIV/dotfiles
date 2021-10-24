@@ -407,7 +407,6 @@ _download_video() {
         mv ./{*.mp4,*.mkv} "$videos_dir" > /dev/null 2>&1
         echo ""
         echo " ${green}All done${nocolor}"
-        rm ./*.webm
         rm $ffop $ytop
         sleep 2s
         _menu
