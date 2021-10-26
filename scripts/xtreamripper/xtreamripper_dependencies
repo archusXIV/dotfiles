@@ -1,15 +1,21 @@
 #!/bin/bash
 
 _streamripper_choice() {
-    if [[ -n $(command -v streamripper) ]]; then
-        _prompt "Do you want to use regular streamripper?:" || {
-            _main
-        }
-        echo ""
-        _streamripper
-    else
-        _main
-    fi
+    read -rp 'Continue with xtreamripper [1] or quit [2] ?: ' answer
+    case "$answer" in
+        1)  if [[ -n $(command -v streamripper) ]]; then
+                _prompt "Do you want to use regular streamripper?:" || {
+                _main
+                }
+                echo ""
+                _streamripper
+            else
+                _main
+            fi
+        ;;
+        2) echo "bye..." && exit
+        ;;
+    esac
 }
 
 _warning() {
