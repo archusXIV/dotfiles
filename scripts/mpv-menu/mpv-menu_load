@@ -102,3 +102,24 @@ _load_playlist() {
 
 }
 
+_load_local() {
+    local vid_dir
+    vid_dir="$HOME/Documents/Videos/"
+
+    read -rp 'What would you like to load, a directory [d] or file(s) [f] ?: ' answer
+
+    case "$answer" in
+        d)  PS3="Select a directory to queue in mpv: "
+            select dir in $(find "$vid_dir" -maxdepth 1 | sed 's,.*/,,'); do
+                mpvc add "$vid_dir"/"$dir"/* >/dev/null 2>&1
+                echo " ${green}$dir added to mpv playlist.${nocolor}"
+                sleep 3s
+                break
+            done
+            _menu
+        ;;
+        f) ranger "$vid_dir"; exit
+        ;;
+    esac
+}
+
