@@ -1,4 +1,4 @@
--- lite-xl version 2.0.1-1
+-- lite-xl version 2.0.3-1
 -- put user settings here
 -- this module will be loaded after everything else when the application starts
 -- it will be automatically reloaded when saved
