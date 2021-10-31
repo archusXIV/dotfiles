@@ -448,15 +448,6 @@ _edit_mpv-conf() {
 
 }
 
-_edit_script() {
-
-    _check_editor
-    $VISUAL $SCRIPTDIR/mpv-menu-full
-    echo " ${green}mpv-menu-full saved.${nocolor}"
-    sleep 2s
-
-}
-
 _get_audio() {
 
     cd "$audios_dir"
