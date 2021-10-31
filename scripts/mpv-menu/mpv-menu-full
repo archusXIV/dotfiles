@@ -131,21 +131,22 @@ _check_editor() {
 
 _check_queue() {
 
+    _remove_crap
     ## This looks ugly but everything will fit nicely...
     if (( $(wc -l "$queue" | awk '{print $1}') > 1 )); then
         if (( $(wc -l "$queue" | awk '{print $1}') < 11 )); then
             echo -e "                  ┌──────────────────────────────────────────────┐"
             echo -e "                  │  ${red} There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "url(s) in default playlist.${nocolor}     │"
-            echo -e "                  │ Consider checking the url(s) list ${green}(option 5) ${nocolor}|"
-            echo -e "                  │ or delete them ${green}(option 6).${nocolor}                   |"
+            echo -e "                  │ Consider checking the url(s) list ${green}(option 6) ${nocolor}|"
+            echo -e "                  │ or delete them ${green}(option 7).${nocolor}                   |"
             echo -e "                  └──────────────────────────────────────────────┘"
             sleep 6s
             _menu
         else
             echo -e "                  ┌───────────────────────────────────────────────┐"
             echo -e "                  │  ${red} There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "url(s) in default playlist.${nocolor}     │"
-            echo -e "                  │ Consider checking the url(s) list ${green}(option 5) ${nocolor} |"
-            echo -e "                  │ or delete them ${green}(option 6).${nocolor}                    |"
+            echo -e "                  │ Consider checking the url(s) list ${green}(option 6) ${nocolor} |"
+            echo -e "                  │ or delete them ${green}(option 7).${nocolor}                    |"
             echo -e "                  └───────────────────────────────────────────────┘"
             sleep 6s
             _menu
@@ -202,6 +203,9 @@ _remove_crap() {
         'G; s/\n/&&/; /^\([ -~]*\n\).*\n\1/d; s/\n//; h; P' \
         "$queue"
     }
+
+    # Let's remove possible empty lines
+    [[ $(sed -r '/^\s*$/d' "$queue") ]] && sed -i '/^\s*$/d' "$queue"
 
 }
 
