@@ -3,21 +3,22 @@
 
 _check_queue() {
 
+    _remove_crap
     ## This looks ugly but everything will fit nicely...
     if (( $(wc -l "$queue" | awk '{print $1}') > 1 )); then
         if (( $(wc -l "$queue" | awk '{print $1}') < 11 )); then
             echo -e "                  ┌──────────────────────────────────────────────┐"
             echo -e "                  │  ${red} There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "url(s) in default playlist.${nocolor}     │"
-            echo -e "                  │ Consider checking the url(s) list ${green}(option 5) ${nocolor}|"
-            echo -e "                  │ or delete them ${green}(option 6).${nocolor}                   |"
+            echo -e "                  │ Consider checking the url(s) list ${green}(option 6) ${nocolor}|"
+            echo -e "                  │ or delete them ${green}(option 7).${nocolor}                   |"
             echo -e "                  └──────────────────────────────────────────────┘"
             sleep 6s
             _menu
         else
             echo -e "                  ┌───────────────────────────────────────────────┐"
             echo -e "                  │  ${red} There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "url(s) in default playlist.${nocolor}     │"
-            echo -e "                  │ Consider checking the url(s) list ${green}(option 5) ${nocolor} |"
-            echo -e "                  │ or delete them ${green}(option 6).${nocolor}                    |"
+            echo -e "                  │ Consider checking the url(s) list ${green}(option 6) ${nocolor} |"
+            echo -e "                  │ or delete them ${green}(option 7).${nocolor}                    |"
             echo -e "                  └───────────────────────────────────────────────┘"
             sleep 6s
             _menu
@@ -31,7 +32,7 @@ _check_queue() {
 _check_dependencies() {
 
     ## Checking dependencies: softwares, directories and files.
-    declare -a deps=( "ffmpeg" "mpv" "mpvc" "socat" "youtube-dl" )
+    declare -a deps=( "ffmpeg" "mpv" "mpvc" "ranger" "socat" "youtube-dl" )
 
     for i in "${deps[@]}"; do
         [[ -z $(command -v "$i") ]] \
