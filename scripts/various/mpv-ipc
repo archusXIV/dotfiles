@@ -5,7 +5,6 @@
 metadata="$XDG_RUNTIME_DIR/mpv.txt"
 
 until [[ -n $(pidof mpv) ]]; do
-    polybar-msg hook mpv-ipc 1 >/dev/null 2>&1
     if [[ -f "$metadata" ]]; then
         rm "$metadata" >/dev/null 2>&1
         continue
@@ -19,6 +18,12 @@ until [[ -n $(pidof mpv) ]]; do
         | socat - /tmp/mpvsocket | awk -F '"' '{print $4}' > "$metadata"
         polybar-msg hook mpv-ipc 2 >/dev/null 2>&1
         sleep 1s
+        
+        [[ -z $(pidof mpv) ]] && {
+            polybar-msg hook mpv-ipc 1 >/dev/null 2>&1
+            break
+        }
+
     done
     killall -q picom
 done
