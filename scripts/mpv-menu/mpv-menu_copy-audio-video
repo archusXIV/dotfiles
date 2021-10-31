@@ -23,6 +23,9 @@ _remove_crap() {
         "$queue"
     }
 
+    # Let's remove possible empty lines
+    [[ $(sed -r '/^\s*$/d' "$queue") ]] && sed -i '/^\s*$/d' "$queue"
+
 }
 
 _copy_audio() {
