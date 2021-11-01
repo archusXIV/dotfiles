@@ -8,7 +8,6 @@
 #    We can also find and purge orphan packages, refresh our mirrorlist, purge the cache,
 #    edit pacman.conf/makepkg.conf and of course update the system.
 
-
 color_off=$'\e[0m';
 red=$'\e[0;31m';
 green=$'\e[0;32m';
@@ -58,8 +57,6 @@ _orphans() {
     fi
 }
 
-# This not beautiful code here but if anyone knows how to print strings with spaces throught
-# a select loop and get rid of 'sed & case statement' lines, I'll be happy to rewrite this part.
 _reflector() {
     PS3=""
     echo ""
@@ -102,7 +99,6 @@ _reflector() {
 }
 
 _menu() {
-
     clear
     while [[ -f /etc/pacman.conf ]]; do
         clear
@@ -134,7 +130,7 @@ _menu() {
             5)  _reflector
                 echo ""
             ;;
-            6)  sudo pacman -Syu
+            6)  updates-viewer --list
                 echo ""
             ;;
             7)  sudo pacdiff
@@ -149,16 +145,14 @@ _menu() {
             0)  clear
                 exit
             ;;
-            *)  echo " ${red} Wrong option ${color_off}"
+            *)  echo -e " ${red} Wrong option!"
                 echo " ${green}Wait and try again...${color_off}"
                 echo ""
-                sleep 2s
+                sleep 3s
                 clear
             ;;
         esac
     done
-
 }
 
 _menu
-
