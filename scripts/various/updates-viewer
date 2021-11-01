@@ -89,7 +89,7 @@ case "$1" in
             done < "$archaur"
 
             if [[ -z $(cat "$archaur") ]]; then
-                echo No update available && exit 0
+                echo No update available && sleep 3s && exit 0
             else
                 echo ""
                 _ynp "Procede with updates?" || {
