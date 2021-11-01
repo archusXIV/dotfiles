@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Author: Barret E (2020) <archus@protonmail.con>
+# Author: Barret E (2020-21) <archus@protonmail.con>
 # Yet Another Updates Viewer Script for Arch Linux based systems.
 # Checks for updates, lists them in a file and passes the number in polybar.
 
@@ -96,7 +96,8 @@ case "$1" in
                 echo "bye..." && exit 0
                 }
                 if (( $(wc -l "$aur" | awk '{print $1}') > 0 )); then
-                    yay -Syu --aur && {
+                    yay -Syu --aur
+                    rm -rf $HOME/.ccache && {
                     (( $(wc -l "$arch" | awk '{print $1}') > 0 )) \
                         && sudo upp
                     }
@@ -108,4 +109,3 @@ case "$1" in
     --updates)  _check_updates
     ;;
 esac
-
