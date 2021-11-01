@@ -49,6 +49,7 @@ _check_updates() {
     done &
 }
 
+# Yes/No prompt
 _ynp() {
     local screenprompt key default opts status
 
