@@ -89,7 +89,7 @@ case "$1" in
             done < "$archaur"
 
             if [[ -z $(cat "$archaur") ]]; then
-                echo "No update available" && sleep 3s && exit 0
+                echo "No update available." && sleep 3s && exit 0
             else
                 echo ""
                 _ynp "Procede with updates?" || {
@@ -98,13 +98,14 @@ case "$1" in
                 if (( $(wc -l "$aur" | awk '{print $1}') > 0 )); then
                     yay -Syu --aur
                     rm -rf $HOME/.ccache && {
-                    (( $(wc -l "$arch" | awk '{print $1}') > 0 )) \
-                        && sudo upp \
-                        && rm "$archaur" \
-                        && touch "$archaur"
+                    (( $(wc -l "$arch" | awk '{print $1}') > 0 )) && {
+                        rm "$archaur"
+                        touch "$archaur"
+                        sudo upp
+                        }
                     }
                 else
-                    sudo upp && rm "$archaur" && touch "$archaur"
+                    rm "$archaur" && touch "$archaur" && sudo upp
                 fi
             fi
     ;;
