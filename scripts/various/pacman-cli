@@ -3,7 +3,7 @@
 #    Author: Barret E (2021) <archus@protonmail.com>
 #    Dependencies: fzf, pacdiff, reflector, vim.
 #
-#    This script shows a menu to let you choose over severals pacman tools an options.
+#    This script shows a menu to let you choose over severals pacman tools and options.
 #    In order to install or remove packages it uses fzf utility on the fancy side.
 #    We can also find and purge orphan packages, refresh our mirrorlist, purge the cache,
 #    edit pacman.conf/makepkg.conf and of course update the system.
