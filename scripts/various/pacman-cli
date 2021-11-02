@@ -12,7 +12,7 @@ color_off=$'\e[0m';
 red=$'\e[0;31m';
 green=$'\e[0;32m';
 
-declare -a dependencies=( "fzf" "pacdiff" "reflector" "vim" )
+declare -a dependencies=( "fzf" "pacdiff" "reflector" "vim" "updates-viewer" )
 
 for i in "${dependencies[@]}"; do
     [[ -z $(command -v "$i") ]] \
