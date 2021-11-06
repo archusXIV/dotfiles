@@ -670,7 +670,10 @@ _load_local() {
             done
             _menu
         ;;
-        f)  ranger "$vid_dir"; _menu # See my ranger configuration files to open or queue video files with mpv
+        # Add these lines into your ranger configuration (~/.config/ranger/rifle.conf).
+        # mime ^video,       has mpv,      X, flag f = mpvc add -- "$@"
+        # mime ^video,       has mpv,      X, flag f = mpvc add --fs -- "$@"
+        f)  ranger "$vid_dir"; _menu
         ;;
     esac
 }
