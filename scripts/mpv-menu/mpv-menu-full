@@ -657,14 +657,20 @@ _load_local() {
     case "$answer" in
         d)  PS3="Select a directory to queue in mpv: "
             select dir in $(find "$vid_dir" -maxdepth 1 | sed 's,.*/,,'); do
-                mpvc add "$vid_dir"/"$dir"/* >/dev/null 2>&1
-                echo " ${green}$dir added to mpv playlist.${nocolor}"
-                sleep 3s
-                break
+                if [[ -n $(find "$vid_dir"/"$dir" -type d -empty) ]]; then
+                    echo " ${red}$dir is empty. Wait and try again...${nocolor}"
+                    sleep 3s
+                    continue
+                else
+                    mpvc add "$vid_dir"/"$dir"/* >/dev/null 2>&1
+                    echo " ${green}$dir added to mpv playlist.${nocolor}"
+                    sleep 3s
+                    break
+                fi
             done
             _menu
         ;;
-        f)  ranger "$vid_dir"; _menu
+        f)  ranger "$vid_dir"; _menu # See my ranger configuration files to open or queue video files with mpv
         ;;
     esac
 }
