@@ -12,7 +12,8 @@ _disksusage() { df -h | awk '/sda2/{print $5}'; }
 
 _fanspeed() { sensors | awk '/fan2/{print $2}'; }
 
-_coretemp() { sensors | awk '/Tdie/{print $2}' | sed 's/+//'; }
+_coretemp() { sensors | awk '/Tccd1/{print $2}' | sed 's/+//'; }
+#_coretemp() { sensors | awk '/Tdie/{print $2}' | sed 's/+//'; }
 
 _nvidia() {
     gputemp="$(nvidia-smi \
