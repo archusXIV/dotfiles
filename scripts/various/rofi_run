@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+#
 export XDG_CURRENT_DESKTOP=''
 
 NAME=$(basename "$0")
