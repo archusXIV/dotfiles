@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # A rofi script to apply a ~/.Xresources color theme.
+# Themes files are located in XDG_CONFIG_HOME/xfiles/themes
 
 xres_file="$RESOURCES_FILE"
 
