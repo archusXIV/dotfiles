@@ -3,7 +3,7 @@
 # This script will copy your username and password
 # (from a text file) in the clipboard so you can paste them somewhere.
 # Account: username password
-
+# Script to use as a single user computer of course.
 list="$HOME/Documents/.admin/pass/pass.txt"
 
 _copy() {
