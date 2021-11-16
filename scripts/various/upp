@@ -1,11 +1,13 @@
 #!/bin/bash
 
+# This script prompt the user to reboot his machine
+# in case importants packages got updates available
 # Dependencies: pacman-contrib to use rankmirrors.
 # Optional    : polybar, i3blocks
 
 mirr="/etc/pacman.d/mirrorlist"
 bckp="/etc/pacman.d/mirrorlist_bckp"
-criteria="(linux|linux-lts|nvidia|nvidia-lts|mesa|systemd|amd-ucode|xf86-video|xorg)"
+criteria="(linux|nvidia|mesa|systemd|amd-ucode|xf86-video|xorg)"
 nocolor=$'\e[0m';
 red=$'\e[0;31m';
 green=$'\e[0;32m';
