@@ -57,6 +57,15 @@ _orphans() {
     fi
 }
 
+_pacdiff() {
+    if [[ -z $(find /etc -regextype posix-extended -regex ".+\.pac(new|save)" 2> /dev/null) ]]; then
+        echo " ${green}No pac{new,save} files found.${color_off}"
+        sleep 3s
+    else
+        sudo pacdiff
+    fi
+}
+
 _reflector() {
     PS3=""
     echo ""
@@ -133,7 +142,7 @@ _menu() {
             6)  updates-viewer --list
                 echo ""
             ;;
-            7)  sudo pacdiff
+            7)  _pacdiff
                 echo ""
             ;;
             8)  sudo vim /etc/pacman.conf
