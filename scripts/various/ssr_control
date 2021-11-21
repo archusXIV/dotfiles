@@ -1,24 +1,42 @@
 #!/bin/bash
 
-# Start simplescreenrecorder at least for 30 seconds...
-PIPE="/tmp/ssr-command-pipe"
+PIPE="$XDG_RUNTIME_DIR/ssr.fifo"
 
 if [[ -p "$PIPE" ]]; then
-    rm "$PIPE" && mkfifo "$PIPE"
+    rm "$PIPE" && mkfifo "$PIPE" || exit 1
 else
-    mkfifo "$PIPE"
+    mkfifo "$PIPE" || exit 1
 fi
+
+amixer set Capture,0 85%,85% unmute cap >/dev/null 2>&1
+polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 2 >/dev/null 2>&1
+
+echo "How long do you want the desktop recording to last? (in seconds): "
+read -r TIME
 
 simplescreenrecorder \
     --start-hidden \
     --settingsfile="/home/archangel/.config/simplescreenrecorder/input-profiles/triplescreen.conf" < "$PIPE" &
 
+record_chrono 2 &
+
 exec 4> "$PIPE"
 sleep 3
+
 echo "record-start" >&4
-sleep 30
+sleep "$TIME"
+
 echo "record-save" >&4
 sleep 3
+
 echo "quit" >&4
 exec 4>&-
+
 rm "$PIPE"
+
+amixer set Capture,0 0%,0% mute nocap >/dev/null 2>&1
+polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 1 >/dev/null 2>&1
+killall record_chrono
+polybar-msg hook chrono-ipc-2 2 >/dev/null 2>&1
+clear
+exit
