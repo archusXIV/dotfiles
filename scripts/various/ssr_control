@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Dependencies: simplescreenrecorder, polybar (optional)
+
+[[ -z $(command -v simplescreenrecorder) ]] && {
+    echo "simplescreenrecorder isn't installed, exiting..."
+    exit 165
+   }
+
 PIPE="$XDG_RUNTIME_DIR/ssr.fifo"
 
 if [[ -p "$PIPE" ]]; then
@@ -18,7 +25,7 @@ simplescreenrecorder \
     --start-hidden \
     --settingsfile="/home/archangel/.config/simplescreenrecorder/input-profiles/triplescreen.conf" < "$PIPE" &
 
-record_chrono 2 &
+record_chrono 2 & # https://github.com/archusXIV/dotfiles/blob/main/scripts/various/record_chrono
 
 exec 4> "$PIPE"
 sleep 3
