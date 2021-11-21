@@ -1,0 +1,21 @@
+! black & cyan
+#define fg    #7b81a6
+#define bg    #000000
+#define curs  #8be9fd
+
+#define blk   #464A52
+#define blk2  #464A52
+#define red   #D43838
+#define red2  #D43838
+#define grn   #A0CC7A
+#define grn2  #A0CC7A
+#define ylw   #C3FA8C
+#define ylw2  #C3FA8C
+#define blu   #424D9A
+#define blu2  #424D9A
+#define mag   #AF5EA0
+#define mag2  #AF5EA0
+#define cyn   #8BE9FD
+#define cyn2  #8BE9FD
+#define wht   #F8F8F0
+#define wht2  #F8F8F2
