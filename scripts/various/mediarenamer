@@ -1,0 +1,104 @@
+#!/bin/bash
+
+# Author Barret E (2021) <archus@protonmail.com>
+# https://github.com/archusXIV/dotfiles
+#
+# Run this script in your music directory for example... (works fine for videos too).
+# First we remove spaces in media files, then list them for
+# you to choose one to rename from its metadatas presented
+# with 'mediainfo' witch is in fact the only dependency of this short program.
+
+color_off=$'\e[0m';
+red=$'\e[0;31m';
+green=$'\e[0;32m';
+
+
+[[ -z $(command -v mediainfo) ]] && {
+    echo " ${red}Missing dependencies...mediainfo"
+    exit 1
+}
+
+_if_ext() {
+    if [[ "$media" =~ .mkv ]]; then
+        mv "$media" "$(cat newname.txt)".mkv
+    elif [[ "$media" =~ .mp3 ]]; then
+        mv "$media" "$(cat newname.txt)".mp3
+    elif [[ "$media" =~ .mp4 ]]; then
+        mv "$media" "$(cat newname.txt)".mp4
+    elif [[ "$media" =~ .flac ]]; then
+        mv "$media" "$(cat newname.txt)".flac
+    elif [[ "$media" =~ .ogg ]]; then
+        mv "$media" "$(cat newname.txt)".ogg
+    else
+        mv "$media" "$(cat newname.txt)".wav
+    fi
+}
+
+# Replacing spaces with underscores.
+if [[ -n $(find . -depth -name "* *") ]]; then
+    find . -depth -name "* *" -exec \
+    bash -c '
+    for f in "$@"; do
+        n="${f##*/}"
+        mv -nv "$f" "${f%/*}/${n// /_}" >/dev/null 2>&1
+    done
+    ' dummy {} +
+fi
+
+PS3=""
+echo " ${green}Please select a file to rename: ${color_off}"
+echo ""
+select media in $(find . -name "*.mkv" -o -name "*.mp3" -o -name "*.mp4" \
+    -o -name "*.flac" -o -name "*.ogg" -o -name "*.wav" | sed 's,.*/,,'); do
+
+    if [[ $(mediainfo "$media" | grep -e 'Track name') ]]; then
+        echo " ${green}$media" metadatas:${color_off}
+        mediainfo "$media"
+        sleep 5
+        mediainfo "$media" \
+        | grep -e 'Track name' \
+        | sed -n '1p' \
+        | sed 's/Track name//;s/^ *[[:space:]]//;s/: //' > newname.txt
+        echo " ${green}The suggested file name is: ${red}"$(cat newname.txt)""
+        echo " ${green}Copy/paste it, or pick another one.${color_off}"
+        read -r newname
+        echo "$newname" > newname.txt
+
+        _if_ext
+
+    else
+        echo " ${green}$media" metadatas:${color_off}
+        mediainfo "$media"
+        sleep 5
+        mediainfo "$media" \
+        | grep -e 'Complete name' \
+        | sed 's/Complete name//;s/^ *[[:space:]]//;s/: //' > newname.txt
+        echo " ${green}The suggested file name is: ${red}"$(cat newname.txt)""
+        echo " ${green}Copy/paste it, or pick another one.${color_off}"
+        read -r newname
+        echo "$newname" > newname.txt
+
+        _if_ext
+
+    fi
+
+    rm newname.txt
+
+# Replacing underscores with spaces.
+    if [[ -n $(find . -depth -name "*_*") ]]; then
+        find . -depth -name "*_*" -exec \
+        bash -c '
+        for f in "$@"; do
+            n="${f##*/}"
+            mv -nv "$f" "${f%/*}/${n//_/ }" >/dev/null 2>&1
+        done
+        ' dummy {} +
+    fi
+
+    echo ""
+    echo " ${green} Media files in this directory ${red}"
+    echo ""
+    ls -lth --file-type *.{mpv,mp3,mp4,flac,ogg,wav} 2>/dev/null
+    break
+done
+
