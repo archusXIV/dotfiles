@@ -41,6 +41,7 @@ volume_color =                          "red"
 ###############################################################################
 ##########################  playlist & other settings  ########################
 ###############################################################################
+execute_on_player_state_change =        notify-send "$(mpc --format %title% current)"
 autocenter_mode =                       "yes"
 ignore_leading_the =                    "yes"
 ignore_diacritics =                     "yes"
