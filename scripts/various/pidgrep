@@ -34,6 +34,7 @@ EOF
 
 case "$1" in
     -p) if [[ -n $(pidof -x "$2") ]]; then
+            clear
             echo ""
             echo "Pid  | Command"
             echo "----------------------------------------------"
