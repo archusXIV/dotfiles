@@ -20,16 +20,15 @@ _usage() {
 
     Do you want to kill polybar? [N/y]:
 
-    *Some processes may not be displayed directly
+    * Some processes may not be displayed directly
     because they are children of a parent process,
     so this will be print:
 
-    Pid   | Command
+    Pid Matching expression bspwm_backnforth
     ----------------------------------------------
-    pid(s) matching expression conkyrc
+    908
 
-    366850
-
+    Do you want to kill bspwm_backnforth? [N/y]:
 EOF
 }
 
@@ -38,20 +37,20 @@ case "$1" in
             echo ""
             echo "Pid  | Command"
             echo "----------------------------------------------"
+            pgrep -a "$2"
 
             if [[ -z $(pgrep -a "$2") ]]; then
-                echo "pid(s) matching expression $2"
-                echo ""
+                clear
+                echo "Pid Matching expression $2"
+                echo "----------------------------------------------"
                 pgrep --full "$2" | sed -n '1p'
-            else
-                pgrep -a "$2"
             fi
         else
             echo "No such process!" && exit 1
         fi
 
         echo ""
-        echo " ${red}Do you want to kill $2? [N/y]:${nocolor}"
+        echo " ${red}Do you want to kill one of these processes? [N/y]:${nocolor}"
         read -rsn1 answer
             case "$answer" in
                 N|n) echo "bye..." && exit 0
