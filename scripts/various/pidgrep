@@ -38,12 +38,13 @@ case "$1" in
             echo ""
             echo "Pid  | Command"
             echo "----------------------------------------------"
-            pgrep -a "$2"
 
             if [[ -z $(pgrep -a "$2") ]]; then
                 echo "pid(s) matching expression $2"
                 echo ""
-                pgrep --full "$2"
+                pgrep --full "$2" | sed -n '1p'
+            else
+                pgrep -a "$2"
             fi
         else
             echo "No such process!" && exit 1
@@ -53,9 +54,9 @@ case "$1" in
         echo " ${red}Do you want to kill $2? [N/y]:${nocolor}"
         read -rsn1 answer
             case "$answer" in
-                N) exit 0
+                N|n) echo "bye..." && exit 0
                 ;;
-                y) echo " Enter the pid number to kill."
+                y|Y) echo " Enter the pid number to kill."
                    read -r pid 
                    kill -KILL $pid && echo " $2 does not exist anymore." \
                    && exit 0 || [[ -z $pid ]] && exit 1
@@ -67,4 +68,3 @@ case "$1" in
     -h|--help) _usage
     ;;
 esac
-
