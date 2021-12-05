@@ -1,5 +1,16 @@
 #!/bin/bash
 
+# Simple script to get a pid number of a running process.
+# We are prompted to kill it or not...
+# eg: pidgrep ncmpcpp
+# Pid  | Command
+# ----------------------------------------------
+# 1012331 ncmpcpp
+# Do you want to kill ncmpcpp? [N/y]:
+# Enter the pid number to kill.
+# 1012331
+# ncmpcpp does not exist anymore
+
 red=$'\e[0;31m';
 nocolor=$'\e[0m';
 
@@ -13,7 +24,7 @@ else
 fi
 
 echo ""
-echo " ${red}Do you want to kill this process? [N/y]:${nocolor}"
+echo " ${red}Do you want to kill "$1"? [N/y]:${nocolor}"
 read -rsn1 answer
     case "$answer" in
         N|n) echo "exiting...bye." && exit 0
