@@ -1,70 +1,33 @@
 #!/bin/bash
 
-
 red=$'\e[0;31m';
 nocolor=$'\e[0m';
 
-_usage() {
-    cat <<- EOF
+if [[ -n $(pgrep --full "$1") ]]; then
+    echo ""
+    echo "Pid  | Command"
+    echo "----------------------------------------------"
+    echo "$(pgrep --full "$1" | sed -n '1p')" "$1"
+else
+    echo "No such process!" && exit 1
+fi
 
-    -p) get the pid of a process using pidof, pgrep.
-    -h) Shows this synopsis.
-
-    * Output example using -p option: pidgrep -p polybar
-
-    Pid   | Command
-    ----------------------------------------------
-    366850 polybar i3-bar-1 -q
-    366851 polybar i3-bar-2 -q
-    366852 polybar i3-bar-3 -q
-
-    Do you want to kill polybar? [N/y]:
-
-    * Some processes may not be displayed directly
-    because they are children of a parent process,
-    so this will be print:
-
-    Pid Matching expression bspwm_backnforth
-    ----------------------------------------------
-    908
-
-    Do you want to kill bspwm_backnforth? [N/y]:
-EOF
-}
-
-case "$1" in
-    -p) if [[ -n $(pidof -x "$2") ]]; then
-            clear
-            echo ""
-            echo "Pid  | Command"
-            echo "----------------------------------------------"
-            pgrep -a "$2"
-
-            if [[ -z $(pgrep -a "$2") ]]; then
-                clear
-                echo "Pid Matching expression $2"
-                echo "----------------------------------------------"
-                pgrep --full "$2" | sed -n '1p'
+echo ""
+echo " ${red}Do you want to kill this process? [N/y]:${nocolor}"
+read -rsn1 answer
+    case "$answer" in
+        N|n) echo "exiting...bye." && exit 0
+        ;;
+        y|Y) echo " Enter the pid number to kill."
+            read -r pid 
+            if [[ $pid != $(pgrep --full "$1" | sed -n '1p') ]]; then
+                echo " ${red}wrong pid number"
+                exit 1
+            else
+                kill -KILL "$pid" && echo " ${red}$1 does not exist anymore."
+                exit 0
             fi
-        else
-            echo "No such process!" && exit 1
-        fi
-
-        echo ""
-        echo " ${red}Do you want to kill one of these processes? [N/y]:${nocolor}"
-        read -rsn1 answer
-            case "$answer" in
-                N|n) echo "bye..." && exit 0
-                ;;
-                y|Y) echo " Enter the pid number to kill."
-                   read -r pid 
-                   kill -KILL $pid && echo " $2 does not exist anymore." \
-                   && exit 0 || [[ -z $pid ]] && exit 1
-                ;;
-                *) echo "Must be 'N' or 'y', exiting..." && exit 1
-                ;;
-            esac
-    ;;
-    -h|--help) _usage
-    ;;
-esac
+        ;;
+        *) echo "Must be 'N' or 'y', exiting..." && exit 1
+        ;;
+    esac
