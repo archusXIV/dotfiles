@@ -28,19 +28,19 @@ fi
 echo ""
 echo " ${red}Do you want to kill "$1"? [N/y]:${nocolor}"
 read -rsn1 answer
-    case "$answer" in
-        N|n) echo "exiting...bye." && exit 0
-        ;;
-        y|Y) echo " Enter the pid number to kill."
-            read -r pid 
-            if [[ $pid != $(pgrep --full "$1" | sed -n '1p') ]]; then
-                echo " ${red}wrong pid number"
-                exit 1
-            else
-                kill -KILL "$pid" && echo " ${red}$1 does not exist anymore."
-                exit 0
-            fi
-        ;;
-        *) echo "Must be 'N' or 'y', exiting..." && exit 1
-        ;;
-    esac
+case "$answer" in
+    N|n) echo "exiting...bye." && exit 0
+    ;;
+    y|Y) echo " Enter the pid number to kill."
+        read -r pid
+        if [[ $pid != $(pgrep --full "$1" | sed -n '1p') ]]; then
+            echo " ${red}wrong pid number"
+            exit 1
+        else
+            kill -KILL "$pid" && echo " ${red}$1 does not exist anymore."
+            exit 0
+        fi
+    ;;
+    *) echo "Must be 'N' or 'y', exiting..." && exit 1
+    ;;
+esac
