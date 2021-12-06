@@ -2,14 +2,16 @@
 
 # Simple script to get a pid number of a running process.
 # We are prompted to kill it or not...
-# eg: pidgrep ncmpcpp
+# Of course we could use xkill but what about a background process?
+# eg: pidgrep mpd
 # Pid  | Command
 # ----------------------------------------------
-# 1012331 ncmpcpp
-# Do you want to kill ncmpcpp? [N/y]:
+# 712 mpd
+#
+# Do you want to kill mpd? [N/y]:
 # Enter the pid number to kill.
-# 1012331
-# ncmpcpp does not exist anymore
+# 712
+# mpd does not exist anymore
 
 red=$'\e[0;31m';
 nocolor=$'\e[0m';
