@@ -3,7 +3,7 @@
 # Simple script to get a pid number of a running process.
 # We are prompted to kill it or not...
 # Of course we could use xkill but what about a background process?
-# eg: pidgrep mpd
+# eg: pidgrep mpd (use sudo for root privileges).
 # Pid  | Command
 # ----------------------------------------------
 # 712 mpd
@@ -11,7 +11,7 @@
 # Do you want to kill mpd? [N/y]:
 # Enter the pid number to kill.
 # 712
-# mpd does not exist anymore
+# mpd does not exist anymore...
 
 red=$'\e[0;31m';
 nocolor=$'\e[0m';
@@ -21,26 +21,25 @@ if [[ -n $(pgrep --full "$1") ]]; then
     echo "Pid  | Command"
     echo "----------------------------------------------"
     echo "$(pgrep --full "$1" | sed -n '1p')" "$1"
+    echo ""
+    echo " ${red}Do you want to kill "$1"? [N/y]:${nocolor}"
+    read -rsn1 answer
+    case "$answer" in
+        N|n) echo "exiting...bye." && exit 0
+        ;;
+        y|Y) echo " Enter the pid number to kill."
+            read -r pid
+            if [[ $pid != $(pgrep --full "$1" | sed -n '1p') ]]; then
+                echo " ${red}wrong pid number"
+                exit 1
+            else
+                kill -KILL "$pid" && echo " ${red}$1 does not exist anymore..."
+                exit 0
+            fi
+        ;;
+        *) echo "Must be 'N' or 'y', exiting..." && exit 1
+        ;;
+    esac
 else
     echo "No such process!" && exit 1
 fi
-
-echo ""
-echo " ${red}Do you want to kill "$1"? [N/y]:${nocolor}"
-read -rsn1 answer
-case "$answer" in
-    N|n) echo "exiting...bye." && exit 0
-    ;;
-    y|Y) echo " Enter the pid number to kill."
-        read -r pid
-        if [[ $pid != $(pgrep --full "$1" | sed -n '1p') ]]; then
-            echo " ${red}wrong pid number"
-            exit 1
-        else
-            kill -KILL "$pid" && echo " ${red}$1 does not exist anymore."
-            exit 0
-        fi
-    ;;
-    *) echo "Must be 'N' or 'y', exiting..." && exit 1
-    ;;
-esac
