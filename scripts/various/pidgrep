@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Simple script to get a pid number of a running process.
+# Simple script to get the pid number of a running process.
 # We are prompted to kill it or not...
 # Of course we could use xkill but what about a background process?
 # eg: pidgrep mpd (use sudo for root privileges).
