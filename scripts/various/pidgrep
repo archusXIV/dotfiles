@@ -4,23 +4,31 @@
 # We are prompted to kill it or not...
 # Of course we could use xkill but what about a background process?
 # eg: pidgrep mpd (use sudo for root privileges).
-# Pid  | Command
 # ----------------------------------------------
-# 712 mpd
-#
+#  PID: 712 COMMAND: mpd
+# ----------------------------------------------
+#  
 # Do you want to kill mpd? [N/y]:
 # Enter the pid number to kill.
 # 712
-# mpd does not exist anymore...
+# 712 mpd does not exist anymore...
 
 red=$'\e[0;31m';
 nocolor=$'\e[0m';
 
-if [[ -n $(pgrep --full "$1") ]]; then
+# Using -x provides scripts pids too.
+if [[ -n $(pidof -x "$1") ]]; then
     echo ""
-    echo "Pid  | Command"
-    echo "----------------------------------------------"
-    echo "$(pgrep --full "$1" | sed -n '1p')" "$1"
+    if [[ $(ps -ef | grep "$1" | wc -l) -gt 1 ]]; then
+        echo "----------------------------------------------"
+        echo " ${red}PIDS:" ${nocolor}"$(pidof -x -S\| "$1")" ${red}"COMMAND:" ${nocolor}"$1"
+        echo "----------------------------------------------"
+    else
+        echo "----------------------------------------------"
+        echo " ${red}PID:" ${nocolor}"$(pgrep -u $UID -x "$1")" ${red}"COMMAND:" ${nocolor}"$1"
+        echo "----------------------------------------------"
+    fi
+
     echo ""
     echo " ${red}Do you want to kill "$1"? [N/y]:${nocolor}"
     read -rsn1 answer
@@ -29,11 +37,11 @@ if [[ -n $(pgrep --full "$1") ]]; then
         ;;
         y|Y) echo " Enter the pid number to kill."
             read -r pid
-            if [[ $pid != $(pgrep --full "$1" | sed -n '1p') ]]; then
-                echo " ${red}wrong pid number"
+            if [[ -z $(pgrep --full "$1" | grep "$pid") ]]; then
+                echo " ${red}wrong pid number...$1 still alive."
                 exit 1
             else
-                kill -KILL "$pid" && echo " ${red}$1 does not exist anymore..."
+                kill -KILL "$pid" && echo " ${red}"$pid" "$1" ${nocolor}does not exist anymore..."
                 exit 0
             fi
         ;;
