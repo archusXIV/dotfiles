@@ -102,7 +102,7 @@ case "$1" in
                     (( $(wc -l "$arch" | awk '{print $1}') > 0 )) && {
                         rm "$archaur"
                         touch "$archaur"
-                        sudo upp
+                        sudo upp # external script
                         }
                     }
                 else
