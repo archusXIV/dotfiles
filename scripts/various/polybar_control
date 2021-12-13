@@ -27,7 +27,7 @@ if [[ -n $(pidof bspwm) ]]; then
         -r1) polybar-msg -p "$pid1" cmd restart ;;
         -r2) polybar-msg -p "$pid2" cmd restart ;;
         -r3) polybar-msg -p "$pid3" cmd restart ;;
-        -ra) $SCRIPTDIR/launch_polybar ;;
+        -ra) $SCRIPTDIR/launch_polybar & ;;
     esac
 elif [[ -n $(pidof i3) ]]; then
     # I use i3 as a second wm choice
@@ -42,8 +42,10 @@ elif [[ -n $(pidof i3) ]]; then
         -r1) polybar-msg -p "$pid1" cmd restart ;;
         -r2) polybar-msg -p "$pid2" cmd restart ;;
         -r3) polybar-msg -p "$pid3" cmd restart ;;
-        -ra) $SCRIPTDIR/launch_polybar ;;
+        -ra) $SCRIPTDIR/launch_polybar & ;;
     esac
 else
     echo "no bspwm or i3 session running" && exit 1
 fi
+
+exit
