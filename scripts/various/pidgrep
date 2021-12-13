@@ -1,52 +1,81 @@
 #!/bin/bash
 
-# Simple script to get the pid number of a running process.
+# Simple script to get the pid(s) number(s) of a running process.
 # We are prompted to kill it or not...
 # Of course we could use xkill but what about a background process?
 # eg: pidgrep mpd (use sudo for root privileges).
 # ----------------------------------------------
 #  PID: 712 COMMAND: mpd
 # ----------------------------------------------
-#  
+#
 # Do you want to kill mpd? [N/y]:
 # Enter the pid number to kill.
 # 712
 # 712 mpd does not exist anymore...
 
+green=$'\e[0;32m';
 red=$'\e[0;31m';
 nocolor=$'\e[0m';
 
 if [[ $(ps -ef | grep "$1" | sed -r '$ d' | wc -l) -gt 2 ]]; then
+
     echo ""
+
     if [[ $(ps -ef | grep "$1" | sed -r '$ d' | wc -l) -gt 3 ]]; then
+
         # Here we expect more than three matches:
         # The process name itself with at least two instances,
         # the ps line matching 'grep $1' and the pid of this script too.
         # Using 'pidof -x' provides scripts pids too.
+
         echo "----------------------------------------------"
-        echo " ${red}PIDS:" ${nocolor}$(pidof -x -S\| "$1") ${red}"COMMAND:" ${nocolor}"$1"
+        echo " PIDS:"${green} $(pidof -x -S\| "$1")${nocolor} "COMMAND:" ${green}"$1"${nocolor}
         echo "----------------------------------------------"
         echo ""
-        echo " ${red}"$1" owns multiple pids or instances."
-        echo " Do you wish to kill them all? [N/y]:${nocolor}"
+        echo " ${red}There are multiple pids or instances matching $1."
+        echo " Press any key for details.${nocolor}"
+        echo ""
+
+        read -rsn 1 key
+        case "$key" in
+            *) echo "--------------------------------------------------------------------------------"
+               echo " ${green}USER    |  PID  |                                 |       COMMAND${nocolor}"
+               echo "--------------------------------------------------------------------------------"
+               ps -ef | grep "$1" | head -n -2
+               echo "--------------------------------------------------------------------------------" ;;
+        esac
+
+        echo ""
+        echo " ${red}Do you wish to kill them all [a] or just one [x] or quit [q]?${nocolor}"
+
         read -rsn1 answer
         case "$answer" in
-            N|n) echo "exiting...bye." && exit 0
+            q) echo "exiting...bye." && exit 0
             ;;
-            y|Y) for pid in $(pidof -x "$1"); do
+            a) for pid in $(pidof -x "$1"); do
                      kill -KILL "$pid"
                  done
                  echo " ${red}"$1" ${nocolor}does not exist anymore..."
             ;;
-            *) echo "Must be 'N' or 'y', exiting..." && exit 1
+            x) echo " Enter the pid number to kill."
+               read -r pid 
+               if [[ -z $(pgrep --full "$1" | grep "$pid") ]]; then
+                    echo " ${red}wrong pid number...$1 still alive."
+                    exit 1
+                else
+                    kill -KILL "$pid" && echo " ${red}"$pid" ${nocolor}has been killed..."
+                    exit 0
+                fi
             ;;
         esac
+
     else
         echo "----------------------------------------------"
-        echo " ${red}PID:" ${nocolor}$(pgrep --full "$1" | sed -n '1p') ${red}"COMMAND:" ${nocolor}"$1"
+        echo " PID:" ${green}$(pgrep --full "$1" | sed -n '1p') ${nocolor}"COMMAND:" ${green}"$1"${nocolor}
         echo "----------------------------------------------"
         echo ""
         echo " ${red}Do you want to kill "$1"? [N/y]:${nocolor}"
+
         read -rsn1 answer
         case "$answer" in
             N|n) echo "exiting...bye." && exit 0
@@ -64,6 +93,7 @@ if [[ $(ps -ef | grep "$1" | sed -r '$ d' | wc -l) -gt 2 ]]; then
             *) echo "Must be 'N' or 'y', exiting..." && exit 1
             ;;
         esac
+
     fi
 
 else
