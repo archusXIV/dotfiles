@@ -6,15 +6,15 @@
 # Simple script to get the pid(s) number(s) of a running process.
 # We are prompted to kill it or not...
 # Of course we could use xkill but what about a background process?
-# eg: pidgrep mpd (use sudo for root privileges).
+# eg: pidgrep my_script_name (use sudo for root privileges).
 # ----------------------------------------------
-#  PID: 712 COMMAND: mpd
+#  PID: 712 COMMAND: my_script_name
 # ----------------------------------------------
 #
-# Do you want to kill mpd? [N/y]:
+# Do you want to kill my_script_name? [N/y]:
 # Enter the pid number to kill.
 # 712
-# 712 mpd does not exist anymore...
+# 712 my_script_name does not exist anymore...
 
 green=$'\e[0;32m';
 red=$'\e[0;31m';
