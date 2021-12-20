@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# Author: Barret E (2020-21) <archus@protonmail.com>
+# Dependencies: pulseaudio, polybar
+#
+# This script toggle mute my webcam ' microphone.
+# It is called by the sxhkd daemon and sends a hook in my polybar module.
+# https://github.com/archusXIV/dotfiles/blob/main/polybar/active-modules-bar2.conf
+
+_get_source() { pactl get-source-mute 1; }
+
+_up() {
+    if [[ $(_get_source) == 'Mute: yes' ]]; then
+        pactl set-source-mute 1 0
+        pactl set-source-volume 1 85%
+        polybar-msg hook mic-ipc 2 >/dev/null 2>&1
+    else
+        pactl set-source-volume 1 +1%
+        polybar-msg hook mic-ipc 2 >/dev/null 2>&1
+    fi
+}
+
+_down() {
+    pactl set-source-volume 1 -1%
+    polybar-msg hook mic-ipc 2 >/dev/null 2>&1
+}
+
+_toggle() {
+    if [[ $(_get_source) == 'Mute: yes' ]]; then
+        pactl set-source-mute 1 0
+        pactl set-source-volume 1 85%
+        polybar-msg hook mic-ipc 2 >/dev/null 2>&1
+    else
+        pactl set-source-mute 1 1
+        pactl set-source-volume 1 0%
+        polybar-msg hook mic-ipc 1 >/dev/null 2>&1
+    fi
+}
+
+case "$1" in
+    up     ) _up
+    ;;
+    down   ) _down
+    ;;
+    toggle) _toggle
+    ;;
+esac
+
