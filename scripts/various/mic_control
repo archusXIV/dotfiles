@@ -17,7 +17,7 @@ case "$1" in
             else
                 pactl set-source-volume 1 +1%
                 polybar-msg hook mic-ipc 2 >/dev/null 2>&1
-                fi
+            fi
     ;;
     down  ) pactl set-source-volume 1 -1%
             polybar-msg hook mic-ipc 2 >/dev/null 2>&1
