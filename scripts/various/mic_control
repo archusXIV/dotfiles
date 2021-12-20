@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Author: Barret E (2020-21) <archus@protonmail.com>
+# Author: Barret E (2021) <archus@protonmail.com>
 # Dependencies: pulseaudio, polybar
 #
 # This script toggle mute my webcam' microphone.
