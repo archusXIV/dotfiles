@@ -1,6 +1,6 @@
 [reload the hotkeys daemon]
 # reload sxhkd configuration files.
-super + Escape
+alt + Escape
     pkill -USR1 -x sxhkd; \
     notify-send "sxhkd config reloaded"
 
@@ -12,27 +12,40 @@ ctrl + alt +Delete
 Menu ; {d,r}
     {dmenu-chooser,rofi-chooser}
 
+[scratchpad]
+super + e
+    bspwm_scratchpad $EDITOR
+
+alt + p
+    bspwm_scratchpad $MIXER
+
+alt + y
+    bspwm_scratchpad mpv-menu
+
+alt + z
+    bspwm_scratchpad $TERMINAL
+
 [applications bindings]
 # terminal emulators
-super + Return
+alt + Return
     $TERMINAL
 
 # center term in screens.
 super + shift + {KP_End,KP_Down,KP_Next}
     xdo move -n $TERMINAL {-x 123 -y 108,-x 2043 -y 108,-x 3963 -y 108}
 
-super + t ; {r,s}
+alt + t ; {r,s}
     {\
     xtranger, \
     xterm -e 'sudo search_install' \
     }
 
 # URxvt applications
-super + u ; {b,c,d,e,h,j,m,n,p,r,s,x,y}
+alt + u ; {b,c,d,e,h,j,m,n,p,r,s,x,y}
     urxvt_apps -{b,c,d,e,h,j,m,n,p,r,s,x,y}
 
 # gui applications
-super + g ; {e,f,g,v,w}
+alt + g ; {e,f,g,v,w}
     {\
     $EDITOR, \
     $FILEMNGR, \
@@ -42,7 +55,7 @@ super + g ; {e,f,g,v,w}
     }
 
 # audio-video applications
-super + v ; {e,g,p,q}
+alt + v ; {e,g,p,q}
     {\
     pulseaudio-equalizer-gtk, \
     qv4l2, \
@@ -51,7 +64,7 @@ super + v ; {e,g,p,q}
     }
 
 # script to launch rofi-record or ssr.
-super + shift + v ; {r,s,k}
+alt + shift + v ; {r,s,k}
     record_options -{r,s,k}
 
 [polycontrol]
@@ -66,7 +79,8 @@ alt + shift + {Left,Down,Up,Right}
 
 [volume/player control]
 XF86Audio{Lower,Raise}Volume
-    pulsemixer --change-volume {-,+,}5
+    pactl set-sink-volume 1 {-,+,}5%; \
+    notify-volume
 
 XF86AudioMute
     pulsemixer --toggle-mute
@@ -89,4 +103,7 @@ alt + F10
 
 [mic control]
 alt + XF86AudioMute
-    amixer set Capture toggle
+    mic_control toggle
+
+alt + XF86Audio{Lower,Raise}Volume
+    mic_control {down,up}
