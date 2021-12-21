@@ -1,40 +1,46 @@
 #!/bin/bash
 
-# Dependencies: awk, gawk or nawk, vim (set as VISUAL).
 # SCRIPTDIR is part of the environment variables.
 
-[[ -d $SCRIPTDIR ]] && cd "$SCRIPTDIR" || exit 1
+cd "$SCRIPTDIR" || exit 1
 
 PS3="Enter a script number to Chmod, Edit, Remove, or Rename: "
 
-# set the scripts list.
+[[ -n $(find . -maxdepth 1 -perm 644) ]] && {
+    printf '%s\n' "THESE FILES ARE NOT EXECUTABLE:"
+    find . -maxdepth 1 -perm 644 | sed 's/.\///'
+    echo ""
+}
 
+# set the scripts list.
 select file in $(find "$SCRIPTDIR" -maxdepth 1 -type f | sort -d | sed 's,.*/,,'); do
     echo ""
     read -rp '[C]hmod, [E]dit, [R]emove, [r]ename the chosen script or QUIT [q]: ' action
     case "$action" in
-        C|c)    chmod +x "$file" && break
+        C|c)    chmod u+x "$file"
+                printf '%s\n' "$file is now executable."
+
         ;;
-        E|e)    $VISUAL "$file" && break
+        E|e)    $VISUAL "$file"
         ;;
-        R  )    echo "remove $file? [y/N]:"
-                read -r del
-                case $del in
-                    y|yes|Y) rm "$file" && echo "$file removed" && break
+        R  )    printf '%s\n' "remove $file? [y/N]:"
+                read -rsn 1 del
+                case "$del" in
+                    y|yes|Y) rm "$file" && printf '%s\n' "$file removed"
                     ;;
-                    n|no|N) echo "Deletion aborted" && break
+                    n|no|N) printf '%s\n' "Deletion aborted"
                     ;;
-                    *) echo "Unknown option...deletion aborted" && exit 1
+                    *) printf '%s\n' "Unknown option...deletion aborted" && exit 1
                     ;;
                 esac
         ;;
-        r  )    echo "rename $file:"
+        r  )    printf '%s\n' "rename $file:"
                 read -r name
                 mv "$file" "$name"
-                echo "$file renamed to: $name" && break
+                printf '%s\n' "$file renamed to: $name"
         ;;
         q)  exit 0
         ;;
     esac
+    break
 done
-
