@@ -5,7 +5,11 @@
 #
 # This script toggle mute my webcam' microphone.
 # It is called by the sxhkd daemon and sends a hook in my polybar module.
+# https://github.com/archusXIV/dotfiles/blob/main/sxhkd/sxhkdrc
 # https://github.com/archusXIV/dotfiles/blob/main/polybar/active-modules-bar2.conf
+# The digits in the pactl command line are:
+# 1rst) sound card ID
+# 2nd)  boolean or percentage value
 
 _get_mute() { pactl get-source-mute 1; }
 
