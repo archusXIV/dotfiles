@@ -1,8 +1,8 @@
 # reload sxhkd configuration files.
-super + Escape
+alt + Escape
 
 # launch the default terminal.
-super + Return
+alt + Return
 
 # dmenu-chooser, rofi-chooser
 Menu ; {d,r}
@@ -17,7 +17,7 @@ super + b ; m
 super + b ; super + {1-9,0}
 
 # most used gui applications.
-super + g ; {e,f,g,v,w}
+alt + g ; {e,f,g,v,w}
 
 # focus the older or newer node in the focus history.
 super + {i,o}
@@ -29,19 +29,19 @@ super + k
 super + m
 
 # send pulsemixer in scratchpad.
-super + p
+alt + p
 
 # swap current node with the next one.
 super + s
 
 # ranger & ranger as root, search_install.
-super + t ; {r,s}
+alt + t ; {r,s}
 
 # URxvt cmus, mpm, mutt,htop,jnettop, ncmpvc, mixer, etc...
-super + u ; {c,d,e,h,j,m,n,p,r,s,x,y}
+alt + u ; {c,d,e,h,j,m,n,p,r,s,x,y}
 
 # pulseaudio-equalizer-gtk, qv4l2, pavucontrol, qvidcap.
-super + v ; {e,g,p,q}
+alt + v ; {e,g,p,q}
 
 # swap focused window with the last one.
 super + x
@@ -50,7 +50,7 @@ super + x
 super + y
 
 # send terminal in scratchpad.
-super + z
+alt + z
 
 # move focus to next monitor.
 super + BackSpace
@@ -107,7 +107,7 @@ super + shift + b
 super + shift + r
 
 # record_options (rofi-record,ssr,kill polybar_mic)
-super + shift + v ; {r,s,k}
+alt + shift + v ; {r,s,k}
 
 # send focused window to next monitor.
 super + shift + BackSpace
@@ -137,8 +137,7 @@ alt + f : {Left,Down,Up,Right}
 alt + g : {h,j,k,l}
 
 # resize node in the given direction.
-alt + r : {Left,Down,Up,Right}
-    bspwm_resize {west,south,north,east} 25
+ctrl + r : {Left,Down,Up,Right}
 
 # swap current node with the previous one
 alt + s
@@ -151,9 +150,6 @@ alt + @button{1-3}
 
 # controls the webcam rectangle position on the screen.
 alt + shift + {Left,Down,Up,Right}
-
-# controls SimpleScreenRecorder (ssrt)
-alt + shift + r ; {d,m,p}
 
 # amixer set Capture toggle
 alt + XF86AudioMute
@@ -190,3 +186,9 @@ alt + F12
 
 # mediacontrol prev.
 alt + F9
+
+# mic_control toggle
+alt + XF86AudioMute
+
+mic_control {down,up}
+alt + XF86Audio{Lower,Raise}Volume
