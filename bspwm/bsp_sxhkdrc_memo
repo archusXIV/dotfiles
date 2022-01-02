@@ -190,5 +190,5 @@ alt + F9
 # mic_control toggle
 alt + XF86AudioMute
 
-mic_control {down,up}
+# mic_control {down,up}
 alt + XF86Audio{Lower,Raise}Volume
