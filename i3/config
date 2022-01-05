@@ -1,17 +1,42 @@
+#
+#               ▗▖                       ▗▄▖
+#               ▐▌                       ▝▜▌
+# ▟██▖ █▟█▌ ▟██▖▐▙██▖ ▟██▖▐▙██▖ ▟█▟▌ ▟█▙  ▐▌
+# ▘▄▟▌ █▘  ▐▛  ▘▐▛ ▐▌ ▘▄▟▌▐▛ ▐▌▐▛ ▜▌▐▙▄▟▌ ▐▌
+#▗█▀▜▌ █   ▐▌   ▐▌ ▐▌▗█▀▜▌▐▌ ▐▌▐▌ ▐▌▐▛▀▀▘ ▐▌
+#▐▙▄█▌ █   ▝█▄▄▌▐▌ ▐▌▐▙▄█▌▐▌ ▐▌▝█▄█▌▝█▄▄▌ ▐▙▄
+# ▀▀▝▘ ▀    ▝▀▀ ▝▘ ▝▘ ▀▀▝▘▝▘ ▝▘ ▞▀▐▌ ▝▀▀   ▀▀
+#                               ▜█▛▘
+#
+
+include $XDG_CONFIG_HOME/i3/conf.d/*.conf
+
+# font
+font pango:DejaVu Sans Mono 11
+
 #--------------------------------------- keys code ---------------------------------------------
 # Mod4 = Super (Windows key)
 # Mod1 = Alt
 set $Mod   Mod4
 set $Alt   Mod1
 set $Super bindsym Mod4
-set $ensi  exec --no-startup-id
-set $aensi exec_always --no-startup-id
 set $ws    workspace
 set $Sht   Shift
 set $Ctl   Control
 
+#-----------------------------------------------------------------------------------------------
+#------------------------------------------- modes ---------------------------------------------
+#-----------------------------------------------------------------------------------------------
+#set $DMENU DMENU: [A]rchWiki [C]onfigurator [F]inder [H]elp [I]3-dmenu [M]pd command [S]creenshots
+#set $GUI GUI: [E]ditor [F]ile manager [V]box [W]eb browser
+#set $ROFI ROFI: [A]pps [E]xit [K]eys [L]ocate [S]cript-menu [T]heme-selector [W]indows
+#set $URXVT URXVT: [C]mus [H]top [J]nettop [M]ixer [N]cmpcpp [P]ackagelist [R]ss [S]earch & install [Y]outube
+
 #------------------------------------- autostart apps ------------------------------------------
-$aensi sxhkd-start
+# start i3 focusing workspace one.
+exec --no-startup-id i3-msg $ws $WS1
+exec --no-startup-id sxhkd-start
+#exec --no-startup-id i3_alternate_layouts.py
 
 #------------------------------------ monitors settings ----------------------------------------
 # for non-free driver
@@ -39,61 +64,18 @@ set $WS10  "10"
 # restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
 $Super+$Alt+r restart
 # reload the configuration file
-$Super+$Sht+Escape reload; $ensi notify-send 'i3 config reloaded'
+$Super+$Sht+Escape reload; exec --no-startup-id notify-send 'i3 config reloaded'
 # exit i3 (back to tty)
-$Super+$Alt+q $ensi prompt "Do you really want to quit i3 ?" "Xexit"
+$Super+$Alt+q exec --no-startup-id prompt "Do you really want to logout ?" "Xexit"
 
 #-------------------------------------- Screenshot ---------------------------------------------
-bindsym Print $ensi screenshooter
+bindsym Print exec --no-startup-id screenshooter
 
-#----------------------------------- window managemnt ------------------------------------------
-# resizing tiled window with personal script.
-$Super+$Alt+$Ctl+Up    $ensi i3sizemode up
-$Super+$Alt+$Ctl+Down  $ensi i3sizemode down
-$Super+$Alt+$Ctl+Left  $ensi i3sizemode left
-$Super+$Alt+$Ctl+Right $ensi i3sizemode right
-
-# We are using i3get and i3sizemode here, for floating window.
-# with $Super+$Alt+$Ctl+{Up,Down,Left,Right} same as above.
-mode "RESIZE_TOPLEFT" {
-        bindsym Left resize grow left 5 px or 5 ppt
-        bindsym Right resize shrink left 5 px or 5 ppt
-
-        bindsym Down resize shrink up 5 px or 5 ppt
-        bindsym Up resize grow up 5 px or 5 ppt
-
-        bindsym Escape mode "default"
-}
-
-mode "RESIZE_TOPRIGHT" {
-        bindsym Left resize shrink right 5 px or 5 ppt
-        bindsym Right resize grow right 5 px or 5 ppt
-
-        bindsym Down resize shrink up 5 px or 5 ppt
-        bindsym Up resize grow up 5 px or 5 ppt
-
-        bindsym Escape mode "default"
-}
-
-mode "RESIZE_BOTTOMLEFT" {
-        bindsym Left resize grow left 5 px or 5 ppt
-        bindsym Right resize shrink left 5 px or 5 ppt
-
-        bindsym Down resize grow down 5 px or 5 ppt
-        bindsym Up resize shrink down 5 px or 5 ppt
-
-        bindsym Escape mode "default"
-}
-
-mode "RESIZE_BOTTOMRIGHT" {
-        bindsym Left resize shrink right 5 px or 5 ppt
-        bindsym Right resize grow right 5 px or 5 ppt
-
-        bindsym Down resize grow down 5 px or 5 ppt
-        bindsym Up resize shrink down 5 px or 5 ppt
-
-        bindsym Escape mode "default"
-}
+#--------------------- resizing tiled window with personal script ------------------------------
+$Super+$Alt+$Ctl+Up    exec --no-startup-id i3sizemode up
+$Super+$Alt+$Ctl+Down  exec --no-startup-id i3sizemode down
+$Super+$Alt+$Ctl+Left  exec --no-startup-id i3sizemode left
+$Super+$Alt+$Ctl+Right exec --no-startup-id i3sizemode right
 
 #-------------------------------------- Workspace Bindings --------------------------------------
 # workspace assignment
@@ -146,17 +128,18 @@ $Super+$Ctl+Right move workspace to output right
 $Super+$Ctl+Left move workspace to output left
 
 #-------------------------------- Container/Windows control -------------------------------------
-new_window normal
-new_float  normal
+# borders
+default_border normal
+default_floating_border normal
 
 # kill focused window
 $Super+$Ctl+q kill
 
 # close focused window
-$Super+q $ensi xdo close
+$Super+q exec --no-startup-id xdo close
 
-# close all windows with the same WM_CLASS
-$Super+$Alt+$Ctl+c $ensi xdo close -c
+# close all windows with the same class
+$Super+$Alt+$Ctl+c exec --no-startup-id xdo close -c
 
 # fullscreen window
 $Super+$Alt+f fullscreen toggle
@@ -192,10 +175,10 @@ $Super+c move position center
 
 ################# container layout ########################
 # default workspace layout: default|stacking|tabbed
-workspace_layout tabbed
+workspace_layout default
 
-$Super+h split h; $ensi notify-send 'split vertically'
-$Super+v split v; $ensi notify-send 'split horizontally'
+$Super+h split h; exec --no-startup-id notify-send 'split vertically'
+$Super+v split v; exec --no-startup-id notify-send 'split horizontally'
 
 # layout toggle, keycode 23 is Tab
 bindcode $Alt+23 layout toggle tabbed stacking splitv splith
@@ -221,193 +204,3 @@ $Super+$Alt+plus       gaps inner current plus  5
 $Super+$Alt+minus      gaps inner current minus 5
 $Super+$Alt+$Sht+plus  gaps outer current plus  5
 $Super+$Alt+$Sht+minus gaps outer current minus 5
-
-#----------------------------- application settings & assignments -------------------------------
-# get window class with xprop
-focus_follows_mouse yes
-popup_during_fullscreen smart
-# start i3 focusing workspace one.
-$ensi i3-msg $ws $WS1
-
-# border & title.. Must be set to border pixel for gaps to work
-for_window [class="^.*"] border pixel 1, title_format "%class >> %title"
-
-# focus, floating & sticky
-for_window [title="(?i)(?:copying|deleting|moving|About Mozilla Firefox)"] floating enable
-for_window [window_role="(?i)(?:pop-up|setup|About)"] floating enable, focus
-for_window [window_role="(?i)(?:PictureInPicture)"]   floating enable, focus
-for_window [class="(?i)(?:Five-or-more)"]             floating enable, focus
-for_window [class="(?i)(?:Fpm2)"]                     floating enable, focus
-for_window [class="(?i)(?:G213colors-gui)"]           floating enable, focus
-for_window [class="(?i)(?:Gufw.py)"]                  floating enable, focus
-for_window [class="(?i)(?:Nm-connection-editor)"]     floating enable, focus
-for_window [class="(?i)(?:Pavucontrol)"]              floating enable, focus
-for_window [class="(?i)(?:qt5ct)"]                    floating enable, focus
-for_window [class="(?i)(?:Sol)"]                      floating enable, focus
-for_window [class="(?i)(?:Alacritty)"]                floating enable, focus
-for_window [class="(?i)(?:Rofi)"]                     floating enable, focus
-for_window [instance="pulsemixer"]                    floating enable, focus
-for_window [instance="mpv-menu"]                      floating enable, focus
-
-# None floating rules
-for_window [class="(?i)(?:Feh)"]                      focus
-for_window [class="(?i)(?:Filezilla)"]                focus
-for_window [class="(?i)(?:Firefox)"]                  focus
-for_window [class="(?i)(?:Geany|lite-xl)"]            focus
-for_window [class="(?i)(?:Gparted)"]                  focus
-for_window [class="(?i)(?:Pcmanfm)"]                  focus
-for_window [class="(?i)(?:SimpleScreenRecorder)"]     focus
-for_window [class="(?i)(?:Xterm)"]                    focus
-for_window [class="(?i)(?:URxvt)"]                    focus
-for_window [class="(?i)(?:Virtualbox)"]               focus
-for_window [class="(?i)(?:Zathura)"]                  focus
-for_window [instance="cmus"]                          focus, title_format "<b>Urxvt >> cmus</b>"
-for_window [instance="jnettop"]                       focus, title_format "<b>Urxvt >> jnettop</b>"
-for_window [instance="ncmpcpp"]                       focus, title_format "<b>Urxvt >> ncmpcpp</b>"
-
-# Assign Applications to specific workspace
-# Monitor 1
-assign [class="(?i)(?:Firefox)"]                     → $WS1
-assign [instance="mpv-menu"]                         → $WS1
-assign [class="(?i)(?:Pcmanfm)"]                     → $WS2
-assign [class="(?i)(?:Filezilla)"]                   → $WS3
-assign [class="(?i)(?:Gimp|Feh)"]                    → $WS4
-assign [class="(?i)(?:SimpleScreenRecorder)"]        → $WS4
-assign [class="(?i)(?:qv4l2)"]                       → $WS4
-assign [class="(?i)(?:Sol|Five-or-more)"]            → $WS7
-assign [class="(?i)(?:Zathura)"]                     → $WS4
-# Monitor 2
-assign [class="(?i)(?:Geany)"]                       → $WS5
-assign [class="(?i)(?:lite-xl)"]                     → $WS5
-assign [instance="youtube"]                          → $WS6
-assign [class="(?i)(?:Mpv)"]                         → $WS6
-assign [class="(?i)(?:Gparted)"]                     → $WS7
-assign [class="(?i)(?:Gufw.py)"]                     → $WS7
-assign [class="(?i)(?:fpm2)"]                        → $WS7
-assign [class="(?i)(?:Virtualbox)"]                  → $WS7
-# Monitor 3
-assign [instance="pulsemixer"]                       → $WS8
-assign [instance="cmus"]                             → $WS8
-assign [instance="ncmpcpp"]                          → $WS8
-assign [instance="htop"]                             → $WS9
-assign [instance="jnettop"]                          → $WS9
-assign [class="(?i)(?:Xterm)"]                       → $WS10
-assign [instance="newsboat"]                         → $WS10
-assign [instance="packagelist"]                      → $WS10
-assign [instance="search_install"]                   → $WS10
-
-#--------------------------------- ricing our i3 config ---------------------------------------
-# These lines call colors from ~/.Xresources
-# Xresources      var      value       fallback (default .Xresources theme)
-set_from_resource $bg      background  #1A2833
-set_from_resource $fg      foreground  #6296BF
-set_from_resource $blk     color0      #152028
-set_from_resource $red     color1      #FF4747
-set_from_resource $grn     color2      #A6E074
-set_from_resource $ylw     color3      #DCA060
-set_from_resource $blu     color4      #4F57BF
-set_from_resource $mag     color5      #BF5EAE
-set_from_resource $cyn     color6      #5EA7BF
-set_from_resource $wht     color7      #CEC7F0
-set_from_resource $blk2    color8      #373B41
-set_from_resource $red2    color9      #CC6666
-set_from_resource $grn2    color10     #B5BD68
-set_from_resource $ylw2    color11     #F0C674
-set_from_resource $blu2    color12     #81A2BE
-set_from_resource $mag2    color13     #B294BB
-set_from_resource $cyn2    color14     #8ABEB7
-set_from_resource $wht2    color15     #C5C8C6
-# class                    border      background text    indicator  child_bd
-client.focused             $bg         $bg        $fg      $red       $blu
-client.unfocused           $bg         $bg        $blk2    $bg        $bg
-client.focused_inactive    $bg         $bg        $blk2    $bg        $bg
-client.urgent              $red        $bg        $red     $red       $red
-client.placeholder         $bg         $bg        $bg      $bg        $bg
-client.background          $bg
-# font
-font pango:DejaVu Sans Mono 11
-
-################################################################################################
-###########################################   i3bars   #########################################
-################################################################################################
-#bindsym --release Caps_Lock exec pkill -SIGRTMIN+1 i3blocks
-# Start i3bar to display a workspace bar
-#(plus the system information i3status, i3blocks finds out, if available)
-################################################################################################
-#$aensi nm-applet
-#$ensi volumeicon
-################################################################################################
-############################################ bar-0 #############################################
-################################################################################################
-#bar {
-#    id bar-0
-#    status_command i3blocks -c ~/.config/i3/i3blocks_DP-0.conf
-#    position top
-#    strip_workspace_numbers yes
-#    separator_symbol ":"
-#    output DP-0
-#    tray_output none
-#    workspace_buttons yes
-
-#colors {
-#    background $bg
-#    statusline #fg
-#    separator  $bg
-##   Indicators panel    border  backgr   text
-#    focused_workspace   $bg     $bg      $ylw2
-#    active_workspace    $bg     $bg      $grn2
-#    inactive_workspace  $bg     $bg      $fg
-#    urgent_workspace    $red    $bg      $red
-#    binding_mode        $bg     $red     $blk
-#    }
-#}
-################################################################################################
-############################################ bar-1 #############################################
-################################################################################################
-#bar {
-#    id bar-1
-#    status_command i3blocks -c ~/.config/i3/i3blocks_HDMI-0.conf
-#    position top
-#    strip_workspace_numbers yes
-#    separator_symbol ":"
-#    output HDMI-0
-#    tray_output none
-#    workspace_buttons yes
-
-#colors {
-#    background $bg
-#    statusline #fg
-#    separator  $bg
-##   Indicators panel    border  backgr   text
-#    focused_workspace   $bg     $bg      $ylw2
-#    active_workspace    $bg     $bg      $grn2
-#    inactive_workspace  $bg     $bg      $fg
-#    urgent_workspace    $red    $bg      $red
-#    binding_mode        $bg     $red     $blk
-#    }
-#}
-################################################################################################
-############################################ bar-2 #############################################
-################################################################################################
-#bar {
-#    id bar-2
-#    status_command i3blocks -c ~/.config/i3/i3blocks_DVI-D-0.conf
-#    position top
-#    strip_workspace_numbers yes
-#    separator_symbol ":"
-#    output DVI-D-0
-#    tray_output DVI-D-0
-#    workspace_buttons yes
-
-#colors {
-#    background $bg
-#    statusline #fg
-#    separator  $bg
-##   Indicators panel    border  backgr   text
-#    focused_workspace   $bg     $bg      $ylw2
-#    active_workspace    $bg     $bg      $grn2
-#    inactive_workspace  $bg     $bg      $fg
-#    urgent_workspace    $red    $bg      $red
-#    binding_mode        $bg     $red     $blk
-#    }
-#}
