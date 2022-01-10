@@ -1,21 +1,25 @@
 #!/bin/bash
 
-output="$XDG_CONFIG_HOME/cmus/cmus_output"
-info="$(cmus-remote -Q 2> /dev/null)"
-duration="$(echo "$info" | grep -v "set " | grep -v "tag " | grep "duration " | cut -d ' ' -f 2)"
+# Optional dependencies 'polybar' 'mpc'
+
+duration="$(cmus-remote -Q 2> /dev/null | awk '/duration/{print $2}')"
 artist=""
 title=""
 file=""
 status="stopped"
 
-if [[ $duration -gt 0 ]]; then
-    dur_minutes=$(printf "%02d" $((duration / 60)))
-    dur_seconds=$(printf "%02d" $((duration % 60)))
-
-    info_dur=" |  $dur_minutes:$dur_seconds"
+if (( ${duration} >= 3600 )); then
+    hours=$(printf "%02d" $((duration / 3600)))
+    minutes=$(printf "%02d" $((duration / 60 - 60)))
+    seconds=$(printf "%02d" $((duration % 60)))
+    total_time=" |  ${hours}:${minutes}:${seconds}"
+elif (( ${duration} < 3600 )); then
+    minutes=$(printf "%02d" $((duration / 60)))
+    seconds=$(printf "%02d" $((duration % 60)))
+    total_time=" |  ${minutes}:${seconds}"
 fi
 
-while [ "$1" '!=' "" ]; do
+while [[ $1 != "" ]]; do
     case "$1" in
         title) title="$2"
         ;;
@@ -32,23 +36,26 @@ done
 
 msg=""
 
-
-if [ "$status" '=' 'stopped' ]; then
+if [[ ${status} = 'stopped' ]]; then
     msg=""
 else
-    if [ "$status" '=' 'paused' ]; then
-        msg="%{F$(xrdb -query | awk '/color1:/{print $NF}')}$msg"
+    # stop mpd if it's playing
+    [[ -n $(mpc --format %title% current) ]] && mpc stop
+
+    if [[ ${status} = 'paused' ]]; then
+        # if music is paused, title in polybar will turn blue
+        msg="%{F$(xrdb -query | awk '/color4:/{print $NF}')}${msg}"
     fi
 
-    if [ -n "$artist" ]; then
-        msg="$msg $artist"
+    if [[ -n ${artist} ]]; then
+        msg="${msg} ${artist}"
     fi
 
-    if [ -n "$title" ]; then
-        msg="$msg - $title $info_dur"
+    if [[ -n ${title} ]]; then
+        msg="${msg} - ${title} ${total_time}"
     else
-        if [ -n "$file" ]; then
-            msg="$msg $(basename "${file%.*}") $info_dur"
+        if [[ -n ${file} ]]; then
+            msg="${msg} $(basename "${file%.*}") ${total_time}"
         else
             msg=""
         fi
@@ -56,13 +63,13 @@ else
 
 fi
 
-echo "$msg" > "$output"
+output="$XDG_CONFIG_HOME/cmus/cmus_output"
+echo "${msg}" > "${output}"
 
 sleep 0.2;
 
-if [ -n "$(pidof polybar)" ]; then
+if [[ -n $(pidof polybar) ]]; then
     polybar-msg hook cmus-ipc 1 > /dev/null 2>&1
 else
-    notify-send "$(cat $output)"
+    notify-send "$(cat "${output}")"
 fi
-
