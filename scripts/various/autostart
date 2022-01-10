@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # User systemd services.
-systemctl --user start {mpv-ipc,mpd}
+systemctl --user start mpv-ipc
 
 # Apply the lastest wallpaper
 if [[ -n $(command -v nitrogen) ]]; then
@@ -11,10 +11,19 @@ else
 fi
 
 # Sound
-pulsemixer --set-volume 50 &
-amixer set Capture,0 0%,0% mute nocap >/dev/null 2>&1
+# muting HDMI source/sink & webcam mic too.
+for ids in 0 1; do
+    pactl set-source-mute "$ids" 1
+    pactl set-source-volume "$ids" 0%
+done
 
-# Other settings
+pactl set-sink-mute 0 1
+pactl set-sink-volume 0 0%
+pactl set-sink-volume 1 50%
+
+unset ids
+
+# Bars
 if [[ -n $(pidof bspwm) ]]; then
     launch_polybar
     nm-applet &
@@ -22,12 +31,14 @@ elif [[ -n $(pidof i3) ]]; then
     launch_polybar
     nm-applet &
 else
-    notify-send 'This is Awesome'
+    notify-send "Welcome in "$(wmctrl -m | awk '/Name/{ print $2 }')""
 fi
 
+# Other settings
 cleanup &
 rsync -apq "$SCRIPTDIR"/* ~/Documents/scripts/ &
-rsync -apq --exclude 'VirtualBox' "$XDG_CONFIG_HOME"/* ~/Documents/configs/CONFIGS/ &
+rsync -apq --exclude \
+'VirtualBox' "$XDG_CONFIG_HOME"/* ~/Documents/configs/CONFIGS/ &
 
 # Updates script
-sleep 15s && updates-viewer --updates
+sleep 10s && updates-viewer --updates
