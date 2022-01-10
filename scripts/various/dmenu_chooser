@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# $DMENU_OPTIONS are in this file
+# https://github.com/archusXIV/dotfiles/blob/main/dmenu/dmenurc
+
 rc="$HOME/.config/dmenu/dmenurc"
 
 [ -f "$rc" ] && source "$rc"
