@@ -5,23 +5,184 @@ choice=$(printf "applications\\nautoscript\\nconfigs\\nfind\\nfonts\\nkeybinding
 
 [[ -z $choice ]] && exit
 
+_autoscript_menu() {
+    [[ -z ${SCRIPTDIR+x} ]] && exit 1
+
+    _autoscript() (
+
+        local script_file
+
+        script_file="$SCRIPTDIR/$1"
+ 
+        if [[ -f $script_file ]]; then
+            $EDITOR "$script_file" &
+        else
+            echo "#!/bin/bash" > "$script_file"
+            chmod +x "$script_file"
+            $EDITOR "$script_file" &
+        fi
+    )
+
+    selected=$(find "$SCRIPTDIR" -type f \
+        | sed 's,.*/,,' | sort | rofi \
+        -normal-window \
+        -dmenu \
+        -width 30 \
+        -hide-scrollbar \
+        -line-padding  \
+        -padding 20 \
+        -lines 10 \
+        -p "edit/create a script ")
+
+    [[ -z $selected ]] && exit
+
+    _autoscript "$selected"
+}
+
+_passwd_copy() {
+    local list selected
+    list="$HOME/Documents/.admin/pass/pass.txt"
+
+    _copy() (
+        cat "$list" | grep "$selected" | awk '{print $2" "$3}' | xclip -sel clip
+    )
+
+    selected=$(awk '{print $1}' "$list" | rofi \
+                                -normal-window \
+                                -dmenu \
+                                -columns 2 \
+                                -width 30 \
+                                -hide-scrollbar \
+                                -line-padding 2 \
+                                -padding 20 \
+                                -lines 10 \
+                                -p "Choose an account ")
+    [[ -z $selected ]] && exit
+
+    _copy "$selected"
+
+}
+
+_rofi_configs() {
+    local confDir dirOptions dirChoice fileOptions fileChoice
+
+    confDir="$HOME/.config/"
+
+    dirOptions=$(cd ${confDir} && ls -d */ | cut -d " " -f 1)
+    dirChoice=$(echo -e "${dirOptions[@]}\nquit" \
+        | rofi -normal-window -dmenu -i -width 20 -hide-scrollbar \
+        -line-padding 4 -padding 20 -lines 5 -p 'Config directories ')
+
+    if [[ $dirChoice == 'quit' ]]; then
+        echo dmenu closed.
+    elif [[ $dirChoice == ${dirChoice} ]]; then
+        fileOptions=$(cd ${confDir}${dirChoice} && ls -Ap | cut -d " " -f 1 | grep -v / )
+        fileChoice=$(echo -e "${fileOptions[@]}" \
+        | rofi -normal-window -dmenu -i -width 20 -hide-scrollbar \
+        -line-padding 4 -padding 20 -lines 4 -p 'Edit this file: ')
+        exec geany ${confDir}${dirChoice}${fileChoice} &
+    fi
+
+}
+
+_theme-selector() {
+    local xres_file selected
+    xres_file="$RESOURCES_FILE"
+
+    selected="$(ls "$XDG_CONFIG_HOME/xfiles/themes" \
+                | rofi -normal-window \
+                -dmenu -width 25 \
+                -hide-scrollbar \
+                -line-padding  \
+                -padding 20 \
+                -lines 10 \
+                -columns 2 \
+                -p "The actual theme is $(grep themes "$xres_file" | sed 's,.*/,,;s/"//')")"
+
+    [[ ! -f "$xres_file" ]] && echo "$xres_file: no such file or directory" && exit 1
+    [[ ! -f "$HOME"/.config/xfiles/themes/$selected ]] && exit 1
+
+    sed -i --follow-symlinks \
+        "/\#include \"\.config\/xfiles\/themes\//c\\#include \"\.config\/xfiles\/themes\/$selected\"" \
+        "$xres_file"
+
+    sleep 1s
+
+    # Function below calls other scripts.
+    _reload() (
+        xrdb -load "$xres_file" \
+        && Terminal_theme_changer \
+        && restart_wm \
+        && launch_polybar \
+        && xre2rasi \
+        && xre2dmenu \
+        && notify-send 'theme changed'
+    )
+
+    if [[ -n $(pidof bspwm) ]] || [[ -n $(pidof i3) ]]; then
+        _reload
+    else
+        exit 1
+    fi
+}
+
 case "$choice" in
-    applications) rofi_run -r &
+    applications) rofi \
+                 -normal-window \
+                 -modi run,drun \
+                 -show drun \
+                 -line-padding 4 \
+                 -columns 2 \
+                 -padding 50 \
+                 -hide-scrollbar
     ;;
-    autoscript) autoscript-menu &
+    autoscript  ) _autoscript_menu
     ;;
-    configs) rofi_configs &
+    configs     ) _rofi_configs
     ;;
-    find) locate-files &
+    find        ) locate / | rofi \
+                             -normal-window \
+                             -threads 0 \
+                             -width 50 \
+                             -dmenu -i \
+                             -p "locate " | xargs -r -0 xdg-open
     ;;
-    fonts) fontawesomemenu -f $HOME/Documents/theming/fa4-icon-list.txt &
+    fonts       ) fontawesomemenu -f "$HOME"/Documents/theming/fa4-icon-list.txt
     ;;
-    keybindings) rofi_keybindings &
+    keybindings ) if [[ -n $(pidof bspwm) ]]; then
+                      awk '/^[a-zA-Z]/ \
+                      && last {print $0,"\t",last} \
+                      {last=""} /^#/{last=$0}' \
+                      ~/.config/bspwm/bsp_sxhkdrc_memo \
+                      | column -t -s $'\t' \
+                      | rofi -normal-window \
+                      -dmenu -i -p 'Sxhkd memo ' \
+                      -no-show-icons \
+                      -width 1200 \
+                      -location 0
+                  elif [[ -n $(pidof i3) ]]; then
+                      awk '/^[a-zA-Z]/ \
+                      && last {print $0,"\t",last} \
+                      {last=""} /^#/{last=$0}' \
+                      ~/.config/i3/i3_sxhkdrc_memo \
+                      | column -t -s $'\t' \
+                      | rofi -normal-window \
+                      -dmenu -i -p 'i3_memo ' \
+                      -no-show-icons \
+                      -width 1200 \
+                      -location 0
+                  else
+                      echo "no bspwm or i3 session running" && exit 1
+                  fi
     ;;
-    pass) passwd_copy &
+    pass        ) _passwd_copy
     ;;
-    themes) theme-selector &
+    themes      ) _theme-selector
     ;;
-    window) rofi -modi window -show window -location 0 -width 850 &
+    window      ) rofi \
+                  -modi window \
+                  -show window \
+                  -location 0 \
+                  -width 850 &
     ;;
 esac
