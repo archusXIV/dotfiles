@@ -20,11 +20,11 @@ green=$'\e[0;32m';
 red=$'\e[0;31m';
 nocolor=$'\e[0m';
 
-if [[ $(ps -ef | grep "$1" | sed -r '$ d' | wc -l) -gt 2 ]]; then
+if [[ $(ps -ef | grep -c "$1") -gt 2 ]]; then
 
     echo ""
 
-    if [[ $(ps -ef | grep "$1" | sed -r '$ d' | wc -l) -gt 3 ]]; then
+    if [[ $(ps -ef | grep -c "$1") -gt 3 ]]; then
 
         # Here we expect more than three matches:
         # The process name itself with at least two instances,
