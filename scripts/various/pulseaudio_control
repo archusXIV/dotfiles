@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# Author: Barret E <archus@protonmail.com>
+# https://github.com/archusXIV/dotfiles
+# Simple script to control pulseaudio volume/microphone.
+# For instance I use the polybar default [module/pulseaudio] (sink) for sound output,
+# but not for my microphone (source) [module/mic-ipc]
+# https://github.com/archusXIV/dotfiles/blob/main/polybar/active-modules-bar2.conf
+
+PACTL_OUTPUT="$XDG_CACHE_HOME/volume.txt"
+
+_get_mute() { pactl get-source-mute @DEFAULT_SOURCE@; }
+
+_hook_on() { polybar-msg hook mic-ipc 2 >/dev/null 2>&1; }
+
+case "$1" in
+    --sink)     case "$2" in
+                    up)     pactl set-sink-volume @DEFAULT_SINK@ +5%
+                    ;;
+                    down)   pactl set-sink-volume @DEFAULT_SINK@ -5%
+                    ;;
+                    toggle) pactl set-sink-mute @DEFAULT_SINK@ toggle
+                    ;;
+                esac
+    ;;
+    --source)   case "$2" in
+                    up    ) if [[ $(_get_mute) == 'Mute: yes' ]]; then
+                                pactl set-source-mute 1 0
+                                pactl set-source-volume 1 75%
+                                _hook_on
+                            else
+                                pactl set-source-volume 1 +1%
+                                _hook_on
+                            fi
+                    ;;
+                    down  ) pactl set-source-volume 1 -1%
+                            _hook_on
+                    ;;
+                    toggle) if [[ $(_get_mute) == 'Mute: yes' ]]; then
+                                pactl set-source-mute 1 0
+                                pactl set-source-volume 1 75%
+                                _hook_on
+                            else
+                                pactl set-source-mute 1 1
+                                pactl set-source-volume 1 0%
+                                polybar-msg hook mic-ipc 1 >/dev/null 2>&1
+                            fi
+                    ;;
+                esac
+    ;;
+esac
+
