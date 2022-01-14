@@ -6,8 +6,8 @@
 # For instance I use the polybar default [module/pulseaudio] (sink) for sound output,
 # but not for my microphone (source) [module/mic-ipc]
 # https://github.com/archusXIV/dotfiles/blob/main/polybar/active-modules-bar2.conf
-# Usage: pulseaudio --sink {up,down,toggle}
-#        pulseaudio --source {up,down,toggle}
+# Usage: pulseaudio_control --sink {up,down,toggle}
+#        pulseaudio_control --source {up,down,toggle}
 
 PACTL_OUTPUT="$XDG_CACHE_HOME/volume.txt"
 
