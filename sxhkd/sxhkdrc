@@ -10,12 +10,9 @@ ctrl + alt +Delete
 
 [dmenu/rofi]
 Menu ; {d,r}
-    {dmenu-chooser,rofi-chooser}
+    {dmenu_chooser,rofi_chooser}
 
 [scratchpad]
-super + e
-    bspwm_scratchpad $EDITOR
-
 alt + p
     bspwm_scratchpad $MIXER
 
@@ -30,9 +27,8 @@ alt + z
 alt + Return
     $TERMINAL
 
-# center term in screens.
-super + shift + {KP_End,KP_Down,KP_Next}
-    xdo move -n $TERMINAL {-x 123 -y 108,-x 2043 -y 108,-x 3963 -y 108}
+alt + shift + Return
+    urxvtc -name floaterm
 
 alt + t ; {r,s}
     {\
@@ -77,14 +73,21 @@ ctrl + {_,shift + }{KP_End,KP_Down,KP_Next,KP_Left}
 alt + shift + {Left,Down,Up,Right}
     webcam_rectangle {1435 0,0 715,0 0,1435 715}
 
-[volume/player control]
+[volume/mic]
 XF86Audio{Lower,Raise}Volume
-    pactl set-sink-volume 1 {-,+,}5%; \
+    pulseaudio_control --sink {down,up}; \
     notify-volume
 
 XF86AudioMute
-    pulsemixer --toggle-mute
+    pulseaudio_control --sink toggle
 
+alt + XF86Audio{Lower,Raise}Volume
+    pulseaudio_control --source {down,up}
+
+alt + XF86AudioMute
+    pulseaudio_control --source toggle
+
+[player control]
 #XF86Audio{Play,Pause}
 alt + F11
     mediacontrol --toggle
@@ -100,10 +103,3 @@ alt + F9
 #XF86AudioStop
 alt + F10
     mediacontrol --stop
-
-[mic control]
-alt + XF86AudioMute
-    mic_control toggle
-
-alt + XF86Audio{Lower,Raise}Volume
-    mic_control {down,up}
