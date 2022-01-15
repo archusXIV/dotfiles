@@ -9,7 +9,7 @@
 # Usage: pulseaudio_control --sink {up,down,toggle}
 #        pulseaudio_control --source {up,down,toggle}
 
-[[ -n $(pidof polybar) ]] || exit 1
+[[ -z $(pidof polybar) ]] && exit 1
 
 default_sink=$(pactl get-default-sink)
 default_source=$(pactl get-default-source)
