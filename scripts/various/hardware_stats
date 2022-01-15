@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Hardware utilizations and temperatures.
+# Hardware utilizations and temperatures for polybar
 
 _kernel() { uname -r; }
 
