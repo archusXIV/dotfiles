@@ -35,17 +35,21 @@ _uninstall() {
 }
 
 _orphans() {
+    local pkgs
+    pkgs="$XDG_CACHE_HOME"/orphans_list.txt
     echo ""
-    if [[ -n $(pacman -Qdqt) ]]; then
-        pacman -Qdqt
+    if [[ -n $(pacman -Qtdq) ]]; then
+        pacman -Qtdq > "$pkgs" && cat "$pkgs"
         echo ""
         echo " ${red}Would you like to purge orphan packages? [N/y]:${color_off}"
         read -r purge
         case "$purge" in
             N|n|no ) _menu
             ;;
-            y|Y|yes) sudo pacman -Rdd $(pacman -Qdqt) && sudo paccache -ruk0
-                    _menu
+            y|Y|yes) sudo pacman -Rdd $(pacman -Qtdq) && sudo paccache -ruk0
+                     echo " ${green}A list of removed packages has been created \
+                     in "$XDG_CACHE_HOME"/orphans_list.txt.${color_off}"
+                     sleep 5s
             ;;
             *      ) _menu
             ;;
