@@ -20,14 +20,14 @@ green=$'\e[0;32m';
 red=$'\e[0;31m';
 nocolor=$'\e[0m';
 
-if [[ $(ps -ef | grep -c "$1") -gt 2 ]]; then
+if [[ $(ps -ef | grep -c "$1") -ge 3 ]]; then
 
     echo ""
 
-    if [[ $(ps -ef | grep -c "$1") -gt 3 ]]; then
+    if [[ $(ps -ef | grep -c "$1") -ge 4 ]]; then
 
         # Here we expect more than three matches:
-        # The process name itself with at least two instances,
+        # The process name itself with at least two instances or threads,
         # the ps line matching 'grep $1' and the pid of this script too.
         # Using 'pidof -x' provides scripts pids too.
 
@@ -35,8 +35,7 @@ if [[ $(ps -ef | grep -c "$1") -gt 2 ]]; then
         echo " PIDS:"${green} $(pidof -x -S\| "$1")${nocolor} "COMMAND:" ${green}"$1"${nocolor}
         echo "----------------------------------------------"
         echo ""
-        echo " ${red}There are multiple pids or instances matching $1."
-        echo " Press any key for details.${nocolor}"
+        echo " ${red}Press any key for details.${nocolor}"
         echo ""
 
         read -rsn 1 key
@@ -61,7 +60,7 @@ if [[ $(ps -ef | grep -c "$1") -gt 2 ]]; then
                 echo " ${red}"$1" ${nocolor}does not exist anymore..."
             ;;
             x)  echo " Enter the pid number to kill."
-                read -r pid 
+                read -r pid
                 if [[ -z $(pgrep --full "$1" | grep "$pid") ]]; then
                     echo " ${red}wrong pid number...$1 still alive."
                     exit 1
@@ -73,7 +72,7 @@ if [[ $(ps -ef | grep -c "$1") -gt 2 ]]; then
         esac
 
     else
-    
+
         if [[ -n $(systemctl list-units | grep "$1") ]]; then
             printf '%s\n' " ${red}$1 is a running systemd unit," \
             " ${green}please use systemctl command to manage it."
@@ -81,7 +80,7 @@ if [[ $(ps -ef | grep -c "$1") -gt 2 ]]; then
         elif [[ -n $(systemctl --user list-units | grep "$1") ]]; then
             printf '%s\n' " ${red}$1 is a running systemd --user unit," \
             " ${green}please use systemctl command to manage it."
-            exit 1 
+            exit 1
         fi
 
         echo "----------------------------------------------"
@@ -90,7 +89,7 @@ if [[ $(ps -ef | grep -c "$1") -gt 2 ]]; then
         echo ""
         echo " ${red}Do you want to kill "$1"? [N/y]:${nocolor}"
 
-        read -rsn1 answer
+        read -rsn 1 answer
         case "$answer" in
             N|n) echo "exiting...bye." && exit 0
             ;;
