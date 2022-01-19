@@ -17,10 +17,7 @@
 
 [section/base]
 include-file = /home/archangel/.config/polybar/bars.conf
-include-file = /home/archangel/.config/polybar/active-modules-wm.conf
-include-file = /home/archangel/.config/polybar/active-modules-bar1.conf
-include-file = /home/archangel/.config/polybar/active-modules-bar2.conf
-include-file = /home/archangel/.config/polybar/active-modules-bar3.conf
+include-directory = /home/archangel/.config/polybar/active-modules
 
 ;=====================================================
 ;     Colors & Settings
