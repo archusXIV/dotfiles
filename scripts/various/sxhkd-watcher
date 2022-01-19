@@ -1,20 +1,24 @@
 #!/bin/bash
 
-# Another sxhkd listener script
+# Listen on sxhkd events to:
+# - indicate when in a chord chain,
+# the last hotkey and the corresponding command.
+# export SXHKD_FIFO="$XDG_RUNTIME_DIR"/sxhkd.fifo
 
-pipe="$XDG_RUNTIME_DIR/sxhkd.fifo"
+cmd="$XDG_RUNTIME_DIR/cmd.txt"
 keys="$XDG_RUNTIME_DIR/keys.txt"
 
-while read line <$pipe
+while read line <$SXHKD_FIFO
 do
     if [[ "$line" == 'EEnd chain' ]]; then
-        echo "$line" > "$keys"
         polybar-msg hook sxhkd-ipc 2 >/dev/null 2>&1
     elif [[ "$line" == 'BBegin chain' ]]; then
-        echo "$line" > "$keys"
         polybar-msg hook sxhkd-ipc 1 >/dev/null 2>&1
-    else
+    elif [[ "$line" =~ 'H' ]]; then
         echo "$line" > "$keys"
-        polybar-msg hook sxhkd-ipc 3 >/dev/null 2>&1
+        polybar-msg hook hotkeys-ipc 2 >/dev/null 2>&1
+    elif [[ "$line" =~ 'C' ]]; then
+        echo "$line" > "$cmd"
+        polybar-msg hook command-ipc 2 >/dev/null 2>&1
     fi
 done
