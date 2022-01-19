@@ -1,15 +1,5 @@
 #!/bin/bash
 
-##xdotool search --onlyvisible --classname scratchpad windowunmap \
-##|| ( xdotool search --classname scratchpad windowmap; xdotool search --classname scratchpad windowraise; ) \
-##|| ( urxvtc -name scratchpad -geometry 102x34; xdotool search --classname scratchpad windowraise; )
-
-##  if ! xdotool search –onlyvisible –-classname ‘scratchpad’ windowunmap; then
-##    if ! xdotool search –-classname ‘scratchpad’ windowmap; then
-##      urxvt -title ‘scratchpad’ -name ‘scratchpad’;
-##      bspc window –swap biggest;
-##    fi;
-##  fi
 
 if [ $# = 0 ]; then
     cat <<EOF
