@@ -11,7 +11,6 @@ while read -r line <&3; do
     case "$line" in
         B*) hook=1 ;;
         E*) hook=2 ;;
-        C*) echo "$line" > "$keys" && hook=3 ;;
     esac
     polybar-msg hook sxhkd-ipc "${hook}"
 done
