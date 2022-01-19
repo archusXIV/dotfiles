@@ -47,8 +47,7 @@ _orphans() {
             N|n|no ) _menu
             ;;
             y|Y|yes) sudo pacman -Rdd $(pacman -Qtdq) && sudo paccache -ruk0
-                     echo " ${green}A list of removed packages has been created \
-                     in "$XDG_CACHE_HOME"/orphans_list.txt.${color_off}"
+                     echo " ${green}A list of removed packages has been created in $XDG_CACHE_HOME/orphans_list.txt.${color_off}"
                      sleep 5s
             ;;
             *      ) _menu
