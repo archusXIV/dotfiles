@@ -6,63 +6,71 @@
 # For instance I use the polybar [module/pulseaudio-ipc] (sink) for sound output,
 # and for my microphone (source) [module/mic-ipc]
 # https://github.com/archusXIV/dotfiles/blob/main/polybar/active-modules-bar2.conf
-# Usage: pulseaudio_control --sink {up,down,toggle}
-#        pulseaudio_control --source {up,down,toggle}
+# Usage: pulseaudio_control --sink {up,down,toggle} (preset is -/+5%)
+#        pulseaudio_control --source {up,down,toggle} (preset is -/+1%)
 
 [[ -z $(pidof polybar) ]] && exit 1
 
-default_sink=$(pactl get-default-sink)
-default_source=$(pactl get-default-source)
+# change default presets values to your liking.
+sink_preset=5
+source_preset=1
 
-get_sink_mute=$(pactl get-sink-mute "${default_sink}")
-get_source_mute=$(pactl get-source-mute "${default_source}")
+DEFAULT_SINK=$(pactl get-default-sink)
+DEFAULT_SOURCE=$(pactl get-default-source)
 
+# Are we muted?
+GET_SINK_MUTE=$(pactl get-sink-mute "${DEFAULT_SINK}")
+GET_SOURCE_MUTE=$(pactl get-source-mute "${DEFAULT_SOURCE}")
+
+# sending message to polybar
 _hook_sink_on() { polybar-msg hook pulseaudio-ipc 2 >/dev/null 2>&1; }
 _hook_source_on() { polybar-msg hook mic-ipc 2 >/dev/null 2>&1; }
 
 case "$1" in
     --sink)     case "$2" in
-                    up)     if [[ ${get_sink_mute} == 'Mute: yes' ]]; then
-                                pactl set-sink-mute "${default_sink}" toggle
-                                pactl set-sink-volume "${default_sink}" -5%
+                            # In case sound is muted we toggle mute.
+                    up)     if [[ ${GET_SINK_MUTE} == 'Mute: yes' ]]; then
+                                pactl set-sink-mute "${DEFAULT_SINK}" toggle
                                 _hook_sink_on
                             else
-                                pactl set-sink-volume "${default_sink}" +5%
+                                pactl set-sink-volume "${DEFAULT_SINK}" +${sink_preset}%
                                 _hook_sink_on
                             fi
                     ;;
-                    down)   pactl set-sink-volume "${default_sink}" -5%
+                    down)   pactl set-sink-volume "${DEFAULT_SINK}" -${sink_preset}%
                             _hook_sink_on
                     ;;
-                    toggle) pactl set-sink-mute "${default_sink}" toggle
-                            if [[ ${get_sink_mute} == 'Mute: yes' ]]; then
+                    toggle) if [[ ${GET_SINK_MUTE} == 'Mute: yes' ]]; then
+                                pactl set-sink-mute "${DEFAULT_SINK}" toggle
                                 _hook_sink_on
                             else
+                                pactl set-sink-mute "${DEFAULT_SINK}" toggle
                                 polybar-msg hook pulseaudio-ipc 1 >/dev/null 2>&1
                             fi
                     ;;
                 esac
     ;;
     --source)   case "$2" in
-                    up    ) if [[ ${get_source_mute} == 'Mute: yes' ]]; then
-                                pactl set-source-mute "${default_source}" toggle
-                                pactl set-source-volume "${default_source}" 75%
+                            # Same as above.
+                    up    ) if [[ ${GET_SOURCE_MUTE} == 'Mute: yes' ]]; then
+                                pactl set-source-mute "${DEFAULT_SOURCE}" toggle
+                                pactl set-source-volume "${DEFAULT_SOURCE}" 75%
                                 _hook_source_on
                             else
-                                pactl set-source-volume "${default_source}" +1%
+                                pactl set-source-volume "${DEFAULT_SOURCE}" +${source_preset}%
                                 _hook_source_on
                             fi
                     ;;
-                    down  ) pactl set-source-volume "${default_source}" -1%
+                    down  ) pactl set-source-volume "${DEFAULT_SOURCE}" -${source_preset}%
                             _hook_source_on
                     ;;
-                    toggle) if [[ ${get_source_mute} == 'Mute: yes' ]]; then
-                                pactl set-source-mute "${default_source}" toggle
-                                pactl set-source-volume "${default_source}" 75%
+                    toggle) if [[ ${GET_SOURCE_MUTE} == 'Mute: yes' ]]; then
+                                pactl set-source-mute "${DEFAULT_SOURCE}" toggle
+                                pactl set-source-volume "${DEFAULT_SOURCE}" 75%
                                 _hook_source_on
                             else
-                                pactl set-source-mute "${default_source}" toggle
-                                pactl set-source-volume "${default_source}" 0%
+                                pactl set-source-mute "${DEFAULT_SOURCE}" toggle
+                                pactl set-source-volume "${DEFAULT_SOURCE}" 0%
                                 polybar-msg hook mic-ipc 1 >/dev/null 2>&1
                             fi
                     ;;
