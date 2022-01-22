@@ -26,19 +26,29 @@ GET_SOURCE_MUTE=$(pactl get-source-mute "${DEFAULT_SOURCE}")
 _hook_sink_on() { polybar-msg hook pulseaudio-ipc 2 >/dev/null 2>&1; }
 _hook_source_on() { polybar-msg hook mic-ipc 2 >/dev/null 2>&1; }
 
+# if no polybar volume module exist; then get a notification anyway.
+_notify_volume() {
+    notify-send "Main pulseaudio volume \
+    "$(pactl get-sink-volume "${DEFAULT_SINK}" \
+    | awk '{if(NR!=2) {print $5}}')""
+}
+
 case "$1" in
     --sink)     case "$2" in
                             # In case sound is muted we toggle mute.
                     up)     if [[ ${GET_SINK_MUTE} == 'Mute: yes' ]]; then
                                 pactl set-sink-mute "${DEFAULT_SINK}" toggle
                                 _hook_sink_on
+                                _notify_volume
                             else
                                 pactl set-sink-volume "${DEFAULT_SINK}" +${sink_preset}%
                                 _hook_sink_on
+                                _notify_volume
                             fi
                     ;;
                     down)   pactl set-sink-volume "${DEFAULT_SINK}" -${sink_preset}%
                             _hook_sink_on
+                            _notify_volume
                     ;;
                     toggle) if [[ ${GET_SINK_MUTE} == 'Mute: yes' ]]; then
                                 pactl set-sink-mute "${DEFAULT_SINK}" toggle
