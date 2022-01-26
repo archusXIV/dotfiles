@@ -3,6 +3,8 @@
 ##    Author: Barret E (2020-21) <archus@protonmail.com>
 ##    Dependencies: ffmpeg, youtube-dl, ranger, socat, mpv & mpvc (command line interface for mpv).
 ##    https://github.com/lwilletts/mpvc/blob/master/mpvc
+##    To queue files in mpv when using function _load_local (option n°5 in main menu),
+##    follow given instructions at line 675.
 ##
 ##    This script rips video urls from Youtube and so on.
 ##    In our case we use ".m3u" files to store urls in and then be able
