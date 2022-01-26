@@ -20,7 +20,7 @@ _save_remove() {
                 echo " ${green}Overwrite $list? [y/N]:${nocolor}"
                 read overwrite
                 case $overwrite in
-                    y)  cp -f "$queue" "$list"
+                    y)  cp -f "$queue" "$list".m3u
                         echo " ${green}$list saved ${nocolor}"
                         sleep 2s
                         _check_queue
