@@ -1,45 +1,48 @@
 #!/bin/bash
 
 # Author: Barret E (2020-21) <archus@protonmail.con>
+# https://github.com/archusXIV/dotfiles
+#
 # Yet Another Updates Viewer Script for Arch Linux based systems.
-# Checks for updates, lists them in a file and passes the number in polybar.
+# Checks for updates, lists them in a readable file, update your polybar module.
 
-arch="$XDG_CACHE_HOME/archlinux.list"
-aur="$XDG_CACHE_HOME/aur.list"
-archaur="$XDG_CACHE_HOME/combined.list"
+ARCH="$XDG_CACHE_HOME/archlinux.list"
+AUR="$XDG_CACHE_HOME/aur.list"
+ARCHAUR="$XDG_CACHE_HOME/combined.list"
 
 _check_updates() {
     # checking dependencies
-    for i in checkupdates polybar yay; do
-        [[ -z $(command -v $i) ]] && exit 1
+    for deps in checkupdates polybar yay; do
+        [[ -z $(command -v $deps) ]] && exit 1
     done
 
     while true; do
 
-        [[ ! -f "$arch" ]] && touch "$arch"
-        [[ ! -f "$aur" ]] && touch "$aur"
-        [[ ! -f "$archaur" ]] && touch "$archaur"
+        [[ ! -f "$ARCH" ]] && touch "$ARCH"
+        [[ ! -f "$AUR" ]] && touch "$AUR"
+        [[ ! -f "$ARCHAUR" ]] && touch "$ARCHAUR"
 
         # because we want to check out the updates list.
-        checkupdates > "$arch"
-        cat "$arch" > "$archaur"
+        checkupdates > "$ARCH"
+        cat "$ARCH" > "$ARCHAUR"
 
         if (( $(yay -Qum 2> /dev/null | wc -l) > 0 )); then
             sleep 2s
-            yay -Qum > "$aur"
-            cat "$aur" >> "$archaur"
+            yay -Qum > "$AUR"
+            cat "$AUR" >> "$ARCHAUR"
 
-            # purge combined.list from possible double entries.
-            if [[ -n $(uniq -d "$archaur") ]]; then
+            # purge combined.list from possible duplicates.
+            if [[ -n $(uniq -d "$ARCHAUR") ]]; then
                 sed -i -n \
                 'G; s/\n/&&/; /^\([ -~]*\n\).*\n\1/d; s/\n//; h; P' \
-                "$archaur"
+                "$ARCHAUR"
             fi
-
         fi
 
         if [[ -n $(pidof polybar) ]]; then
             polybar-msg hook updates-ipc 1 >/dev/null 2>&1
+        elif [[ -n $(pidof i3blocks) ]]; then
+            pkill -RTMIN+10 i3blocks >/dev/null 2>&1 &
         else
             break
         fi
@@ -49,17 +52,16 @@ _check_updates() {
     done &
 }
 
-# Yes/No prompt
-_ynp() {
-    local screenprompt key default opts status
+_yesnoprompt() {
+    local screenprompt key default options status
 
     default=y
-    opts=yn
+    options=yn
 
-    [[ $1 =~ -([${opts}]) ]] \
+    [[ $1 =~ -([${options}]) ]] \
         && default="${BASH_REMATCH[1]}" && shift
 
-    screenprompt="$* [${default^^}/${opts/$default/}]"
+    screenprompt="$* [${default^^}/${options/$default/}]"
 
     if [[ -t 2 ]]; then
         >&2 echo "$screenprompt"
@@ -68,7 +70,7 @@ _ynp() {
             read -rsn 1
 
             key="${REPLY:-$default}"
-            [[ $key =~ [${opts}] ]] || continue
+            [[ $key =~ [${options}] ]] || continue
             break
         done
     else
@@ -80,33 +82,118 @@ _ynp() {
     return "${status:-0}"
 }
 
+MIRR="/etc/pacman.d/mirrorlist"
+BCKP="/etc/pacman.d/mirrorlist_bckp"
+
+nocolor=$'\e[0m';
+red=$'\e[0;31m';
+green=$'\e[0;32m';
+
+_reboot() {
+    sudo cp -f "$MIRR" "$BCKP"
+    sudo pacman -Syu
+    sudo grub-mkconfig -o /boot/grub/grub.cfg
+    rm "$ARCHAUR"
+    sudo reboot
+}
+
+_noreboot() {
+    sudo cp -f "$MIRR" "$BCKP"
+    sudo pacman -Syu
+    sudo grub-mkconfig -o /boot/grub/grub.cfg
+    rm "$ARCHAUR"
+
+    if [[ -n $(pidof polybar) ]]; then
+        polybar-msg hook updates-ipc 2 > /dev/null 2>&1
+    elif [[ -n $(pidof i3blocks) ]]; then
+        pkill -SIGRTMIN+10 i3blocks > /dev/null 2>&1
+    else
+        echo "no running bars found" && exit 1
+    fi
+    exit
+}
+
+_poweroff() {
+    sudo cp -f "$MIRR" "$BCKP"
+    sudo pacman -Syu
+    sudo grub-mkconfig -o /boot/grub/grub.cfg
+    rm "$ARCHAUR"
+    sudo poweroff
+}
+
+_criteria() {
+    # default is reboot.
+    # by pressing Enter we will get the default action.
+    echo ""
+    _yesnoprompt -n "Do you wish to ${red}poweroff ${nocolor}after updates?" || {
+        _yesnoprompt "Do you wish to ${red}reboot ${nocolor}after updates?" || {
+            _noreboot
+        }
+        _reboot
+    }
+    _poweroff
+}
+
+_nocriteria() {
+    # Here the default is '_noreboot'.
+    echo ""
+    _yesnoprompt -n "Do you wish to ${red}poweroff ${nocolor}after updates?" || {
+        _noreboot
+    }
+    _poweroff
+}
+
+_make_updates() {
+    if [[ ! -e $MIRR ]]; then
+        sudo reflector -c 'France' \
+        -l 10 -a 24 --protocol http \
+        --protocol https --sort rate \
+        --save "$MIRR"
+    fi
+
+    # etablishing an array of packages who need rebooting to complete.
+    declare -a criteria=( "linux" "linux-lts" "nvidia" "nvidia-lts" \
+                        "mesa" "systemd" "amd-ucode" "xf86-video" "xorg" )
+
+    for i in "${criteria[@]}"; do
+        if grep -q "$i" "$ARCHAUR"; then
+            echo " ${red}REBOOT NEEDED !${nocolor}"
+            _criteria
+        elif ! grep -q "$i" "$ARCHAUR"; then
+            echo " ${green}NO REBOOT NEEDED !${nocolor}"
+            _nocriteria
+        fi
+    done
+}
+
 case "$1" in
     --hook) polybar-msg hook updates-ipc 1 >/dev/null 2>&1
     ;;
     --list) while read -r content; do
-
                 echo "$content"
+            done < "$ARCHAUR"
 
-            done < "$archaur"
-
-            if [[ -z $(cat "$archaur") ]]; then
-                echo "No update available." && sleep 3s && exit 0
+            if [[ -z $(cat "$ARCHAUR") ]]; then
+                echo " ${red}No update available."
+                sleep 3s
+                exit 0
             else
                 echo ""
-                _ynp "Procede with updates?" || {
-                echo "bye..." && exit 0
+                echo "${green}There are "$(grep "" -c $ARCHAUR)" updates available.${nocolor}"
+                echo ""
+                _yesnoprompt "Procede with updates?" || {
+                    echo "bye..."
+                    exit 0
                 }
-                if (( $(wc -l "$aur" | awk '{print $1}') > 0 )); then
-                    yay -Syu --aur
-                    rm -rf $HOME/.ccache && {
-                    (( $(wc -l "$arch" | awk '{print $1}') > 0 )) && {
-                        rm "$archaur"
-                        touch "$archaur"
-                        sudo upp # external script
+                if (( $(wc -l "$AUR" | awk '{print $1}') > 0 )); then
+                    yay -Sua
+                    rm -rf "$HOME"/.ccache && {
+                    (( $(wc -l "$ARCH" | awk '{print $1}') > 0 )) && {
+                        _make_updates
                         }
                     }
                 else
-                    rm "$archaur" && touch "$archaur" && sudo upp
+                    _make_updates
                 fi
             fi
     ;;
