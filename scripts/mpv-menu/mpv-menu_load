@@ -55,7 +55,7 @@ _load_playlist() {
     PS3="Select a playlist to load (Press 'q' to quit mpv): "
     select list in $(find . -name "*.m3u" | sort -d | sed 's,.*/,,'); do
 
-        if [[ -z $(grep -e 'https' -e 'http' "$list") ]]; then
+        if ! grep -e 'https' -e 'http' "$list"; then
             echo " ${red}$list list is empty...${nocolor}"
             sleep 3s
             break
