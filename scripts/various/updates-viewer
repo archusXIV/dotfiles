@@ -13,7 +13,10 @@ ARCHAUR="$XDG_CACHE_HOME/combined.list"
 _check_updates() {
     # checking dependencies
     for deps in checkupdates polybar yay; do
-        [[ -z $(command -v $deps) ]] && exit 1
+        [[ -z $(command -v $deps) ]] && {
+            echo "$desps" isn't installed
+            exit 1
+        }
     done
 
     while true; do
