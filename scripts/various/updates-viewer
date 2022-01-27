@@ -156,10 +156,10 @@ _make_updates() {
                         "mesa" "systemd" "amd-ucode" "xf86-video" "xorg" )
 
     for i in "${criteria[@]}"; do
-        if grep -q "$i" "$ARCHAUR"; then
+        if grep -qw "$i" "$ARCHAUR"; then
             echo " ${red}REBOOT NEEDED !${nocolor}"
             _criteria
-        elif ! grep -q "$i" "$ARCHAUR"; then
+        elif ! grep -qw "$i" "$ARCHAUR"; then
             echo " ${green}NO REBOOT NEEDED !${nocolor}"
             _nocriteria
         fi
