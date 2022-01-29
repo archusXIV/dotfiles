@@ -23,7 +23,7 @@ GET_SINK_MUTE=$(pactl get-sink-mute "${DEFAULT_SINK}")
 GET_SOURCE_MUTE=$(pactl get-source-mute "${DEFAULT_SOURCE}")
 
 # sending message to polybar
-_hook_sink_on() { polybar-msg hook pulseaudio-ipc 2 >/dev/null 2>&1; }
+_hook_sink_on() { polybar-msg hook volume-ipc 2 >/dev/null 2>&1; }
 _hook_source_on() { polybar-msg hook mic-ipc 2 >/dev/null 2>&1; }
 
 # if no polybar volume module exist; then get a notification anyway.
@@ -55,7 +55,7 @@ case "$1" in
                                 _hook_sink_on
                             else
                                 pactl set-sink-mute "${DEFAULT_SINK}" toggle
-                                polybar-msg hook pulseaudio-ipc 1 >/dev/null 2>&1
+                                polybar-msg hook volume-ipc 1 >/dev/null 2>&1
                             fi
                     ;;
                 esac
