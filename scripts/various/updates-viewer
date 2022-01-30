@@ -4,7 +4,8 @@
 # https://github.com/archusXIV/dotfiles
 #
 # Yet Another Updates Viewer Script for Arch Linux based systems.
-# Checks for updates, lists them in a readable file, update your polybar module.
+# Checks for updates, lists them in a readable file, update your polybar module,
+# and your system of course.
 
 ARCH="$XDG_CACHE_HOME/archlinux.list"
 AUR="$XDG_CACHE_HOME/aur.list"
