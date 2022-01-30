@@ -12,7 +12,7 @@ ARCHAUR="$XDG_CACHE_HOME/combined.list"
 
 _check_updates() {
     # checking dependencies
-    for deps in checkupdates polybar yay; do
+    for deps in checkupdates i3blocks polybar yay; do
         [[ -z $(command -v $deps) ]] && exit 1
     done
 
