@@ -23,13 +23,11 @@ _check_updates() {
         [[ ! -f "$ARCHAUR" ]] && touch "$ARCHAUR"
 
         # because we want to check out the updates list.
-        checkupdates > "$ARCH"
-        cat "$ARCH" > "$ARCHAUR"
+        checkupdates | tee "$ARCH" > "$ARCHAUR"
 
         if (( $(yay -Qum 2> /dev/null | wc -l) > 0 )); then
             sleep 2s
-            yay -Qum > "$AUR"
-            cat "$AUR" >> "$ARCHAUR"
+            yay -Qum | tee "$AUR" >> "$ARCHAUR"
 
             # purge combined.list from possible duplicates.
             if [[ -n $(uniq -d "$ARCHAUR") ]]; then
@@ -159,7 +157,7 @@ _make_updates() {
         if grep -qw "$i" "$ARCHAUR"; then
             echo " ${red}REBOOT NEEDED !${nocolor}"
             _criteria
-        elif ! grep -qw "$i" "$ARCHAUR"; then
+        else
             echo " ${green}NO REBOOT NEEDED !${nocolor}"
             _nocriteria
         fi
