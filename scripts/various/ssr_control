@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Dependencies: simplescreenrecorder, polybar (optional)
+# Launch it and you'll be prompted for $TIME. eg 600 will be 10mn
 
 [[ -z $(command -v simplescreenrecorder) ]] && {
     echo "simplescreenrecorder isn't installed, exiting..."
