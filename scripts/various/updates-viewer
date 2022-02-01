@@ -150,17 +150,18 @@ _make_updates() {
         --save "$MIRR"
     fi
 
-     # etablishing an array of packages who need rebooting to complete.
-    criteria=( "linux" "linux-lts" "nvidia" "nvidia-lts" \
-                "mesa" "systemd" "amd-ucode" "xf86-video" "xorg" )
-                
-    if [[ $(checkupdates) =~ $criteria ]]; then
-        echo " ${red}REBOOT NEEDED !${nocolor}"
-        _criteria
-    else
-        echo " ${green}NO REBOOT NEEDED !${nocolor}"
-        _nocriteria
-    fi
+    declare -a criteria=( "linux" "linux-lts" "nvidia" "nvidia-lts" \
+                    "mesa" "systemd" "amd-ucode" "xf86-video" "xorg" )
+
+    for i in "${criteria[@]}"; do
+        if grep -q "$i" "$ARCHAUR"; then
+            echo " ${red}REBOOT NEEDED !${nocolor}"
+            _criteria
+        elif ! grep -q "$i" "$ARCHAUR"; then
+            echo " ${green}NO REBOOT NEEDED !${nocolor}"
+            _nocriteria
+        fi
+    done
 }
 
 case "$1" in
