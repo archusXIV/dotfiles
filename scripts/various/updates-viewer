@@ -153,15 +153,32 @@ _make_updates() {
     declare -a criteria=( "linux" "linux-lts" "nvidia" "nvidia-lts" \
                     "mesa" "systemd" "amd-ucode" "xf86-video" "xorg" )
 
+    _make_updates() {
+
+    if [[ ! -e $MIRR ]]; then
+        sudo reflector -c 'France' \
+        -l 10 -a 24 --protocol http \
+        --protocol https --sort rate \
+        --save "$MIRR"
+    fi
+
+    declare -a criteria=( "linux" "nvidia" "mesa" "systemd" "amd-ucode" "xf86-video" "xorg" )
+
     for i in "${criteria[@]}"; do
-        if grep -q "$i" "$ARCHAUR"; then
+        if grep -qw "$i" "$ARCHAUR"; then
             echo " ${red}REBOOT NEEDED !${nocolor}"
             _criteria
-        else
+        fi
+    done
+
+    for i in "${criteria[@]}"; do
+        if ! grep -qw "$i" "$ARCHAUR"; then
             echo " ${green}NO REBOOT NEEDED !${nocolor}"
             _nocriteria
         fi
     done
+
+}
 }
 
 case "$1" in
