@@ -157,7 +157,7 @@ _make_updates() {
         if grep -q "$i" "$ARCHAUR"; then
             echo " ${red}REBOOT NEEDED !${nocolor}"
             _criteria
-        elif ! grep -q "$i" "$ARCHAUR"; then
+        else
             echo " ${green}NO REBOOT NEEDED !${nocolor}"
             _nocriteria
         fi
