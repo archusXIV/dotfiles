@@ -4,16 +4,22 @@
 # https://github.com/archusXIV/dotfiles
 #
 # Yet Another Updates Viewer Script for Arch Linux based systems.
-# Checks for updates, lists them in a readable file, update your polybar module,
-# and your system of course.
+# Checks for updates, lists them in a readable file, update your polybar module.
 
 ARCH="$XDG_CACHE_HOME/archlinux.list"
 AUR="$XDG_CACHE_HOME/aur.list"
 ARCHAUR="$XDG_CACHE_HOME/combined.list"
 
+MIRR="/etc/pacman.d/mirrorlist"
+BCKP="/etc/pacman.d/mirrorlist_bckp"
+
+nocolor=$'\e[0m';
+red=$'\e[0;31m';
+green=$'\e[0;32m';
+
 _check_updates() {
     # checking dependencies
-    for deps in checkupdates i3blocks polybar yay; do
+    for deps in checkupdates polybar yay; do
         [[ -z $(command -v $deps) ]] && exit 1
     done
 
@@ -22,6 +28,13 @@ _check_updates() {
         [[ ! -f "$ARCH" ]] && touch "$ARCH"
         [[ ! -f "$AUR" ]] && touch "$AUR"
         [[ ! -f "$ARCHAUR" ]] && touch "$ARCHAUR"
+
+        if [[ ! -e $MIRR ]]; then
+            sudo reflector -c 'France' \
+            -l 10 -a 24 --protocol http \
+            --protocol https --sort rate \
+            --save "$MIRR"
+        fi
 
         # because we want to check out the updates list.
         checkupdates | tee "$ARCH" > "$ARCHAUR"
@@ -52,6 +65,7 @@ _check_updates() {
 }
 
 _yesnoprompt() {
+    # stolen from budRich
     local screenprompt key default options status
 
     default=y
@@ -81,18 +95,11 @@ _yesnoprompt() {
     return "${status:-0}"
 }
 
-MIRR="/etc/pacman.d/mirrorlist"
-BCKP="/etc/pacman.d/mirrorlist_bckp"
-
-nocolor=$'\e[0m';
-red=$'\e[0;31m';
-green=$'\e[0;32m';
-
 _reboot() {
     sudo cp -f "$MIRR" "$BCKP"
     sudo pacman -Syu
     sudo grub-mkconfig -o /boot/grub/grub.cfg
-    rm "$ARCHAUR"
+    sed -i '/^[a-zA-Z]/d' "$ARCHAUR"
     sudo reboot
 }
 
@@ -100,15 +107,16 @@ _noreboot() {
     sudo cp -f "$MIRR" "$BCKP"
     sudo pacman -Syu
     sudo grub-mkconfig -o /boot/grub/grub.cfg
-    rm "$ARCHAUR"
+    sed -i '/^[a-zA-Z]/d' "$ARCHAUR"
 
     if [[ -n $(pidof polybar) ]]; then
-        polybar-msg hook updates-ipc 2 > /dev/null 2>&1
+        polybar-msg hook updates-ipc 1 > /dev/null 2>&1
     elif [[ -n $(pidof i3blocks) ]]; then
         pkill -SIGRTMIN+10 i3blocks > /dev/null 2>&1
     else
         echo "no running bars found" && exit 1
     fi
+
     exit
 }
 
@@ -116,7 +124,7 @@ _poweroff() {
     sudo cp -f "$MIRR" "$BCKP"
     sudo pacman -Syu
     sudo grub-mkconfig -o /boot/grub/grub.cfg
-    rm "$ARCHAUR"
+    sed -i '/^[a-zA-Z]/d' "$ARCHAUR"
     sudo poweroff
 }
 
@@ -143,24 +151,6 @@ _nocriteria() {
 }
 
 _make_updates() {
-    if [[ ! -e $MIRR ]]; then
-        sudo reflector -c 'France' \
-        -l 10 -a 24 --protocol http \
-        --protocol https --sort rate \
-        --save "$MIRR"
-    fi
-
-    declare -a criteria=( "linux" "linux-lts" "nvidia" "nvidia-lts" \
-                    "mesa" "systemd" "amd-ucode" "xf86-video" "xorg" )
-
-    _make_updates() {
-
-    if [[ ! -e $MIRR ]]; then
-        sudo reflector -c 'France' \
-        -l 10 -a 24 --protocol http \
-        --protocol https --sort rate \
-        --save "$MIRR"
-    fi
 
     declare -a criteria=( "linux" "nvidia" "mesa" "systemd" "amd-ucode" "xf86-video" "xorg" )
 
@@ -178,7 +168,6 @@ _make_updates() {
         fi
     done
 
-}
 }
 
 case "$1" in
@@ -200,11 +189,11 @@ case "$1" in
                     echo "bye..."
                     exit 0
                 }
-                if (( $(grep "" -c "$AUR") > 0 )); then
+                if (( $(grep "" -c $AUR) > 0 )); then
                     yay -Sua
                     rm -rf "$HOME"/.ccache && {
-                    (( $(grep "" -c "$ARCH") > 0 )) && {
-                        _make_updates
+                        (( $(grep "" -c $ARCH) > 0 )) && {
+                            _make_updates
                         }
                     }
                 else
