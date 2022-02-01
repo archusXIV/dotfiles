@@ -155,7 +155,7 @@ _make_updates() {
                         "mesa" "systemd" "amd-ucode" "xf86-video" "xorg" )
 
     for i in "${criteria[@]}"; do
-        if grep -qw "$i" "$ARCHAUR"; then
+        if grep -wx "$i" "$ARCHAUR" >/dev/null 2>&1; then
             echo " ${red}REBOOT NEEDED !${nocolor}"
             _criteria
         else
@@ -184,10 +184,10 @@ case "$1" in
                     echo "bye..."
                     exit 0
                 }
-                if (( $(wc -l "$AUR" | awk '{print $1}') > 0 )); then
+                if (( $(grep "" -c "$AUR") > 0 )); then
                     yay -Sua
                     rm -rf "$HOME"/.ccache && {
-                    (( $(wc -l "$ARCH" | awk '{print $1}') > 0 )) && {
+                    (( $(grep "" -c "$ARCH") > 0 )) && {
                         _make_updates
                         }
                     }
