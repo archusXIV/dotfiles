@@ -18,10 +18,10 @@ red=$'\e[0;31m';
 green=$'\e[0;32m';
 
 # checking dependencies
-for deps in checkupdates polybar yay; do
+for deps in checkupdates i3blocks polybar yay; do
     [[ -z $(command -v $deps) ]] && exit 1
 done
-
+    
 _check_updates() {
     while true; do
 
@@ -29,12 +29,9 @@ _check_updates() {
         [[ ! -f "$AUR" ]] && touch "$AUR"
         [[ ! -f "$ARCHAUR" ]] && touch "$ARCHAUR"
 
-        if [[ ! -e $MIRR ]]; then
-            sudo reflector -c 'France' \
-            -l 10 -a 24 --protocol http \
-            --protocol https --sort rate \
-            --save "$MIRR"
-        fi
+        sudo reflector --country 'France' --latest 10 \
+        --age 24 --protocol https --protocol http \
+        --sort rate --save "$MIRR"
 
         # because we want to check out the updates list.
         checkupdates | tee "$ARCH" > "$ARCHAUR"
@@ -59,7 +56,7 @@ _check_updates() {
             break
         fi
 
-        sleep 3598s
+        sleep 3588s
 
     done &
 }
@@ -116,7 +113,6 @@ _noreboot() {
     else
         echo "no running bars found" && exit 1
     fi
-
     exit
 }
 
@@ -170,37 +166,44 @@ _make_updates() {
 
 }
 
-case "$1" in
-    --hook) polybar-msg hook updates-ipc 1 >/dev/null 2>&1
-    ;;
-    --list) while read -r content; do
-                echo "$content"
-            done < "$ARCHAUR"
+_list() {
 
-            if [[ -z $(cat "$ARCHAUR") ]]; then
-                echo " ${red}No update available."
-                sleep 3s
-                exit 0
-            else
-                echo ""
-                echo "${green}There are "$(grep "" -c $ARCHAUR)" updates available.${nocolor}"
-                echo ""
-                _yesnoprompt "Procede with updates?" || {
-                    echo "bye..."
-                    exit 0
-                }
-                if (( $(grep "" -c $AUR) > 0 )); then
-                    yay -Sua
-                    rm -rf "$HOME"/.ccache && {
-                        (( $(grep "" -c $ARCH) > 0 )) && {
-                            _make_updates
-                        }
-                    }
-                else
+    while read -r content; do
+        echo "$content"
+    done < "$ARCHAUR"
+
+    if [[ -z $(cat "$ARCHAUR") ]]; then
+        echo " ${red}No update available."
+        sleep 3s
+        exit 0
+    else
+        echo ""
+        echo "${green}There are "$(grep "" -c $ARCHAUR)" updates available.${nocolor}"
+        echo ""
+        _yesnoprompt "Procede with updates?" || {
+            echo "bye..."
+            sleep 2s
+            exit 0
+        }
+        if (( $(grep "" -c $AUR) > 0 )); then
+            yay -Sua
+            rm -rf "$HOME"/.ccache && {
+                (( $(grep "" -c $ARCH) > 0 )) && {
                     _make_updates
-                fi
-            fi
+                }
+            }
+        else
+            _make_updates
+        fi
+    fi
+
+}
+
+case "$1" in
+    --hook   ) polybar-msg hook updates-ipc 1 >/dev/null 2>&1
     ;;
-    --updates)  _check_updates
+    --list   ) _list 
+    ;;
+    --updates) _check_updates
     ;;
 esac
