@@ -17,12 +17,12 @@ nocolor=$'\e[0m';
 red=$'\e[0;31m';
 green=$'\e[0;32m';
 
-_check_updates() {
-    # checking dependencies
-    for deps in checkupdates polybar yay; do
-        [[ -z $(command -v $deps) ]] && exit 1
-    done
+# checking dependencies
+for deps in checkupdates polybar yay; do
+    [[ -z $(command -v $deps) ]] && exit 1
+done
 
+_check_updates() {
     while true; do
 
         [[ ! -f "$ARCH" ]] && touch "$ARCH"
