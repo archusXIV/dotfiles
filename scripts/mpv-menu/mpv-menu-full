@@ -6,6 +6,9 @@
 ##    To queue files in mpv when using function _load_local (option n°5 in main menu),
 ##    follow given instructions at line 675.
 ##
+##    Youtube-dl is for now kind of unmaintained so install or make a symlink with
+##    https://github.com/yt-dlp/yt-dlp/releases
+##
 ##    This script rips video urls from Youtube and so on.
 ##    In our case we use ".m3u" files to store urls in and then be able
 ##    to watch from the site itself or download videos or just the audio.
