@@ -34,10 +34,7 @@ if [[ -n $(pidof bspwm) ]]; then
 elif [[ -n $(pidof i3) ]]; then
     # Launch sxhkd within i3
     sxhkd -t 5 \
-    -s "$SXHKD_FIFO" \
     -c "$XDG_CONFIG_HOME"/sxhkd/sxhkdrc &
-
-    sxhkd-watcher &
     notify-send 'hotkeys daemon ready'
     rm -f "$HOME"/1 >/dev/null
 else
