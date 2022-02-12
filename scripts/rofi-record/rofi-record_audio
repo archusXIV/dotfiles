@@ -2,31 +2,85 @@
 
 # only audio from mic (webcam)
 _audio_input() {
-    amixer set Capture,0 90%,90% unmute cap >/dev/null 2>&1
-    polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 2 >/dev/null 2>&1
+    amixer set Capture,0 80%,80% unmute cap >/dev/null 2>&1
+    polybar-msg hook mic-ipc 2 >/dev/null 2>&1
     ffmpeg -f pulse \
     -i 1 \
     -map '0' \
     -c:a mp3 \
     "$recordings"/audio-input_"$date".mp3 &
-    echo $! > "$XDG_RUNTIME_DIR"/recordingpid
+    echo $! > "${pid}"
     _updateicon ""
     polybar-msg hook recording-ipc-2 1 >/dev/null 2>&1
     record_chrono 2
 }
 
-# records what we hear from the speakers
+# records what we hear from the speakers.
+# prompt to choose between four output formats.
 _audio_output() {
-    ffmpeg -f pulse \
-    -i 2 \
-    -map '0' \
-    -acodec libmp3lame \
-    -ar 48000 \
-    -ab 320k \
-    "$recordings"/audio-output_"$date".mp3 &
-    echo $! > "$XDG_RUNTIME_DIR"/recordingpid
-    _updateicon ""
-    polybar-msg hook recording-ipc-2 1 >/dev/null 2>&1
-    record_chrono 2
-}
+    local audioformat
+    audioformat=$(printf "flac\\nmp3\\nogg\\nwav\\nQUIT" \
+    | rofi -normal-window -dmenu -i -width 20 -hide-scrollbar \
+    -line-padding 4 -padding 20 -lines 5 -p 'Select an audio format')
 
+    _format_flac() (
+        ffmpeg -f pulse \
+        -i 2 \
+        -map '0' \
+        -af aformat=s32:48000 \
+        "$recordings"/audio-output_"$date".flac &
+        echo $! > "${pid}"
+        _updateicon ""
+        polybar-msg hook recording-ipc-2 1 >/dev/null 2>&1
+        record_chrono 2
+    )
+
+    _format_mp3() (
+        ffmpeg -f pulse \
+        -i 2 \
+        -map '0' \
+        -acodec libmp3lame \
+        -ar 48000 \
+        -ab 320k \
+        "$recordings"/audio-output_"$date".mp3 &
+        echo $! > "${pid}"
+        _updateicon ""
+        polybar-msg hook recording-ipc-2 1 >/dev/null 2>&1
+        record_chrono 2
+    )
+
+    _format_ogg() (
+        ffmpeg -f pulse \
+        -i 2 \
+        -map '0' \
+        -acodec libvorbis \
+        -ar 48000 \
+        -ab 320k \
+        "$recordings"/audio-output_"$date".ogg &
+        echo $! > "${pid}"
+        _updateicon ""
+        polybar-msg hook recording-ipc-2 1 >/dev/null 2>&1
+        record_chrono 2
+    )
+
+    _format_wav() (
+        ffmpeg -f pulse \
+        -i 2 \
+        -map '0' \
+        -acodec pcm_s32le -ar 48000 \
+        "$recordings"/audio-output_"$date".wav &
+        echo $! > "${pid}"
+        _updateicon ""
+        polybar-msg hook recording-ipc-2 1 >/dev/null 2>&1
+        record_chrono 2
+    )
+  
+    case "$audioformat" in
+        flac) _format_flac ;;
+        mp3 ) _format_mp3  ;;
+        ogg ) _format_ogg  ;;
+        wav ) _format_wav  ;;
+        QUIT) exit ;;
+    esac
+
+}
