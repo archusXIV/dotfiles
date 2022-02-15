@@ -1,24 +1,64 @@
 #!/bin/bash
 
-#    Author: Barret E (2020-21) <archus@protonmail.com>
-#    Dependencies: ffmpeg, mediainfo, mpc, mpd. Optional streamripper.
-#    [full version of xtreamripper]
-#    This script rips the selected radio stream from the mpd playlists_directory.
-#    In our case files extensions are m3u and pls, so if you want to rip
-#    from other extensions you will have to edit the ffmpeg subshell command lines yourself.
-#    We can also choose from four different output formats to encode to and rename the file.
-#    If you use mpd with auto_update "yes" and auto_update_depth "3",
-#    generated files will be automatically added to the database.
+# Author: Barret E (2020-21) <archus@protonmail.com>
+# https://github.com/archusXIV/dotfiles
+# Dependencies: ffmpeg, mediainfo, mpc, mpd. Optional streamripper.
+#
+# This script rips the selected radio stream from the mpd playlists_directory.
+# In our case files extensions are m3u and pls, so if you want to rip
+# from other extensions you will have to edit the ffmpeg subshell command lines yourself.
+# We can also choose from four different output formats to encode to and rename the file.
+# If you use mpd with auto_update "yes" and auto_update_depth "3",
+# generated files will be automatically added to the database.
 
 # global variables
 music="$HOME/Documents/Music"
 playlists_dir="$music/playlists"
 rip_dir="$music/streamripper"
+
 extensions="(.aac|.flac|.mp3|.ogg|.wav)"
 date="$(date "+%d-%m-%Y_%H:%M:%S")"
+
 color_off=$'\e[0m';
 red=$'\e[0;31m';
 green=$'\e[0;32m';
+
+_dependencies() {
+
+    declare -a dependencies=( "ffmpeg" "mediainfo" "mpd" "mpc" )
+
+    for i in "${dependencies[@]}"; do
+        [[ -z $(command -v "$i") ]] && {
+            echo " ${red}Missing dependencies...$i"
+            exit 127
+        }
+    done
+
+    unset i
+
+    [[ ! -d $rip_dir ]] && mkdir -p "$rip_dir"
+    
+    if [[ ! -d $playlists_dir ]]; then
+        echo "Please type the absolute path to the playlists directory:"
+        echo ""
+        read -r path
+        playlists_dir="$path"
+        echo " ${red}If you don't want to be prompted next time,"
+        echo "consider changing playlists_dir variable at the top of this file.${color_off}"
+        echo ""
+        sleep 5s
+        cd "$playlists_dir" || exit 1
+    elif [[ -z $(command ls -A $playlists_dir) ]]; then
+        echo "$playlists_dir is empty..." && exit 1
+    else
+        cd "$playlists_dir" || exit 1
+    fi
+
+    _warning
+
+    _streamripper_choice
+
+}
 
 # This function is a [Y/n] prompt, it reads one keyboard strock only.
 # The default action is 'Yes' = Enter (Return).
@@ -57,7 +97,7 @@ _main() {
 
     _warning
 
-    cd "$playlists_dir"
+    cd "$playlists_dir" || exit 1
     # We leave PS3 prompt empty for aesthetic reason.
     PS3=""
     echo ""
@@ -66,7 +106,7 @@ _main() {
     echo " and also choose between 4 output formats."
     echo ""
     echo " ${red}For this program to work properly, make sure your playlist files contain"
-    echo " these ocurences: File1 for .pls & #EXTM3U for .m3u."
+    echo " these occurences: File1 for .pls & #EXTM3U for .m3u."
     echo ""
     echo " ${green}Select a stream number to rip (Press 'q' to quit ffmpeg): ${color_off}"
     echo ""
@@ -74,7 +114,6 @@ _main() {
     select stream in $(find "$playlists_dir" -name "*.pls" -o -name "*.m3u" | sort | sed 's,.*/,,'); do
         echo ""
         read -rp 'Now select an output format [1 = mp3/320k] [2 = flac/lossless] [3 = wav/~3000k] [4 = ogg/320k]: ' rip2
-
         # Let's call our encoder functions
         case $rip2 in
             1) _rip2mp3  ;;
@@ -87,12 +126,10 @@ _main() {
                _streamripper_choice
             ;;
         esac
-
         echo ""
         echo " ${green}---------------------------------- END OF FFMPEG OUTPUT ---------------------------------------- ${color_off}"
         echo ""
         read -rp 'Rename the recording manually? [Yes = 1] [No = 2] or autorename [3]: ' name
-
         # To rename the new file we prompt the user to copy & paste
         # what we did extracted from the metadata (artist - title) using mediainfo.
         # If autorename is chosen then the user isn't prompted.
@@ -109,10 +146,8 @@ _main() {
                _streamripper_choice
             ;;
         esac
-
         echo ""
         break
-
     done
 
 }
@@ -169,14 +204,13 @@ _rip2ogg() {
 }
 
 _player() {
-
     # Change mpc command line if needed.
     # We update the mpd database and use mpc for playing recordings.
 
     local trackname
     trackname="$rip_dir/tracklist.txt"
 
-    cd "$rip_dir"
+    cd "$rip_dir" || exit 1
 
     [[ -z $(pidof mpd) ]] && {
         echo " ${red}Mpd isn't running!${color_off}"
@@ -194,62 +228,48 @@ _player() {
     }
 
     _prompt "Finaly, do you wish to listen the recording(s)? :" || {
-        while (( $(wc -l "$trackname" | awk '{print $1}') > 0 )); do
-
+        while (( $(grep "" -c "$trackname") > 0 )); do
             _prompt "Do you want to keep" "${green}""$(cat $trackname | sed -n '$ p')" "${color_off}""? :" || {
-    
                 echo " ${red}$(cat $trackname | sed -n '$ p')" "deleted.${color_off}"
                 echo ""
                 rm -f "$(cat $trackname | sed -n '$ p')"
                 sed -i '$ d' "$trackname"
                 continue
-    
-            }    
-
+            }
             mv "$(cat $trackname | sed -n '$ p')" "$music"
-            
             echo " ${green}$(cat $trackname | sed -n '$ p') ${color_off}moved in $music"
             sleep 3s
             echo ""
             sed -i '$ d' "$trackname"
-
         done
-       
         rm -f ./*.txt
         clear
         echo ""
         _streamripper_choice
-
     }
 
     mpc add streamripper/
 
-    while (( $(wc -l "$trackname" | awk '{print $1}') > 0 )); do
-
+    while (( $(grep "" -c "$trackname") > 0 )); do
         mpc --quiet play "$(mpc playlist | wc -l)"
         echo " ${red}Playing a 30 seconds sample of..."
         echo " ${green}$(mpc --format %file% current | sed 's/streamripper\///')${color_off}"
         sleep 30s
         echo ""
         _prompt "Do you want to keep" "${green}""$(cat $trackname | sed -n '$ p')" "${color_off}""? :" || {
-
             echo " ${red}$(cat $trackname | sed -n '$ p')" "deleted.${color_off}"
             echo ""
             rm -f "$(cat $trackname | sed -n '$ p')"
             sed -i '$ d' "$trackname"
             mpc --quiet del "$(mpc --format %position% current)"
             continue
-
-        }    
-
+        }
         mpc --quiet del "$(mpc --format %position% current)"
         mv "$(cat $trackname | sed -n '$ p')" "$music"
-        
         echo " ${green}$(cat $trackname | sed -n '$ p') ${color_off}moved in $music"
         sleep 3s
         echo ""
         sed -i '$ d' "$trackname"
-
     done
 
     rm ./*.txt
@@ -261,7 +281,7 @@ _player() {
 
 _renamer() {
 
-    cd "$rip_dir"
+    cd "$rip_dir" || exit 1
 
     # For loop to rename the file we've just ripped,
     # and any file matching the same criterias if present in $rip_dir.
@@ -272,10 +292,9 @@ _renamer() {
             | cut -d '' -f4 \
             | sed 's/StreamTitle//;s/://;s/^ *[[:space:]]//' \
             | sed -n '1p' > metadata.txt
-
             echo "The suggested file name is:" ${green}"$(cat metadata.txt)" ${color_off}
             echo "Copy/paste it, or pick another one."
-            read newname
+            read -r newname
             echo "$newname" > newname.txt
             mv "$file" "$(cat newname.txt)".wav
         else
@@ -284,10 +303,9 @@ _renamer() {
                 | grep -w StreamTitle \
                 | sed 's/StreamTitle//;s/://;s/^ *[[:space:]]//'
             done > metadata.txt
-
             echo "The suggested file name is:" ${green}"$(cat metadata.txt)" ${color_off}
             echo "Copy/paste it, or pick another one."
-            read newname
+            read -r newname
             echo "$newname" > newname.txt
 
             if [[ -n $(find . -name "*.mp3") ]]; then
@@ -298,7 +316,6 @@ _renamer() {
                 mv "$file" "$(cat newname.txt)".ogg
             fi
         fi
-
     done
 
     _player
@@ -306,7 +323,8 @@ _renamer() {
 
 _autorenamer() {
 
-    cd "$rip_dir"
+    cd "$rip_dir" || exit 1
+
     # For loop to autorename the file we've just ripped from its metadatas,
     # because mediainfo is unefficiant with untagged .wav files.
     # If you use this function the file will be automatically renamed
@@ -334,7 +352,6 @@ _autorenamer() {
                 mv "$file" "$(cat newname.txt)".ogg
             fi
         fi
-
     done
 
     _player
@@ -344,8 +361,8 @@ _autorenamer() {
 _streamripper() {
 
     _warning
-    
-    cd "$playlists_dir"
+
+    cd "$playlists_dir" || exit 1
 
     # We leave PS3 prompt empty for aesthetic reason.
     PS3=""
@@ -356,7 +373,6 @@ _streamripper() {
     echo ""
     # Set a clean streams list.
     select stream in $(find . -name "*.pls" -o -name "*.m3u" | sort -d | sed 's,.*/,,'); do
-        
         if grep -q File1 "$stream"; then
             /usr/bin/streamripper "$(grep -F File1 "$stream" | sed 's/File1=//')" \
             -u "FreeAmp/2.x" \
@@ -368,11 +384,8 @@ _streamripper() {
         else
             echo " ${red}$stream, file corrupted" && exit 1
         fi
-
         [[ -d $rip_dir/incomplete ]] && rm -rf "$rip_dir"/incomplete
-
         break
-
     done
 
     _player
@@ -380,7 +393,8 @@ _streamripper() {
 }
 
 _streamripper_choice() {
-    read -rp 'Continue with xtreamripper [1] or quit [2] ?: ' answer
+    read -rsn1 -p 'Continue with Xtreamripper [1] or quit [2] ?: ' answer
+    clear
     case "$answer" in
         1)  if [[ -n $(command -v streamripper) ]]; then
                 _prompt "Do you want to use regular streamripper?:" || {
@@ -405,39 +419,4 @@ _warning() {
     }
 }
 
-_dependencies() {
-
-    declare -a dependencies=( "ffmpeg" "mediainfo" "mpd" "mpc" )
-
-    for i in "${dependencies[@]}"; do
-        [[ -z $(command -v "$i") ]] && echo " ${red}Missing dependencies...$i" && exit 1
-    done
-
-    unset i
-
-    if [[ ! -d $playlists_dir ]]; then
-        echo "Please type the absolute path to the playlists directory:"
-        echo ""
-        read -r path
-        playlists_dir="$path"
-        echo " ${red}If you don't want to be prompted next time,"
-        echo "consider changing playlists_dir variable at the top of this file.${color_off}"
-        echo ""
-        sleep 5s
-        cd "$playlists_dir"
-    elif [[ -z $(command ls -A $playlists_dir) ]]; then
-        echo "$playlists_dir is empty..." && exit 1
-    else
-        cd "$playlists_dir"
-    fi
-    
-    [[ ! -d $rip_dir ]] && mkdir -p "$rip_dir"
-
-    _warning
-
-    _streamripper_choice
-
-}
-
 _dependencies
-
