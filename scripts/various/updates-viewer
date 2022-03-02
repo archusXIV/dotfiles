@@ -180,7 +180,7 @@ _list() {
         echo ""
         echo "${green}There are "$(grep "" -c $ARCHAUR)" updates available.${nocolor}"
         echo ""
-        _yesnoprompt "Procede with updates?" || {
+        _yesnoprompt "Proceed with installation?" || {
             echo "bye..."
             sleep 2s
             exit 0
