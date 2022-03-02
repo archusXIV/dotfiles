@@ -1,30 +1,26 @@
 #!/bin/bash
 
-# Terminate already polybar instances in case it's true.
-if [[ -n $(pidof polybar) ]]; then
-    killall -q polybar
+# Terminate already polybar instances.
+killall -q polybar
 
-    # Wait until the process has been shut down
-    while pgrep -u $UID -x polybar >/dev/null; do
-        sleep 1s
-    done
-fi
+# Wait until the process has been closed.
+while [[ -n $(pgrep -u $UID -x polybar) ]]; do
+    sleep 0.5
+done
+
+bars_bsp=( "bspwm-bar-1" "bspwm-bar-2" "bspwm-bar-3" )
+bars_i3=( "i3-bar-1" "i3-bar-2" "i3-bar-3" )
 
 if [[ -n $(pidof bspwm) ]]; then
-    polybar bspwm-bar-1 -q &
-    sleep 0.5
-    polybar bspwm-bar-2 -q &
-    sleep 0.5
-    polybar bspwm-bar-3 -q &
+    for b in "${bars_bsp[@]}"; do
+        polybar "$b" -q & disown
+    done
     notify-send 'Bars launched...'
+    exit 0
 elif [[ -n $(pidof i3) ]]; then
-    polybar i3-bar-1 -q &
-    sleep 0.5
-    polybar i3-bar-2 -q &
-    sleep 0.5
-    polybar i3-bar-3 -q &
+    for b in "${bars_i3[@]}"; do
+        polybar "$b" -q & disown
+    done
     notify-send 'Bars launched...'
-else
-    echo "no wm at all.....!" && exit 1
+    exit 0
 fi
-
