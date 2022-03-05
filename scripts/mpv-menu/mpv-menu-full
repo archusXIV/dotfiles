@@ -393,20 +393,25 @@ _download_video() {
             echo ""
             echo " ${green}There are" "$(sed '/#EXTM3U/d' "$list" | wc -l)" "video files left to download.${nocolor}"
         fi
-
+        
+        # Here enter a youtube-dl code, if you want to merge video & audio codes just type:
+        # video_code+audio_code and youtube-dl will '--merge-output-format' to mp4
+        
+        youtube-dl -F "$url"
         echo ""
+        echo " ${green}Choose a format code: ${nocolor}"
+        read -r code
+        echo "$code" > "$ytop"
+        sleep 0.5
         echo " ${green}Please be patient while downloading files...${nocolor}"
 
-        # choosing the very best format first, if available.
-        if [[ -n $(youtube-dl -F "$url" | grep -e '137' -e '251') ]]; then
-            youtube-dl -f 137+251 --merge-output-format mp4 "$url" > "$ytop"
-        elif [[ -n $(youtube-dl -F "$url" | grep -e '22' ) ]]; then
-            youtube-dl -f 22 "$url" > "$ytop"
+        if [[ -n $(grep -e ${code} "$ytop") ]]; then
+            youtube-dl -f "$code" --merge-output-format mp4 "$url" > "$ytop"
         else
-            youtube-dl "$url" > "$ytop"
+            youtube-dl -f "$code" "$url" > "$ytop"
         fi
-
-        sed -i '2d' "$list" >/dev/null
+        
+        sed -i '2d' "$queue"
         clear
 
     done
@@ -433,7 +438,7 @@ _download_video() {
         echo " ${green}All done${nocolor}"
         sleep 2s
         rm "$ytop"
-        echo "Downloads are complete, do you want to delete $list? [n/Y]: "
+        echo "Downloads are completed, do you want to delete $list? [n/Y]: "
         read -r REPLY
         case "$REPLY" in
             n|N) _menu ;;
