@@ -15,19 +15,18 @@ _get_audio() {
             echo " ${green}There are" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "audio files left to download.${nocolor}"
         fi
 
-        youtube-dl -F "$url" | grep -e 'audio only'
+        youtube-dl -F "$url" | grep -e 'audio only' | sed 's/audio only      //'
         echo ""
         echo " ${green}Choose a format code: ${nocolor}"
-        read -rn 3 code
+        read -r code
         echo " ${green}Please be patient while downloading files...${nocolor}"
-        youtube-dl -f "$code" "$url" > $ytop
+        youtube-dl -f "$code" "$url" > "$ytop"
         sed -i '2d' "$queue"
         clear
 
     done
 
-    echo " ${green}Done${nocolor}"
-    echo ""
+    echo -e " ${green}Done\n${nocolor}"
 
     if [[ -n $(find . -iname "*.webm") ]]; then
         echo " ${green}Please be patient while ffmpeg is working...${nocolor}"
@@ -35,15 +34,15 @@ _get_audio() {
         bash -c 'FILE="$1"; \
         ffmpeg -i "${FILE}" \
         -vn -ab 320k -ar 48000 \
-        -y "${FILE%.webm}.mp3";' _ '{}' \; 2>$ffop
+        -y "${FILE%.webm}.mp3";' _ '{}' \; 2>"$ffop"
 
         echo " ${green}Done${nocolor}"
         sleep 2s
         rm ./*.webm
-        rm $ffop $ytop
+        rm "$ffop" "$ytop"
         _menu
     else
-        rm $ytop
+        rm "$ytop"
         _menu
     fi
 
@@ -56,9 +55,16 @@ _get_video() {
     local webm
     webm="$(find . -name '*.webm' | sed 's,.*/,,')"
 
-    echo " ${green}Please be patient while downloading files...${nocolor}"
     for url in $(grep 'https' "$queue"); do
 
+        youtube-dl -F "$url"
+        echo ""
+        echo " ${green}Choose a format code: ${nocolor}"
+        read -r code
+        echo "$code" > "$ytop"
+        sleep 0.5
+        echo " ${green}Please be patient while downloading files...${nocolor}"
+        
         if (( $(sed '/#EXTM3U/d' "$queue" | wc -l) < 2 )); then
             echo ""
             echo " ${green}There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "video file left to download.${nocolor}"
@@ -67,15 +73,15 @@ _get_video() {
             echo " ${green}There are" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "video files left to download.${nocolor}"
         fi
 
-        # choosing the very best format first, if available.
-        if [[ -n $(youtube-dl -F "$url" | grep -e '137' -e '251' ) ]]; then
-            youtube-dl -f 137+251 --merge-output-format mp4 "$url" > $ytop
+        if grep -qe ${code} "$ytop"; then
+            youtube-dl -f "$code" --merge-output-format mp4 "$url" > "$ytop"
         else
-            youtube-dl --format best "$url" > $ytop
+            youtube-dl -f "$code" "$url" > "$ytop"
         fi
+        
         sed -i '2d' "$queue"
         clear
-    
+
     done
 
     echo " ${green}Done${nocolor}"
@@ -87,12 +93,11 @@ _get_video() {
         echo " ${green}All done${nocolor}"
         sleep 2s
         rm ./*.webm
-        rm $ffop $ytop
+        rm "$ffop" "$ytop"
         _menu
     else
-        rm $ytop
+        rm "$ytop"
         _menu
     fi
 
 }
-
