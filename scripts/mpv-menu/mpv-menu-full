@@ -405,7 +405,7 @@ _download_video() {
             echo " ${green}There are" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "video files left to download.${nocolor}"
         fi
         
-        if grep -qe ${code} "$ytop"; then
+        if [[ $(grep -e '+' "$ytop") ]]; then
             youtube-dl -f "$code" --merge-output-format mp4 "$url" > "$ytop"
         else
             youtube-dl -f "$code" "$url" > "$ytop"
@@ -550,7 +550,7 @@ _get_video() {
             echo " ${green}There are" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "video files left to download.${nocolor}"
         fi
 
-        if grep -qe ${code} "$ytop"; then
+        if [[ $(grep -e '+' "$ytop") ]]; then
             youtube-dl -f "$code" --merge-output-format mp4 "$url" > "$ytop"
         else
             youtube-dl -f "$code" "$url" > "$ytop"
