@@ -5,21 +5,21 @@ _check_queue() {
 
     _remove_crap
     ## This looks ugly but everything will fit nicely...
-    if (( $(wc -l "$queue" | awk '{print $1}') > 1 )); then
-        if (( $(wc -l "$queue" | awk '{print $1}') < 11 )); then
-            echo -e "                  ┌──────────────────────────────────────────────┐"
-            echo -e "                  │  ${red} There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "url(s) in default playlist.${nocolor}     │"
-            echo -e "                  │ Consider checking the url(s) list ${green}(option 6) ${nocolor}|"
-            echo -e "                  │ or delete them ${green}(option 7).${nocolor}                   |"
-            echo -e "                  └──────────────────────────────────────────────┘"
+    if (( $(grep "" -c "$queue") > 1 )); then
+        if (( $(grep "" -c "$queue") < 11 )); then
+            echo -e "                            ┌──────────────────────────────────────────────┐"
+            echo -e "                            │  ${red} There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "url(s) in default playlist.${nocolor}     │"
+            echo -e "                            │ Consider checking the url(s) list ${green}(option 6) ${nocolor}|"
+            echo -e "                            │ or delete them ${green}(option 7).${nocolor}                   |"
+            echo -e "                            └──────────────────────────────────────────────┘"
             sleep 6s
             _menu
         else
-            echo -e "                  ┌───────────────────────────────────────────────┐"
-            echo -e "                  │  ${red} There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "url(s) in default playlist.${nocolor}     │"
-            echo -e "                  │ Consider checking the url(s) list ${green}(option 6) ${nocolor} |"
-            echo -e "                  │ or delete them ${green}(option 7).${nocolor}                    |"
-            echo -e "                  └───────────────────────────────────────────────┘"
+            echo -e "                            ┌───────────────────────────────────────────────┐"
+            echo -e "                            │  ${red} There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "url(s) in default playlist.${nocolor}     │"
+            echo -e "                            │ Consider checking the url(s) list ${green}(option 6) ${nocolor} |"
+            echo -e "                            │ or delete them ${green}(option 7).${nocolor}                    |"
+            echo -e "                            └───────────────────────────────────────────────┘"
             sleep 6s
             _menu
         fi
@@ -71,21 +71,19 @@ _check_editor() {
 
 _check_url() {
 
-    if (( $(wc -l "$queue" | awk '{print $1}') > 1 )); then
+    if (( $(grep "" -c "$queue") > 1 )); then
         echo " ${green}Default playlist content:${nocolor}"
         while read -r urls; do
-            echo " ${green}$urls${nocolor}"
+            echo " $urls"
         done < "$queue" | sed 's/#EXTM3U//'
-
-        read -rp 'delete url(s) [d], play url(s) [p], save url(s) as playlist [s] or back to menu [m]: ' opt
+        echo ""
+        read -rsn 1 -p ${green}'delete url(s) [d], play url(s) [p], save url(s) as playlist [s] or back to menu [m]: '${nocolor} opt
         case $opt in
-            d) _delete_url
-            ;;
-            m) _menu
-            ;;
-            p) _load_main
-            ;;
-            s) _save_remove
+            d) _delete_url  ;;
+            m) _menu        ;;
+            p) _load_video  ;;
+            s) _save_remove ;;
+            *) _menu        ;;
         esac
     else
         echo " ${red}Default list is empty ${nocolor}"
@@ -93,4 +91,3 @@ _check_url() {
     fi
 
 }
-
