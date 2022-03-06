@@ -1,31 +1,30 @@
 #!/bin/bash
 ## This is a part of main script: mpv-menu.
 
-_save_remove() {
+save_remove() {
 
     cd "$playlists_dir"
 
-    read -rp 'Save [s] or Remove [r] a playlist?: ' opt
+    read -rsn 1 -p 'Save [s] or Remove [r] a playlist?: ' opt
     echo ""
-    case $opt in
-        s)  echo "Playlists directory content:"
+    case "$opt" in
+        s)  echo -e " ${green}Available playlists:\n${nocolor}"
+            find . -name "*.m3u" | sort -d | sed 's/.*\///;s/.m3u//'
             echo ""
-            find . -name "*.m3u" | sort -d | sed 's,.*/,,'
-            echo ""
-            echo "Save playlist as:"
-            read list
-            if [[ -f "$list" ]]; then
-                echo ""
-                echo " ${red}This playlist already exists!${nocolor}"
-                echo " ${green}Overwrite $list? [y/N]:${nocolor}"
-                read overwrite
-                case $overwrite in
-                    y)  cp -f "$queue" "$list".m3u
+            echo -e " ${green}Save playlist as:\n${nocolor}"
+            read -r list
+            list="$list.m3u"
+            if [[ $(find . -name "${list}") ]]; then
+                echo " ${red}This playlist already exists!"
+                echo " Overwrite $list? [y/N]:${nocolor}"
+                read -r overwrite
+                case "$overwrite" in
+                    y|Y)  cp -f "$queue" "$list"
                         echo " ${green}$list saved ${nocolor}"
                         sleep 2s
                         _check_queue
                     ;;
-                    N)  _check_queue
+                    N|n)  _check_queue
                     ;;
                     *)  _check_queue
                     ;;
@@ -37,42 +36,31 @@ _save_remove() {
                 _check_queue
             fi
         ;;
-        r)  select list in $(find . -name "*.m3u" | sort -d | sed 's,.*/,,'); do
+        r)  PS3=""
+            echo -e " ${green}Which playlist do you want to remove? \n${nocolor}"
+            select list in $(find . -name "*.m3u" | sort -d | sed 's,.*/,,'); do
                 echo ""
                 echo " ${red}Are you sure you want to remove $list? [y/N]:${nocolor}"
                 read -r del
-                case $del in
-                    y)  rm "$list"
+                case "$del" in
+                    y|Y)  rm "$list"
                         echo " ${red}$list removed ${nocolor}"
                         sleep 2s
                         _menu
                     ;;
-                    N)  _menu
+                    N|n)  _menu
                     ;;
-                    *)  echo -e " ${red} Wrong option! Wait and try again...${nocolor}"
+                    *)  echo " ${red} Wrong option! Wait and try again...${nocolor}"
                         sleep 3s
                         _menu
                     ;;
                 esac
             done
         ;;
-        *)  echo -e " ${red} Wrong option! Wait and try again...${nocolor}"
+        *)  echo " ${red} Wrong option! Wait and try again...${nocolor}"
             sleep 3s
             _menu
         ;;
     esac
 
 }
-
-_delete_url() {
-    [[ -z $(sed -n '2p' "$queue") ]] \
-    && echo " ${green}Nothing to do here, main list is empty...${nocolor}" \
-    && sleep 2s \
-    && _menu || {
-        sed -i /https/d "$queue" \
-        && echo " ${red}All urls removed ${nocolor}" \
-        && sleep 2s \
-        && _menu
-    }
-}
-
