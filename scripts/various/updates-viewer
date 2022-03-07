@@ -18,10 +18,10 @@ red=$'\e[0;31m';
 green=$'\e[0;32m';
 
 # checking dependencies
-for deps in checkupdates i3blocks polybar yay; do
+for deps in checkupdates polybar yay; do
     [[ -z $(command -v $deps) ]] && exit 1
 done
-    
+
 _check_updates() {
     while true; do
 
@@ -94,15 +94,16 @@ _yesnoprompt() {
 
 _reboot() {
     sudo cp -f "$MIRR" "$BCKP"
-    sudo pacman -Syu
+    sudo pacman -Syu --noconfirm
     sudo grub-mkconfig -o /boot/grub/grub.cfg
+    # cleaning our lists from old packages updates.
     sed -i '/^[a-zA-Z]/d' {$ARCH,$AUR,$ARCHAUR}
     sudo reboot
 }
 
 _noreboot() {
     sudo cp -f "$MIRR" "$BCKP"
-    sudo pacman -Syu
+    sudo pacman -Syu --noconfirm
     sudo grub-mkconfig -o /boot/grub/grub.cfg
     sed -i '/^[a-zA-Z]/d' {$ARCH,$AUR,$ARCHAUR}
 
@@ -118,7 +119,7 @@ _noreboot() {
 
 _poweroff() {
     sudo cp -f "$MIRR" "$BCKP"
-    sudo pacman -Syu
+    sudo pacman -Syu --noconfirm
     sudo grub-mkconfig -o /boot/grub/grub.cfg
     sed -i '/^[a-zA-Z]/d' {$ARCH,$AUR,$ARCHAUR}
     sudo poweroff
@@ -168,8 +169,8 @@ _make_updates() {
 
 _list() {
 
-    while read -r content; do
-        echo "$content"
+    while read -r line; do
+        echo "$line"
     done < "$ARCHAUR"
 
     if [[ -z $(cat "$ARCHAUR") ]]; then
@@ -178,8 +179,12 @@ _list() {
         exit 0
     else
         echo ""
-        echo "${green}There are "$(grep "" -c $ARCHAUR)" updates available.${nocolor}"
-        echo ""
+        if (( $(grep "" -c $ARCHAUR) > 1 )); then
+            echo -e "${green}There are "$(grep "" -c $ARCHAUR)" updates available.\n${nocolor}"
+        else
+            echo -e "${green}There is "$(grep "" -c $ARCHAUR)" update available.\n${nocolor}"
+        fi
+
         _yesnoprompt "Proceed with installation?" || {
             echo "bye..."
             sleep 2s
@@ -202,7 +207,7 @@ _list() {
 case "$1" in
     --hook   ) polybar-msg hook updates-ipc 1 >/dev/null 2>&1
     ;;
-    --list   ) _list 
+    --list   ) _list
     ;;
     --updates) _check_updates
     ;;
