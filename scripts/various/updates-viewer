@@ -19,7 +19,7 @@ green=$'\e[0;32m';
 
 # checking dependencies
 for deps in checkupdates polybar yay; do
-    [[ -z $(command -v $deps) ]] && exit 1
+    [[ -z $(command -v "$deps") ]] && exit 1
 done
 
 _check_updates() {
