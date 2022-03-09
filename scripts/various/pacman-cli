@@ -54,7 +54,7 @@ _menu() {
             5)  _reflector
                 echo ""
             ;;
-            6)  updates-manager --list
+            6)  updates-viewer --list
                 echo ""
             ;;
             7)  _pacdiff
