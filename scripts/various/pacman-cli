@@ -1,24 +1,83 @@
 #!/bin/bash
 
-#    Author: Barret E (2021) <archus@protonmail.com>
-#    Dependencies: fzf, pacdiff, reflector, vim.
+# Author: Barret E (2021) <archus@protonmail.com>
+# https://github.com/archusXIV/dotfiles
+# Dependencies: fzf, pacdiff, reflector, vim.
 #
-#    This script shows a menu to let you choose over several pacman tools and options.
-#    In order to install or remove packages it uses fzf utility on the fancy side.
-#    We can also find and purge orphan packages, pacnew & pacsave files,
-#    refresh our mirrorlist, purge the cache, edit pacman.conf/makepkg.conf and of course update the system.
+# This script shows a menu to let you choose over severals pacman tools and options.
+# In order to install or remove packages it uses fzf utility on the fancy side.
+# We can also find and purge orphan packages, refresh our mirrorlist, purge the cache,
+# edit pacman.conf/makepkg.conf and of course update the system.
 
 color_off=$'\e[0m';
 red=$'\e[0;31m';
 green=$'\e[0;32m';
 
-declare -a dependencies=( "fzf" "pacdiff" "reflector" "vim" "updates-viewer" )
+declare -a dependencies=( "fzf" "pacdiff" "reflector" "vim" "updates-manager" )
 
 for i in "${dependencies[@]}"; do
-    [[ -z $(command -v "$i") ]] \
-    && echo " ${red}Missing dependencies...$i" \
-    && exit 1
+    [[ -z $(command -v "$i") ]] && {
+        echo " ${red}Missing dependency...$i"
+        exit 1
+    }
 done
+
+_menu() {
+    clear
+    while [[ -f /etc/pacman.conf ]]; do
+        clear
+        echo ""
+        echo -e "                                            ::pacman options:: "
+        echo -e "                       ┌───────────────────────────────────────────────────────────┐"
+        echo -e "                       │    1) Search & Install           6) Update the system     │"
+        echo -e "                       │    2) Uninstall a package(s)     7) Pacdiff               │"
+        echo -e "                       │    3) List/Purge orphans         8) Edit pacman.conf      │"
+        echo -e "                       │    4) Purge the cache            9) Edit makepkg.conf     │"
+        echo -e "                       │    5) Update mirrors             0) Exit                  │"
+        echo -e "                       └───────────────────────────────────────────────────────────┘"
+        echo -e "                                             ${green}Select an item${color_off}"
+        echo ""
+        read -r option
+        case $option in
+            1)  _install
+                echo ""
+            ;;
+            2)  _uninstall
+                echo ""
+            ;;
+            3)  _orphans
+                echo ""
+            ;;
+            4)  sudo pacman -Scc
+                echo ""
+            ;;
+            5)  _reflector
+                echo ""
+            ;;
+            6)  updates-manager --list
+                echo ""
+            ;;
+            7)  _pacdiff
+                echo ""
+            ;;
+            8)  sudo vim /etc/pacman.conf
+                echo ""
+            ;;
+            9)  sudo vim /etc/makepkg.conf
+                echo ""
+            ;;
+            0)  clear
+                exit
+            ;;
+            *)  echo -e " ${red} Wrong option!"
+                echo " ${green}Wait and try again...${color_off}"
+                echo ""
+                sleep 3s
+                clear
+            ;;
+        esac
+    done
+}
 
 _install() {
     sudo pacman -Sy >/dev/null 2>&1
@@ -46,8 +105,9 @@ _orphans() {
         case "$purge" in
             N|n|no ) _menu
             ;;
-            y|Y|yes) sudo pacman -Rdd $(pacman -Qtdq) && sudo paccache -ruk0
-                     echo " ${green}A list of removed packages has been created in $XDG_CACHE_HOME/orphans_list.txt.${color_off}"
+            y|Y|yes) sudo pacman -Rdd "$(pacman -Qtdq)"
+                     echo " ${green}A list of removed packages has been created"
+                     echo " in $XDG_CACHE_HOME/orphans/orphans_list.txt${color_off}"
                      sleep 5s
             ;;
             *      ) _menu
@@ -74,7 +134,7 @@ _reflector() {
     echo ""
     echo " ${green}Select your country:"
     echo " Example for France: 19"
-    echo " More details in a terminal, type: ${color_off}reflector --list-countries"
+    echo " More details in a terminal, type: ${color_off}reflector --list-countries | less"
     echo ""
     select country in $(reflector --list-countries \
         | sed '1d;2d;8d' \
@@ -107,63 +167,6 @@ _reflector() {
         echo " ${green}New mirrorlist saved.${color_off}"
         sleep 3s
         break
-    done
-}
-
-_menu() {
-    clear
-    while [[ -f /etc/pacman.conf ]]; do
-        clear
-        echo ""
-        echo -e "                                           ::pacman options:: "
-        echo -e "                       ┌───────────────────────────────────────────────────────────┐"
-        echo -e "                       │    1) Search & Install          6) Update the system      │"
-        echo -e "                       │    2) Uninstall a package(s)    7) Pacdiff                │"
-        echo -e "                       │    3) List/Purge orphans        8) Edit pacman.conf       │"
-        echo -e "                       │    4) Purge the cache           9) Edit makepkg.conf      │"
-        echo -e "                       │    5) Update mirrors            0) Exit                   │"
-        echo -e "                       └───────────────────────────────────────────────────────────┘"
-        echo -e "                                             ${green}Select an item${color_off}"
-        echo ""
-        read -r option
-        case $option in
-            1)  _install
-                echo ""
-            ;;
-            2)  _uninstall
-                echo ""
-            ;;
-            3)  _orphans
-                echo ""
-            ;;
-            4)  sudo pacman -Scc
-                echo ""
-            ;;
-            5)  _reflector
-                echo ""
-            ;;
-            6)  updates-viewer --list
-                echo ""
-            ;;
-            7)  _pacdiff
-                echo ""
-            ;;
-            8)  sudo vim /etc/pacman.conf
-                echo ""
-            ;;
-            9)  sudo vim /etc/makepkg.conf
-                echo ""
-            ;;
-            0)  clear
-                exit
-            ;;
-            *)  echo -e " ${red} Wrong option!"
-                echo " ${green}Wait and try again...${color_off}"
-                echo ""
-                sleep 3s
-                clear
-            ;;
-        esac
     done
 }
 
