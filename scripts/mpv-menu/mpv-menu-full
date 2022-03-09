@@ -110,6 +110,8 @@ _menu() {
             0)  clear
                 #[[ -z $(systemctl --user list-units | grep -e 'mpv-ipc') ]] \
                 #    && systemctl --user start mpv-ipc.service
+                # ffmpeg creates a ccache directory while converting/merging files.
+                rm -rf "$HOME"/.ccache
                 exit
             ;;
             *)  echo " ${red}Wrong option!"
@@ -139,7 +141,6 @@ _check_editor() {
 
 _check_queue() {
 
-    _remove_crap
     ## This looks ugly but everything will fit nicely...
     if (( $(grep "" -c "$queue") > 1 )); then
         if (( $(grep "" -c "$queue") < 11 )); then
@@ -387,7 +388,7 @@ _download_video() {
     # We're still in $playlists_dir
     clear
 
-    for url in $(grep 'https' "$list"); do
+    for url in $(grep -e 'https' "$list"); do
 
         youtube-dl -F "$url"
         echo ""
@@ -397,12 +398,12 @@ _download_video() {
         sleep 0.5
         echo " ${green}Please be patient while downloading files...${nocolor}"
 
-        if (( $(sed '/#EXTM3U/d' "$queue" | wc -l) < 2 )); then
+        if (( $(sed '/#EXTM3U/d' "$list" | wc -l) < 2 )); then
             echo ""
-            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "video file left to download.${nocolor}"
+            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$list" | wc -l)" "video file left to download.${nocolor}"
         else
             echo ""
-            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "video files left to download.${nocolor}"
+            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$list" | wc -l)" "video files left to download.${nocolor}"
         fi
         
         if [[ $(grep -e '+' "$ytop") ]]; then
@@ -411,7 +412,7 @@ _download_video() {
             youtube-dl -f "$code" "$url" > "$ytop"
         fi
         
-        sed -i '2d' "$queue"
+        sed -i '2d' "$list"
         clear
 
     done
@@ -424,11 +425,11 @@ _download_video() {
     webm="$(find "$playlists_dir" -name "*.webm" | sed 's,.*/,,')"
 
     if [[ -n $webm ]]; then
-        echo " ${green}Please be patient while ffmpeg is working...${nocolor}"
+        echo -e " ${green}Please be patient while ffmpeg is working...\n${nocolor}"
         ffmpeg -i "$webm" "$webm".mp4 2> "$ffop"
         rm ./*.webm
         mv ./{*.mp4,*.mkv} "$videos_dir" > /dev/null 2>&1
-        echo ""
+
         echo " ${green}All done${nocolor}"
         rm "$ffop" "$ytop"
         rm "$list"_origin
@@ -561,8 +562,7 @@ _get_video() {
 
     done
 
-    echo " ${green}Done${nocolor}"
-    echo ""
+    echo -e " ${green}Done.\n${nocolor}"
 
     if [[ -n ${webm} ]]; then
         echo " ${green}Please be patient while ffmpeg is working...${nocolor}"
@@ -630,16 +630,15 @@ _load_playlist() {
 
     cd "$playlists_dir"
 
-    PS3="Select a playlist to load (Press 'q' to quit mpv): "
+    PS3=" Select a playlist to load (Press 'q' to quit mpv): "
     select list in $(find . -name "*.m3u" | sort -d | sed 's,.*/,,'); do
 
-        if (( $(grep "" -c "$list") == 0 )); then
-            echo " ${red}$list list is empty...${nocolor}"
+        if ! grep -q -e 'https' -e 'http' "$list"; then
+            echo " ${red}$list is empty...${nocolor}"
             sleep 3s
             break
         fi
 
-        echo ""
         read -rsn 1 -p 'Just load [l] download audio [a] or download video [v] (Press '^C' to quit youtube-dl): ' letter
         case "$letter" in
             a)  cp "$list" "$list"_origin
@@ -656,7 +655,7 @@ _load_playlist() {
                         mpvc -a "$list"
                         #_get_mpv_title # && killall -q picom
                     ;;
-                    *)  echo -e " ${red} Wrong option! Wait and try again...${nocolor}"
+                    *)  echo " ${red} Wrong option! Wait and try again...${nocolor}"
                         sleep 3s
                     ;;
                 esac
@@ -722,7 +721,7 @@ _save_remove() {
     echo ""
     case "$opt" in
         s)  echo -e " ${green}Available playlists:\n${nocolor}"
-            find . -name "*.m3u" | sort -d | sed 's/.*\///;s/.m3u//'
+            find . -name "*.m3u" | sort -d | sed 's,.*/,,'
             echo ""
             echo -e " ${green}Save playlist as:\n${nocolor}"
             read -r list
