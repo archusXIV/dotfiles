@@ -51,7 +51,7 @@ _load_video() {
 _load_playlist() {
 
     cd "$playlists_dir"
-    rm "$tmp_dir"/titles.txt >/dev/null 2>&1
+    
     PS3=""
     echo -e " ${green}Select a playlist to load (Press 'q' to quit mpv):\n${nocolor}"
     select list in $(find . -name "*.m3u" | sort -d | sed 's,.*/,,'); do
@@ -95,7 +95,7 @@ _load_playlist() {
                     ;;
                 esac
 
-                rm "$metadatas"
+                rm "$tmp_dir"/*.txt >/dev/null 2>&1
                 clear
                 _menu
             ;;
