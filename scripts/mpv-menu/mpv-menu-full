@@ -79,7 +79,7 @@ _menu() {
         echo -e "                                             ${green}Select an item${nocolor}"
         echo ""
         read -r action
-        case $action in
+        case ${action} in
             1)  _copy_video
                 echo ""
             ;;
@@ -175,7 +175,7 @@ _check_url() {
         done < "$queue" | sed 's/#EXTM3U//'
         echo ""
         read -rsn 1 -p ${green}'delete url(s) [d], play url(s) [p], save url(s) as playlist [s] or back to menu [m]: '${nocolor} opt
-        case $opt in
+        case ${opt} in
             d) _delete_url  ;;
             m) _menu        ;;
             p) _load_video  ;;
@@ -244,7 +244,7 @@ _copy_audio() {
         echo -e "                                           ${green}Select an item${nocolor}"
         echo ""
         read -r options
-        case "$options" in
+        case ${options} in
             1) clear && continue
                echo ""
             ;;
@@ -296,7 +296,7 @@ _copy_video() {
         echo -e "                                           ${green}Select an item${nocolor}"
         echo ""
         read -r options
-        case "$options" in
+        case ${options} in
             1) clear && continue
                echo "" 
             ;;
@@ -339,7 +339,12 @@ _download_audio() {
         echo ""
         echo " ${green}Choose a format code: ${nocolor}"
         read -r code
-        echo " ${green}Please be patient while downloading files...${nocolor}"
+        
+        # let's get our file (web page) title.
+        local downloadaudiotitle
+        downloadaudiotitle=$(youtube-dl -j "$url" | jq '(.webpage_url, .title)' | tac | sed -n '1p')
+        
+        echo " ${green}Please be patient while downloading ${red}$downloadaudiotitle...${nocolor}"
         youtube-dl -f "$code" "$url" > "$ytop"
         sed -i '2d' "$list"
         clear
@@ -371,7 +376,7 @@ _download_audio() {
         rm "$ytop"
         echo "Downloads are completed, do you want to delete $list? [n/Y]: "
         read -rsn 1 REPLY
-        case "$REPLY" in
+        case ${REPLY} in
             n|N) _menu
             ;;
             Y|y) rm "$list" && _menu
@@ -396,7 +401,9 @@ _download_video() {
         read -r code
         echo "$code" > "$ytop"
         sleep 0.5
-        echo " ${green}Please be patient while downloading files...${nocolor}"
+        local downloadvideotiltle
+        downloadvideotitle=$(youtube-dl -j "$url" | jq '(.webpage_url, .title)' | tac | sed -n '1p')
+        echo " ${green}Please be patient while downloading ${red}$downloadvideotitle...${nocolor}"
 
         if (( $(sed '/#EXTM3U/d' "$list" | wc -l) < 2 )); then
             echo ""
@@ -497,7 +504,10 @@ _get_audio() {
         echo ""
         echo " ${green}Choose a format code: ${nocolor}"
         read -r code
-        echo " ${green}Please be patient while downloading files...${nocolor}"
+        local getaudiotitle
+        getaudiotitle=$(youtube-dl -j "$url" | jq '(.webpage_url, .title)' | tac | sed -n '1p')
+        echo " ${green}Please be patient while downloading ${red}$getaudiotitle...${nocolor}"
+        sleep 2s
         youtube-dl -f "$code" "$url" > "$ytop"
         sed -i '2d' "$queue"
         clear
@@ -541,7 +551,10 @@ _get_video() {
         read -r code
         echo "$code" > "$ytop"
         sleep 0.5
-        echo " ${green}Please be patient while downloading files...${nocolor}"
+        local getvideotiltle
+        getvideotitle=$(youtube-dl -j "$url" | jq '(.webpage_url, .title)' | tac | sed -n '1p')
+        echo " ${green}Please be patient while downloading ${red}$getvideotitle...${nocolor}"
+        sleep 2s
         
         if (( $(sed '/#EXTM3U/d' "$queue" | wc -l) < 2 )); then
             echo ""
@@ -647,7 +660,7 @@ _load_playlist() {
             l)  # _stop_mpvipc
                 echo ""
                 read -rsn 1 -p 'Load audio [a] or video [v] ?: ' load
-                case "$load" in
+                case ${load} in
                     a)  mpvc -a -Q "$list"
                         #_get_mpv_title
                     ;;
@@ -730,7 +743,7 @@ _save_remove() {
                 echo " ${red}This playlist already exists!"
                 echo " Overwrite $list? [y/N]:${nocolor}"
                 read -r overwrite
-                case "$overwrite" in
+                case ${overwrite} in
                     y|Y)  cp -f "$queue" "$list"
                         echo " ${green}$list saved ${nocolor}"
                         sleep 2s
