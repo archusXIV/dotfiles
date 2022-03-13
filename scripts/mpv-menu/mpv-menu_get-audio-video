@@ -19,7 +19,12 @@ _get_audio() {
         echo ""
         echo " ${green}Choose a format code: ${nocolor}"
         read -r code
-        echo " ${green}Please be patient while downloading files...${nocolor}"
+        
+        local getaudiotitle
+        getaudiotitle=$(youtube-dl -j "$url" | jq '(.webpage_url, .title)' | tac | sed -n '1p')
+        echo " ${green}Please be patient while downloading ${red}$getaudiotitle...${nocolor}"
+        sleep 2s
+        
         youtube-dl -f "$code" "$url" > "$ytop"
         sed -i '2d' "$queue"
         clear
@@ -63,7 +68,11 @@ _get_video() {
         read -r code
         echo "$code" > "$ytop"
         sleep 0.5
-        echo " ${green}Please be patient while downloading files...${nocolor}"
+        
+        local getvideotiltle
+        getvideotitle=$(youtube-dl -j "$url" | jq '(.webpage_url, .title)' | tac | sed -n '1p')
+        echo " ${green}Please be patient while downloading ${red}$getvideotitle...${nocolor}"
+        sleep 2s
         
         if (( $(sed '/#EXTM3U/d' "$queue" | wc -l) < 2 )); then
             echo ""
@@ -84,8 +93,7 @@ _get_video() {
 
     done
 
-    echo " ${green}Done${nocolor}"
-    echo ""
+    echo -e " ${green}Done.\n${nocolor}"
 
     if [[ -n ${webm} ]]; then
         echo " ${green}Please be patient while ffmpeg is working...${nocolor}"
