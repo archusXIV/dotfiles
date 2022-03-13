@@ -642,24 +642,37 @@ _load_video() {
 _load_playlist() {
 
     cd "$playlists_dir"
-
-    PS3=" Select a playlist to load (Press 'q' to quit mpv): "
+    rm "$tmp_dir"/titles.txt >/dev/null 2>&1
+    PS3=""
+    echo -e " ${green}Select a playlist to load (Press 'q' to quit mpv):\n${nocolor}"
     select list in $(find . -name "*.m3u" | sort -d | sed 's,.*/,,'); do
-
+        
         if ! grep -q -e 'https' -e 'http' "$list"; then
             echo " ${red}$list is empty...${nocolor}"
             sleep 3s
             break
         fi
-
-        read -rsn 1 -p 'Just load [l] download audio [a] or download video [v] (Press '^C' to quit youtube-dl): ' letter
+        
+        echo ""
+        echo -e " ${green}Getting videos availability...please wait.${nocolor}\n"
+        
+        while read -r line; do
+            youtube-dl -j "$line" \
+            | jq '(.webpage_url, .title)' \
+            | tac | sed -n '1p' >> "$tmp_dir"/titles.txt
+        done < <(cat "$list" | sed '/#EXTM3U/d')
+        
+        cat -n "$tmp_dir"/titles.txt
+        echo ""
+        
+        read -rsn 1 -p ${green}' Just load [l] download audio [a] or download video [v] (Press '^C' to quit youtube-dl): '${nocolor} letter
         case "$letter" in
             a)  cp "$list" "$list"_origin
                 _download_audio
             ;;
             l)  # _stop_mpvipc
                 echo ""
-                read -rsn 1 -p 'Load audio [a] or video [v] ?: ' load
+                read -rsn 1 -p  ${green}' Load audio [a] or video [v] ?: '${nocolor} load
                 case ${load} in
                     a)  mpvc -a -Q "$list"
                         #_get_mpv_title
