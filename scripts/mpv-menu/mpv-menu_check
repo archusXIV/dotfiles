@@ -59,7 +59,7 @@ _check_queue() {
 _check_dependencies() {
 
     ## Checking dependencies: softwares, directories and files.
-    declare -a deps=( "ffmpeg" "mpv" "mpvc" "ranger" "socat" "youtube-dl" )
+    declare -a deps=( "ffmpeg" "jq" "mpv" "mpvc" "ranger" "socat" "youtube-dl" )
 
     for i in "${deps[@]}"; do
         [[ -z $(command -v "$i") ]] \
