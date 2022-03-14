@@ -5,7 +5,7 @@
 ##    Dependencies: ffmpeg, jq,  mpv & mpvc (command line interface for mpv), ranger, socat, youtube-dl.
 ##    https://github.com/lwilletts/mpvc/blob/master/mpvc
 ##
-##    Youtube-dl is for now kind of unmaintained so install and make a symlink with
+##    Youtube-dl is for now kind of unmaintained so install yt-dlp and make a symlink with.
 ##    https://github.com/yt-dlp/yt-dlp/releases
 ##
 ##    This script rips video urls from Youtube and so on.
