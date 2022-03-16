@@ -320,27 +320,29 @@ _copy_video() {
 
 }
 
+_download_completed() {
+    echo "Downloads are completed, do you want to delete $list? [n/Y]: "
+    read -rsn 1 REPLY
+    case ${REPLY} in
+        n|N) _menu
+        ;;
+        Y|y) rm "$list" && _menu
+        ;;
+        *  ) echo " ${red} Wrong option! Wait and try again...${nocolor}"
+             sleep 3s
+        ;;
+    esac
+}
+
 _download_audio() {
     # We're still in $playlists_dir
     clear
     
-    if [[ $(grep -e 'playlist?list=' "$list") ]]; then
-        echo ""
-        echo -e " ${green}Getting youtube playlist availability...please wait.${nocolor}\n"
-        while read -r line; do
-            youtube-dl -j "$line" \
-            | jq '(.webpage_url)' \
-            | cat | sed 's/"//g' >> "$tmp_dir"/urls.txt
-        done < <(cat "$list" | sed '/#EXTM3U/d')
-        cat "$tmp_dir"/urls.txt >> "$list"
-        sed -i '2d' "$list"
-    fi
-    
     for url in $(grep 'https' "$list"); do
         
         # let's get our file (web page) title.
-        local downloadaudiotitle
-        downloadaudiotitle=$(youtube-dl -j "$url" | jq '(.title)')
+        local printaudiotitle
+        printaudiotitle=$(youtube-dl -j "$url" | jq '(.title)')
     
         if (( $(sed '/#EXTM3U/d' "$list" | wc -l) < 2 )); then
             echo ""
@@ -356,7 +358,7 @@ _download_audio() {
         echo " ${green}Choose a format code: ${nocolor}"
         read -r code
         
-        echo " ${green}Please be patient while downloading ${red}$downloadaudiotitle...${nocolor}"
+        echo " ${green}Please be patient while downloading ${red}$printaudiotitle...${nocolor}"
         youtube-dl -f "$code" "$url" > "$ytop"
         sed -i '2d' "$list"
         clear
@@ -381,22 +383,12 @@ _download_audio() {
         rm "$tmp_dir"/*.txt
         rm "$list"_origin
         mv *.mp3 "$audios_dir"
-        _menu
+        _download_completed
     else
         echo " ${green}Please check out for none mp3 files in $playlists_dir${nocolor}"
         sleep 5s
         rm "$tmp_dir"/*.txt
-        echo "Downloads are completed, do you want to delete $list? [n/Y]: "
-        read -rsn 1 REPLY
-        case ${REPLY} in
-            n|N) _menu
-            ;;
-            Y|y) rm "$list" && _menu
-            ;;
-            *  ) echo " ${red} Wrong option! Wait and try again...${nocolor}"
-                 sleep 3s
-            ;;
-        esac
+        _download_completed
     fi
 
 }
@@ -405,23 +397,10 @@ _download_video() {
     # We're still in $playlists_dir
     clear
     
-
-    if [[ $(grep -e 'playlist?list=' "$list") ]]; then
-        echo ""
-        echo -e " ${green}Getting youtube playlist availability...please wait.${nocolor}\n"
-        while read -r line; do
-            youtube-dl -j "$line" \
-            | jq '(.webpage_url)' \
-            | cat | sed 's/"//g' >> "$tmp_dir"/urls.txt
-        done < <(cat "$list" | sed '/#EXTM3U/d')
-        cat "$tmp_dir"/urls.txt >> "$list"
-        sed -i '2d' "$list"
-    fi
-    
     for url in $(grep -e 'https' "$list"); do
 
-        local downloadvideotiltle
-        downloadvideotitle=$(youtube-dl -j "$url" | jq '(.title)')
+        local printvideotiltle
+        printvideotitle=$(youtube-dl -j "$url" | jq '(.title)')
     
         youtube-dl -F "$url"
         echo ""
@@ -430,7 +409,7 @@ _download_video() {
         echo "$code" > "$ytop"
         sleep 0.5
         
-        echo " ${green}Please be patient while downloading ${red}$downloadvideotitle...${nocolor}"
+        echo " ${green}Please be patient while downloading ${red}$printvideotitle...${nocolor}"
 
         if (( $(sed '/#EXTM3U/d' "$list" | wc -l) < 2 )); then
             echo ""
@@ -468,18 +447,13 @@ _download_video() {
         rm "$tmp_dir"/*.txt
         rm "$list"_origin
         sleep 2s
-        _menu
+        _download_completed
     else
         mv ./{*.mp4,*.mkv} "$videos_dir" > /dev/null 2>&1
         echo " ${green}All done${nocolor}"
         sleep 2s
         rm "$tmp_dir"/*.txt
-        echo "Downloads are completed, do you want to delete $list? [n/Y]: "
-        read -r REPLY
-        case "$REPLY" in
-            n|N) _menu ;;
-            Y|y) rm "$list" && _menu ;;
-        esac
+        _download_completed
     fi
 
 }
@@ -513,26 +487,33 @@ _edit_mpv-conf() {
 
 }
 
-_get_audio() {
-
-    cd "$audios_dir"
-        
+_get_youtubeplaylist_urls() {
     if [[ $(grep -e 'playlist?list=' "$queue") ]]; then
         echo ""
-        echo -e " ${green}Getting youtube playlist availability...please wait.${nocolor}\n"
+        echo -e " ${green}Checking youtube playlist availability...please wait.${nocolor}\n"
+        
         while read -r line; do
             youtube-dl -j "$line" \
             | jq '(.webpage_url)' \
             | cat | sed 's/"//g' >> "$tmp_dir"/urls.txt
         done < <(cat "$queue" | sed '/#EXTM3U/d')
+        
         cat "$tmp_dir"/urls.txt >> "$queue"
-        sed -i '2d' "$queue"
+        sed -i '/playlist/d' "$queue"
+        sed -i -n 'G; s/\n/&&/; /^\([ -~]*\n\).*\n\1/d; s/\n//; h; P' "$queue"
     fi
+}
+
+_get_audio() {
+
+    cd "$audios_dir"
+        
+    _get_youtubeplaylist_urls
     
     for url in $(grep 'https' "$queue"); do
         
-        local getaudiotitle
-        getaudiotitle=$(youtube-dl -j "$url" | jq '(.title)')
+        local printaudiotitle
+        printaudiotitle=$(youtube-dl -j "$url" | jq '(.title)')
     
         if (( $(sed '/#EXTM3U/d' "$queue" | wc -l) < 2 )); then
             echo ""
@@ -547,7 +528,7 @@ _get_audio() {
         echo " ${green}Choose a format code: ${nocolor}"
         read -r code
         
-        echo " ${green}Please be patient while downloading ${red}$getaudiotitle...${nocolor}"
+        echo " ${green}Please be patient while downloading ${red}$printaudiotitle...${nocolor}"
         sleep 2s
         youtube-dl -f "$code" "$url" > "$ytop"
         sed -i '2d' "$queue"
@@ -581,24 +562,13 @@ _get_video() {
 
     cd "$videos_dir"
 
-    local getvideotitle webm
+    local printvideotitle webm
     
-
-    if [[ $(grep -e 'playlist?list=' "$queue") ]]; then
-        echo ""
-        echo -e " ${green}Getting youtube playlist availability...please wait.${nocolor}\n"
-        while read -r line; do
-            youtube-dl -j "$line" \
-            | jq '(.webpage_url)' \
-            | cat | sed 's/"//g' >> "$tmp_dir"/urls.txt
-        done < <(cat "$queue" | sed '/#EXTM3U/d')
-        cat "$tmp_dir"/urls.txt >> "$queue"
-        sed -i '2d' "$queue"
-    fi
+    _get_youtubeplaylist_urls
     
     for url in $(grep 'https' "$queue"); do
 
-        getvideotitle=$(youtube-dl -j "$url" | jq '(.title)')
+        printvideotitle=$(youtube-dl -j "$url" | jq '(.title)')
         
         youtube-dl -F "$url"
         echo ""
@@ -607,7 +577,7 @@ _get_video() {
         echo "$code" > "$ytop"
         sleep 0.5
         
-        echo " ${green}Please be patient while downloading ${red}$getvideotitle...${nocolor}"
+        echo " ${green}Please be patient while downloading ${red}$printvideotitle...${nocolor}"
         sleep 2s
         
         if (( $(sed '/#EXTM3U/d' "$queue" | wc -l) < 2 )); then
@@ -660,19 +630,10 @@ _get_mpv_title() {
 
 }
 
-_stop_mpvipc() {
-
-    [[ $(systemctl --user list-units | awk '/mpv-ipc/{print $3}') == 'active' ]] \
-        && systemctl --user stop mpv-ipc.service
-
-}
-
 _load_audio() {
 
-    # _stop_mpvipc
-
     mpvc -a -Q "$queue"
-   #_get_mpv_title
+   _get_mpv_title
 
     rm "$metadatas"
     clear
@@ -682,13 +643,9 @@ _load_audio() {
 
 _load_video() {
 
-    # _stop_mpvipc
-    # picom &
-
     mpvc -a "$queue"
-    #_get_mpv_title
+    _get_mpv_title
 
-    # killall -q picom
     rm "$metadatas"
     clear
     _menu
@@ -709,8 +666,25 @@ _load_playlist() {
             break
         fi
         
+        # $list may also contain a {playlist url}, so let's extract videos from,
+        # remove {playlist url} and grab videos' titles.(in the second while loop).
+        if [[ $(grep -e 'playlist?list=' "$list") ]]; then
+            echo ""
+            echo -e " ${green}Checking youtube playlist availability...please wait.${nocolor}\n"
+            while read -r line; do
+                youtube-dl -j "$line" \
+                | jq '(.webpage_url)' \
+                | cat | sed 's/"//g' >> "$tmp_dir"/urls.txt
+            done < <(cat "$list" | sed '/#EXTM3U/d')
+            cat "$tmp_dir"/urls.txt >> "$list"
+            
+            # Cleaning $list...
+            sed -i '/playlist/d' "$list"
+            sed -i -n 'G; s/\n/&&/; /^\([ -~]*\n\).*\n\1/d; s/\n//; h; P' "$list"
+        fi
+        
         echo ""
-        echo -e " ${green}Getting videos availability...please wait.${nocolor}\n"
+        echo -e " ${green}Getting videos titles...please wait.${nocolor}\n"
         
         while read -r line; do
             youtube-dl -j "$line" \
@@ -730,11 +704,10 @@ _load_playlist() {
                 read -rsn 1 -p  ${green}' Load audio [a] or video [v] ?: '${nocolor} load
                 case ${load} in
                     a)  mpvc -a -Q "$list"
-                        #_get_mpv_title
+                        _get_mpv_title
                     ;;
-                    v)  # picom &
-                        mpvc -a "$list"
-                        #_get_mpv_title # && killall -q picom
+                    v)  mpvc -a "$list"
+                        _get_mpv_title
                     ;;
                     *)  echo " ${red} Wrong option! Wait and try again...${nocolor}"
                         sleep 3s
