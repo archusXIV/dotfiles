@@ -5,7 +5,7 @@
 ##    Dependencies: ffmpeg, jq,  mpv & mpvc (command line interface for mpv), ranger, socat, youtube-dl.
 ##    https://github.com/lwilletts/mpvc/blob/master/mpvc
 ##
-##    Youtube-dl is for now kind of unmaintained so install yt-dlp and make a symlink with.
+##    Youtube-dl is for now kind of unmaintained so install and make a symlink with
 ##    https://github.com/yt-dlp/yt-dlp/releases
 ##
 ##    This script rips video urls from Youtube and so on.
@@ -630,10 +630,19 @@ _get_mpv_title() {
 
 }
 
+_stop_mpvipc() {
+
+    [[ $(systemctl --user list-units | awk '/mpv-ipc/{print $3}') == 'active' ]] \
+        && systemctl --user stop mpv-ipc.service
+
+}
+
 _load_audio() {
 
+    # _stop_mpvipc
+
     mpvc -a -Q "$queue"
-   _get_mpv_title
+   #_get_mpv_title
 
     rm "$metadatas"
     clear
@@ -643,9 +652,13 @@ _load_audio() {
 
 _load_video() {
 
-    mpvc -a "$queue"
-    _get_mpv_title
+    # _stop_mpvipc
+    # picom &
 
+    mpvc -a "$queue"
+    #_get_mpv_title
+
+    # killall -q picom
     rm "$metadatas"
     clear
     _menu
@@ -704,10 +717,11 @@ _load_playlist() {
                 read -rsn 1 -p  ${green}' Load audio [a] or video [v] ?: '${nocolor} load
                 case ${load} in
                     a)  mpvc -a -Q "$list"
-                        _get_mpv_title
+                        #_get_mpv_title
                     ;;
-                    v)  mpvc -a "$list"
-                        _get_mpv_title
+                    v)  # picom &
+                        mpvc -a "$list"
+                        #_get_mpv_title # && killall -q picom
                     ;;
                     *)  echo " ${red} Wrong option! Wait and try again...${nocolor}"
                         sleep 3s
@@ -739,7 +753,7 @@ _load_local() {
     read -rp 'What would you like to load, a directory [d] or file(s) [f] ?: ' answer
 
     case "$answer" in
-        d)  PS3="Select a directory to queue in mpv: "
+        d)  PS3=" Select a directory to queue in mpv: "
             select dir in $(find "$VIDEOS" -maxdepth 1 | sed 's,.*/,,'); do
                 if [[ $(find "$VIDEOS"/"$dir" -type d -empty) ]]; then
                     echo " ${red}$dir is empty. Wait and try again...${nocolor}"
