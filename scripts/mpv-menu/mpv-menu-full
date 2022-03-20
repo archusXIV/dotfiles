@@ -609,11 +609,9 @@ _get_audio() {
         rm ./*.webm
         rm "$tmp_dir"/*.txt
         _get_incompleted
-        _menu
     else
         rm "$tmp_dir"/*.txt
         _get_incompleted
-        _menu
     fi
 
 }
@@ -671,11 +669,9 @@ _get_video() {
         rm ./*.webm
         rm "$tmp_dir"/*.txt
         _get_incompleted
-        _menu
     else
         rm "$tmp_dir"/*.txt
         _get_incompleted
-        _menu
     fi
 
 }
