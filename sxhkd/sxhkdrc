@@ -5,7 +5,7 @@ alt + Escape
     notify-send "sxhkd config reloaded"
 
 # Invoke the session managemnt menu.
-ctrl + alt +Delete
+ctrl + alt + Delete
     rofi_run -l
 
 [dmenu/rofi]
