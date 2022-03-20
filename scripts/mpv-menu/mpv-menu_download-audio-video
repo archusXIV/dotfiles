@@ -1,27 +1,51 @@
 #!/bin/bash
 ## This is a part of main script: mpv-menu.
 
+_download_completed() {
+    echo " ${green}Downloads are completed, do you want to delete $list? [n/Y]: ${nocolor}"
+    read -rsn 1 REPLY
+    case "${REPLY}" in
+        n|N) _menu
+        ;;
+        Y|y) rm "$list" && _menu
+        ;;
+        *  ) echo " ${red} Wrong option! Wait and try again...${nocolor}"
+             sleep 3s
+        ;;
+    esac
+}
+
+_download_incompleted() {
+    if [[ $(find "$playlists_dir" -name "*.part") ]]; then
+        echo -e " ${red}Incomplete files:\n"
+        find "$playlists_dir" -name "*.part" | sort -d | sed 's,.*/,,'
+        read -rsn 1 -p ${green}' Edit your $list and try again later? [Y/n]: '${nocolor} edit
+        case "${edit}" in
+            Y|y) _edit_playlist ;;
+            n|N) echo "" && _download_completed ;;
+        esac
+    elif [[ $(find "$videos_dir" -name "*.part") ]]; then
+        echo -e " ${red}Incomplete files:\n"
+        find "$videos_dir" -name "*.part" | sort -d | sed 's,.*/,,'
+        read -rsn 1 -p ${green}' Edit your $list and try again later? [Y/n]: '${nocolor} edit
+        case "${edit}" in
+            Y|y) _edit_playlist ;;
+            n|N) echo "" && _download_completed ;;
+        esac
+    else
+        _download_completed
+    fi
+}
+
 _download_audio() {
     # We're still in $playlists_dir
     clear
     
-    if [[ $(grep -e 'playlist?list=' "$list") ]]; then
-        echo ""
-        echo -e " ${green}Getting youtube playlist availability...please wait.${nocolor}\n"
-        while read -r line; do
-            youtube-dl -j "$line" \
-            | jq '(.webpage_url)' \
-            | cat | sed 's/"//g' >> "$tmp_dir"/urls.txt
-        done < <(cat "$list" | sed '/#EXTM3U/d')
-        cat "$tmp_dir"/urls.txt >> "$list"
-        sed -i '2d' "$list"
-    fi
-    
     for url in $(grep 'https' "$list"); do
         
         # let's get our file (web page) title.
-        local downloadaudiotitle
-        downloadaudiotitle=$(youtube-dl -j "$url" | jq '(.title)')
+        local printaudiotitle
+        printaudiotitle=$(youtube-dl -j "$url" | jq '(.title)')
     
         if (( $(sed '/#EXTM3U/d' "$list" | wc -l) < 2 )); then
             echo ""
@@ -37,7 +61,7 @@ _download_audio() {
         echo " ${green}Choose a format code: ${nocolor}"
         read -r code
         
-        echo " ${green}Please be patient while downloading ${red}$downloadaudiotitle...${nocolor}"
+        echo " ${green}Please be patient while downloading ${red}$printaudiotitle...${nocolor}"
         youtube-dl -f "$code" "$url" > "$ytop"
         sed -i '2d' "$list"
         clear
@@ -62,22 +86,12 @@ _download_audio() {
         rm "$tmp_dir"/*.txt
         rm "$list"_origin
         mv *.mp3 "$audios_dir"
-        _menu
+        _download_incompleted
     else
         echo " ${green}Please check out for none mp3 files in $playlists_dir${nocolor}"
         sleep 5s
         rm "$tmp_dir"/*.txt
-        echo "Downloads are completed, do you want to delete $list? [n/Y]: "
-        read -rsn 1 REPLY
-        case ${REPLY} in
-            n|N) _menu
-            ;;
-            Y|y) rm "$list" && _menu
-            ;;
-            *  ) echo " ${red} Wrong option! Wait and try again...${nocolor}"
-                 sleep 3s
-            ;;
-        esac
+        _download_incompleted
     fi
 
 }
@@ -86,23 +100,10 @@ _download_video() {
     # We're still in $playlists_dir
     clear
     
-
-    if [[ $(grep -e 'playlist?list=' "$list") ]]; then
-        echo ""
-        echo -e " ${green}Getting youtube playlist availability...please wait.${nocolor}\n"
-        while read -r line; do
-            youtube-dl -j "$line" \
-            | jq '(.webpage_url)' \
-            | cat | sed 's/"//g' >> "$tmp_dir"/urls.txt
-        done < <(cat "$list" | sed '/#EXTM3U/d')
-        cat "$tmp_dir"/urls.txt >> "$list"
-        sed -i '2d' "$list"
-    fi
-    
     for url in $(grep -e 'https' "$list"); do
 
-        local downloadvideotiltle
-        downloadvideotitle=$(youtube-dl -j "$url" | jq '(.title)')
+        local printvideotiltle
+        printvideotitle=$(youtube-dl -j "$url" | jq '(.title)')
     
         youtube-dl -F "$url"
         echo ""
@@ -111,7 +112,7 @@ _download_video() {
         echo "$code" > "$ytop"
         sleep 0.5
         
-        echo " ${green}Please be patient while downloading ${red}$downloadvideotitle...${nocolor}"
+        echo " ${green}Please be patient while downloading ${red}$printvideotitle...${nocolor}"
 
         if (( $(sed '/#EXTM3U/d' "$list" | wc -l) < 2 )); then
             echo ""
@@ -149,18 +150,13 @@ _download_video() {
         rm "$tmp_dir"/*.txt
         rm "$list"_origin
         sleep 2s
-        _menu
+        _download_incompleted
     else
         mv ./{*.mp4,*.mkv} "$videos_dir" > /dev/null 2>&1
         echo " ${green}All done${nocolor}"
         sleep 2s
         rm "$tmp_dir"/*.txt
-        echo "Downloads are completed, do you want to delete $list? [n/Y]: "
-        read -r REPLY
-        case "$REPLY" in
-            n|N) _menu ;;
-            Y|y) rm "$list" && _menu ;;
-        esac
+        _download_incompleted
     fi
 
 }
