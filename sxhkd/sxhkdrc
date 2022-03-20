@@ -75,17 +75,17 @@ alt + shift + {Left,Down,Up,Right}
 
 [volume/mic]
 XF86Audio{Lower,Raise}Volume
-    pulseaudio_control --sink {down,up}; \
+    volume_control sink --{down,up}; \
     notify-volume
 
 XF86AudioMute
-    pulseaudio_control --sink toggle
+    volume_control sink --toggle
 
 alt + XF86Audio{Lower,Raise}Volume
-    pulseaudio_control --source {down,up}
+    volume_control source --{down,up}
 
 alt + XF86AudioMute
-    pulseaudio_control --source toggle
+    volume_control source --toggle
 
 [player control]
 #XF86Audio{Play,Pause}
