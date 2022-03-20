@@ -79,7 +79,7 @@ _menu() {
         echo -e "                                             ${green}Select an item${nocolor}"
         echo ""
         read -r action
-        case ${action} in
+        case "${action}" in
             1)  _copy_video
                 echo ""
             ;;
@@ -112,7 +112,7 @@ _menu() {
                 #    && systemctl --user start mpv-ipc.service
                 # ffmpeg creates a ccache directory while converting/merging files.
                 rm -rf "$HOME"/.ccache
-                exit
+                exit 0
             ;;
             *)  echo " ${red}Wrong option!"
                 echo -e " Wait and try again...${nocolor}\n"
@@ -175,7 +175,7 @@ _check_url() {
         done < "$queue" | sed 's/#EXTM3U//'
         echo ""
         read -rsn 1 -p ${green}'delete url(s) [d], play url(s) [p], save url(s) as playlist [s] or back to menu [m]: '${nocolor} opt
-        case ${opt} in
+        case "${opt}" in
             d) _delete_url  ;;
             m) _menu        ;;
             p) _load_video  ;;
@@ -244,7 +244,7 @@ _copy_audio() {
         echo -e "                                           ${green}Select an item${nocolor}"
         echo ""
         read -r options
-        case ${options} in
+        case "${options}" in
             1) clear && continue
                echo ""
             ;;
@@ -296,7 +296,7 @@ _copy_video() {
         echo -e "                                           ${green}Select an item${nocolor}"
         echo ""
         read -r options
-        case ${options} in
+        case "${options}" in
             1) clear && continue
                echo "" 
             ;;
@@ -321,9 +321,9 @@ _copy_video() {
 }
 
 _download_completed() {
-    echo "Downloads are completed, do you want to delete $list? [n/Y]: "
+    echo " ${green}Downloads are completed, do you want to delete $list? [n/Y]: ${nocolor}"
     read -rsn 1 REPLY
-    case ${REPLY} in
+    case "${REPLY}" in
         n|N) _menu
         ;;
         Y|y) rm "$list" && _menu
@@ -332,6 +332,28 @@ _download_completed() {
              sleep 3s
         ;;
     esac
+}
+
+_download_incompleted() {
+    if [[ $(find "$playlists_dir" -name "*.part") ]]; then
+        echo -e " ${red}Incomplete files:\n"
+        find "$playlists_dir" -name "*.part" | sort -d | sed 's,.*/,,'
+        read -rsn 1 -p ${green}' Edit your playlist and try again later? [Y/n]: '${nocolor} edit
+        case "${edit}" in
+            Y|y) _edit_playlist ;;
+            n|N) echo "" && _download_completed ;;
+        esac
+    elif [[ $(find "$videos_dir" -name "*.part") ]]; then
+        echo -e " ${red}Incomplete files:\n"
+        find "$videos_dir" -name "*.part" | sort -d | sed 's,.*/,,'
+        read -rsn 1 -p ${green}' Edit your playlist and try again later? [Y/n]: '${nocolor} edit
+        case "${edit}" in
+            Y|y) _edit_playlist ;;
+            n|N) echo "" && _download_completed ;;
+        esac
+    else
+        _download_completed
+    fi
 }
 
 _download_audio() {
@@ -383,12 +405,12 @@ _download_audio() {
         rm "$tmp_dir"/*.txt
         rm "$list"_origin
         mv *.mp3 "$audios_dir"
-        _download_completed
+        _download_incompleted
     else
         echo " ${green}Please check out for none mp3 files in $playlists_dir${nocolor}"
         sleep 5s
         rm "$tmp_dir"/*.txt
-        _download_completed
+        _download_incompleted
     fi
 
 }
@@ -447,13 +469,13 @@ _download_video() {
         rm "$tmp_dir"/*.txt
         rm "$list"_origin
         sleep 2s
-        _download_completed
+        _download_incompleted
     else
         mv ./{*.mp4,*.mkv} "$videos_dir" > /dev/null 2>&1
         echo " ${green}All done${nocolor}"
         sleep 2s
         rm "$tmp_dir"/*.txt
-        _download_completed
+        _download_incompleted
     fi
 
 }
@@ -472,7 +494,7 @@ _edit_playlist() {
         sleep 2s
         break
     done
-
+    _menu
 }
 
 _edit_mpv-conf() {
@@ -501,6 +523,42 @@ _get_youtubeplaylist_urls() {
         cat "$tmp_dir"/urls.txt >> "$queue"
         sed -i '/playlist/d' "$queue"
         sed -i -n 'G; s/\n/&&/; /^\([ -~]*\n\).*\n\1/d; s/\n//; h; P' "$queue"
+    fi
+}
+
+_get_completed() {
+    echo " ${green}Downloads are completed, do you want to clean $queue? [n/Y]: ${nocolor}"
+    read -rsn 1 REPLY
+    case "${REPLY}" in
+        n|N) _menu
+        ;;
+        Y|y) _delete_url && _menu
+        ;;
+        *  ) echo " ${red} Wrong option! Wait and try again...${nocolor}"
+             sleep 3s
+        ;;
+    esac
+}
+
+_get_incompleted() {
+    if [[ $(find "$audios_dir" -name "*.part") ]]; then
+        echo -e " ${red}Incomplete files:\n"
+        find "$audios_dir" -name "*.part" | sort -d | sed 's,.*/,,'
+        read -rsn 1 -p ${green}' Edit $queue playlist and try again later? [Y/n]: '${nocolor} edit
+        case "${edit}" in
+            Y|y) _edit_playlist ;;
+            n|N) echo "" && _get_completed ;;
+        esac
+    elif [[ $(find "$videos_dir" -name "*.part") ]]; then
+        echo -e " ${red}Incomplete files:\n"
+        find "$videos_dir" -name "*.part" | sort -d | sed 's,.*/,,'
+        read -rsn 1 -p ${green}' Edit $queue playlist and try again later? [Y/n]: '${nocolor} edit
+        case "${edit}" in
+            Y|y) _edit_playlist ;;
+            n|N) echo "" && _get_completed ;;
+        esac
+    else
+        _get_completed
     fi
 }
 
@@ -550,9 +608,11 @@ _get_audio() {
         sleep 2s
         rm ./*.webm
         rm "$tmp_dir"/*.txt
+        _get_incompleted
         _menu
     else
         rm "$tmp_dir"/*.txt
+        _get_incompleted
         _menu
     fi
 
@@ -610,9 +670,11 @@ _get_video() {
         sleep 2s
         rm ./*.webm
         rm "$tmp_dir"/*.txt
+        _get_incompleted
         _menu
     else
         rm "$tmp_dir"/*.txt
+        _get_incompleted
         _menu
     fi
 
@@ -644,7 +706,7 @@ _load_audio() {
     mpvc -a -Q "$queue"
    #_get_mpv_title
 
-    rm "$metadatas"
+    #rm "$metadatas"
     clear
     _menu
 
@@ -653,13 +715,11 @@ _load_audio() {
 _load_video() {
 
     # _stop_mpvipc
-    # picom &
 
     mpvc -a "$queue"
     #_get_mpv_title
 
-    # killall -q picom
-    rm "$metadatas"
+    #rm "$metadatas"
     clear
     _menu
 
@@ -695,8 +755,7 @@ _load_playlist() {
             sed -i '/playlist/d' "$list"
             sed -i -n 'G; s/\n/&&/; /^\([ -~]*\n\).*\n\1/d; s/\n//; h; P' "$list"
         fi
-        
-        echo ""
+
         echo -e " ${green}Getting videos titles...please wait.${nocolor}\n"
         
         while read -r line; do
@@ -719,9 +778,8 @@ _load_playlist() {
                     a)  mpvc -a -Q "$list"
                         #_get_mpv_title
                     ;;
-                    v)  # picom &
-                        mpvc -a "$list"
-                        #_get_mpv_title # && killall -q picom
+                    v)  mpvc -a "$list"
+                        #_get_mpv_title
                     ;;
                     *)  echo " ${red} Wrong option! Wait and try again...${nocolor}"
                         sleep 3s
@@ -798,7 +856,7 @@ _save_remove() {
                 echo " ${red}This playlist already exists!"
                 echo " Overwrite $list? [y/N]:${nocolor}"
                 read -r overwrite
-                case ${overwrite} in
+                case "${overwrite}" in
                     y|Y)  cp -f "$queue" "$list"
                         echo " ${green}$list saved ${nocolor}"
                         sleep 2s
