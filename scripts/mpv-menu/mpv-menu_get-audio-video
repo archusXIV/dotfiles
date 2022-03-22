@@ -22,7 +22,7 @@ _get_completed() {
     echo " ${green}Downloads are completed, do you want to keep main playlist? [n/Y]: ${nocolor}"
     read -rsn 1 REPLY
     case "${REPLY}" in
-        n|N) _menu
+        n|N) rm "$queue"_origin && _menu
         ;;
         Y|y) mv -f "$queue"_origin "$queue" && _menu
         ;;
@@ -33,22 +33,23 @@ _get_completed() {
 }
 
 _get_incompleted() {
+    
+    _main_playlist_edition() {
+        read -rsn 1 -p ${green}' Edit main playlist and try again later? [Y/n]: '${nocolor} edit
+        case "${edit}" in
+            Y|y) _edit_playlist ;;
+            n|N) echo "" && _get_completed ;;
+        esac
+    }
+    
     if [[ $(find "$audios_dir" -name "*.part") ]]; then
-        echo -e " ${red}Incomplete files:\n"
+        echo -e " ${red}Incomplete files in $audios_dir:\n"
         find "$audios_dir" -name "*.part" | sort -d | sed 's,.*/,,'
-        read -rsn 1 -p ${green}' Edit main playlist and try again later? [Y/n]: '${nocolor} edit
-        case "${edit}" in
-            Y|y) _edit_playlist ;;
-            n|N) echo "" && _get_completed ;;
-        esac
+        _main_playlist_edition
     elif [[ $(find "$videos_dir" -name "*.part") ]]; then
-        echo -e " ${red}Incomplete files:\n"
+        echo -e " ${red}Incomplete files in $videos_dir:\n"
         find "$videos_dir" -name "*.part" | sort -d | sed 's,.*/,,'
-        read -rsn 1 -p ${green}' Edit main playlist and try again later? [Y/n]: '${nocolor} edit
-        case "${edit}" in
-            Y|y) _edit_playlist ;;
-            n|N) echo "" && _get_completed ;;
-        esac
+        _main_playlist_edition
     else
         _get_completed
     fi
@@ -116,7 +117,7 @@ _get_video() {
 
     cp -f "$queue" "$queue"_origin
     
-    local printvideotitle webm
+    local printvideotitle
     
     _get_youtubeplaylist_urls
     
@@ -154,20 +155,8 @@ _get_video() {
     done
 
     echo -e " ${green}Done.\n${nocolor}"
-
-    webm="$(find . -name '*.webm' | sed 's,.*/,,')"
-    
-    if [[ -n ${webm} ]]; then
-        echo " ${green}Please be patient while ffmpeg is working...${nocolor}"
-        ffmpeg -i "$webm" "$webm".mp4 2>$ffop
-        echo " ${green}All done${nocolor}"
-        sleep 2s
-        rm ./*.webm
-        rm "$tmp_dir"/*.txt
-        _get_incompleted
-    else
-        rm "$tmp_dir"/*.txt
-        _get_incompleted
-    fi
+    sleep 2s
+    rm "$tmp_dir"/*.txt
+    _get_incompleted
 
 }
