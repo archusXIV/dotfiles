@@ -239,7 +239,7 @@ _copy_audio() {
         echo -e "                     ┌────────────────────────────────────────────────────────────┐"
         echo -e "                     │     1) Add more audio links      4) Play current list      │"
         echo -e "                     │     2) Download current list     5) Check current list     │"
-        echo -e "                     │     3) Save playlist as          6) Back to menu           │"
+        echo -e "                     │     3) Save playlist as          6) Back to main menu      │"
         echo -e "                     └────────────────────────────────────────────────────────────┘"
         echo -e "                                           ${green}Select an item${nocolor}"
         echo ""
@@ -291,7 +291,7 @@ _copy_video() {
         echo -e "                     ┌────────────────────────────────────────────────────────────┐"
         echo -e "                     │     1) Add more video links      4) Play current list      │"
         echo -e "                     │     2) Download current list     5) Check current list     │"
-        echo -e "                     │     3) Save playlist as          6) Back to menu           │"
+        echo -e "                     │     3) Save playlist as          6) Back to main menu      │"
         echo -e "                     └────────────────────────────────────────────────────────────┘"
         echo -e "                                           ${green}Select an item${nocolor}"
         echo ""
@@ -324,9 +324,9 @@ _download_completed() {
     echo " ${green}Downloads are completed, do you want to delete $list? [n/Y]: ${nocolor}"
     read -rsn 1 REPLY
     case "${REPLY}" in
-        n|N) _menu
+        n|N) mv --force "$list"_origin "$list" && _menu
         ;;
-        Y|y) rm "$list" && _menu
+        Y|y) rm "$list" "$list"_origin && _menu
         ;;
         *  ) echo " ${red} Wrong option! Wait and try again...${nocolor}"
              sleep 3s
@@ -335,17 +335,10 @@ _download_completed() {
 }
 
 _download_incompleted() {
+    
     if [[ $(find "$playlists_dir" -name "*.part") ]]; then
-        echo -e " ${red}Incomplete files:\n"
+        echo -e " ${red}Incomplete files in $playlists_dir:\n"
         find "$playlists_dir" -name "*.part" | sort -d | sed 's,.*/,,'
-        read -rsn 1 -p ${green}' Edit your playlist and try again later? [Y/n]: '${nocolor} edit
-        case "${edit}" in
-            Y|y) _edit_playlist ;;
-            n|N) echo "" && _download_completed ;;
-        esac
-    elif [[ $(find "$videos_dir" -name "*.part") ]]; then
-        echo -e " ${red}Incomplete files:\n"
-        find "$videos_dir" -name "*.part" | sort -d | sed 's,.*/,,'
         read -rsn 1 -p ${green}' Edit your playlist and try again later? [Y/n]: '${nocolor} edit
         case "${edit}" in
             Y|y) _edit_playlist ;;
@@ -354,11 +347,13 @@ _download_incompleted() {
     else
         _download_completed
     fi
+
 }
 
 _download_audio() {
     # We're still in $playlists_dir
     clear
+    cp -f "$list" "$list"_origin
     
     for url in $(grep 'https' "$list"); do
         
@@ -387,9 +382,7 @@ _download_audio() {
 
     done
 
-    mv --force "$list"_origin "$list"
-    echo " ${green}Done${nocolor}"
-    echo ""
+    echo -e " ${green}Done${nocolor}\n"
 
     if [[ -n $(find . -iname "*.webm") ]]; then
         echo " ${green}Please be patient while ffmpeg is working...${nocolor}"
@@ -403,7 +396,6 @@ _download_audio() {
         sleep 2s
         rm ./*.webm
         rm "$tmp_dir"/*.txt
-        rm "$list"_origin
         mv *.mp3 "$audios_dir"
         _download_incompleted
     else
@@ -418,6 +410,7 @@ _download_audio() {
 _download_video() {
     # We're still in $playlists_dir
     clear
+    cp -f "$list" "$list"_origin
     
     for url in $(grep -e 'https' "$list"); do
 
@@ -452,31 +445,13 @@ _download_video() {
 
     done
 
-    mv --force "$list"_origin "$list"
-    echo " ${green}Done${nocolor}"
-    echo ""
+    echo -e " ${green}Done\n${nocolor}"
 
-    local webm
-    webm="$(find "$playlists_dir" -name "*.webm" | sed 's,.*/,,')"
-
-    if [[ -n $webm ]]; then
-        echo -e " ${green}Please be patient while ffmpeg is working...\n${nocolor}"
-        ffmpeg -i "$webm" "$webm".mp4 2> "$ffop"
-        rm ./*.webm
-        mv ./{*.mp4,*.mkv} "$videos_dir" > /dev/null 2>&1
-
-        echo " ${green}All done${nocolor}"
-        rm "$tmp_dir"/*.txt
-        rm "$list"_origin
-        sleep 2s
-        _download_incompleted
-    else
-        mv ./{*.mp4,*.mkv} "$videos_dir" > /dev/null 2>&1
-        echo " ${green}All done${nocolor}"
-        sleep 2s
-        rm "$tmp_dir"/*.txt
-        _download_incompleted
-    fi
+    mv ./{*.mp4,*.mkv} "$videos_dir" > /dev/null 2>&1
+    echo " ${green}All done${nocolor}"
+    sleep 2s
+    rm "$tmp_dir"/*.txt
+    _download_incompleted
 
 }
 
@@ -509,172 +484,7 @@ _edit_mpv-conf() {
 
 }
 
-_get_youtubeplaylist_urls() {
-    if [[ $(grep -e 'playlist?list=' "$queue") ]]; then
-        echo ""
-        echo -e " ${green}Checking youtube playlist availability...please wait.${nocolor}\n"
-        
-        while read -r line; do
-            youtube-dl -j "$line" \
-            | jq '(.webpage_url)' \
-            | cat | sed 's/"//g' >> "$tmp_dir"/urls.txt
-        done < <(cat "$queue" | sed '/#EXTM3U/d')
-        
-        cat "$tmp_dir"/urls.txt >> "$queue"
-        sed -i '/playlist/d' "$queue"
-        sed -i -n 'G; s/\n/&&/; /^\([ -~]*\n\).*\n\1/d; s/\n//; h; P' "$queue"
-    fi
-}
 
-_get_completed() {
-    echo " ${green}Downloads are completed, do you want to clean $queue? [n/Y]: ${nocolor}"
-    read -rsn 1 REPLY
-    case "${REPLY}" in
-        n|N) _menu
-        ;;
-        Y|y) _delete_url && _menu
-        ;;
-        *  ) echo " ${red} Wrong option! Wait and try again...${nocolor}"
-             sleep 3s
-        ;;
-    esac
-}
-
-_get_incompleted() {
-    if [[ $(find "$audios_dir" -name "*.part") ]]; then
-        echo -e " ${red}Incomplete files:\n"
-        find "$audios_dir" -name "*.part" | sort -d | sed 's,.*/,,'
-        read -rsn 1 -p ${green}' Edit $queue playlist and try again later? [Y/n]: '${nocolor} edit
-        case "${edit}" in
-            Y|y) _edit_playlist ;;
-            n|N) echo "" && _get_completed ;;
-        esac
-    elif [[ $(find "$videos_dir" -name "*.part") ]]; then
-        echo -e " ${red}Incomplete files:\n"
-        find "$videos_dir" -name "*.part" | sort -d | sed 's,.*/,,'
-        read -rsn 1 -p ${green}' Edit $queue playlist and try again later? [Y/n]: '${nocolor} edit
-        case "${edit}" in
-            Y|y) _edit_playlist ;;
-            n|N) echo "" && _get_completed ;;
-        esac
-    else
-        _get_completed
-    fi
-}
-
-_get_audio() {
-
-    cd "$audios_dir"
-        
-    _get_youtubeplaylist_urls
-    
-    for url in $(grep 'https' "$queue"); do
-        
-        local printaudiotitle
-        printaudiotitle=$(youtube-dl -j "$url" | jq '(.title)')
-    
-        if (( $(sed '/#EXTM3U/d' "$queue" | wc -l) < 2 )); then
-            echo ""
-            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "audio file left to download.${nocolor}"
-        else
-            echo ""
-            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "audio files left to download.${nocolor}"
-        fi
-
-        youtube-dl -F "$url" | grep -e 'audio only' | sed 's/audio only      //'
-        echo ""
-        echo " ${green}Choose a format code: ${nocolor}"
-        read -r code
-        
-        echo " ${green}Please be patient while downloading ${red}$printaudiotitle...${nocolor}"
-        sleep 2s
-        youtube-dl -f "$code" "$url" > "$ytop"
-        sed -i '2d' "$queue"
-        clear
-
-    done
-
-    echo -e " ${green}Done\n${nocolor}"
-
-    if [[ -n $(find . -iname "*.webm") ]]; then
-        echo " ${green}Please be patient while ffmpeg is working...${nocolor}"
-        find . -iname "*.webm" -exec \
-        bash -c 'FILE="$1"; \
-        ffmpeg -i "${FILE}" \
-        -vn -ab 320k -ar 48000 \
-        -y "${FILE%.webm}.mp3";' _ '{}' \; 2>"$ffop"
-
-        echo " ${green}Done${nocolor}"
-        sleep 2s
-        rm ./*.webm
-        rm "$tmp_dir"/*.txt
-        _get_incompleted
-    else
-        rm "$tmp_dir"/*.txt
-        _get_incompleted
-    fi
-
-}
-
-_get_video() {
-
-    cd "$videos_dir"
-
-    local printvideotitle webm
-    
-    _get_youtubeplaylist_urls
-    
-    for url in $(grep 'https' "$queue"); do
-
-        printvideotitle=$(youtube-dl -j "$url" | jq '(.title)')
-        
-        youtube-dl -F "$url"
-        echo ""
-        echo " ${green}Choose a format code: ${nocolor}"
-        read -r code
-        echo "$code" > "$ytop"
-        sleep 0.5
-        
-        echo " ${green}Please be patient while downloading ${red}$printvideotitle...${nocolor}"
-        sleep 2s
-        
-        if (( $(sed '/#EXTM3U/d' "$queue" | wc -l) < 2 )); then
-            echo ""
-            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "video file left to download.${nocolor}"
-        else
-            echo ""
-            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "video files left to download.${nocolor}"
-        fi
-
-        if [[ $(grep -e '+' "$ytop") ]]; then
-            youtube-dl -f "$code" --merge-output-format mp4 "$url" > "$ytop"
-        else
-            youtube-dl -f "$code" "$url" > "$ytop"
-        fi
-        
-        sed -i '2d' "$queue"
-        clear
-
-    done
-
-    echo -e " ${green}Done.\n${nocolor}"
-
-    webm="$(find . -name '*.webm' | sed 's,.*/,,')"
-    
-    if [[ -n ${webm} ]]; then
-        echo " ${green}Please be patient while ffmpeg is working...${nocolor}"
-        ffmpeg -i "$webm" "$webm".mp4 2>$ffop
-        echo " ${green}All done${nocolor}"
-        sleep 2s
-        rm ./*.webm
-        rm "$tmp_dir"/*.txt
-        _get_incompleted
-    else
-        rm "$tmp_dir"/*.txt
-        _get_incompleted
-    fi
-
-}
 
 _get_mpv_title() {
     # mpv --idle --really-quiet --input-ipc-server=/tmp/mpvsocket
@@ -740,6 +550,8 @@ _load_playlist() {
         if [[ $(grep -e 'playlist?list=' "$list") ]]; then
             echo ""
             echo -e " ${green}Checking youtube playlist availability...please wait.${nocolor}\n"
+            rm "$tmp_dir"/urls.txt >/dev/null 2>&1
+            
             while read -r line; do
                 youtube-dl -j "$line" \
                 | jq '(.webpage_url)' \
@@ -753,6 +565,7 @@ _load_playlist() {
         fi
 
         echo -e " ${green}Getting videos titles...please wait.${nocolor}\n"
+        rm "$tmp_dir"/titles.txt >/dev/null 2>&1
         
         while read -r line; do
             youtube-dl -j "$line" \
@@ -762,7 +575,8 @@ _load_playlist() {
         cat -n "$tmp_dir"/titles.txt
         echo ""
         
-        read -rsn 1 -p ${green}' Just load [l] download audio [a] or download video [v] (Press '^C' to quit youtube-dl): '${nocolor} letter
+        echo -e " ${green}Just load [l] download audio [a] or download video [v] \n (Press '^C' to quit youtube-dl):${nocolor} "
+        read -rsn 1 letter
         case "$letter" in
             a)  cp "$list" "$list"_origin
                 _download_audio
@@ -804,7 +618,7 @@ _load_playlist() {
 _load_local() {
     local VIDEOS="$HOME/Documents/Videos/"
 
-    read -rp 'What would you like to load, a directory [d] or file(s) [f] ?: ' answer
+    read -rn 1 -p ${green}' What would you like to load, a directory [d] or file(s) [f] ?: '${nocolor} answer
 
     case "$answer" in
         d)  PS3=" Select a directory to queue in mpv: "
@@ -849,8 +663,7 @@ _save_remove() {
             read -r list
             list="$list.m3u"
             if [[ $(find . -name "${list}") ]]; then
-                echo " ${red}This playlist already exists!"
-                echo " Overwrite $list? [y/N]:${nocolor}"
+                echo -e " ${red}This playlist already exists!\n Overwrite $list? [y/N]:${nocolor}"
                 read -r overwrite
                 case "${overwrite}" in
                     y|Y)  cp -f "$queue" "$list"
@@ -912,4 +725,4 @@ _delete_url() {
     fi
 }
 
-_check_dependencies
+_check_dependencies "${@}"
