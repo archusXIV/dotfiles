@@ -484,7 +484,165 @@ _edit_mpv-conf() {
 
 }
 
+_get_youtubeplaylist_urls() {
+    if [[ $(grep -e 'playlist?list=' "$queue") ]]; then
+        echo ""
+        echo -e " ${green}Checking youtube playlist availability...please wait.${nocolor}\n"
+        
+        while read -r line; do
+            youtube-dl -j "$line" \
+            | jq '(.webpage_url)' \
+            | cat | sed 's/"//g' >> "$tmp_dir"/urls.txt
+        done < <(cat "$queue" | sed '/#EXTM3U/d')
+        
+        cat "$tmp_dir"/urls.txt >> "$queue"
+        sed -i '/playlist/d' "$queue"
+        sed -i -n 'G; s/\n/&&/; /^\([ -~]*\n\).*\n\1/d; s/\n//; h; P' "$queue"
+    fi
+}
 
+_get_completed() {
+    echo " ${green}Downloads are completed, do you want to keep main playlist? [n/Y]: ${nocolor}"
+    read -rsn 1 REPLY
+    case "${REPLY}" in
+        n|N) rm "$queue"_origin && _menu
+        ;;
+        Y|y) mv -f "$queue"_origin "$queue" && _menu
+        ;;
+        *  ) echo " ${red} Wrong option! Wait and try again...${nocolor}"
+             sleep 3s
+        ;;
+    esac
+}
+
+_get_incompleted() {
+    
+    _main_playlist_edition() {
+        read -rsn 1 -p ${green}' Edit main playlist and try again later? [Y/n]: '${nocolor} edit
+        case "${edit}" in
+            Y|y) _edit_playlist ;;
+            n|N) echo "" && _get_completed ;;
+        esac
+    }
+    
+    if [[ $(find "$audios_dir" -name "*.part") ]]; then
+        echo -e " ${red}Incomplete files in $audios_dir:\n"
+        find "$audios_dir" -name "*.part" | sort -d | sed 's,.*/,,'
+        _main_playlist_edition
+    elif [[ $(find "$videos_dir" -name "*.part") ]]; then
+        echo -e " ${red}Incomplete files in $videos_dir:\n"
+        find "$videos_dir" -name "*.part" | sort -d | sed 's,.*/,,'
+        _main_playlist_edition
+    else
+        _get_completed
+    fi
+}
+
+_get_audio() {
+
+    cd "$audios_dir"
+    
+    cp -f "$queue" "$queue"_origin
+    
+    _get_youtubeplaylist_urls
+    
+    for url in $(grep 'https' "$queue"); do
+        
+        local printaudiotitle
+        printaudiotitle=$(youtube-dl -j "$url" | jq '(.title)')
+    
+        if (( $(sed '/#EXTM3U/d' "$queue" | wc -l) < 2 )); then
+            echo ""
+            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "audio file left to download.${nocolor}"
+        else
+            echo ""
+            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "audio files left to download.${nocolor}"
+        fi
+
+        youtube-dl -F "$url" | grep -e 'audio only' | sed 's/audio only      //'
+        echo ""
+        echo " ${green}Choose a format code: ${nocolor}"
+        read -r code
+        
+        echo " ${green}Please be patient while downloading ${red}$printaudiotitle...${nocolor}"
+        sleep 2s
+        youtube-dl -f "$code" "$url" > "$ytop"
+        sed -i '2d' "$queue"
+        clear
+
+    done
+
+    echo -e " ${green}Done\n${nocolor}"
+
+    if [[ -n $(find . -iname "*.webm") ]]; then
+        echo " ${green}Please be patient while ffmpeg is working...${nocolor}"
+        find . -iname "*.webm" -exec \
+        bash -c 'FILE="$1"; \
+        ffmpeg -i "${FILE}" \
+        -vn -ab 320k -ar 48000 \
+        -y "${FILE%.webm}.mp3";' _ '{}' \; 2>"$ffop"
+
+        echo " ${green}Done${nocolor}"
+        sleep 2s
+        rm ./*.webm
+        rm "$tmp_dir"/*.txt
+        _get_incompleted
+    else
+        rm "$tmp_dir"/*.txt
+        _get_incompleted
+    fi
+
+}
+
+_get_video() {
+
+    cd "$videos_dir"
+
+    cp -f "$queue" "$queue"_origin
+    
+    local printvideotitle
+    
+    _get_youtubeplaylist_urls
+    
+    for url in $(grep 'https' "$queue"); do
+
+        printvideotitle=$(youtube-dl -j "$url" | jq '(.title)')
+        
+        youtube-dl -F "$url"
+        echo ""
+        echo " ${green}Choose a format code: ${nocolor}"
+        read -r code
+        echo "$code" > "$ytop"
+        sleep 0.5
+        
+        echo " ${green}Please be patient while downloading ${red}$printvideotitle...${nocolor}"
+        sleep 2s
+        
+        if (( $(sed '/#EXTM3U/d' "$queue" | wc -l) < 2 )); then
+            echo ""
+            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "video file left to download.${nocolor}"
+        else
+            echo ""
+            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "video files left to download.${nocolor}"
+        fi
+
+        if [[ $(grep -e '+' "$ytop") ]]; then
+            youtube-dl -f "$code" --merge-output-format mp4 "$url" > "$ytop"
+        else
+            youtube-dl -f "$code" "$url" > "$ytop"
+        fi
+        
+        sed -i '2d' "$queue"
+        clear
+
+    done
+
+    echo -e " ${green}Done.\n${nocolor}"
+    sleep 2s
+    rm "$tmp_dir"/*.txt
+    _get_incompleted
+
+}
 
 _get_mpv_title() {
     # mpv --idle --really-quiet --input-ipc-server=/tmp/mpvsocket
