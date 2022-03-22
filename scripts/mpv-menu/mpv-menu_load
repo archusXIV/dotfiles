@@ -4,8 +4,8 @@
 _get_mpv_title() {
     # mpv --idle --really-quiet --input-ipc-server=/tmp/mpvsocket
     while [[ -n $(pidof mpv) ]]; do
-        echo '{ "command": ["get_property", "force-media-title"] }' \
-        | socat - /tmp/mpvsocket | awk -F '"' '{print $4}' > $metadatas
+        echo '{ "command": ["get_property", "media-title"] }' \
+        | socat - /tmp/mpvsocket | awk -F '"' '{print $4}' > "$metadatas"
         echo " ${green}Now playing: " "${nocolor}$(tail -n 1 $metadatas)"
         sleep 2s
         clear
@@ -14,20 +14,20 @@ _get_mpv_title() {
 }
 
 _stop_mpvipc() {
-    
+
     [[ $(systemctl --user list-units | awk '/mpv-ipc/{print $3}') == 'active' ]] \
-    && systemctl --user stop mpv-ipc.service
+        && systemctl --user stop mpv-ipc.service
 
 }
 
 _load_audio() {
 
-    _stop_mpvipc
+    # _stop_mpvipc
 
     mpvc -a -Q "$queue"
-   _get_mpv_title
+   #_get_mpv_title
 
-    rm $metadatas
+    rm "$metadatas"
     clear
     _menu
 
@@ -35,14 +35,14 @@ _load_audio() {
 
 _load_video() {
 
-    _stop_mpvipc
-    picom &
+    # _stop_mpvipc
+    # picom &
 
     mpvc -a "$queue"
-    _get_mpv_title
+    #_get_mpv_title
 
-    killall -q picom
-    rm $metadatas
+    # killall -q picom
+    rm "$metadatas"
     clear
     _menu
 
@@ -62,19 +62,38 @@ _load_playlist() {
             break
         fi
         
-        echo ""
-        echo -e " ${green}Getting videos availability...please wait.${nocolor}\n"
+        # $list may also contain a {playlist url}, so let's extract videos from,
+        # remove {playlist url} and grab videos' titles.(in the second while loop).
+        if [[ $(grep -e 'playlist?list=' "$list") ]]; then
+            echo ""
+            echo -e " ${green}Checking youtube playlist availability...please wait.${nocolor}\n"
+            rm "$tmp_dir"/urls.txt >/dev/null 2>&1
+            
+            while read -r line; do
+                youtube-dl -j "$line" \
+                | jq '(.webpage_url)' \
+                | cat | sed 's/"//g' >> "$tmp_dir"/urls.txt
+            done < <(cat "$list" | sed '/#EXTM3U/d')
+            cat "$tmp_dir"/urls.txt >> "$list"
+            
+            # Cleaning $list...
+            sed -i '/playlist/d' "$list"
+            sed -i -n 'G; s/\n/&&/; /^\([ -~]*\n\).*\n\1/d; s/\n//; h; P' "$list"
+        fi
+
+        echo -e " ${green}Getting videos titles...please wait.${nocolor}\n"
+        rm "$tmp_dir"/titles.txt >/dev/null 2>&1
         
         while read -r line; do
             youtube-dl -j "$line" \
-            | jq '(.webpage_url, .title)' \
-            | tac | sed -n '1p' >> "$tmp_dir"/titles.txt
+            | jq '(.title)' >> "$tmp_dir"/titles.txt
         done < <(cat "$list" | sed '/#EXTM3U/d')
         
         cat -n "$tmp_dir"/titles.txt
         echo ""
         
-        read -rsn 1 -p ${green}' Just load [l] download audio [a] or download video [v] (Press '^C' to quit youtube-dl): '${nocolor} letter
+        echo -e " ${green}Just load [l] download audio [a] or download video [v] \n (Press '^C' to quit youtube-dl):${nocolor} "
+        read -rsn 1 letter
         case "$letter" in
             a)  cp "$list" "$list"_origin
                 _download_audio
@@ -86,9 +105,8 @@ _load_playlist() {
                     a)  mpvc -a -Q "$list"
                         #_get_mpv_title
                     ;;
-                    v)  # picom &
-                        mpvc -a "$list"
-                        #_get_mpv_title # && killall -q picom
+                    v)  mpvc -a "$list"
+                        #_get_mpv_title
                     ;;
                     *)  echo " ${red} Wrong option! Wait and try again...${nocolor}"
                         sleep 3s
@@ -120,7 +138,7 @@ _load_local() {
     read -rp 'What would you like to load, a directory [d] or file(s) [f] ?: ' answer
 
     case "$answer" in
-        d)  PS3="Select a directory to queue in mpv: "
+        d)  PS3=" Select a directory to queue in mpv: "
             select dir in $(find "$VIDEOS" -maxdepth 1 | sed 's,.*/,,'); do
                 if [[ $(find "$VIDEOS"/"$dir" -type d -empty) ]]; then
                     echo " ${red}$dir is empty. Wait and try again...${nocolor}"
