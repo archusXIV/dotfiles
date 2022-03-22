@@ -5,9 +5,9 @@ _download_completed() {
     echo " ${green}Downloads are completed, do you want to delete $list? [n/Y]: ${nocolor}"
     read -rsn 1 REPLY
     case "${REPLY}" in
-        n|N) _menu
+        n|N) mv --force "$list"_origin "$list" && _menu
         ;;
-        Y|y) rm "$list" && _menu
+        Y|y) rm "$list" "$list"_origin && _menu
         ;;
         *  ) echo " ${red} Wrong option! Wait and try again...${nocolor}"
              sleep 3s
@@ -16,18 +16,11 @@ _download_completed() {
 }
 
 _download_incompleted() {
+    
     if [[ $(find "$playlists_dir" -name "*.part") ]]; then
-        echo -e " ${red}Incomplete files:\n"
+        echo -e " ${red}Incomplete files in $playlists_dir:\n"
         find "$playlists_dir" -name "*.part" | sort -d | sed 's,.*/,,'
-        read -rsn 1 -p ${green}' Edit your $list and try again later? [Y/n]: '${nocolor} edit
-        case "${edit}" in
-            Y|y) _edit_playlist ;;
-            n|N) echo "" && _download_completed ;;
-        esac
-    elif [[ $(find "$videos_dir" -name "*.part") ]]; then
-        echo -e " ${red}Incomplete files:\n"
-        find "$videos_dir" -name "*.part" | sort -d | sed 's,.*/,,'
-        read -rsn 1 -p ${green}' Edit your $list and try again later? [Y/n]: '${nocolor} edit
+        read -rsn 1 -p ${green}' Edit your playlist and try again later? [Y/n]: '${nocolor} edit
         case "${edit}" in
             Y|y) _edit_playlist ;;
             n|N) echo "" && _download_completed ;;
@@ -35,11 +28,13 @@ _download_incompleted() {
     else
         _download_completed
     fi
+
 }
 
 _download_audio() {
     # We're still in $playlists_dir
     clear
+    cp -f "$list" "$list"_origin
     
     for url in $(grep 'https' "$list"); do
         
@@ -68,9 +63,7 @@ _download_audio() {
 
     done
 
-    mv --force "$list"_origin "$list"
-    echo " ${green}Done${nocolor}"
-    echo ""
+    echo -e " ${green}Done${nocolor}\n"
 
     if [[ -n $(find . -iname "*.webm") ]]; then
         echo " ${green}Please be patient while ffmpeg is working...${nocolor}"
@@ -84,7 +77,6 @@ _download_audio() {
         sleep 2s
         rm ./*.webm
         rm "$tmp_dir"/*.txt
-        rm "$list"_origin
         mv *.mp3 "$audios_dir"
         _download_incompleted
     else
@@ -99,6 +91,7 @@ _download_audio() {
 _download_video() {
     # We're still in $playlists_dir
     clear
+    cp -f "$list" "$list"_origin
     
     for url in $(grep -e 'https' "$list"); do
 
@@ -133,30 +126,12 @@ _download_video() {
 
     done
 
-    mv --force "$list"_origin "$list"
-    echo " ${green}Done${nocolor}"
-    echo ""
+    echo -e " ${green}Done\n${nocolor}"
 
-    local webm
-    webm="$(find "$playlists_dir" -name "*.webm" | sed 's,.*/,,')"
-
-    if [[ -n $webm ]]; then
-        echo -e " ${green}Please be patient while ffmpeg is working...\n${nocolor}"
-        ffmpeg -i "$webm" "$webm".mp4 2> "$ffop"
-        rm ./*.webm
-        mv ./{*.mp4,*.mkv} "$videos_dir" > /dev/null 2>&1
-
-        echo " ${green}All done${nocolor}"
-        rm "$tmp_dir"/*.txt
-        rm "$list"_origin
-        sleep 2s
-        _download_incompleted
-    else
-        mv ./{*.mp4,*.mkv} "$videos_dir" > /dev/null 2>&1
-        echo " ${green}All done${nocolor}"
-        sleep 2s
-        rm "$tmp_dir"/*.txt
-        _download_incompleted
-    fi
+    mv ./{*.mp4,*.mkv} "$videos_dir" > /dev/null 2>&1
+    echo " ${green}All done${nocolor}"
+    sleep 2s
+    rm "$tmp_dir"/*.txt
+    _download_incompleted
 
 }
