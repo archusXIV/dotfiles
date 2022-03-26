@@ -63,3 +63,16 @@ _save_remove() {
     esac
 
 }
+
+_delete_url() {
+    if (( $(grep "" -c "$queue") < 2 )); then
+        echo " ${green}Nothing to do here, main list is empty...${nocolor}"
+        sleep 2s
+        _menu
+    else
+        sed -i '/https/d' "$queue"
+        echo " ${red}All urls removed ${nocolor}"
+        sleep 2s
+        _menu
+    fi
+}
