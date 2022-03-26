@@ -1,7 +1,7 @@
 #!/bin/bash
 ## This is a part of main script: mpv-menu.
 
-save_remove() {
+_save_remove() {
 
     cd "$playlists_dir"
 
@@ -9,14 +9,13 @@ save_remove() {
     echo ""
     case "$opt" in
         s)  echo -e " ${green}Available playlists:\n${nocolor}"
-            find . -name "*.m3u" | sort -d | sed 's/.*\///;s/.m3u//'
+            find . -name "*.m3u" -o -name "*.m3u_origin" | sort -d | sed 's,.*/,,'
             echo ""
             echo -e " ${green}Save playlist as:\n${nocolor}"
             read -r list
             list="$list.m3u"
             if [[ $(find . -name "${list}") ]]; then
-                echo " ${red}This playlist already exists!"
-                echo " Overwrite $list? [y/N]:${nocolor}"
+                echo -e " ${red}This playlist already exists!\n Overwrite $list? [y/N]:${nocolor}"
                 read -r overwrite
                 case "$overwrite" in
                     y|Y)  cp -f "$queue" "$list"
@@ -38,12 +37,12 @@ save_remove() {
         ;;
         r)  PS3=""
             echo -e " ${green}Which playlist do you want to remove? \n${nocolor}"
-            select list in $(find . -name "*.m3u" | sort -d | sed 's,.*/,,'); do
+            select list in $(find . -name "*.m3u" -o -name "*.m3u_origin" | sort -d | sed 's,.*/,,'); do
                 echo ""
                 echo " ${red}Are you sure you want to remove $list? [y/N]:${nocolor}"
                 read -r del
                 case "$del" in
-                    y|Y)  rm "$list"
+                    y|Y) rm "$list"
                         echo " ${red}$list removed ${nocolor}"
                         sleep 2s
                         _menu
