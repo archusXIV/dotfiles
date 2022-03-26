@@ -225,7 +225,7 @@ _copy_audio() {
         _remove_crap
 
         clear
-        if (( $(sed '/#EXTM3U/d' "$queue" | wc -l) < 2 )); then
+        if (( $(grep "" -c "$queue") < 2 )); then
             echo ""
             echo " ${green}There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "url in the list${nocolor}."
         else
@@ -277,7 +277,7 @@ _copy_video() {
         _remove_crap
 
         clear
-        if (( $(sed '/#EXTM3U/d' "$queue" | wc -l) < 2 )); then
+        if (( $(grep "" -c "$queue") < 2 )); then
             echo ""
             echo " ${green}There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "url in the list${nocolor}."
         else
