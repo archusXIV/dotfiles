@@ -100,7 +100,7 @@ _load_playlist() {
             l)  # _stop_mpvipc
                 echo ""
                 read -rsn 1 -p  ${green}' Load audio [a] or video [v] ?: '${nocolor} load
-                case ${load} in
+                case "$load" in
                     a)  mpvc -a -Q "$list"
                         #_get_mpv_title
                     ;;
@@ -133,7 +133,8 @@ _load_playlist() {
 _load_local() {
     local VIDEOS="$HOME/Documents/Videos/"
 
-    read -rp 'What would you like to load, a directory [d] or file(s) [f] ?: ' answer
+    echo -e " ${green}What would you like to load, a directory [d] or file(s) [f] ?: ${nocolor}\n"
+    read -rsn 1 answer
 
     case "$answer" in
         d)  PS3=" Select a directory to queue in mpv: "
