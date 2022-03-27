@@ -3,6 +3,8 @@
 # does what we expect.
 # Presets: ultrafast,superfast,veryfast,faster,fast,medium (defaults).
 _webcam() {
+    amixer set Capture,0 75%,75% unmute cap >/dev/null 2>&1
+    polybar-msg action "#mic-ipc.hook.1" >/dev/null 2>&1
     ffmpeg -f v4l2 \
     -video_size 640x480 \
     -framerate 60 \
@@ -12,11 +14,10 @@ _webcam() {
     -c:a mp3 \
     -c:v h264 \
     -crf 14 \
-    -preset veryfast \
+    -preset fast \
     "$webcam"/webcam-"$date".mkv &
-    echo $! > "$XDG_RUNTIME_DIR"/recordingpid
+    echo $! > "${pid}"
     _updateicon "  "
-    polybar-msg hook recording-ipc-2 1 >/dev/null 2>&1
+    polybar-msg action "#recording-ipc-2.hook.0" >/dev/null 2>&1
     record_chrono 2
 }
-
