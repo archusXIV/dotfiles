@@ -12,19 +12,20 @@ until [[ -n $(pidof mpv) ]]; do
     sleep 1s
 
     while [[ -n $(pidof mpv) ]]; do
-        picom & >/dev/null 2>&1
+
         [[ ! -f "$metadata" ]] && touch "$metadata"
+        
+        sleep 0.5
         echo '{ "command": ["get_property", "media-title"] }' \
         | socat - /tmp/mpvsocket | awk -F '"' '{print $4}' > "$metadata"
-        polybar-msg hook mpv-ipc 2 >/dev/null 2>&1
-        sleep 1s
+        polybar-msg action "#mpv-ipc.hook.1" >/dev/null 2>&1
+        sleep 1.5
         
         [[ -z $(pidof mpv) ]] && {
-            polybar-msg hook mpv-ipc 1 >/dev/null 2>&1
+            polybar-msg action "#mpv-ipc.hook.0" >/dev/null 2>&1
             break
         }
 
     done
-    killall -q picom
-done
 
+done
