@@ -12,7 +12,6 @@ while read -r line <&3; do
         B*) hook=1 ;;
         E*) hook=2 ;;
     esac
-    polybar-msg hook sxhkd-ipc "${hook}"
+    polybar-msg action "#sxhkd-ipc.hook.${hook}"
 done
 exec 3<&-
-
