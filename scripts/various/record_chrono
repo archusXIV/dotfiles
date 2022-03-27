@@ -4,7 +4,7 @@ _chrono1() {
 	date1=`date +%s`; while true; do
 		echo -ne "$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)\r" > "$XDG_CACHE_HOME"/chrono.txt
 		sleep 1s
-		polybar-msg hook chrono-ipc-1 1 >/dev/null 2>&1
+		polybar-msg action "#chrono-ipc-1.hook.0" >/dev/null 2>&1
 	done
 }
 
@@ -12,7 +12,7 @@ _chrono2() {
 	date1=`date +%s`; while true; do
 		echo -ne "$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)\r" > "$XDG_CACHE_HOME"/chrono.txt
 		sleep 1s
-		polybar-msg hook chrono-ipc-2 1 >/dev/null 2>&1
+		polybar-msg action "#chrono-ipc-2.hook.0" >/dev/null 2>&1
 	done
 }
 
@@ -20,7 +20,7 @@ _chrono3() {
 	date1=`date +%s`; while true; do
 		echo -ne "$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)\r" > "$XDG_CACHE_HOME"/chrono.txt
 		sleep 1s
-		polybar-msg hook chrono-ipc-3 1 >/dev/null 2>&1
+		polybar-msg action "#chrono-ipc-3.hook.0" >/dev/null 2>&1
 	done
 }
 
