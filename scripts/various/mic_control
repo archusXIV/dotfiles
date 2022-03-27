@@ -13,27 +13,29 @@
 
 _get_mute() { pactl get-source-mute 1; }
 
+_hook_on() { polybar-msg action "#mic-ipc.hook.1" >/dev/null 2>&1; }
+
 case "$1" in
     up    ) if [[ $(_get_mute) == 'Mute: yes' ]]; then
                 pactl set-source-mute 1 0
-                pactl set-source-volume 1 85%
-                polybar-msg hook mic-ipc 2 >/dev/null 2>&1
+                pactl set-source-volume 1 75%
+                _hook_on
             else
                 pactl set-source-volume 1 +1%
-                polybar-msg hook mic-ipc 2 >/dev/null 2>&1
+                _hook_on
             fi
     ;;
     down  ) pactl set-source-volume 1 -1%
-            polybar-msg hook mic-ipc 2 >/dev/null 2>&1
+            _hook_on
     ;;
     toggle) if [[ $(_get_mute) == 'Mute: yes' ]]; then
                 pactl set-source-mute 1 0
-                pactl set-source-volume 1 85%
-                polybar-msg hook mic-ipc 2 >/dev/null 2>&1
+                pactl set-source-volume 1 75%
+                _hook_on
             else
                 pactl set-source-mute 1 1
                 pactl set-source-volume 1 0%
-                polybar-msg hook mic-ipc 1 >/dev/null 2>&1
+                polybar-msg action "#mic-ipc.hook.0" >/dev/null 2>&1
             fi
     ;;
 esac
