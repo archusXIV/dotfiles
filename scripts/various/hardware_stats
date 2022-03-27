@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Hardware utilizations and temperatures for polybar
+# Hardware utilizations and temperatures.
 
 _kernel() { uname -r; }
 
@@ -12,19 +12,24 @@ _disksusage() { df -h | awk '/sda2/{print $5}'; }
 
 _fanspeed() { sensors | awk '/fan2/{print $2}'; }
 
-_coretemp() { sensors | awk '/Tccd1/{print $2}' | sed 's/+//'; }
-#_coretemp() { sensors | awk '/Tdie/{print $2}' | sed 's/+//'; }
+_coretemp() {
+    if [[ -n $(sensors | awk '/Tccd1/') ]]; then
+        sensors | awk '/Tccd1/{print $2}' | sed 's/+//'
+    else
+        sensors | awk '/Tdie/{print $2}' | sed 's/+//'
+    fi
+}
 
 _nvidia() {
     gputemp="$(nvidia-smi \
-    --format=nounits,csv,noheader \
-    --query-gpu=temperature.gpu)"
+            --format=nounits,csv,noheader \
+            --query-gpu=temperature.gpu)"
     usedgpu="$(nvidia-smi \
-    --format=nounits,csv,noheader \
-    --query-gpu=utilization.gpu)"
+            --format=nounits,csv,noheader \
+            --query-gpu=utilization.gpu)"
 
     [[ $(pacman -Q nvidia) =~ 'nvidia' ]] \
-        && echo "$usedgpu% - $gputemp°C" \
+        && echo "${usedgpu}% - ${gputemp}°C" \
         || echo "no nvidia driver installed"
 }
 
@@ -32,15 +37,14 @@ _nvidia() {
 # (p)oint is just a character that creates a kind of padding function,
 # for simulated blocks or modules.
 
-p="%{F$(xrdb -query | awk '/background:/{print $NF}')}:%{F-}"
-icon_core="%{F$(xrdb -query | awk '/color5:/{print $NF}')}%{F-}"
-icon_nvidia="%{F$(xrdb -query | awk '/color5:/{print $NF}')}%{F-}"
-icon_fan="%{F$(xrdb -query | awk '/color5:/{print $NF}')}%{F-}"
-icon_mem="%{F$(xrdb -query | awk '/color5:/{print $NF}')}%{F-}"
-icon_disk="%{F$(xrdb -query | awk '/color5:/{print $NF}')}%{F-}"
-icon_kernel="%{F$(xrdb -query | awk '/color5:/{print $NF}')}%{F-}"
+p="%{F"$(xrdb -query | awk '/background:/{print $NF}')"}:%{F-}"
+icon_core="%{F"$(xrdb -query | awk '/color4:/{print $NF}')"}%{F-}"
+icon_nvidia="%{F"$(xrdb -query | awk '/color4:/{print $NF}')"}%{F-}"
+icon_fan="%{F"$(xrdb -query | awk '/color4:/{print $NF}')"}%{F-}"
+icon_mem="%{F"$(xrdb -query | awk '/color4:/{print $NF}')"}%{F-}"
+icon_disk="%{F"$(xrdb -query | awk '/color4:/{print $NF}')"}%{F-}"
+icon_kernel="%{F"$(xrdb -query | awk '/color4:/{print $NF}')"}%{F-}"
 
-echo "$icon_core""$p" "$(_coreusage)"% - "$(_coretemp)""$p" "$icon_nvidia""$p" "$(_nvidia)""$p" \
-     "$icon_fan""$p" "$(_fanspeed)""$p" "$icon_mem""$p" "$(_mem)""$p" \
-     "$icon_disk""$p" "$(_disksusage)""$p" "$icon_kernel""$p" "$(_kernel)"
-
+echo "${icon_core}""${p}" "$(_coreusage)"% - "$(_coretemp)""${p}" "${icon_nvidia}""${p}" "$(_nvidia)""$p" \
+     "${icon_fan}""${p}" "$(_fanspeed)""${p}" "${icon_mem}""${p}" "$(_mem)""$p" \
+     "${icon_disk}""${p}" "$(_disksusage)""${p}" "${icon_kernel}""${p}" "$(_kernel)"
