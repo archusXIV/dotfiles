@@ -2,8 +2,8 @@
 
 # all monitors at once.
 _all_monitors() {
-    amixer set Capture,0 90%,90% unmute cap >/dev/null 2>&1
-    polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 2 >/dev/null 2>&1
+    amixer set Capture,0 85%,85% unmute cap >/dev/null 2>&1
+    polybar-msg action "#mic-ipc.hook.1" >/dev/null 2>&1
     ffmpeg -f pulse \
     -i 1 \
     -c:a mp3 \
@@ -15,16 +15,16 @@ _all_monitors() {
     -qp 0 \
     -preset veryfast \
     "$Xsessions"/all_monitors_"$date".mkv &
-    echo $! > "$XDG_RUNTIME_DIR"/recordingpid
+    echo $! > "${pid}"
     _updateicon "  "
-    polybar-msg hook recording-ipc-2 1 >/dev/null 2>&1
+    polybar-msg action "#recording-ipc-2.hook.0" >/dev/null 2>&1
     record_chrono 2
 }
 
 # first monitor (on the left).
 _screencast1() {
-    amixer set Capture,0 90%,90% unmute cap >/dev/null 2>&1
-    polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 2 >/dev/null 2>&1
+    amixer set Capture,0 85%,85% unmute cap >/dev/null 2>&1
+    polybar-msg action "#mic-ipc.hook.1" >/dev/null 2>&1
     ffmpeg -f pulse \
     -i 1 \
     -c:a mp3 \
@@ -36,16 +36,16 @@ _screencast1() {
     -crf 14 \
     -preset veryfast \
     "$Xsessions"/screen1_"$date".mkv &
-    echo $! > "$XDG_RUNTIME_DIR"/recordingpid
+    echo $! > "${pid}"
     _updateicon "  "
-    polybar-msg hook recording-ipc-1 1 >/dev/null 2>&1
+    polybar-msg action "#recording-ipc-1.hook.0" >/dev/null 2>&1
     record_chrono 1
 }
 
-# second monitor (on the center).
+# second monitor (in the center).
 _screencast2() {
-    amixer set Capture,0 90%,90% unmute cap >/dev/null 2>&1
-    polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 2 >/dev/null 2>&1
+    amixer set Capture,0 85%,85% unmute cap >/dev/null 2>&1
+    polybar-msg action "#mic-ipc.hook.1" >/dev/null 2>&1
     ffmpeg -f pulse \
     -i 1 \
     -c:a mp3 \
@@ -57,16 +57,16 @@ _screencast2() {
     -crf 14 \
     -preset veryfast \
     "$Xsessions"/screen2_"$date".mkv &
-    echo $! > "$XDG_RUNTIME_DIR"/recordingpid
+    echo $! > "${pid}"
     _updateicon "  "
-    polybar-msg hook recording-ipc-2 1 >/dev/null 2>&1
+    polybar-msg action "#recording-ipc-2.hook.0" >/dev/null 2>&1
     record_chrono 2
 }
 
 # third monitor (on the right).
 _screencast3() {
-    amixer set Capture,0 90%,90% unmute cap >/dev/null 2>&1
-    polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 2 >/dev/null 2>&1
+    amixer set Capture,0 85%,85% unmute cap >/dev/null 2>&1
+    polybar-msg action "#mic-ipc.hook.1" >/dev/null 2>&1
     ffmpeg -f pulse \
     -i 1 \
     -c:a mp3 \
@@ -78,9 +78,9 @@ _screencast3() {
     -crf 14 \
     -preset veryfast \
     "$Xsessions"/screen3_"$date".mkv &
-    echo $! > "$XDG_RUNTIME_DIR"/recordingpid
+    echo $! > "${pid}"
     _updateicon "  "
-    polybar-msg hook recording-ipc-3 1 >/dev/null 2>&1
+    polybar-msg action "#recording-ipc-3.hook.0" >/dev/null 2>&1
     record_chrono 3
 }
 
@@ -94,9 +94,8 @@ _video() {
     -crf 14 \
     -preset veryfast \
     "$Xsessions"/video-"$date".mkv &
-    echo $! > "$XDG_RUNTIME_DIR"/recordingpid
+    echo $! > "${pid}"
     _updateicon ""
-    polybar-msg hook recording-ipc-1 1 >/dev/null 2>&1
+    polybar-msg action "#recording-ipc-1.hook.0" >/dev/null 2>&1
     record_chrono 1
 }
-
