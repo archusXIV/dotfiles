@@ -21,4 +21,4 @@ sleep 0.3
 
 # This sends a polybar hook to execute
 # hook-0
-polybar-msg hook cmus-ipc 1 > /dev/null 2>&1
+polybar-msg action "#cmus-ipc.hook.0" > /dev/null 2>&1
