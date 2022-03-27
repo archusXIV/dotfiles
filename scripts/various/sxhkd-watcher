@@ -11,14 +11,18 @@ keys="$XDG_RUNTIME_DIR/keys.txt"
 while read line <$SXHKD_FIFO
 do
     if [[ "$line" == 'EEnd chain' ]]; then
-        polybar-msg hook sxhkd-ipc 2 >/dev/null 2>&1
+        polybar-msg action "#sxhkd-ipc.hook.1" >/dev/null 2>&1
+        #polybar-msg action "#screenkeysxhkd-ipc.hook.1" >/dev/null 2>&1
     elif [[ "$line" == 'BBegin chain' ]]; then
-        polybar-msg hook sxhkd-ipc 1 >/dev/null 2>&1
+        polybar-msg action "#sxhkd-ipc.hook.0" >/dev/null 2>&1
+        #polybar-msg action "#screenkeysxhkd-ipc.hook.0" >/dev/null 2>&1
     elif [[ "$line" =~ 'H' ]]; then
         echo "$line" > "$keys"
-        polybar-msg hook hotkeys-ipc 2 >/dev/null 2>&1
+        polybar-msg action "#hotkeys-ipc.hook.1" >/dev/null 2>&1
+		#polybar-msg action "#screenkeyhotkeys-ipc.hook.1" >/dev/null 2>&1
     elif [[ "$line" =~ 'C' ]]; then
         echo "$line" > "$cmd"
-        polybar-msg hook command-ipc 2 >/dev/null 2>&1
+        polybar-msg action "#command-ipc.hook.1" >/dev/null 2>&1
+        #polybar-msg action "#screenkeycommand-ipc.hook.1" >/dev/null 2>&1
     fi
 done
