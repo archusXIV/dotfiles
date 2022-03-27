@@ -123,7 +123,7 @@ def main():
         monitor = PeakMonitor(SINK_NAME, METER_RATE)
         for sample in monitor:
              sample = sample / DISPLAY_SCALE
-             bar_pad = '%{{F#1E1F29}}{}%{{F-i}}'.format(BAR_PAD_CHAR)
+             bar_pad = '%{{F#1E1F29}}{}%{{F-}}'.format(BAR_PAD_CHAR)
              if sample > BAR_LEN:
                 sample = BAR_LEN
              if args.right:
