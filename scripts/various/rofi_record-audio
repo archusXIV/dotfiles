@@ -9,7 +9,7 @@ _updateicon() { echo "$1" > "$XDG_RUNTIME_DIR"/recordingicon; }
 # only audio from mic (webcam)
 _audio_input() {
     amixer set Capture,0 80%,80% unmute cap >/dev/null 2>&1
-    polybar-msg hook mic-ipc 2 >/dev/null 2>&1
+    polybar-msg action "#mic-ipc.hook.1" >/dev/null 2>&1
     ffmpeg -f pulse \
     -i 1 \
     -map '0' \
@@ -17,7 +17,7 @@ _audio_input() {
     "$recordings"/audio-input_"$date".mp3 &
     echo $! > "${pid}"
     _updateicon ""
-    polybar-msg hook recording-ipc-2 1 >/dev/null 2>&1
+    polybar-msg action "#recording-ipc-2.hook.0" >/dev/null 2>&1
     record_chrono 2
 }
 
@@ -37,7 +37,7 @@ _audio_output() {
         "$recordings"/audio-output_"$date".flac &
         echo $! > "${pid}"
         _updateicon ""
-        polybar-msg hook recording-ipc-2 1 >/dev/null 2>&1
+        polybar-msg action "#recording-ipc-2.hook.0" >/dev/null 2>&1
         record_chrono 2
     )
 
@@ -51,7 +51,7 @@ _audio_output() {
         "$recordings"/audio-output_"$date".mp3 &
         echo $! > "${pid}"
         _updateicon ""
-        polybar-msg hook recording-ipc-2 1 >/dev/null 2>&1
+        polybar-msg action "#recording-ipc-2.hook.0" >/dev/null 2>&1
         record_chrono 2
     )
 
@@ -65,7 +65,7 @@ _audio_output() {
         "$recordings"/audio-output_"$date".ogg &
         echo $! > "${pid}"
         _updateicon ""
-        polybar-msg hook recording-ipc-2 1 >/dev/null 2>&1
+        polybar-msg action "#recording-ipc-2.hook.0" >/dev/null 2>&1
         record_chrono 2
     )
 
@@ -77,7 +77,7 @@ _audio_output() {
         "$recordings"/audio-output_"$date".wav &
         echo $! > "${pid}"
         _updateicon ""
-        polybar-msg hook recording-ipc-2 1 >/dev/null 2>&1
+        polybar-msg action "#recording-ipc-2.hook.0" >/dev/null 2>&1
         record_chrono 2
     )
 
@@ -97,20 +97,20 @@ _killrecording() {
     _updateicon ""
     kill -KILL $(pgrep --full "record_chrono")
     # polybar clears icons (update with "nothing").
-    polybar-msg hook recording-ipc-1 2 >/dev/null 2>&1
+    polybar-msg action "#recording-ipc-1.hook.1" >/dev/null 2>&1
     sleep 0.5
-    polybar-msg hook chrono-ipc-1 2 >/dev/null 2>&1
+    polybar-msg action "#chrono-ipc-1.hook.1" >/dev/null 2>&1
     sleep 0.5
-    polybar-msg hook recording-ipc-2 2 >/dev/null 2>&1
+    polybar-msg action "#recording-ipc-2.hook.1" >/dev/null 2>&1
     sleep 0.5
-    polybar-msg hook chrono-ipc-2 2 >/dev/null 2>&1
+    polybar-msg action "#chrono-ipc-2.hook.1" >/dev/null 2>&1
     sleep 0.5
-    polybar-msg hook recording-ipc-3 2 >/dev/null 2>&1
+    polybar-msg action "#recording-ipc-3.hook.1" >/dev/null 2>&1
     sleep 0.5
-    polybar-msg hook chrono-ipc-3 2 >/dev/null 2>&1
+    polybar-msg action "#chrono-ipc-3.hook.1" >/dev/null 2>&1
 
     amixer set Capture,0 0%,0% mute nocap >/dev/null 2>&1
-    polybar-msg hook mic-ipc 1 >/dev/null 2>&1
+    polybar-msg action "#mic-ipc.hook.0" >/dev/null 2>&1
     exit
 }
 
