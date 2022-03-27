@@ -12,15 +12,16 @@
 declare -a deps=( "ffmpeg" "polybar" "rofi" "simplescreenrecorder" )
 
 for i in "${deps[@]}"; do
-    [[ -z $(command -v "$i") ]] \
-    && notify-send "$i isn 't installed, bye..." \
-    && exit 165
+    [[ -z $(command -v "$i") ]] && {
+        notify-send "$i isn 't installed, bye..."
+        exit 165
+    }
 done
 
 _main() {
 
     case "$1" in
-        -r) rofi-record           # external script
+        -r) rofi-record &         # external script
             exit
         ;;
         -s) _simplescreenrecorder # calls below function
@@ -29,7 +30,7 @@ _main() {
         -k) if [[ -z $(pidof simplescreenrecorder) ]] \
                 || [[ -z $(pidof -x rofi-record) ]]; then
                 amixer set Capture,0 0%,0% mute nocap >/dev/null 2>&1
-                polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 1 >/dev/null 2>&1
+                polybar-msg action "#mic-ipc.hook.0" >/dev/null 2>&1
                 exit
             fi
         ;;
@@ -39,88 +40,103 @@ _main() {
 
 _simplescreenrecorder() {
 
-    local triplescreen screen1 screen2 screen3
-    
+    local SCREENS triplescreen screen1 screen2 screen3 WM
+
+    WM=$(wmctrl -m | awk '/Name/{print $2}')
+
     # Profiles:
-    triplescreen="$XDG_CONFIG_HOME/simplescreenrecorder/input-profiles/triplescreen.conf"
-    screen1="$XDG_CONFIG_HOME/simplescreenrecorder/input-profiles/screen1.conf"
-    screen2="$XDG_CONFIG_HOME/simplescreenrecorder/input-profiles/screen2.conf"
-    screen3="$XDG_CONFIG_HOME/simplescreenrecorder/input-profiles/screen3.conf"
-    
+    SCREENS="$XDG_CONFIG_HOME/simplescreenrecorder/input-profiles"
+    triplescreen="$SCREENS/triplescreen.conf"
+    screen1="$SCREENS/screen1.conf"
+    screen2="$SCREENS/screen2.conf"
+    screen3="$SCREENS/screen3.conf"
+
     _all_monitors() (
 
-        amixer set Capture,0 90%,90% unmute cap >/dev/null 2>&1
-        polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 2 >/dev/null 2>&1
+        amixer set Capture,0 75%,75% unmute cap >/dev/null 2>&1
+        polybar-msg action "#mic-ipc.hook.1" >/dev/null 2>&1
         record_chrono 2 &
+
+        [[ $WM == 'bspwm' ]] && bspc desktop --focus '^5' \
+        || [[ $WM == 'i3' ]] && i3-msg workspace 5
+
         simplescreenrecorder \
         --start-hidden \
         --settingsfile="$triplescreen" \
         --start-recording && {
 
-            killall record_chrono
+            killall --quiet record_chrono
             amixer set Capture,0 0%,0% mute nocap >/dev/null 2>&1
-            polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 1 >/dev/null 2>&1
-            polybar-msg hook chrono-ipc-2 2 >/dev/null 2>&1
+            polybar-msg action "#mic-ipc.hook.0" >/dev/null 2>&1
+            polybar-msg action "#chrono-ipc-2.hook.1" >/dev/null 2>&1
 
         }
-
     )
 
     _screencast1() (
 
-        amixer set Capture,0 90%,90% unmute cap >/dev/null 2>&1
-        polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 2 >/dev/null 2>&1
+        amixer set Capture,0 75%,75% unmute cap >/dev/null 2>&1
+        polybar-msg action "#mic-ipc.hook.1" >/dev/null 2>&1
         record_chrono 1 &
+
+        [[ $WM == 'bspwm' ]] && bspc desktop --focus '^1' \
+        || [[ $WM == 'i3' ]] && i3-msg workspace 1
+
         simplescreenrecorder \
         --start-hidden \
         --settingsfile="$screen1" \
         --start-recording && {
 
-            killall record_chrono
+            killall --quiet record_chrono
             amixer set Capture,0 0%,0% mute nocap >/dev/null 2>&1
-            polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 1 >/dev/null 2>&1
-            polybar-msg hook chrono-ipc-1 2 >/dev/null 2>&1
+            polybar-msg action "#mic-ipc.hook.0" >/dev/null 2>&1
+            polybar-msg action "#chrono-ipc-1.hook.1" >/dev/null 2>&1
 
         }
-
     )
 
     _screencast2() (
 
-        amixer set Capture,0 90%,90% unmute cap >/dev/null 2>&1
-        polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 2 >/dev/null 2>&1
+        amixer set Capture,0 75%,75% unmute cap >/dev/null 2>&1
+        polybar-msg action "#mic-ipc.hook.1" >/dev/null 2>&1
         record_chrono 2 &
+
+        [[ $WM == 'bspwm' ]] && bspc desktop --focus '^5' \
+        || [[ $WM == 'i3' ]] && i3-msg workspace 5
+
         simplescreenrecorder \
         --start-hidden \
         --settingsfile="$screen2" \
         --start-recording && {
 
-            killall record_chrono
+            killall --quiet record_chrono
             amixer set Capture,0 0%,0% mute nocap >/dev/null 2>&1
-            polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 1 >/dev/null 2>&1
-            polybar-msg hook chrono-ipc-2 2 >/dev/null 2>&1
+            polybar-msg action "#mic-ipc.hook.0" >/dev/null 2>&1
+            polybar-msg action "#chrono-ipc-2.hook.1" >/dev/null 2>&1
 
         }
-
     )
 
     _screencast3() (
 
-        amixer set Capture,0 90%,90% unmute cap >/dev/null 2>&1
-        polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 2 >/dev/null 2>&1
-        record_chrono 3 &
+        amixer set Capture,0 75%,75% unmute cap >/dev/null 2>&1
+        polybar-msg action "#mic-ipc.hook.1" >/dev/null 2>&1
+        record_chrono 2 &
+
+        [[ $WM == 'bspwm' ]] && bspc desktop --focus '^10' \
+        || [[ $WM == 'i3' ]] && i3-msg workspace 10
+
         simplescreenrecorder \
         --start-hidden \
         --settingsfile="$screen3" \
         --start-recording && {
 
-            killall record_chrono
+            killall --quiet record_chrono
             amixer set Capture,0 0%,0% mute nocap >/dev/null 2>&1
-            polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 1 >/dev/null 2>&1
-            polybar-msg hook chrono-ipc-3 2 >/dev/null 2>&1
+            polybar-msg action "#mic-ipc.hook.0" >/dev/null 2>&1
+            polybar-msg action "#chrono-ipc-2.hook.1" >/dev/null 2>&1
 
         }
-
     )
 
     # testing our monitors setup to launch the right options.
@@ -152,4 +168,3 @@ _simplescreenrecorder() {
 }
 
 _main "${@}"
-
