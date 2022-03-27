@@ -43,8 +43,8 @@ exec 4>&-
 rm "$PIPE"
 
 amixer set Capture,0 0%,0% mute nocap >/dev/null 2>&1
-polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 1 >/dev/null 2>&1
+polybar-msg -p "$(pgrep --full "bspwm-bar-2")" action "#mic-ipc.hook.0" >/dev/null 2>&1
 killall record_chrono
-polybar-msg hook chrono-ipc-2 2 >/dev/null 2>&1
+polybar-msg action "#chrono-ipc-2.hook.1" >/dev/null 2>&1
 clear
 exit
