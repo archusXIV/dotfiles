@@ -43,7 +43,6 @@ else
     [[ -n $(mpc --format %title% current) ]] && mpc stop
 
     if [[ ${status} = 'paused' ]]; then
-        # if music is paused, title in polybar will turn blue
         msg="%{F$(xrdb -query | awk '/color4:/{print $NF}')}${msg}"
     fi
 
@@ -69,7 +68,7 @@ echo "${msg}" > "${output}"
 sleep 0.2;
 
 if [[ -n $(pidof polybar) ]]; then
-    polybar-msg hook cmus-ipc 1 > /dev/null 2>&1
+    polybar-msg action "#cmus-ipc.hook.0" > /dev/null 2>&1
 else
     notify-send "$(cat "${output}")"
 fi
