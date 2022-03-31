@@ -24,15 +24,7 @@ pactl set-sink-volume 1 50%
 unset ids
 
 # Bars
-if [[ -n $(pidof bspwm) ]]; then
-    launch_polybar
-    nm-applet &
-elif [[ -n $(pidof i3) ]]; then
-    launch_polybar
-    nm-applet &
-else
-    notify-send "Welcome in "$(wmctrl -m | awk '/Name/{ print $2 }')""
-fi
+launch_polybar
 
 # Other settings
 cleanup &
