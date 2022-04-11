@@ -28,14 +28,14 @@ super + k
 # alternate between the tiled and monocle layout.
 super + m
 
-# send pulsemixer in scratchpad.
-alt + p
-
 # swap current node with the next one.
 super + s
 
+# scratchpad any, mpv-menu, terminal
+alt + {h,m,t}
+
 # ranger & ranger as root, search_install.
-alt + t ; {r,s}
+alt + x ; {r,s}
 
 # URxvt cmus, mpm, mutt,htop,jnettop, ncmpvc, mixer, etc...
 alt + u ; {c,d,e,h,j,m,n,p,r,s,x,y}
@@ -48,9 +48,6 @@ super + x
 
 # send window to last split.
 super + y
-
-# send terminal in scratchpad.
-alt + z
 
 # move focus to next monitor.
 super + BackSpace
