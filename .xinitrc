@@ -22,8 +22,10 @@ fi
 [ -f $RESOURCES_FILE ] && xrdb -load $RESOURCES_FILE
 
 # Some other early settings
+nvidia_layout &
 systemctl --user import-environment DISPLAY
 systemctl --user start pulseaudio.service
+autostart &
 xset s off -dpms
 xset r rate 300 70
 setxkbmap -layout fr
@@ -32,11 +34,7 @@ numlockx on &
 
 # keyring and polkit daemon.
 /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
-gnome-keyring-daemon --start --components=pkcs11 &
-
-# more stuff
-nvidia_layout &
-autostart &
+gnome-keyring-daemon --start --components=pkcs11
 
 # launch the session, commands below these lines will be ignored
 # Starting Xsession depending on tty.
