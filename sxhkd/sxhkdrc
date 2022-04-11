@@ -13,14 +13,12 @@ Menu ; {d,r}
     {dmenu_chooser,rofi_chooser}
 
 [scratchpad]
-alt + p
-    bspwm_scratchpad $MIXER
-
-alt + y
-    bspwm_scratchpad mpv-menu
-
-alt + z
-    bspwm_scratchpad $TERMINAL
+alt + {h,m,t}
+    { \
+    i3orbsp_scratchpad -h, \
+    i3orbsp_scratchpad -m, \
+    i3orbsp_scratchpad -t \
+    }
 
 [applications bindings]
 # terminal emulators
