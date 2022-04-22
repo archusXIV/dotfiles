@@ -22,20 +22,17 @@ _get_completed() {
     echo " ${green}Downloads are completed, do you want to keep main playlist? [n/Y]: ${nocolor}"
     read -rsn 1 REPLY
     case "$REPLY" in
-        n|N) rm "$queue"_origin && _menu
-        ;;
-        Y|y) mv -f "$queue"_origin "$queue" && _menu
-        ;;
-        *  ) echo " ${red} Wrong option! Wait and try again...${nocolor}"
-             sleep 3s
-        ;;
+        n|N)    rm "$queue"_origin && _menu ;;
+        Y|y)    mv -f "$queue"_origin "$queue" && _menu ;;
+        *  )    echo " ${red} Wrong option! Wait and try again...${nocolor}"
+                sleep 3s ;;
     esac
 }
 
 _get_incompleted() {
     
     _main_playlist_edition() {
-        read -rsn 1 -p ${green}' Edit main playlist and try again later? [Y/n]: '${nocolor} edit
+        read -rsn 1 -p ${green}' Edit "$queue"_origin and try again later? [Y/n]: '${nocolor} edit
         case "$edit" in
             Y|y) _edit_playlist ;;
             n|N) echo "" && _get_completed ;;
@@ -68,7 +65,7 @@ _get_audio() {
         local printaudiotitle
         printaudiotitle=$(youtube-dl -j "$url" | jq '(.title)')
     
-        if (( $(grep "" -c "$queue") < 2 )); then
+        if (( $(grep "" -c "$queue") < 3 )); then
             echo ""
             echo " ${green}There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "audio file left to download.${nocolor}"
         else
@@ -127,7 +124,7 @@ _get_video() {
         
         youtube-dl -F "$url" | sed '/^sb/d'
         echo ""
-        echo " ${green}Choose a format code: ${nocolor}"
+        echo -e " ${green}Choose a format code. \n eg: 137+251 for merging, hls-1080p, 22 for single:${nocolor}"
         read -r code
         # We redirect the format code in a text file,
         # because 'grep' can't act within a variable ($code).
@@ -137,7 +134,7 @@ _get_video() {
         echo " ${green}Please be patient while downloading ${red}$printvideotitle...${nocolor}"
         sleep 2s
         
-        if (( $(grep "" -c "$queue") < 2 )); then
+        if (( $(grep "" -c "$queue") < 3 )); then
             echo ""
             echo " ${green}There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "video file left to download.${nocolor}"
         else
@@ -161,4 +158,15 @@ _get_video() {
     rm "$tmp_dir"/*.txt
     _get_incompleted
 
+}
+
+_get_mpv_title() {
+    # mpv --idle --really-quiet --input-ipc-server=/tmp/mpvsocket
+    while [[ -n $(pidof mpv) ]]; do
+        echo '{ "command": ["get_property", "media-title"] }' \
+        | socat - /tmp/mpvsocket | awk -F '"' '{print $4}' > "$metadatas"
+        echo " ${green}Now playing: " "${nocolor}$(tail -n 1 $metadatas)"
+        sleep 2s
+        clear
+    done
 }
