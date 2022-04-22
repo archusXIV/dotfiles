@@ -165,6 +165,8 @@ _check_url() {
         if (( $(grep "" -c "$queue" ) < 2 )); then
             _menu
         else
+            # we are still in the loop _copy_audio or _copy_video
+            # so 'continue' is pertinent here.
             continue
         fi
     fi
