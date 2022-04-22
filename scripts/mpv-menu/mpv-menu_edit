@@ -6,42 +6,24 @@ _edit_playlist() {
     _check_editor
 
     cd "$playlists_dir"
-    PS3='Choose a playlist to edit: '
+    PS3=${green}' Choose a playlist to edit: '${nocolor}
     echo -en "\nAvailable playlists\n\n"
-    select list in $(find . -name "*.m3u" | sort -d | sed 's,.*/,,'); do
+    select list in $(find . -name "*.m3u" -o -name "*.m3u_origin" \
+        | sort -d | sed 's,.*/,,'); do
         echo ""
         $VISUAL "$list"
         echo " ${green}$list saved${nocolor}"
         sleep 2s
         break
     done
-
+    _menu
 }
 
 _edit_mpv-conf() {
-
     _check_editor
-
-    $VISUAL $XDG_CONFIG_HOME/mpv/mpv.conf
+    $VISUAL "$XDG_CONFIG_HOME"/mpv/mpv.conf
     echo " ${green}mpv.conf saved.${nocolor}"
     sleep 2s
     clear
     _menu
-
-}
-
-_edit_script() {
-
-    _check_editor
-
-    PS3="Select a script number to edit: "
-    echo -en "\nAvailable functions\n\n"
-    select func in $(find $SCRIPTDIR/mpv-menu -name "mpv-menu_*"| sort -d | sed 's,.*/,,'); do
-        cd $SCRIPTDIR/mpv-menu
-        $VISUAL "$func"
-        echo " ${green}$func saved.${nocolor}"
-        sleep 2s
-        break
-    done
-
 }
