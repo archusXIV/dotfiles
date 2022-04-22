@@ -1,30 +1,47 @@
 #!/bin/bash
 ## This is a part of main script: mpv-menu.
 
-_remove_crap() {
+_check_dependencies() {
 
-    # After some tests it appears that a single link copied from a youtube playlist
-    # causes the download of the entire playlist.
-    # So with the help of sed we cleanup the link to get the direct link to the desired video.
-    # Note that this behavior does not appear during a simple viewing/listening.
+    ## Checking dependencies: softwares, directories and files.
+    declare -a deps=( "ffmpeg" "jq" "mpv" "mpvc" "ranger" "socat" "youtube-dl" )
 
-    [[ -n $(grep -e '&list' "$queue") ]] && {
-        echo " ${red}Cleaning entries...${nocolor}"
-        sleep 2s
-        sed -i 's/&.*//' "$queue"
+    for i in "${deps[@]}"; do
+        [[ -z $(command -v "$i") ]] && {
+            echo " ${red}$i isn 't installed, bye..."
+            exit 127
+        }
+    done
+
+    if [[ ! -d "$main_dir" ]]; then
+        mkdir --parents {"$audios_dir","$playlists_dir","$tmp_dir","$videos_dir"}
+    else
+        [[ ! -d "$audios_dir" ]] && mkdir "$audios_dir"
+        [[ ! -d "$playlists_dir" ]] && mkdir "$playlists_dir"
+        [[ ! -d "$tmp_dir" ]] && mkdir "$tmp_dir"
+        [[ ! -d "$videos_dir" ]] && mkdir "$videos_dir"
+    fi
+
+    [[ ! -f $queue ]] && {
+        touch "$queue" 
+        echo "#EXTM3U" > "$queue"
     }
 
-    # Let's remove possible duplicates.
-    [[ -n $(uniq -d "$queue") ]] && {
-        echo " ${red}Removing double entries...${nocolor}"
-        sleep 2s
-        sed -i -n \
-        'G; s/\n/&&/; /^\([ -~]*\n\).*\n\1/d; s/\n//; h; P' \
-        "$queue"
-    }
+    _check_queue
 
-    # Let's remove possible empty lines
-    [[ $(sed -r '/^\s*$/d' "$queue") ]] && sed -i '/^$/d' "$queue"
+}
+
+_check_editor() {
+
+    for item in $EDITOR $VISUAL; do
+        if [[ -z ${item+x} ]]; then
+            echo " ${red}Your $item environment variable is not set..."
+            echo " ${green}Please consider doing so."
+            echo " Example: ${red}export EDITOR='vim' ${nocolor}"
+            sleep 7s
+            _menu
+        fi
+    done
 
 }
 
@@ -56,56 +73,39 @@ _check_queue() {
 
 }
 
-_check_dependencies() {
-
-    ## Checking dependencies: softwares, directories and files.
-    declare -a deps=( "ffmpeg" "jq" "mpv" "mpvc" "ranger" "socat" "youtube-dl" )
-
-    for i in "${deps[@]}"; do
-        [[ -z $(command -v "$i") ]] \
-            && echo " ${red}$i isn 't installed, bye..." \
-            && exit 165
-    done
-
-    if [[ ! -d "$main_dir" ]]; then
-        mkdir --parents {"$audios_dir","$playlists_dir","$tmp_dir","$videos_dir"}
-    else
-        [[ ! -d "$audios_dir" ]] && mkdir "$audios_dir"
-        [[ ! -d "$playlists_dir" ]] && mkdir "$playlists_dir"
-        [[ ! -d "$tmp_dir" ]] && mkdir "$tmp_dir"
-        [[ ! -d "$videos_dir" ]] && mkdir "$videos_dir"
-    fi
-
-    [[ ! -f $queue ]] && touch "$queue" && echo "#EXTM3U" > "$queue"
-
-    _check_queue
-
-}
-
-_check_editor() {
-
-    for item in $EDITOR $VISUAL; do
-        if [[ -z ${item+x} ]]; then
-            echo " ${red}Your $item environment variable is not set..."
-            echo " ${green}Please consider doing so."
-            echo " Example: ${red}export EDITOR='vim' ${nocolor}"
-            sleep 7s
-            _menu
-        fi
-    done
-
-}
-
 _check_url() {
+    # In case link is secured or no format code found.
+    echo " ${green}Verifying media codes..."
+    youtube-dl -F $(cat "$queue" | sed -n '$ p') >/dev/null 2>&1
+    
+    if [[ $? == 1 ]]; then
+        echo " ${red}No format code found! Try again.${nocolor}"
+        sed -i '$ d' "$queue"
+        sleep 3s
+        if (( $(grep "" -c "$queue" ) < 2 )); then
+            _menu
+        else
+            continue
+        fi
+    fi
+}
+
+_view_url() {
 
     if (( $(grep "" -c "$queue") > 1 )); then
-        echo " ${green}Default playlist content:${nocolor}"
+        echo " ${green}Getting titles from url(s), please wait...${nocolor}"
+        
         while read -r urls; do
-            echo " $urls"
-        done < "$queue" | sed 's/#EXTM3U//'
+            youtube-dl -j "$urls" \
+            | jq '(.title, .webpage_url)' >> "$tmp_dir"/view_urls.txt
+        done < <(cat "$queue" | sed '/#EXTM3U/d')
+        
+        cat -n "$tmp_dir"/view_urls.txt
+        rm "$tmp_dir"/view_urls.txt
+        
         echo ""
         read -rsn 1 -p ${green}'delete url(s) [d], play url(s) [p], save url(s) as playlist [s] or back to menu [m]: '${nocolor} opt
-        case $opt in
+        case "$opt" in
             d) _delete_url  ;;
             m) _menu        ;;
             p) _load_video  ;;
