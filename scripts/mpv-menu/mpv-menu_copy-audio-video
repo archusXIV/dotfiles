@@ -9,9 +9,11 @@ _copy_audio() {
         read -r url
         echo "$url" >> "$queue"
         
+        _get_youtubeplaylist_urls
+        
         _remove_crap
         
-        _check_url
+        _check_code
 
         clear
         if (( $(grep "" -c "$queue") < 2 )); then
@@ -58,9 +60,11 @@ _copy_video() {
         read -r url
         echo "$url" >> "$queue"
         
+        _get_youtubeplaylist_urls
+        
         _remove_crap
 
-        _check_url
+        _check_code
         
         clear
         if (( $(grep "" -c "$queue") < 2 )); then
