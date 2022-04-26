@@ -3,20 +3,21 @@
 wid="$1"
 title="$(xtitle "$wid")"
 class="$(xdotool search --classname "$wid")"
+#state
 
 # Firefox rules.
-[[ -z "$state" && "$title" = 'About Mozilla Firefox' ]] \
+[[ -z "$class" && "$title" = 'About Mozilla Firefox' ]] \
     && echo "state=floating"
 
 [[ -z "$state" && "$title" = 'Picture-in-Picture' ]] \
     && echo "state=floating" "center=on" "sticky=on"
 
 # Webcam rectangle initial position.
-[[ -z "$state" && "$title" = 'V4L2 Viewer' ]] \
+[[ -z "$class" && "$title" = 'V4L2 Viewer' ]] \
     && echo "state=floating" "sticky=on" \
     "rectangle=480x360+1435+715" "layer=above"
 
 # mpv-menu
-[[ -z "$state" && "$title" = 'mpv-menu' ]] \
+[[ -z "$class" && "$title" = 'mpv-menu-full' ]] \
     && echo "state=floating"  \
-    "rectangle=948x352+967+723" "layer=above"
+    "rectangle=1031x571+886+26" "layer=above"
