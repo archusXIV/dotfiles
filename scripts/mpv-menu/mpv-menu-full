@@ -19,7 +19,7 @@
 nocolor=$'\e[0m';
 red=$'\e[0;31m';
 green=$'\e[0;32m';
-           
+
 ## directories & files
 main_dir="$HOME/Documents/mpv-menu"
 playlists_dir="$main_dir/playlists"
@@ -153,7 +153,7 @@ _check_queue() {
 
 }
 
-_check_url() {
+_check_code() {
     # In case link is secured or no format code found.
     echo " ${green}Verifying media codes..."
     youtube-dl -F $(cat "$queue" | sed -n '$ p') >/dev/null 2>&1
@@ -165,8 +165,7 @@ _check_url() {
         if (( $(grep "" -c "$queue" ) < 2 )); then
             _menu
         else
-            # we are still in the loop _copy_audio or _copy_video
-            # so 'continue' is pertinent here.
+            # This portion of code is in a loop....
             continue
         fi
     fi
@@ -236,9 +235,11 @@ _copy_audio() {
         read -r url
         echo "$url" >> "$queue"
         
+        _get_youtubeplaylist_urls
+        
         _remove_crap
         
-        _check_url
+        _check_code
 
         clear
         if (( $(grep "" -c "$queue") < 2 )); then
@@ -285,9 +286,11 @@ _copy_video() {
         read -r url
         echo "$url" >> "$queue"
         
+        _get_youtubeplaylist_urls
+        
         _remove_crap
 
-        _check_url
+        _check_code
         
         clear
         if (( $(grep "" -c "$queue") < 2 )); then
@@ -673,11 +676,37 @@ _load_audio() {
 
 _load_video() {
     # _stop_mpvipc
-    mpvc -a "$queue"
+    echo ""
+    _get_youtubeplaylist_urls
+    echo ""
+    echo " ${green}Getting titles from url(s), please wait...${nocolor}"
+    
+    while read -r pls; do
+        youtube-dl -j "$pls" \
+        | jq '(.title)' >> "$tmp_dir"/pls_urls.txt
+    done < <(cat "$queue" | sed '/#EXTM3U/d')
+
+    cat -n "$tmp_dir"/pls_urls.txt
+    rm "$tmp_dir"/pls_urls.txt
+    echo ""
+
+    if [[ $(youtube-dl -F --batch-file "$queue" | grep -e '137' -e '251') ]]; then
+        echo " ${green}Playing 1080p video resolution.${nocolor}"
+        sleep 2s
+        mpv --ytdl-format=137+251 "$queue" >/dev/null 2>&1
+    elif [[ $(youtube-dl -F --batch-file "$queue" | grep -e '22') ]]; then
+        echo " ${green}Playing 720p video resolution.${nocolor}"
+        sleep 2s
+        mpv --ytdl-format=22 "$queue" >/dev/null 2>&1
+    else
+        mpvc -a "$queue"
+    fi
+
     #_get_mpv_title
-    rm "$metadatas"
+    #rm "$metadatas"
     clear
-    _menu
+    _check_queue
+
 }
 
 _load_playlist() {
@@ -733,7 +762,17 @@ _load_playlist() {
                 read -rsn 1 -p  ${green}' Load audio [a] or video [v] ?: '${nocolor} load
                 case "$load" in
                     a)  mpvc -a -Q "$list" ;;
-                    v)  mpvc -a "$list" ;;
+                    v)  if [[ $(youtube-dl -F --batch-file "$list" | grep -e '137' -e '251') ]]; then
+                            echo " ${green}Playing 1080p video resolution.${nocolor}"
+                            sleep 2s
+                            mpv --ytdl-format=137+251 "$list" >/dev/null 2>&1
+                        elif [[ $(youtube-dl -F --batch-file "$list" | grep -e '22') ]]; then
+                            echo " ${green}Playing 720p video resolution.${nocolor}"
+                            sleep 2s
+                            mpv --ytdl-format=22 "$list" >/dev/null 2>&1
+                        else
+                            mpvc -a "$list"
+                        fi ;;
                     *)  echo " ${red} Wrong option! Wait and try again...${nocolor}"
                         sleep 3s ;;
                 esac
