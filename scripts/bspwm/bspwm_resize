@@ -10,19 +10,19 @@ bspc query -N -n focused.floating
 floating=$?
 
 case "$direction" in
-    west)   [ $floating = 0 ] && bspc node -z right -"$size" 0 \
+    west)   [[ $floating = 0 ]] && bspc node -z right -"$size" 0 \
             || bspc node @west  -r -"$size" \
             || bspc node @east  -r -"$size"
             ;;
-    east)   [ $floating = 0 ] && bspc node -z right +"$size" 0 \
+    east)   [[ $floating = 0 ]] && bspc node -z right +"$size" 0 \
             || bspc node @west  -r +"$size" \
             || bspc node @east  -r +"$size"
             ;;
-    north)  [ $floating = 0 ] && bspc node -z bottom 0 -"$size" \
+    north)  [[ $floating = 0 ]] && bspc node -z bottom 0 -"$size" \
             || bspc node @south -r -"$size" \
             || bspc node @north -r -"$size"
             ;;
-    south)  [ $floating = 0 ] && bspc node -z bottom 0 +"$size" \
+    south)  [[ $floating = 0 ]] && bspc node -z bottom 0 +"$size" \
             || bspc node @south -r +"$size" \
             || bspc node @north -r +"$size"
             ;;
