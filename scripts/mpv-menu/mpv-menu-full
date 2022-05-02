@@ -7,6 +7,7 @@
 ##
 ##    Youtube-dl is for now kind of unmaintained so install and make a symlink with
 ##    https://github.com/yt-dlp/yt-dlp/releases
+##    ln -s /usr/bin/yt-dlp ~/.local/bin/youtube-dl (if ~/.local/bin is in your $PATH)
 ##
 ##    This script rips video urls from Youtube and so on.
 ##    In our case we use ".m3u" files to store urls in and then be able
@@ -27,10 +28,12 @@ audios_dir="$main_dir/audios"
 videos_dir="$main_dir/videos"
 tmp_dir="$main_dir/tmp"
 
-queue="$playlists_dir/default.m3u"
-metadatas="$tmp_dir/mpv.txt"
-ytop="$tmp_dir/youtube-dl_output.txt"
-ffop="$tmp_dir/ffmpeg_output.txt"
+QUEUE="$playlists_dir/default.m3u"
+METADATAS="$tmp_dir/mpv.txt"
+YTOP="$tmp_dir/youtube-dl_output.txt"
+FFOP="$tmp_dir/ffmpeg_output.txt"
+COMPLETE_INFO="$tmp_dir/view_urls_info.txt"
+URLS_INFO="$tmp_dir/urls.txt"
 
 _check_dependencies() {
 
@@ -53,9 +56,9 @@ _check_dependencies() {
         [[ ! -d $videos_dir ]] && mkdir "$videos_dir"
     fi
 
-    [[ ! -f $queue ]] && {
-        touch "$queue" 
-        echo "#EXTM3U" > "$queue"
+    [[ ! -f $QUEUE ]] && {
+        touch "$QUEUE"
+        echo "#EXTM3U" > "$QUEUE"
     }
 
     _check_queue
@@ -65,13 +68,13 @@ _check_dependencies() {
 _menu() {
 
     clear
-    while [[ -e $queue ]]; do
+    while [[ -e $QUEUE ]]; do
         clear
         echo ""
         echo -e "                                            ::mpv-menu options:: "
         echo -e "                        ┌─────────────────────────────────────────────────────────────┐"
         echo -e "                        │   1) Create a video playlist    6) View default playlist    │"
-        echo -e "                        │   2) Create an audio playlist   7) Clean default playlist   │"
+        echo -e "                        │   2) Create an audio playlist   7) Clear default playlist   │"
         echo -e "                        │   3) Save/Remove playlist       8) Edit a playlist          │"
         echo -e "                        │   4) Load a playlist            9) Edit mpv.conf            │"
         echo -e "                        │   5) Load local dir/files       0) Exit                     │"
@@ -90,7 +93,7 @@ _menu() {
                 echo "" ;;
             5)  _load_local
                 echo "" ;;
-            6)  _view_url
+            6)  _view_url_info
                 echo "" ;;
             7)  _delete_url
                 echo "" ;;
@@ -129,10 +132,10 @@ _check_editor() {
 _check_queue() {
 
     ## This looks ugly but everything will fit nicely...
-    if (( $(grep "" -c "$queue") > 1 )); then
-        if (( $(grep "" -c "$queue") < 11 )); then
+    if (( $(grep "" -c "$QUEUE") > 1 )); then
+        if (( $(grep "" -c "$QUEUE") < 11 )); then
             echo -e "                              ┌──────────────────────────────────────────────┐"
-            echo -e "                              │  ${red} There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "url(s) in default playlist.${nocolor}     │"
+            echo -e "                              │  ${red} There is" "$(_get_lines_queue)" "url(s) in default playlist.${nocolor}     │"
             echo -e "                              │ Consider checking the url(s) list ${green}(option 6) ${nocolor}|"
             echo -e "                              │ or delete them ${green}(option 7).${nocolor}                   |"
             echo -e "                              └──────────────────────────────────────────────┘"
@@ -140,7 +143,7 @@ _check_queue() {
             _menu
         else
             echo -e "                              ┌───────────────────────────────────────────────┐"
-            echo -e "                              │  ${red} There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "url(s) in default playlist.${nocolor}     │"
+            echo -e "                              │  ${red} There is" "$(_get_lines_queue)" "url(s) in default playlist.${nocolor}     │"
             echo -e "                              │ Consider checking the url(s) list ${green}(option 6) ${nocolor} |"
             echo -e "                              │ or delete them ${green}(option 7).${nocolor}                    |"
             echo -e "                              └───────────────────────────────────────────────┘"
@@ -155,42 +158,48 @@ _check_queue() {
 
 _check_code() {
     # In case link is secured or no format code found.
-    echo " ${green}Verifying media codes..."
-    youtube-dl -F $(cat "$queue" | sed -n '$ p') >/dev/null 2>&1
-    
-    if [[ $? == 1 ]]; then
-        echo " ${red}No format code found! Try again.${nocolor}"
-        sed -i '$ d' "$queue"
-        sleep 3s
-        if (( $(grep "" -c "$queue" ) < 2 )); then
-            _menu
-        else
-            # This portion of code is in a loop....
-            continue
+    echo " ${green}Verifying media codes...${nocolor}"
+
+    for lines in $(cat "$QUEUE" | sed -n '$ p'); do
+        # checking the last url we added.
+        youtube-dl -F $(cat "$QUEUE" | sed -n '$ p') >/dev/null 2>&1
+
+        if [[ $? == 1 ]]; then
+            echo " ${red}No format code found! Try again.${nocolor}"
+            sed -i '$ d' "$QUEUE"
+            sleep 2s
+            if (( $(grep "" -c "$QUEUE" ) < 2 )); then
+                _menu
+            else
+                # _check_code function acts in _copy_audio/videeo loops...
+                continue
+            fi
         fi
-    fi
+        echo "$lines ${green}ok${nocolor}"
+        sleep 1s
+    done
 }
 
-_view_url() {
+_view_url_info() {
 
-    if (( $(grep "" -c "$queue") > 1 )); then
+    if (( $(grep "" -c "$QUEUE") > 1 )); then
         echo " ${green}Getting titles from url(s), please wait...${nocolor}"
-        
+
         while read -r urls; do
             youtube-dl -j "$urls" \
-            | jq '(.title, .webpage_url)' >> "$tmp_dir"/view_urls.txt
-        done < <(cat "$queue" | sed '/#EXTM3U/d')
-        
-        cat -n "$tmp_dir"/view_urls.txt
-        
+            | jq '(.title, .webpage_url)' >> "$COMPLETE_INFO"
+        done < <(cat "$QUEUE" | sed '/#EXTM3U/d')
+
+        cat -n "$COMPLETE_INFO"
+
         echo ""
         read -rsn 1 -p ${green}'delete url(s) [d], play url(s) [p], save url(s) as playlist [s] or back to menu [m]: '${nocolor} opt
         case "$opt" in
-            d) rm "$tmp_dir"/view_urls.txt && _delete_url  ;;
-            m) rm "$tmp_dir"/view_urls.txt && _menu        ;;
-            p) _load_video  ;;
-            s) rm "$tmp_dir"/view_urls.txt && _save_remove ;;
-            *)rm "$tmp_dir"/view_urls.txt &&  _menu        ;;
+            d) rm "$COMPLETE_INFO" && _delete_url  ;;
+            m) rm "$COMPLETE_INFO" && _menu        ;;
+            p) clear && _load_video  ;;
+            s) rm "$COMPLETE_INFO" && _save_remove ;;
+            *) rm "$COMPLETE_INFO" &&  _menu       ;;
         esac
     else
         echo " ${red}Default list is empty ${nocolor}"
@@ -206,49 +215,47 @@ _remove_crap() {
     # So with the help of sed we cleanup the link to get the direct link to the desired video.
     # Note that this behavior does not appear during a simple viewing/listening.
 
-    [[ -n $(grep -e '&list' "$queue") ]] && {
+    [[ -n $(grep -e '&list' "$QUEUE") ]] && {
         echo " ${red}Cleaning entries...${nocolor}"
         sleep 2s
-        sed -i 's/&.*//' "$queue"
+        sed -i 's/&.*//' "$QUEUE" "$URLS_INFO"
     }
 
     # Let's remove possible duplicates.
-    [[ -n $(uniq -d "$queue") ]] && {
+    [[ -n $(uniq -d "$QUEUE") ]] && {
         echo " ${red}Removing double entries...${nocolor}"
         sleep 2s
         sed -i -n \
         'G; s/\n/&&/; /^\([ -~]*\n\).*\n\1/d; s/\n//; h; P' \
-        "$queue"
+        "$QUEUE" "$URLS_INFO"
     }
 
     # Let's remove possible empty lines
-    [[ $(sed -r '/^\s*$/d' "$queue") ]] && sed -i '/^$/d' "$queue"
+    [[ $(sed -r '/^\s*$/d' "$QUEUE") ]] && sed -i '/^$/d' "$QUEUE"
 
 }
 
 _copy_audio() {
 
-    while (( $(grep "" -c "$queue") > 0 )); do
+    while (( $(grep "" -c "$QUEUE") > 0 )); do
         echo ""
         echo " Paste an url to fill the playlist:"
         read -r url
-        echo "$url" >> "$queue"
-        
-        _get_youtubeplaylist_urls
-        
-        _remove_crap
-        
-        _check_code
+        echo "$url" | tee -a "$QUEUE" >> "$URLS_INFO"
 
+        _get_youtubeplaylist_urls
+        _remove_crap
+        _check_code
         clear
-        if (( $(grep "" -c "$queue") < 2 )); then
+
+        if (( $(grep "" -c "$QUEUE") < 2 )); then
             echo ""
-            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "url in the list${nocolor}."
+            echo " ${green}There is" "$(_get_lines_queue)" "url in the list${nocolor}."
         else
             echo ""
-            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "urls in the list${nocolor}."
+            echo " ${green}There are" "$(_get_lines_queue)" "urls in the list${nocolor}."
         fi
-        
+
         echo ""
         echo -e "                                           ::audio options:: "
         echo -e "                       ┌────────────────────────────────────────────────────────────┐"
@@ -279,27 +286,25 @@ _copy_audio() {
 
 _copy_video() {
 
-    while (( $(grep "" -c "$queue") > 0 )); do
+    while (( $(grep "" -c "$QUEUE") > 0 )); do
         echo ""
         echo " Paste an url to fill the playlist:"
         read -r url
-        echo "$url" >> "$queue"
-        
-        _get_youtubeplaylist_urls
-        
-        _remove_crap
+        echo "$url" | tee -a "$QUEUE" >> "$URLS_INFO"
 
+        _get_youtubeplaylist_urls
+        _remove_crap
         _check_code
-        
         clear
-        if (( $(grep "" -c "$queue") < 2 )); then
+
+        if (( $(grep "" -c "$QUEUE") < 2 )); then
             echo ""
-            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "url in the list${nocolor}."
+            echo " ${green}There is" "$(_get_lines_queue)" "url in the list${nocolor}."
         else
             echo ""
-            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "urls in the list${nocolor}."
+            echo " ${green}There are" "$(_get_lines_queue)" "urls in the list${nocolor}."
         fi
-        
+
         echo ""
         echo -e "                                           ::video options:: "
         echo -e "                       ┌────────────────────────────────────────────────────────────┐"
@@ -319,7 +324,7 @@ _copy_video() {
                echo "" ;;
             4) _load_video
                echo "" ;;
-            5) _view_url
+            5) _view_url_info
                echo "" ;;
             6) _check_queue
                echo "" ;;
@@ -340,11 +345,11 @@ _download_completed() {
 }
 
 _download_incompleted() {
-    
+
     if [[ $(find "$playlists_dir" -name "*.part") ]]; then
         echo -e " ${red}Incomplete files in $playlists_dir:\n"
         find "$playlists_dir" -name "*.part" | sort -d | sed 's,.*/,,'
-        echo " ${green}Edit "$list"_origin and try again later? [Y/n]:${nocolor}" 
+        echo " ${green}Edit "$list"_origin and try again later? [Y/n]:${nocolor}"
         read -rsn 1 edit
         case "$edit" in
             Y|y) _edit_playlist ;;
@@ -356,26 +361,25 @@ _download_incompleted() {
 
 }
 
+# let's get our file (web page) title.
+_print_title() { youtube-dl -j "$url" | jq '(.title)'; }
+
 _download_audio() {
     # We're still in $playlists_dir
     clear
     cp -f "$list" "$list"_origin
-    
+
     for url in $(grep 'https' "$list"); do
-        
-        # let's get our file (web page) title.
-        local printaudiotitle
-        printaudiotitle=$(youtube-dl -j "$url" | jq '(.title)')
-        
+
         # We compare if the content of $list is less than 3 because:
         # 1) we have expression #EXTM3U at the top.
         # 2) the uniq url we've enter...if that's the case.
         if (( $(grep "" -c "$list") < 3 )); then
             echo ""
-            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$list" | wc -l)" "audio file left to download.${nocolor}"
+            echo " ${green}There is" "$(_get_lines_list)" "audio file left to download.${nocolor}"
         else
             echo ""
-            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$list" | wc -l)" "audio files left to download.${nocolor}"
+            echo " ${green}There are" "$(_get_lines_list)" "audio files left to download.${nocolor}"
         fi
 
         echo ""
@@ -383,9 +387,9 @@ _download_audio() {
         echo ""
         echo " ${green}Choose a format code: ${nocolor}"
         read -r code
-        
-        echo " ${green}Downloading ${red}$printaudiotitle...${nocolor}"
-        youtube-dl -f "$code" "$url" > "$ytop"
+
+        echo " ${green}Downloading ${red}$(_print_title)...${nocolor}"
+        youtube-dl -f "$code" "$url" > "$YTOP"
         sed -i '2d' "$list"
         clear
 
@@ -399,7 +403,7 @@ _download_audio() {
         bash -c 'FILE="$1"; \
         ffmpeg -i "${FILE}" \
         -vn -ab 320k -ar 48000 \
-        -y "${FILE%.webm}.mp3";' _ '{}' \; 2>"$ffop"
+        -y "${FILE%.webm}.mp3";' _ '{}' \; 2>"$FFOP"
 
         echo " ${green}All done${nocolor}"
         sleep 2s
@@ -420,35 +424,32 @@ _download_video() {
     # We're still in $playlists_dir
     clear
     cp -f "$list" "$list"_origin
-    
+
     for url in $(grep -e 'https' "$list"); do
 
-        local printvideotiltle
-        printvideotitle=$(youtube-dl -j "$url" | jq '(.title)')
-    
+        if (( $(grep "" -c "$list") < 3 )); then
+            echo ""
+            echo " ${green}There is" "$(_get_lines_list)" "video file left to download.${nocolor}"
+        else
+            echo ""
+            echo " ${green}There are" "$(_get_lines_list)" "video files left to download.${nocolor}"
+        fi
+
         youtube-dl -F "$url" | sed '/^sb/d'
         echo ""
         echo -e " ${green}Choose a format code. \n eg: 137+251 for merging, hls-1080p, 22 for single:${nocolor}"
         read -r code
-        echo "$code" > "$ytop"
+        echo "$code" > "$YTOP"
         sleep 0.5
-        
-        echo " ${green}Downloading ${red}$printvideotitle...${nocolor}"
 
-        if (( $(grep "" -c "$list") < 3 )); then
-            echo ""
-            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$list" | wc -l)" "video file left to download.${nocolor}"
+        echo " ${green}Downloading ${red}$(_print_title)...${nocolor}"
+
+        if [[ $(grep -e '+' "$YTOP") ]]; then
+            youtube-dl -f "$code" --merge-output-format mp4 "$url" > "$YTOP"
         else
-            echo ""
-            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$list" | wc -l)" "video files left to download.${nocolor}"
+            youtube-dl -f "$code" "$url" > "$YTOP"
         fi
-        
-        if [[ $(grep -e '+' "$ytop") ]]; then
-            youtube-dl -f "$code" --merge-output-format mp4 "$url" > "$ytop"
-        else
-            youtube-dl -f "$code" "$url" > "$ytop"
-        fi
-        
+
         sed -i '2d' "$list"
         clear
 
@@ -489,20 +490,23 @@ _edit_mpv-conf() {
     _menu
 }
 
+_get_lines_queue() { sed '/#EXTM3U/d' "$QUEUE" | wc -l; }
+
+_get_lines_list() { sed '/#EXTM3U/d' "$list" | wc -l; }
+
 _get_youtubeplaylist_urls() {
-    if [[ $(grep -e 'playlist?list=' "$queue") ]]; then
+    if [[ $(grep -e 'playlist?list=' "$QUEUE") ]]; then
         echo ""
         echo -e " ${green}Checking youtube playlist availability...please wait.${nocolor}\n"
-        
+
         while read -r line; do
             youtube-dl -j "$line" \
             | jq '(.webpage_url)' \
-            | cat | sed 's/"//g' >> "$tmp_dir"/urls.txt
-        done < <(cat "$queue" | sed '/#EXTM3U/d')
-        
-        cat "$tmp_dir"/urls.txt >> "$queue"
-        sed -i '/playlist/d' "$queue"
-        sed -i -n 'G; s/\n/&&/; /^\([ -~]*\n\).*\n\1/d; s/\n//; h; P' "$queue"
+            | cat | sed 's/"//g' >> "$URLS_INFO"
+        done < <(cat "$QUEUE" | sed '/#EXTM3U/d')
+
+        cat "$URLS_INFO" >> "$QUEUE"
+        sed -i '/playlist/d' "$QUEUE" "$URLS_INFO"
     fi
 }
 
@@ -510,23 +514,23 @@ _get_completed() {
     echo " ${green}Downloads are completed, do you want to keep main playlist? [n/Y]: ${nocolor}"
     read -rsn 1 REPLY
     case "$REPLY" in
-        n|N)    rm "$queue"_origin && _menu ;;
-        Y|y)    mv -f "$queue"_origin "$queue" && _menu ;;
+        n|N)    rm "$QUEUE"_origin && _menu ;;
+        Y|y)    mv -f "$QUEUE"_origin "$QUEUE" && _menu ;;
         *  )    echo " ${red} Wrong option! Wait and try again...${nocolor}"
                 sleep 3s ;;
     esac
 }
 
 _get_incompleted() {
-    
+
     _main_playlist_edition() {
-        read -rsn 1 -p ${green}' Edit "$queue"_origin and try again later? [Y/n]: '${nocolor} edit
+        read -rsn 1 -p ${green}' Edit "$QUEUE"_origin and try again later? [Y/n]: '${nocolor} edit
         case "$edit" in
             Y|y) _edit_playlist ;;
             n|N) echo "" && _get_completed ;;
         esac
     }
-    
+
     if [[ $(find "$audios_dir" -name "*.part") ]]; then
         echo -e " ${red}Incomplete files in $audios_dir:\n"
         find "$audios_dir" -name "*.part" | sort -d | sed 's,.*/,,'
@@ -543,33 +547,29 @@ _get_incompleted() {
 _get_audio() {
 
     cd "$audios_dir"
-    
-    cp -f "$queue" "$queue"_origin
-    
+    cp -f "$QUEUE" "$QUEUE"_origin
+
     _get_youtubeplaylist_urls
-    
-    for url in $(grep 'https' "$queue"); do
-        
-        local printaudiotitle
-        printaudiotitle=$(youtube-dl -j "$url" | jq '(.title)')
-    
-        if (( $(grep "" -c "$queue") < 3 )); then
+
+    for url in $(grep 'https' "$QUEUE"); do
+
+        if (( $(grep "" -c "$QUEUE") < 3 )); then
             echo ""
-            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "audio file left to download.${nocolor}"
+            echo " ${green}There is" "$(_get_lines_queue)" "audio file left to download.${nocolor}"
         else
             echo ""
-            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "audio files left to download.${nocolor}"
+            echo " ${green}There are" "$(_get_lines_queue)" "audio files left to download.${nocolor}"
         fi
 
         youtube-dl -F "$url" | grep -e 'audio only' | sed 's/audio only      //'
         echo ""
         echo " ${green}Choose a format code: ${nocolor}"
         read -r code
-        
-        echo " ${green}Please be patient while downloading ${red}$printaudiotitle...${nocolor}"
+
+        echo " ${green}Please be patient while downloading ${red}$(_print_title)...${nocolor}"
         sleep 2s
-        youtube-dl -f "$code" "$url" > "$ytop"
-        sed -i '2d' "$queue"
+        youtube-dl -f "$code" "$url" > "$YTOP"
+        sed -i '2d' "$QUEUE"
         clear
 
     done
@@ -582,7 +582,7 @@ _get_audio() {
         bash -c 'FILE="$1"; \
         ffmpeg -i "${FILE}" \
         -vn -ab 320k -ar 48000 \
-        -y "${FILE%.webm}.mp3";' _ '{}' \; 2>"$ffop"
+        -y "${FILE%.webm}.mp3";' _ '{}' \; 2>"$FFOP"
 
         echo " ${green}Done${nocolor}"
         sleep 2s
@@ -599,44 +599,39 @@ _get_audio() {
 _get_video() {
 
     cd "$videos_dir"
+    cp -f "$QUEUE" "$QUEUE"_origin
 
-    cp -f "$queue" "$queue"_origin
-    
-    local printvideotitle
-    
     _get_youtubeplaylist_urls
-    
-    for url in $(grep 'https' "$queue"); do
 
-        printvideotitle=$(youtube-dl -j "$url" | jq '(.title)')
-        
+    for url in $(grep 'https' "$QUEUE"); do
+
+        if (( $(grep "" -c "$QUEUE") < 3 )); then
+            echo ""
+            echo " ${green}There is" "$(_get_lines_queue)" "video file left to download.${nocolor}"
+        else
+            echo ""
+            echo " ${green}There are" "$(_get_lines_queue)" "video files left to download.${nocolor}"
+        fi
+
         youtube-dl -F "$url" | sed '/^sb/d'
         echo ""
         echo -e " ${green}Choose a format code. \n eg: 137+251 for merging, hls-1080p, 22 for single:${nocolor}"
         read -r code
         # We redirect the format code in a text file,
         # because 'grep' can't act within a variable ($code).
-        echo "$code" > "$ytop"
+        echo "$code" > "$YTOP"
         sleep 0.5
-        
-        echo " ${green}Please be patient while downloading ${red}$printvideotitle...${nocolor}"
+
+        echo " ${green}Please be patient while downloading ${red}$(_print_title)...${nocolor}"
         sleep 2s
-        
-        if (( $(grep "" -c "$queue") < 3 )); then
-            echo ""
-            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "video file left to download.${nocolor}"
+
+        if [[ $(grep -e '+' "$YTOP") ]]; then
+            youtube-dl -f "$code" --merge-output-format mp4 "$url" > "$YTOP"
         else
-            echo ""
-            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "video files left to download.${nocolor}"
+            youtube-dl -f "$code" "$url" > "$YTOP"
         fi
 
-        if [[ $(grep -e '+' "$ytop") ]]; then
-            youtube-dl -f "$code" --merge-output-format mp4 "$url" > "$ytop"
-        else
-            youtube-dl -f "$code" "$url" > "$ytop"
-        fi
-        
-        sed -i '2d' "$queue"
+        sed -i '2d' "$QUEUE"
         clear
 
     done
@@ -652,8 +647,8 @@ _get_mpv_title() {
     # mpv --idle --really-quiet --input-ipc-server=/tmp/mpvsocket
     while [[ -n $(pidof mpv) ]]; do
         echo '{ "command": ["get_property", "media-title"] }' \
-        | socat - /tmp/mpvsocket | awk -F '"' '{print $4}' > "$metadatas"
-        echo " ${green}Now playing: " "${nocolor}$(tail -n 1 $metadatas)"
+        | socat - /tmp/mpvsocket | awk -F '"' '{print $4}' > "$METADATAS"
+        echo " ${green}Now playing: " "${nocolor}$(tail -n 1 $METADATAS)"
         sleep 2s
         clear
     done
@@ -666,45 +661,42 @@ _stop_mpvipc() {
 
 _load_audio() {
     # _stop_mpvipc
-    mpvc -a -Q "$queue"
+    mpvc -a -Q "$QUEUE"
     #_get_mpv_title
-    #rm "$metadatas"
+    #rm "$METADATAS"
+    rm "$tmp_dir"/*.txt
     clear
     _menu
 }
 
 _load_video() {
     # _stop_mpvipc
-
     echo ""
-    _get_youtubeplaylist_urls
+    if [[ -f "$URLS_INFO" ]]; then
+        mapfile -t < <(cat "$URLS_INFO")
+        sed -i '/https/d;s/"//g' "$COMPLETE_INFO"
+    else
+        grep -e 'https' "$COMPLETE_INFO" \
+        | sed 's/"//g' > "$URLS_INFO"
+        sed -i '/https/d;s/"//g' "$COMPLETE_INFO"
+        mapfile -t < <(cat "$URLS_INFO")
+    fi
 
-    while read -r url; do
+    for i in "${MAPFILE[@]}"; do
+        cat -n "$COMPLETE_INFO"
         echo ""
-        if [[ $(youtube-dl -F "$url" | grep -e '137') ]]; then
-            echo " ${green}Playing: $(youtube-dl -j "$url" | jq '(.title)') in 1080p video resolution."
-            echo -e " ${red}Press 'q' to play next video.${nocolor}\n"
-            sleep 2s
-            mpv --ytdl-format=137+251 "$url" >/dev/null 2>&1
-        elif [[ $(youtube-dl -F "$url" | grep -e '22') ]]; then
-            echo " ${green}Playing: $(youtube-dl -j "$url" | jq '(.title)') in 720p video resolution."
-            echo -e " ${red}Press 'q' to play next video.${nocolor}\n"
-            sleep 2s
-            mpv --ytdl-format=22 "$url" >/dev/null 2>&1
-        else
-            echo " ${green}Playing $(youtube-dl -j "$url" | jq '(.title)') default"
-            echo -e " ${red}Press 'q' to play next video.${nocolor}\n"
-            sleep 2s
-            mpv "$url"
-        fi
+        echo " ${red}Press 'q' in mpv to play next video.${nocolor}"
+        mpv --ytdl-format=137+251 "$i" >/dev/null 2>&1 \
+        || mpv --ytdl-format=299+251 "$i" >/dev/null 2>&1 \
+        || mpv --ytdl-format=22 "$i" >/dev/null 2>&1 \
+        || mpvc -a "$QUEUE"
+        sed -i '1d' "$COMPLETE_INFO"
         clear
-        cat -n "$tmp_dir"/view_urls.txt
-    done < <(cat "$queue" | sed '/#EXTM3U/d')
-    
-    rm "$tmp_dir"/view_urls.txt
+    done
+
+    rm "$tmp_dir"/*.txt
     #_get_mpv_title
-    #rm "$metadatas"
-    clear
+    #rm "$METADATAS"
     _check_queue
 
 }
@@ -712,47 +704,46 @@ _load_video() {
 _load_playlist() {
 
     cd "$playlists_dir"
-    
+
     PS3=""
     echo -e " ${green}Select a playlist to load (Press 'q' to quit mpv):\n${nocolor}"
     select list in $(find . -name "*.m3u" | sort -d | sed 's,.*/,,'); do
-        
+
         if ! grep -q -e 'https' -e 'http' "$list"; then
             echo " ${red}$list is empty...${nocolor}"
             sleep 3s
             break
         fi
-        
+
         # $list may also contain a {playlist url}, so let's extract videos from,
         # remove {playlist url} and grab videos' titles.(in the second while loop).
         if [[ $(grep -e 'playlist?list=' "$list") ]]; then
             echo ""
             echo -e " ${green}Checking youtube playlist availability...please wait.${nocolor}\n"
-            rm "$tmp_dir"/urls.txt >/dev/null 2>&1
-            
+            rm "$URLS_INFO" >/dev/null 2>&1
+
             while read -r line; do
                 youtube-dl -j "$line" \
                 | jq '(.webpage_url)' \
-                | cat | sed 's/"//g' >> "$tmp_dir"/urls.txt
+                | cat | sed 's/"//g' >> "$URLS_INFO"
             done < <(cat "$list" | sed '/#EXTM3U/d')
-            
-            cat "$tmp_dir"/urls.txt >> "$list"
+
+            cat "$URLS_INFO" >> "$list"
             # Cleaning $list...
             sed -i '/playlist/d' "$list"
             sed -i -n 'G; s/\n/&&/; /^\([ -~]*\n\).*\n\1/d; s/\n//; h; P' "$list"
         fi
 
         echo -e " ${green}Getting videos titles...please wait.${nocolor}\n"
-        rm "$tmp_dir"/titles.txt >/dev/null 2>&1
-        
+
         while read -r line; do
             youtube-dl -j "$line" \
-            | jq '(.title)' >> "$tmp_dir"/titles.txt
+            | jq '(.title)' >> "$COMPLETE_INFO"
         done < <(cat "$list" | sed '/#EXTM3U/d')
-        
-        cat -n "$tmp_dir"/titles.txt
+
+        cat -n "$COMPLETE_INFO"
         echo ""
-        
+
         echo -e " ${green}Just load [l] download audio [a] or download video [v] \n (Press '^C' to quit youtube-dl):${nocolor} "
         read -rsn 1 letter
         case "$letter" in
@@ -760,27 +751,18 @@ _load_playlist() {
             l)  # _stop_mpvipc
                 echo ""
                 read -rsn 1 -p  ${green}' Load audio only [a] or video [v] ?: '${nocolor} load
-                echo ""
+                clear
                 case "$load" in
                     a)  mpvc -a -Q "$list" ;;
                     v)  while read -r url; do
-        
-                            if [[ $(youtube-dl -F "$url" | grep -e '137') ]]; then
-                                echo " ${green}Playing: $(youtube-dl -j "$url" | jq '(.title)') in 1080p video resolution."
-                                echo -e " ${red}Press 'q' to play next video.${nocolor}\n"
-                                sleep 2s
-                                mpv --ytdl-format=137+251 "$url" >/dev/null 2>&1
-                            elif [[ $(youtube-dl -F "$url" | grep -e '22') ]]; then
-                                echo " ${green}Playing: $(youtube-dl -j "$url" | jq '(.title)') in 720p video resolution."
-                                echo -e " ${red}Press 'q' to play next video.${nocolor}\n"
-                                sleep 2s
-                                mpv --ytdl-format=22 "$url" >/dev/null 2>&1
-                            else
-                                echo " ${red}Playing $(youtube-dl -j "$url" | jq '(.title)') default"
-                                echo -e " ${red}Press 'q' to play next video.${nocolor}\n"
-                                sleep 2s
-                                mpv "$url"
-                            fi
+                            cat -n "$COMPLETE_INFO"
+                            echo ""
+                            echo -e " ${red}Press 'q' to play next video.${nocolor}\n"
+                            mpv --ytdl-format=137+251 "$url" >/dev/null 2>&1 \
+                            || mpv --ytdl-format=299+251 "$url" >/dev/null 2>&1 \
+                            || mpv --ytdl-format=22 "$url" >/dev/null 2>&1 \
+                            mpvc -a "$list"
+                            sed -i '1d' "$COMPLETE_INFO"
                             clear
                         done < <(cat "$list" | sed '/#EXTM3U/d') ;;
                     *)  echo " ${red} Wrong option! Wait and try again...${nocolor}"
@@ -809,7 +791,7 @@ _load_local() {
     read -rsn 1 answer
 
     case "$answer" in
-        d)  PS3=" Select a directory to queue in mpv: "
+        d)  PS3=" Select a directory to QUEUE in mpv: "
             select dir in $(find "$VIDEOS" -maxdepth 1 | sed 's,.*/,,'); do
                 if [[ $(find "$VIDEOS"/"$dir" -type d -empty) ]]; then
                     echo " ${red}$dir is empty. Wait and try again...${nocolor}"
@@ -837,7 +819,7 @@ _load_local() {
 _save_remove() {
 
     cd "$playlists_dir"
-
+    clear
     read -rsn 1 -p 'Save [s] or Remove [r] a playlist?: ' opt
     echo ""
     case "$opt" in
@@ -851,7 +833,7 @@ _save_remove() {
                 echo -e " ${red}This playlist already exists!\n Overwrite $list? [y/N]:${nocolor}"
                 read -r overwrite
                 case "$overwrite" in
-                    y|Y)    cp -f "$queue" "$list"
+                    y|Y)    cp -f "$QUEUE" "$list"
                             echo " ${green}$list saved ${nocolor}"
                             sleep 3s
                             _check_queue ;;
@@ -859,7 +841,7 @@ _save_remove() {
                     *  )    _check_queue ;;
                 esac
             else
-                cp "$queue" "$list"
+                cp "$QUEUE" "$list"
                 echo " ${green}$list saved ${nocolor}"
                 sleep 2s
                 _check_queue
@@ -889,13 +871,14 @@ _save_remove() {
 }
 
 _delete_url() {
-    if (( $(grep "" -c "$queue") < 2 )); then
+    if (( $(grep "" -c "$QUEUE") < 2 )); then
         echo " ${green}Nothing to do here, main list is empty...${nocolor}"
         sleep 3s
         _menu
     else
         echo ""
-        sed -i '/https/d' "$queue"
+        sed -i '/https/d' "$QUEUE"
+        rm "$tmp_dir"/*.txt
         echo " ${red}All urls removed ${nocolor}"
         sleep 3s
         _menu
