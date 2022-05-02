@@ -4,7 +4,7 @@
 _save_remove() {
 
     cd "$playlists_dir"
-
+    clear
     read -rsn 1 -p 'Save [s] or Remove [r] a playlist?: ' opt
     echo ""
     case "$opt" in
@@ -18,7 +18,7 @@ _save_remove() {
                 echo -e " ${red}This playlist already exists!\n Overwrite $list? [y/N]:${nocolor}"
                 read -r overwrite
                 case "$overwrite" in
-                    y|Y)    cp -f "$queue" "$list"
+                    y|Y)    cp -f "$QUEUE" "$list"
                             echo " ${green}$list saved ${nocolor}"
                             sleep 3s
                             _check_queue ;;
@@ -26,7 +26,7 @@ _save_remove() {
                     *  )    _check_queue ;;
                 esac
             else
-                cp "$queue" "$list"
+                cp "$QUEUE" "$list"
                 echo " ${green}$list saved ${nocolor}"
                 sleep 2s
                 _check_queue
@@ -56,13 +56,14 @@ _save_remove() {
 }
 
 _delete_url() {
-    if (( $(grep "" -c "$queue") < 2 )); then
+    if (( $(grep "" -c "$QUEUE") < 2 )); then
         echo " ${green}Nothing to do here, main list is empty...${nocolor}"
         sleep 3s
         _menu
     else
         echo ""
-        sed -i '/https/d' "$queue"
+        sed -i '/https/d' "$QUEUE"
+        rm "$tmp_dir"/*.txt
         echo " ${red}All urls removed ${nocolor}"
         sleep 3s
         _menu
