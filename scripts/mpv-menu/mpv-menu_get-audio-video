@@ -1,20 +1,26 @@
 #!/bin/bash
 ## This is a part of main script: mpv-menu.
 
+_get_lines_queue() { sed '/#EXTM3U/d' "$QUEUE" | wc -l; }
+
+_get_lines_list() { sed '/#EXTM3U/d' "$list" | wc -l; }
+
+# let's get our file (web page) title.
+_get_video_title() { youtube-dl -j "$url" | jq '(.title)'; }
+
 _get_youtubeplaylist_urls() {
-    if [[ $(grep -e 'playlist?list=' "$queue") ]]; then
+    if [[ $(grep -e 'playlist?list=' "$QUEUE") ]]; then
         echo ""
         echo -e " ${green}Checking youtube playlist availability...please wait.${nocolor}\n"
-        
+
         while read -r line; do
             youtube-dl -j "$line" \
             | jq '(.webpage_url)' \
-            | cat | sed 's/"//g' >> "$tmp_dir"/urls.txt
-        done < <(cat "$queue" | sed '/#EXTM3U/d')
-        
-        cat "$tmp_dir"/urls.txt >> "$queue"
-        sed -i '/playlist/d' "$queue"
-        sed -i -n 'G; s/\n/&&/; /^\([ -~]*\n\).*\n\1/d; s/\n//; h; P' "$queue"
+            | cat | sed 's/"//g' >> "$URLS_INFO"
+        done < <(cat "$QUEUE" | sed '/#EXTM3U/d')
+
+        cat "$URLS_INFO" >> "$QUEUE"
+        sed -i '/playlist/d' "$QUEUE" "$URLS_INFO"
     fi
 }
 
@@ -22,23 +28,23 @@ _get_completed() {
     echo " ${green}Downloads are completed, do you want to keep main playlist? [n/Y]: ${nocolor}"
     read -rsn 1 REPLY
     case "$REPLY" in
-        n|N)    rm "$queue"_origin && _menu ;;
-        Y|y)    mv -f "$queue"_origin "$queue" && _menu ;;
+        n|N)    rm "$QUEUE"_origin && _menu ;;
+        Y|y)    mv -f "$QUEUE"_origin "$QUEUE" && _menu ;;
         *  )    echo " ${red} Wrong option! Wait and try again...${nocolor}"
                 sleep 3s ;;
     esac
 }
 
 _get_incompleted() {
-    
+
     _main_playlist_edition() {
-        read -rsn 1 -p ${green}' Edit "$queue"_origin and try again later? [Y/n]: '${nocolor} edit
+        read -rsn 1 -p ${green}' Edit "$QUEUE"_origin and try again later? [Y/n]: '${nocolor} edit
         case "$edit" in
             Y|y) _edit_playlist ;;
             n|N) echo "" && _get_completed ;;
         esac
     }
-    
+
     if [[ $(find "$audios_dir" -name "*.part") ]]; then
         echo -e " ${red}Incomplete files in $audios_dir:\n"
         find "$audios_dir" -name "*.part" | sort -d | sed 's,.*/,,'
@@ -55,33 +61,29 @@ _get_incompleted() {
 _get_audio() {
 
     cd "$audios_dir"
-    
-    cp -f "$queue" "$queue"_origin
-    
+    cp -f "$QUEUE" "$QUEUE"_origin
+
     _get_youtubeplaylist_urls
-    
-    for url in $(grep 'https' "$queue"); do
-        
-        local printaudiotitle
-        printaudiotitle=$(youtube-dl -j "$url" | jq '(.title)')
-    
-        if (( $(grep "" -c "$queue") < 3 )); then
+
+    for url in $(grep 'https' "$QUEUE"); do
+
+        if (( $(grep "" -c "$QUEUE") < 3 )); then
             echo ""
-            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "audio file left to download.${nocolor}"
+            echo " ${green}There is" "$(_get_lines_queue)" "audio file left to download.${nocolor}"
         else
             echo ""
-            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "audio files left to download.${nocolor}"
+            echo " ${green}There are" "$(_get_lines_queue)" "audio files left to download.${nocolor}"
         fi
 
         youtube-dl -F "$url" | grep -e 'audio only' | sed 's/audio only      //'
         echo ""
         echo " ${green}Choose a format code: ${nocolor}"
         read -r code
-        
-        echo " ${green}Please be patient while downloading ${red}$printaudiotitle...${nocolor}"
+
+        echo " ${green}Please be patient while downloading ${red}$(_get_video_title)...${nocolor}"
         sleep 2s
-        youtube-dl -f "$code" "$url" > "$ytop"
-        sed -i '2d' "$queue"
+        youtube-dl -f "$code" "$url" > "$YTOP"
+        sed -i '2d' "$QUEUE"
         clear
 
     done
@@ -94,7 +96,7 @@ _get_audio() {
         bash -c 'FILE="$1"; \
         ffmpeg -i "${FILE}" \
         -vn -ab 320k -ar 48000 \
-        -y "${FILE%.webm}.mp3";' _ '{}' \; 2>"$ffop"
+        -y "${FILE%.webm}.mp3";' _ '{}' \; 2>"$FFOP"
 
         echo " ${green}Done${nocolor}"
         sleep 2s
@@ -111,44 +113,39 @@ _get_audio() {
 _get_video() {
 
     cd "$videos_dir"
+    cp -f "$QUEUE" "$QUEUE"_origin
 
-    cp -f "$queue" "$queue"_origin
-    
-    local printvideotitle
-    
     _get_youtubeplaylist_urls
-    
-    for url in $(grep 'https' "$queue"); do
 
-        printvideotitle=$(youtube-dl -j "$url" | jq '(.title)')
-        
+    for url in $(grep 'https' "$QUEUE"); do
+
+        if (( $(grep "" -c "$QUEUE") < 3 )); then
+            echo ""
+            echo " ${green}There is" "$(_get_lines_queue)" "video file left to download.${nocolor}"
+        else
+            echo ""
+            echo " ${green}There are" "$(_get_lines_queue)" "video files left to download.${nocolor}"
+        fi
+
         youtube-dl -F "$url" | sed '/^sb/d'
         echo ""
         echo -e " ${green}Choose a format code. \n eg: 137+251 for merging, hls-1080p, 22 for single:${nocolor}"
         read -r code
         # We redirect the format code in a text file,
         # because 'grep' can't act within a variable ($code).
-        echo "$code" > "$ytop"
+        echo "$code" > "$YTOP"
         sleep 0.5
-        
-        echo " ${green}Please be patient while downloading ${red}$printvideotitle...${nocolor}"
+
+        echo " ${green}Please be patient while downloading ${red}$(_get_video_title)...${nocolor}"
         sleep 2s
-        
-        if (( $(grep "" -c "$queue") < 3 )); then
-            echo ""
-            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "video file left to download.${nocolor}"
+
+        if [[ $(grep -e '+' "$YTOP") ]]; then
+            youtube-dl -f "$code" --merge-output-format mp4 "$url" > "$YTOP"
         else
-            echo ""
-            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "video files left to download.${nocolor}"
+            youtube-dl -f "$code" "$url" > "$YTOP"
         fi
 
-        if [[ $(grep -e '+' "$ytop") ]]; then
-            youtube-dl -f "$code" --merge-output-format mp4 "$url" > "$ytop"
-        else
-            youtube-dl -f "$code" "$url" > "$ytop"
-        fi
-        
-        sed -i '2d' "$queue"
+        sed -i '2d' "$QUEUE"
         clear
 
     done
@@ -164,8 +161,8 @@ _get_mpv_title() {
     # mpv --idle --really-quiet --input-ipc-server=/tmp/mpvsocket
     while [[ -n $(pidof mpv) ]]; do
         echo '{ "command": ["get_property", "media-title"] }' \
-        | socat - /tmp/mpvsocket | awk -F '"' '{print $4}' > "$metadatas"
-        echo " ${green}Now playing: " "${nocolor}$(tail -n 1 $metadatas)"
+        | socat - /tmp/mpvsocket | awk -F '"' '{print $4}' > "$METADATAS"
+        echo " ${green}Now playing: " "${nocolor}$(tail -n 1 $METADATAS)"
         sleep 2s
         clear
     done
