@@ -1,6 +1,7 @@
 #!/bin/bash
 
 ##    Author: Barret E (2020-21) <archus@protonmail.com>
+##    https://github.com/archusXIV/dotfiles
 ##    Dependencies: ffmpeg, youtube-dl, socat, mpv & mpvc (command line interface for mpv).
 ##
 ##    This script rips video urls from Youtube and so on.
@@ -23,10 +24,12 @@ audios_dir="$main_dir/audios"
 videos_dir="$main_dir/videos"
 tmp_dir="$main_dir/tmp"
 
-queue="$playlists_dir/default.m3u"
-metadatas="$tmp_dir/mpv.txt"
-ytop="$tmp_dir/youtube-dl_output.txt"
-ffop="$tmp_dir/ffmpeg_output.txt"
+QUEUE="$playlists_dir/default.m3u"
+METADATAS="$tmp_dir/mpv.txt"
+YTOP="$tmp_dir/youtube-dl_output.txt"
+FFOP="$tmp_dir/ffmpeg_output.txt"
+COMPLETE_INFO="$tmp_dir/view_urls_info.txt"
+URLS_INFO="$tmp_dir/urls.txt"
 
 ## First source our functions.
 if [[ -n ${SCRIPTDIR+x} ]]; then
@@ -40,5 +43,4 @@ else
     exit 1
 fi
 
-_check_dependencies
-
+_check_dependencies "${@}"
