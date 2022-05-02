@@ -13,11 +13,11 @@ _download_completed() {
 }
 
 _download_incompleted() {
-    
+
     if [[ $(find "$playlists_dir" -name "*.part") ]]; then
         echo -e " ${red}Incomplete files in $playlists_dir:\n"
         find "$playlists_dir" -name "*.part" | sort -d | sed 's,.*/,,'
-        echo " ${green}Edit "$list"_origin and try again later? [Y/n]:${nocolor}" 
+        echo " ${green}Edit "$list"_origin and try again later? [Y/n]:${nocolor}"
         read -rsn 1 edit
         case "$edit" in
             Y|y) _edit_playlist ;;
@@ -33,22 +33,18 @@ _download_audio() {
     # We're still in $playlists_dir
     clear
     cp -f "$list" "$list"_origin
-    
+
     for url in $(grep 'https' "$list"); do
-        
-        # let's get our file (web page) title.
-        local printaudiotitle
-        printaudiotitle=$(youtube-dl -j "$url" | jq '(.title)')
-        
+
         # We compare if the content of $list is less than 3 because:
         # 1) we have expression #EXTM3U at the top.
         # 2) the uniq url we've enter...if that's the case.
         if (( $(grep "" -c "$list") < 3 )); then
             echo ""
-            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$list" | wc -l)" "audio file left to download.${nocolor}"
+            echo " ${green}There is" "$(_get_lines_list)" "audio file left to download.${nocolor}"
         else
             echo ""
-            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$list" | wc -l)" "audio files left to download.${nocolor}"
+            echo " ${green}There are" "$(_get_lines_list)" "audio files left to download.${nocolor}"
         fi
 
         echo ""
@@ -56,9 +52,9 @@ _download_audio() {
         echo ""
         echo " ${green}Choose a format code: ${nocolor}"
         read -r code
-        
-        echo " ${green}Downloading ${red}$printaudiotitle...${nocolor}"
-        youtube-dl -f "$code" "$url" > "$ytop"
+
+        echo " ${green}Downloading ${red}$(_get_video_title)...${nocolor}"
+        youtube-dl -f "$code" "$url" > "$YTOP"
         sed -i '2d' "$list"
         clear
 
@@ -72,7 +68,7 @@ _download_audio() {
         bash -c 'FILE="$1"; \
         ffmpeg -i "${FILE}" \
         -vn -ab 320k -ar 48000 \
-        -y "${FILE%.webm}.mp3";' _ '{}' \; 2>"$ffop"
+        -y "${FILE%.webm}.mp3";' _ '{}' \; 2>"$FFOP"
 
         echo " ${green}All done${nocolor}"
         sleep 2s
@@ -93,35 +89,32 @@ _download_video() {
     # We're still in $playlists_dir
     clear
     cp -f "$list" "$list"_origin
-    
+
     for url in $(grep -e 'https' "$list"); do
 
-        local printvideotiltle
-        printvideotitle=$(youtube-dl -j "$url" | jq '(.title)')
-    
+        if (( $(grep "" -c "$list") < 3 )); then
+            echo ""
+            echo " ${green}There is" "$(_get_lines_list)" "video file left to download.${nocolor}"
+        else
+            echo ""
+            echo " ${green}There are" "$(_get_lines_list)" "video files left to download.${nocolor}"
+        fi
+
         youtube-dl -F "$url" | sed '/^sb/d'
         echo ""
         echo -e " ${green}Choose a format code. \n eg: 137+251 for merging, hls-1080p, 22 for single:${nocolor}"
         read -r code
-        echo "$code" > "$ytop"
+        echo "$code" > "$YTOP"
         sleep 0.5
-        
-        echo " ${green}Downloading ${red}$printvideotitle...${nocolor}"
 
-        if (( $(grep "" -c "$list") < 3 )); then
-            echo ""
-            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$list" | wc -l)" "video file left to download.${nocolor}"
+        echo " ${green}Downloading ${red}$(_get_video_title)...${nocolor}"
+
+        if [[ $(grep -e '+' "$YTOP") ]]; then
+            youtube-dl -f "$code" --merge-output-format mp4 "$url" > "$YTOP"
         else
-            echo ""
-            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$list" | wc -l)" "video files left to download.${nocolor}"
+            youtube-dl -f "$code" "$url" > "$YTOP"
         fi
-        
-        if [[ $(grep -e '+' "$ytop") ]]; then
-            youtube-dl -f "$code" --merge-output-format mp4 "$url" > "$ytop"
-        else
-            youtube-dl -f "$code" "$url" > "$ytop"
-        fi
-        
+
         sed -i '2d' "$list"
         clear
 
