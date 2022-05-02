@@ -13,18 +13,18 @@ _check_dependencies() {
         }
     done
 
-    if [[ ! -d "$main_dir" ]]; then
+    if [[ ! -d $main_dir ]]; then
         mkdir --parents {"$audios_dir","$playlists_dir","$tmp_dir","$videos_dir"}
     else
-        [[ ! -d "$audios_dir" ]] && mkdir "$audios_dir"
-        [[ ! -d "$playlists_dir" ]] && mkdir "$playlists_dir"
-        [[ ! -d "$tmp_dir" ]] && mkdir "$tmp_dir"
-        [[ ! -d "$videos_dir" ]] && mkdir "$videos_dir"
+        [[ ! -d $audios_dir ]] && mkdir "$audios_dir"
+        [[ ! -d $playlists_dir ]] && mkdir "$playlists_dir"
+        [[ ! -d $tmp_dir ]] && mkdir "$tmp_dir"
+        [[ ! -d $videos_dir ]] && mkdir "$videos_dir"
     fi
 
-    [[ ! -f $queue ]] && {
-        touch "$queue" 
-        echo "#EXTM3U" > "$queue"
+    [[ ! -f $QUEUE ]] && {
+        touch "$QUEUE"
+        echo "#EXTM3U" > "$QUEUE"
     }
 
     _check_queue
@@ -47,23 +47,22 @@ _check_editor() {
 
 _check_queue() {
 
-    _remove_crap
     ## This looks ugly but everything will fit nicely...
-    if (( $(grep "" -c "$queue") > 1 )); then
-        if (( $(grep "" -c "$queue") < 11 )); then
-            echo -e "                            ┌──────────────────────────────────────────────┐"
-            echo -e "                            │  ${red} There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "url(s) in default playlist.${nocolor}     │"
-            echo -e "                            │ Consider checking the url(s) list ${green}(option 6) ${nocolor}|"
-            echo -e "                            │ or delete them ${green}(option 7).${nocolor}                   |"
-            echo -e "                            └──────────────────────────────────────────────┘"
+    if (( $(grep "" -c "$QUEUE") > 1 )); then
+        if (( $(grep "" -c "$QUEUE") < 11 )); then
+            echo -e "                              ┌──────────────────────────────────────────────┐"
+            echo -e "                              │  ${red} There is" "$(_get_lines_queue)" "url(s) in default playlist.${nocolor}     │"
+            echo -e "                              │ Consider checking the url(s) list ${green}(option 6) ${nocolor}|"
+            echo -e "                              │ or delete them ${green}(option 7).${nocolor}                   |"
+            echo -e "                              └──────────────────────────────────────────────┘"
             sleep 6s
             _menu
         else
-            echo -e "                            ┌───────────────────────────────────────────────┐"
-            echo -e "                            │  ${red} There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "url(s) in default playlist.${nocolor}     │"
-            echo -e "                            │ Consider checking the url(s) list ${green}(option 6) ${nocolor} |"
-            echo -e "                            │ or delete them ${green}(option 7).${nocolor}                    |"
-            echo -e "                            └───────────────────────────────────────────────┘"
+            echo -e "                              ┌───────────────────────────────────────────────┐"
+            echo -e "                              │  ${red} There is" "$(_get_lines_queue)" "url(s) in default playlist.${nocolor}     │"
+            echo -e "                              │ Consider checking the url(s) list ${green}(option 6) ${nocolor} |"
+            echo -e "                              │ or delete them ${green}(option 7).${nocolor}                    |"
+            echo -e "                              └───────────────────────────────────────────────┘"
             sleep 6s
             _menu
         fi
@@ -73,44 +72,50 @@ _check_queue() {
 
 }
 
-_check_url() {
+_check_code() {
     # In case link is secured or no format code found.
-    echo " ${green}Verifying media codes..."
-    youtube-dl -F $(cat "$queue" | sed -n '$ p') >/dev/null 2>&1
-    
-    if [[ $? == 1 ]]; then
-        echo " ${red}No format code found! Try again.${nocolor}"
-        sed -i '$ d' "$queue"
-        sleep 3s
-        if (( $(grep "" -c "$queue" ) < 2 )); then
-            _menu
-        else
-            continue
+    echo " ${green}Verifying media codes...${nocolor}"
+
+    for lines in $(cat "$QUEUE" | sed -n '$ p'); do
+        # checking the last url we added.
+        youtube-dl -F $(cat "$QUEUE" | sed -n '$ p') >/dev/null 2>&1
+
+        if [[ $? == 1 ]]; then
+            echo " ${red}No format code found! Try again.${nocolor}"
+            sed -i '$ d' "$QUEUE"
+            sleep 2s
+            if (( $(grep "" -c "$QUEUE" ) < 2 )); then
+                _menu
+            else
+                # _check_code function acts in _copy_audio/videeo loops...
+                continue
+            fi
         fi
-    fi
+        echo "$lines ${green}ok${nocolor}"
+        sleep 1s
+    done
 }
 
-_view_url() {
+_view_url_info() {
 
-    if (( $(grep "" -c "$queue") > 1 )); then
+    if (( $(grep "" -c "$QUEUE") > 1 )); then
         echo " ${green}Getting titles from url(s), please wait...${nocolor}"
-        
+
         while read -r urls; do
             youtube-dl -j "$urls" \
-            | jq '(.title, .webpage_url)' >> "$tmp_dir"/view_urls.txt
-        done < <(cat "$queue" | sed '/#EXTM3U/d')
-        
-        cat -n "$tmp_dir"/view_urls.txt
-        rm "$tmp_dir"/view_urls.txt
-        
+            | jq '(.title, .webpage_url)' >> "$COMPLETE_INFO"
+        done < <(cat "$QUEUE" | sed '/#EXTM3U/d')
+
+        cat -n "$COMPLETE_INFO"
+
         echo ""
         read -rsn 1 -p ${green}'delete url(s) [d], play url(s) [p], save url(s) as playlist [s] or back to menu [m]: '${nocolor} opt
         case "$opt" in
-            d) _delete_url  ;;
-            m) _menu        ;;
-            p) _load_video  ;;
-            s) _save_remove ;;
-            *) _menu        ;;
+            d) rm "$COMPLETE_INFO" && _delete_url  ;;
+            m) rm "$COMPLETE_INFO" && _menu        ;;
+            p) clear && _load_video  ;;
+            s) rm "$COMPLETE_INFO" && _save_remove ;;
+            *) rm "$COMPLETE_INFO" &&  _menu       ;;
         esac
     else
         echo " ${red}Default list is empty ${nocolor}"
