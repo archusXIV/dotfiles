@@ -160,7 +160,7 @@ _check_code() {
     # In case link is secured or no format code found.
     echo " ${green}Verifying media codes...${nocolor}"
 
-    for lines in $(cat "$QUEUE" | sed -n '$ p'); do
+    for lines in $(cat "$QUEUE" | sed '/#EXTM3U/d'); do
         # checking the last url we added.
         youtube-dl -F $(cat "$QUEUE" | sed -n '$ p') >/dev/null 2>&1
 
