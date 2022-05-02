@@ -3,35 +3,33 @@
 
 _copy_audio() {
 
-    while (( $(grep "" -c "$queue") > 0 )); do
+    while (( $(grep "" -c "$QUEUE") > 0 )); do
         echo ""
         echo " Paste an url to fill the playlist:"
         read -r url
-        echo "$url" >> "$queue"
-        
-        _get_youtubeplaylist_urls
-        
-        _remove_crap
-        
-        _check_code
+        echo "$url" | tee -a "$QUEUE" >> "$URLS_INFO"
 
+        _get_youtubeplaylist_urls
+        _remove_crap
+        _check_code
         clear
-        if (( $(grep "" -c "$queue") < 2 )); then
+
+        if (( $(grep "" -c "$QUEUE") < 2 )); then
             echo ""
-            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "url in the list${nocolor}."
+            echo " ${green}There is" "$(_get_lines_queue)" "url in the list${nocolor}."
         else
             echo ""
-            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "urls in the list${nocolor}."
+            echo " ${green}There are" "$(_get_lines_queue)" "urls in the list${nocolor}."
         fi
-        
+
         echo ""
-        echo -e "                                         ::audio options:: "
-        echo -e "                     ┌────────────────────────────────────────────────────────────┐"
-        echo -e "                     │     1) Add more audio links      4) Play current list      │"
-        echo -e "                     │     2) Download current list     5) View current list      │"
-        echo -e "                     │     3) Save playlist as          6) Back to main menu      │"
-        echo -e "                     └────────────────────────────────────────────────────────────┘"
-        echo -e "                                           ${green}Select an item${nocolor}"
+        echo -e "                                           ::audio options:: "
+        echo -e "                       ┌────────────────────────────────────────────────────────────┐"
+        echo -e "                       │     1) Add more audio links      4) Play current list      │"
+        echo -e "                       │     2) Download current list     5) View current list      │"
+        echo -e "                       │     3) Save playlist as          6) Back to main menu      │"
+        echo -e "                       └────────────────────────────────────────────────────────────┘"
+        echo -e "                                             ${green}Select an item${nocolor}"
         echo ""
         read -r options
         case "$options" in
@@ -54,35 +52,33 @@ _copy_audio() {
 
 _copy_video() {
 
-    while (( $(grep "" -c "$queue") > 0 )); do
+    while (( $(grep "" -c "$QUEUE") > 0 )); do
         echo ""
         echo " Paste an url to fill the playlist:"
         read -r url
-        echo "$url" >> "$queue"
-        
-        _get_youtubeplaylist_urls
-        
-        _remove_crap
+        echo "$url" | tee -a "$QUEUE" >> "$URLS_INFO"
 
+        _get_youtubeplaylist_urls
+        _remove_crap
         _check_code
-        
         clear
-        if (( $(grep "" -c "$queue") < 2 )); then
+
+        if (( $(grep "" -c "$QUEUE") < 2 )); then
             echo ""
-            echo " ${green}There is" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "url in the list${nocolor}."
+            echo " ${green}There is" "$(_get_lines_queue)" "url in the list${nocolor}."
         else
             echo ""
-            echo " ${green}There are" "$(sed '/#EXTM3U/d' "$queue" | wc -l)" "urls in the list${nocolor}."
+            echo " ${green}There are" "$(_get_lines_queue)" "urls in the list${nocolor}."
         fi
-        
+
         echo ""
-        echo -e "                                         ::video options:: "
-        echo -e "                     ┌────────────────────────────────────────────────────────────┐"
-        echo -e "                     │     1) Add more video links      4) Play current list      │"
-        echo -e "                     │     2) Download current list     5) View current list      │"
-        echo -e "                     │     3) Save playlist as          6) Back to main menu      │"
-        echo -e "                     └────────────────────────────────────────────────────────────┘"
-        echo -e "                                           ${green}Select an item${nocolor}"
+        echo -e "                                           ::video options:: "
+        echo -e "                       ┌────────────────────────────────────────────────────────────┐"
+        echo -e "                       │     1) Add more video links      4) Play current list      │"
+        echo -e "                       │     2) Download current list     5) View current list      │"
+        echo -e "                       │     3) Save playlist as          6) Back to main menu      │"
+        echo -e "                       └────────────────────────────────────────────────────────────┘"
+        echo -e "                                             ${green}Select an item${nocolor}"
         echo ""
         read -r options
         case "$options" in
@@ -94,7 +90,7 @@ _copy_video() {
                echo "" ;;
             4) _load_video
                echo "" ;;
-            5) _view_url
+            5) _view_url_info
                echo "" ;;
             6) _check_queue
                echo "" ;;
