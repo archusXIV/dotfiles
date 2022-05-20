@@ -29,6 +29,10 @@ videos_dir="$main_dir/videos"
 tmp_dir="$main_dir/tmp"
 QUEUE="$playlists_dir/default.m3u"
 
+_clean_tmp_dir() { rm -f "$tmp_dir"/*.txt >/dev/null 2>&1; }
+
+trap "_clean_tmp_dir; exit" SIGTERM EXIT
+
 _check_dependencies() {
 
     ## Checking dependencies: softwares, directories and files.
@@ -95,11 +99,7 @@ _menu() {
                 echo "" ;;
             9)  _edit_mpv-conf
                 echo "" ;;
-            0)  [[ $(find $tmp_dir -name "*.txt") ]] && {
-                    _clean_tmp_dir
-                    exit 0
-                }
-                exit 0 ;;
+            0)  exit 0 ;;
             *)  echo -e " ${red}Wrong option!\n Wait and try again...${nocolor}"
                 sleep 2s
                 clear ;;
@@ -155,16 +155,16 @@ _check_code_queue() {
 
     for lines in $(cat "$QUEUE" | sed '/#EXTM3U/d'); do
         # checking the last url we added.
-        youtube-dl -F $(cat "$QUEUE" | sed -n '$ p') >/dev/null 2>&1
+        youtube-dl -F "$(cat "$QUEUE" | sed -n '$ p')" >/dev/null 2>&1
 
-        if [[ $? == 1 ]]; then
+        if [[ $? -eq 1 ]]; then
             echo " ${red}No format code found! Try again.${nocolor}"
             sed -i '$ d' "$QUEUE"
             sleep 2s
             if (( $(grep "" -c "$QUEUE" ) < 2 )); then
                 _menu
             else
-                # _check_code function acts in _copy_audio/videeo loops...
+                # _check_code function acts in _copy_audio/_videeo loops...
                 continue
             fi
         fi
@@ -178,11 +178,10 @@ _check_code_load() {
     echo " ${green}Verifying media codes from $list...${nocolor}"
 
     for lines in $(cat "$list" | sed '/#EXTM3U/d'); do
+        
+        youtube-dl -F "$(cat "$list" | sed -n '$ p')" >/dev/null 2>&1
 
-        youtube-dl -F $(cat "$list" | sed -n '$ p') >/dev/null 2>&1
-
-        if [[ $? == 1 ]]; then
-
+        if [[ $? -eq 1 ]]; then
             sed -i '$ d' "$list"
             echo -e " ${red}No format code found!\n ${green}Edit $list? [Y/n]: ${nocolor}"
             read -rs answer
@@ -193,9 +192,10 @@ _check_code_load() {
                             else
                                 continue
                             fi ;;
-                *      )    echo " ${red}Wrong option...try again.${nocolor}" && _menu ;;
+                *      )    echo " ${red}Wrong option...try again.${nocolor}"
+                            sleep 2s
+                            _menu ;;
             esac
-
         fi
         echo "$lines ${green}ok${nocolor}"
         sleep 1s
@@ -262,7 +262,7 @@ _remove_crap() {
     }
 
     # Let's remove possible empty lines.
-    [[ $(sed -r '/^\s*$/d' "$QUEUE") ]] && sed -i '/^$/d' "$QUEUE"
+    sed -i '/^\s*$/d' "$QUEUE"
 
 }
 
@@ -363,11 +363,11 @@ _copy_video() {
 }
 
 _download_completed() {
-    echo " ${green}Downloads are completed, do you want to delete $list? [n/Y]: ${nocolor}"
+    echo " ${green}Downloads are completed, do you want to delete $list? [N/y]: ${nocolor}"
     read -rsn 1 REPLY
     case "$REPLY" in
-        n|N)    mv --force "$list"_origin "$list" && _menu ;;
-        Y|y)    rm "$list" "$list"_origin && _menu ;;
+        N|n)    mv --force "$list"_origin "$list" && _menu ;;
+        y|Y)    rm "$list" "$list"_origin && _menu ;;
         *  )    echo " ${red} Wrong option! Wait and try again...${nocolor}"
                 sleep 3s ;;
     esac
@@ -389,8 +389,6 @@ _download_incompleted() {
     fi
 
 }
-
-_clean_tmp_dir() { rm "$tmp_dir"/*.txt >/dev/null 2>&1; }
 
 # let's get our file (web page) title.
 _get_media_title() { youtube-dl -j "$url" | jq '(.title)'; }
@@ -422,9 +420,9 @@ _download_audio() {
         echo ""
         echo " ${green}Choose a format code: ${nocolor}"
         read -r code
-
+        clear
         echo " ${green}Downloading ${red}$(_get_media_title)...${nocolor}"
-        youtube-dl -f "$code" "$url" > "$YTOP"
+        youtube-dl -f "$code" --progress "$url"
         sed -i '2d' "$list"
         clear
 
@@ -477,15 +475,16 @@ _download_video() {
         read -r code
         echo "$code" > "$YTOP"
         sleep 0.5
+        clear
 
         if [[ $(grep -e '+' "$YTOP") ]]; then
             echo " ${green}Please be patient while downloading and merging formats for:"
             echo " ${red}$(_get_media_title).${nocolor}"
-            youtube-dl -f "$code" --merge-output-format mp4 "$url" > "$YTOP"
+            youtube-dl -f "$code" --merge-output-format mp4 --progress "$url"
         else
             echo " ${green}Please be patient while downloading:"
             echo " ${red}$(_get_media_title).${nocolor}"
-            youtube-dl -f "$code" "$url" > "$YTOP"
+            youtube-dl -f "$code" "$url" --progress "$url"
         fi
 
         sed -i '2d' "$list"
@@ -511,7 +510,7 @@ _edit_playlist() {
     select list in $(find . -name "*.m3u" -o -name "*.m3u_origin" \
         | sort -d | sed 's,.*/,,'); do
         echo ""
-        $VISUAL "$list"
+        $VISUAL "$list" || $EDITOR "$list"
         echo " ${green}$list saved${nocolor}"
         sleep 2s
         break
@@ -521,7 +520,8 @@ _edit_playlist() {
 
 _edit_mpv-conf() {
     _check_editor
-    $VISUAL "$XDG_CONFIG_HOME"/mpv/mpv.conf
+    $VISUAL "$XDG_CONFIG_HOME"/mpv/mpv.conf \
+    || $EDITOR "$XDG_CONFIG_HOME"/mpv/mpv.conf
     echo " ${green}mpv.conf saved.${nocolor}"
     sleep 2s
     clear
@@ -549,11 +549,11 @@ _get_youtubeplaylist_urls() {
 }
 
 _get_completed() {
-    echo " ${green}Downloads are completed, do you want to keep main playlist? [n/Y]: ${nocolor}"
+    echo " ${green}Downloads are completed, do you want to keep main playlist? [N/y]: ${nocolor}"
     read -rsn 1 REPLY
     case "$REPLY" in
-        n|N)    rm "$QUEUE"_origin && _menu ;;
-        Y|y)    mv -f "$QUEUE"_origin "$QUEUE" && _menu ;;
+        N|n)    rm "$QUEUE"_origin && _menu ;;
+        y|Y)    mv -f "$QUEUE"_origin "$QUEUE" && _menu ;;
         *  )    echo " ${red} Wrong option! Wait and try again...${nocolor}"
                 sleep 3s ;;
     esac
@@ -603,10 +603,10 @@ _get_audio() {
         echo ""
         echo " ${green}Choose a format code: ${nocolor}"
         read -r code
-
+        clear
         echo -e " ${green}Please be patient while downloading \n ${red}$(_get_media_title)...${nocolor}"
         sleep 2s
-        youtube-dl -f "$code" "$url" > "$YTOP"
+        youtube-dl -f "$code" --progress "$url"
         sed -i '2d' "$QUEUE"
         clear
 
@@ -654,20 +654,19 @@ _get_video() {
         youtube-dl -F "$url" | sed '/^sb/d'
         echo ""
         echo -e " ${green}Choose a format code. \n eg: 137+251 for merging, hls-1080p, 22 for single:${nocolor}"
-        read -r code
         # We redirect the format code in a text file,
         # because 'grep' can't act within a variable ($code).
-        echo "$code" > "$YTOP"
+        read -r code && echo "$code" > "$YTOP"
         sleep 0.5
-
+        clear
         if [[ $(grep -e '+' "$YTOP") ]]; then
             echo " ${green}Please be patient while downloading and merging formats for:"
             echo " ${red}$(_get_media_title).${nocolor}"
-            youtube-dl -f "$code" --merge-output-format mp4 "$url" > "$YTOP"
+            youtube-dl -f "$code" --merge-output-format mp4 --progress "$url"
         else
             echo " ${green}Please be patient while downloading:"
             echo " ${red}$(_get_media_title).${nocolor}"
-            youtube-dl -f "$code" "$url" > "$YTOP"
+            youtube-dl -f "$code" "$url" --progress "$url"
         fi
 
         sed -i '2d' "$QUEUE"
@@ -686,7 +685,7 @@ _get_mpv_title() {
     # mpv --idle --really-quiet --input-ipc-server=/tmp/mpvsocket
     while [[ -n $(pidof mpv) ]]; do
         echo '{ "command": ["get_property", "media-title"] }' \
-        | socat - /tmp/mpvsocket | awk -F '"' '{print $4}'d9
+        | socat - /tmp/mpvsocket | awk -F '"' '{print $4}'
         sleep 2s
         clear
     done
@@ -694,6 +693,7 @@ _get_mpv_title() {
 
 _load_audio() {
     mpvc -a -Q "$QUEUE"
+    _get_mpv_title
     _clean_tmp_dir
     clear
     _menu
@@ -707,12 +707,12 @@ _load_video() {
             youtube-dl -j "$line" \
             | jq '(.title)' >> "$COMPLETE_INFO"
         done < <(cat "$URLS_INFO")
-        mapfile -t < <(cat "$URLS_INFO")
+        mapfile -t PLAYLIST < <(cat "$URLS_INFO")
     else
-        mapfile -t < <(cat "$URLS_INFO")
+        mapfile -t PLAYLIST < <(cat "$URLS_INFO")
     fi
 
-    for i in "${MAPFILE[@]}"; do
+    for i in "${PLAYLIST[@]}"; do
         echo ""
         echo -e " ${green}Playing: $(cat "$COMPLETE_INFO" | sed -n '1p')\n"
         echo " ${red}Press 'q' in mpv to play next video.${nocolor}"
@@ -726,7 +726,7 @@ _load_video() {
 
     _clean_tmp_dir
     _check_queue
-	
+
 }
 
 _load_playlist() {
@@ -737,7 +737,7 @@ _load_playlist() {
     echo -e " ${green}Select a playlist to load (Press 'q' to quit mpv):\n${nocolor}"
     select list in $(find . -name "*.m3u" | sort -d | sed 's,.*/,,'); do
 
-        if ! grep -q -e 'https' -e 'http' "$list"; then
+        if ! grep -q -e 'https' "$list"; then
             echo " ${red}$list is empty...${nocolor}"
             sleep 3s
             break
@@ -792,7 +792,7 @@ _load_playlist() {
                 read -rsn 1 -p  ${green}' Load audio only [a] or video [v] ?: '${nocolor} load
                 clear
                 case "$load" in
-                    a)  mpvc -a -Q "$list" ;;
+                    a)  mpvc -a -Q "$list"; _get_mpv_title ;;
                     v)  _check_code_load && _load_video ;;
                     *)  echo " ${red} Wrong option! Wait and try again...${nocolor}"
                         sleep 3s ;;
@@ -916,9 +916,9 @@ _delete_url() {
     fi
 }
 
-# avoid running multiple instances
-filename=$(basename $0)
-pids=($(pidof -x $filename))
+# avoids running multiple instances
+mpvmenu=$(basename $0)
+pids=($(pidof -x $mpvmenu))
 
 [[ ${#pids[@]} -gt 1 ]] && exit
 
