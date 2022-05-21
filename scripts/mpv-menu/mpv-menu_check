@@ -55,7 +55,7 @@ _check_queue() {
             echo -e "                              │ Consider checking the url(s) list ${green}(option 6) ${nocolor}|"
             echo -e "                              │ or delete them ${green}(option 7).${nocolor}                   |"
             echo -e "                              └──────────────────────────────────────────────┘"
-            sleep 6s
+            sleep 5s
             _menu
         else
             echo -e "                              ┌───────────────────────────────────────────────┐"
@@ -63,7 +63,7 @@ _check_queue() {
             echo -e "                              │ Consider checking the url(s) list ${green}(option 6) ${nocolor} |"
             echo -e "                              │ or delete them ${green}(option 7).${nocolor}                    |"
             echo -e "                              └───────────────────────────────────────────────┘"
-            sleep 6s
+            sleep 5s
             _menu
         fi
     else
@@ -72,22 +72,22 @@ _check_queue() {
 
 }
 
-_check_code() {
+_check_code_queue() {
     # In case link is secured or no format code found.
-    echo " ${green}Verifying media codes...${nocolor}"
+    echo " ${green}Verifying media codes from default list...${nocolor}"
 
     for lines in $(cat "$QUEUE" | sed '/#EXTM3U/d'); do
         # checking the last url we added.
-        youtube-dl -F $(cat "$QUEUE" | sed -n '$ p') >/dev/null 2>&1
+        youtube-dl -F "$(cat "$QUEUE" | sed -n '$ p')" >/dev/null 2>&1
 
-        if [[ $? == 1 ]]; then
+        if [[ $? -eq 1 ]]; then
             echo " ${red}No format code found! Try again.${nocolor}"
             sed -i '$ d' "$QUEUE"
             sleep 2s
             if (( $(grep "" -c "$QUEUE" ) < 2 )); then
                 _menu
             else
-                # _check_code function acts in _copy_audio/videeo loops...
+                # _check_code function acts in _copy_audio/_videeo loops...
                 continue
             fi
         fi
@@ -96,10 +96,44 @@ _check_code() {
     done
 }
 
+_check_code_load() {
+    # Same as above, but for the chosen already existing playlist.
+    echo " ${green}Verifying media codes from $list...${nocolor}"
+
+    for lines in $(cat "$list" | sed '/#EXTM3U/d'); do
+        
+        youtube-dl -F "$(cat "$list" | sed -n '$ p')" >/dev/null 2>&1
+
+        if [[ $? -eq 1 ]]; then
+            sed -i '$ d' "$list"
+            echo -e " ${red}No format code found!\n ${green}Edit $list? [Y/n]: ${nocolor}"
+            read -rs answer
+            case "$answer" in
+                Y|y|yes)    _edit_playlist ;;
+                n|N|no )    if (( $(grep "" -c "$list" ) < 2 )); then
+                                _menu
+                            else
+                                continue
+                            fi ;;
+                *      )    echo " ${red}Wrong option...try again.${nocolor}"
+                            sleep 2s
+                            _menu ;;
+            esac
+        fi
+        echo "$lines ${green}ok${nocolor}"
+        sleep 1s
+    done
+}
+
+COMPLETE_INFO="$tmp_dir/view_urls_info.txt"
+URLS_INFO="$tmp_dir/urls.txt"
+
 _view_url_info() {
 
+    [[ -f $COMPLETE_INFO ]] && rm "$COMPLETE_INFO"
+
     if (( $(grep "" -c "$QUEUE") > 1 )); then
-        echo " ${green}Getting titles from url(s), please wait...${nocolor}"
+        echo " ${green}Getting url(s) infos, please wait...${nocolor}"
 
         while read -r urls; do
             youtube-dl -j "$urls" \
@@ -107,18 +141,22 @@ _view_url_info() {
         done < <(cat "$QUEUE" | sed '/#EXTM3U/d')
 
         cat -n "$COMPLETE_INFO"
+        cat "$QUEUE" | sed '/#EXTM3U/d' > "$URLS_INFO"
+        sed -i 's/"//g; /^https/d' "$COMPLETE_INFO"
 
         echo ""
-        read -rsn 1 -p ${green}'delete url(s) [d], play url(s) [p], save url(s) as playlist [s] or back to menu [m]: '${nocolor} opt
+        read -rsn 1 -p ${green}' delete url(s) [d], play url(s) [p], save url(s) as playlist [s] or back to menu [m]: '${nocolor} opt
         case "$opt" in
-            d) rm "$COMPLETE_INFO" && _delete_url  ;;
-            m) rm "$COMPLETE_INFO" && _menu        ;;
-            p) clear && _load_video  ;;
-            s) rm "$COMPLETE_INFO" && _save_remove ;;
-            *) rm "$COMPLETE_INFO" &&  _menu       ;;
+            d) rm "$COMPLETE_INFO" && _delete_url          ;;
+            m) _menu                                       ;;
+            p) echo ""
+               _check_code_queue
+               _load_video                                 ;;
+            s) rm "$COMPLETE_INFO" && _save_remove         ;;
+            *) _menu                                       ;;
         esac
     else
-        echo " ${red}Default list is empty ${nocolor}"
+        echo " ${red}Default list is empty.${nocolor}"
         sleep 2s && _menu
     fi
 
