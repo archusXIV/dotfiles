@@ -11,7 +11,6 @@ _copy_audio() {
 
         _get_youtubeplaylist_urls
         _remove_crap
-        _check_code
         clear
 
         if (( $(grep "" -c "$QUEUE") < 2 )); then
@@ -39,9 +38,9 @@ _copy_audio() {
                echo "" ;;
             3) _save_remove
                echo "" ;;
-            4) _load_audio
+            4) _check_code_queue && _load_audio
                echo "" ;;
-            5) _view_url
+            5) _view_url_info
                echo "" ;;
             6) _check_queue
                echo "" ;;
@@ -60,7 +59,6 @@ _copy_video() {
 
         _get_youtubeplaylist_urls
         _remove_crap
-        _check_code
         clear
 
         if (( $(grep "" -c "$QUEUE") < 2 )); then
@@ -88,7 +86,7 @@ _copy_video() {
                echo "" ;;
             3) _save_remove
                echo "" ;;
-            4) _load_video
+            4) _check_code_queue && _load_video
                echo "" ;;
             5) _view_url_info
                echo "" ;;
