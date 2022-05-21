@@ -4,18 +4,18 @@
 _menu() {
 
     clear
-    while [[ -e $queue ]]; do
+    while [[ -e $QUEUE ]]; do
         clear
         echo ""
-        echo -e "                                          ::mpv-menu options:: "
-        echo -e "                      ┌─────────────────────────────────────────────────────────────┐"
-        echo -e "                      │   1) Create a video playlist    6) View default playlist    │"
-        echo -e "                      │   2) Create an audio playlist   7) Clean default playlist   │"
-        echo -e "                      │   3) Save/Remove playlist       8) Edit a playlist          │"
-        echo -e "                      │   4) Load a playlist            9) Edit mpv.conf            │"
-        echo -e "                      │   5) Load local dir/files       0) Exit                     │"
-        echo -e "                      └─────────────────────────────────────────────────────────────┘"
-        echo -e "                                             ${green}Select an item${nocolor}"
+        echo -e "                                            ${red}::MPV-MENU OPTIONS::${nocolor} "
+        echo -e "                        ┌─────────────────────────────────────────────────────────────┐"
+        echo -e "                        │   1) Create a video playlist    6) View default playlist    │"
+        echo -e "                        │   2) Create an audio playlist   7) Clear default playlist   │"
+        echo -e "                        │   3) Save/Remove playlist       8) Edit a playlist          │"
+        echo -e "                        │   4) Load a playlist            9) Edit mpv.conf            │"
+        echo -e "                        │   5) Load local dir/files       0) Exit                     │"
+        echo -e "                        └─────────────────────────────────────────────────────────────┘"
+        echo -e "                                               ${green}Select an item${nocolor}"
         echo ""
         read -r action
         case "$action" in
@@ -29,7 +29,7 @@ _menu() {
                 echo "" ;;
             5)  _load_local
                 echo "" ;;
-            6)  _view_url
+            6)  _view_url_info
                 echo "" ;;
             7)  _delete_url
                 echo "" ;;
@@ -37,12 +37,7 @@ _menu() {
                 echo "" ;;
             9)  _edit_mpv-conf
                 echo "" ;;
-            0)  clear
-                #[[ -z $(systemctl --user list-units | grep -e 'mpv-ipc') ]] \
-                #    && systemctl --user start mpv-ipc.service
-                # ffmpeg creates a ccache directory while converting/merging files.
-                # rm -rf "$HOME"/.ccache
-                exit 0 ;;
+            0)  exit 0 ;;
             *)  echo -e " ${red}Wrong option!\n Wait and try again...${nocolor}"
                 sleep 2s
                 clear ;;
