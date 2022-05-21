@@ -46,7 +46,6 @@ _check_editor() {
 }
 
 _check_queue() {
-
     ## This looks ugly but everything will fit nicely...
     if (( $(grep "" -c "$QUEUE") > 1 )); then
         echo -e "                              ┌──────────────────────────────────────────────┐"
