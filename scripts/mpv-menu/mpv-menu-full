@@ -278,7 +278,7 @@ _copy_audio() {
         _remove_crap
         clear
 
-        if (( $(grep "" -c "$QUEUE") < 2 )); then
+        if (( $(grep "" -c "$QUEUE") < 3 )); then
             echo ""
             echo " ${green}There is" "$(_get_lines_queue)" "url in the list${nocolor}."
         else
@@ -326,7 +326,7 @@ _copy_video() {
         _remove_crap
         clear
 
-        if (( $(grep "" -c "$QUEUE") < 2 )); then
+        if (( $(grep "" -c "$QUEUE") < 3 )); then
             echo ""
             echo " ${green}There is" "$(_get_lines_queue)" "url in the list${nocolor}."
         else
