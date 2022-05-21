@@ -2,11 +2,11 @@
 ## This is a part of main script: mpv-menu.
 
 _download_completed() {
-    echo " ${green}Downloads are completed, do you want to delete $list? [n/Y]: ${nocolor}"
+    echo " ${green}Downloads are completed, do you want to delete $list? [N/y]: ${nocolor}"
     read -rsn 1 REPLY
     case "$REPLY" in
-        n|N)    mv --force "$list"_origin "$list" && _menu ;;
-        Y|y)    rm "$list" "$list"_origin && _menu ;;
+        N|n)    mv --force "$list"_origin "$list" && _menu ;;
+        y|Y)    rm "$list" "$list"_origin && _menu ;;
         *  )    echo " ${red} Wrong option! Wait and try again...${nocolor}"
                 sleep 3s ;;
     esac
@@ -30,9 +30,10 @@ _download_incompleted() {
 }
 
 _download_audio() {
-    # We're still in $playlists_dir
+    # ...We're still in $playlists_dir
     clear
     cp -f "$list" "$list"_origin
+    _check_code_load
 
     for url in $(grep 'https' "$list"); do
 
@@ -52,9 +53,9 @@ _download_audio() {
         echo ""
         echo " ${green}Choose a format code: ${nocolor}"
         read -r code
-
-        echo " ${green}Downloading ${red}$(_get_video_title)...${nocolor}"
-        youtube-dl -f "$code" "$url" > "$YTOP"
+        clear
+        echo " ${green}Downloading ${red}$(_get_media_title)...${nocolor}"
+        youtube-dl -f "$code" --progress "$url"
         sed -i '2d' "$list"
         clear
 
@@ -73,13 +74,13 @@ _download_audio() {
         echo " ${green}All done${nocolor}"
         sleep 2s
         rm ./*.webm
-        rm "$tmp_dir"/*.txt
+        _clean_tmp_dir
         mv *.mp3 "$audios_dir"
         _download_incompleted
-    else
+    elif [[ -n $(find . -iname "*.*") ]]; then
         echo " ${green}Please check out for none mp3 files in $playlists_dir${nocolor}"
         sleep 5s
-        rm "$tmp_dir"/*.txt
+        _clean_tmp_dir
         _download_incompleted
     fi
 
@@ -89,6 +90,7 @@ _download_video() {
     # We're still in $playlists_dir
     clear
     cp -f "$list" "$list"_origin
+    _check_code_load
 
     for url in $(grep -e 'https' "$list"); do
 
@@ -106,13 +108,16 @@ _download_video() {
         read -r code
         echo "$code" > "$YTOP"
         sleep 0.5
-
-        echo " ${green}Downloading ${red}$(_get_video_title)...${nocolor}"
+        clear
 
         if [[ $(grep -e '+' "$YTOP") ]]; then
-            youtube-dl -f "$code" --merge-output-format mp4 "$url" > "$YTOP"
+            echo " ${green}Please be patient while downloading and merging formats for:"
+            echo " ${red}$(_get_media_title).${nocolor}"
+            youtube-dl -f "$code" --merge-output-format mp4 --progress "$url"
         else
-            youtube-dl -f "$code" "$url" > "$YTOP"
+            echo " ${green}Please be patient while downloading:"
+            echo " ${red}$(_get_media_title).${nocolor}"
+            youtube-dl -f "$code" "$url" --progress "$url"
         fi
 
         sed -i '2d' "$list"
@@ -123,7 +128,7 @@ _download_video() {
     mv ./{*.mp4,*.mkv} "$videos_dir" > /dev/null 2>&1
     echo " ${green}All done${nocolor}"
     sleep 2s
-    rm "$tmp_dir"/*.txt
+    _clean_tmp_dir
     _download_incompleted
 
 }
