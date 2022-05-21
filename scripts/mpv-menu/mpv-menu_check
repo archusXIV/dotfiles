@@ -49,23 +49,13 @@ _check_queue() {
 
     ## This looks ugly but everything will fit nicely...
     if (( $(grep "" -c "$QUEUE") > 1 )); then
-        if (( $(grep "" -c "$QUEUE") < 11 )); then
-            echo -e "                              ┌──────────────────────────────────────────────┐"
-            echo -e "                              │  ${red} There is" "$(_get_lines_queue)" "url(s) in default playlist.${nocolor}     │"
-            echo -e "                              │ Consider checking the url(s) list ${green}(option 6) ${nocolor}|"
-            echo -e "                              │ or delete them ${green}(option 7).${nocolor}                   |"
-            echo -e "                              └──────────────────────────────────────────────┘"
-            sleep 5s
-            _menu
-        else
-            echo -e "                              ┌───────────────────────────────────────────────┐"
-            echo -e "                              │  ${red} There is" "$(_get_lines_queue)" "url(s) in default playlist.${nocolor}     │"
-            echo -e "                              │ Consider checking the url(s) list ${green}(option 6) ${nocolor} |"
-            echo -e "                              │ or delete them ${green}(option 7).${nocolor}                    |"
-            echo -e "                              └───────────────────────────────────────────────┘"
-            sleep 5s
-            _menu
-        fi
+        echo -e "                              ┌──────────────────────────────────────────────┐"
+        echo -e "                              │      ${red}Default playlist contains $(_get_lines_queue) url(s).${nocolor}     │"
+        echo -e "                              │ Consider checking the url(s) list ${green}(option 6).${nocolor}|"
+        echo -e "                              │ Or delete them ${green}(option 7).${nocolor}                   |"
+        echo -e "                              └──────────────────────────────────────────────┘"
+        sleep 5s
+        _menu
     else
         _menu
     fi
