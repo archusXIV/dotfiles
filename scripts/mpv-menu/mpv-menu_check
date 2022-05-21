@@ -125,9 +125,6 @@ _check_code_load() {
     done
 }
 
-COMPLETE_INFO="$tmp_dir/view_urls_info.txt"
-URLS_INFO="$tmp_dir/urls.txt"
-
 _view_url_info() {
 
     [[ -f $COMPLETE_INFO ]] && rm "$COMPLETE_INFO"
