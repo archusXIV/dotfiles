@@ -1,6 +1,6 @@
 #!/bin/bash
 
-##    Author: Barret E (2020-21) <archus@protonmail.com>
+##    Author: Barret E (2020-22) <archus@protonmail.com>
 ##    https://github.com/archusXIV/dotfiles
 ##    Dependencies: ffmpeg, youtube-dl, socat, mpv & mpvc (command line interface for mpv).
 ##
@@ -25,7 +25,6 @@ videos_dir="$main_dir/videos"
 tmp_dir="$main_dir/tmp"
 
 QUEUE="$playlists_dir/default.m3u"
-METADATAS="$tmp_dir/mpv.txt"
 YTOP="$tmp_dir/youtube-dl_output.txt"
 FFOP="$tmp_dir/ffmpeg_output.txt"
 COMPLETE_INFO="$tmp_dir/view_urls_info.txt"
@@ -38,9 +37,21 @@ if [[ -n ${SCRIPTDIR+x} ]]; then
     done
 else
     echo " ${red}Your scripts directory environment variable is not set...${nocolor}"
-    echo " Just type: ${green}export SCRIPTDIR='/path_to_my_scripts_directory'"
+    echo " Just type: ${green}export SCRIPTDIR='/path_to_my_scripts_directory'${nocolor}"
     echo " To set it permanently put it in your .bash_profile or whatever *.profile you're using."
     exit 1
 fi
+
+# This function is called multiple times across this program,
+# but let's ensure temporary files are removed before we exit out. 
+_clean_tmp_dir() { rm -f "$tmp_dir"/*.txt >/dev/null 2>&1; }
+
+trap "_clean_tmp_dir; exit" SIGTERM EXIT
+
+# avoids running multiple instances
+mpvmenu=$(basename $0)
+pids=($(pidof -x $mpvmenu))
+
+[[ ${#pids[@]} -gt 1 ]] && exit
 
 _check_dependencies "${@}"
