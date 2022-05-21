@@ -4,14 +4,14 @@
 _edit_playlist() {
 
     _check_editor
-
     cd "$playlists_dir"
+
     PS3=${green}' Choose a playlist to edit: '${nocolor}
     echo -en "\nAvailable playlists\n\n"
     select list in $(find . -name "*.m3u" -o -name "*.m3u_origin" \
         | sort -d | sed 's,.*/,,'); do
         echo ""
-        $VISUAL "$list"
+        $VISUAL "$list" || $EDITOR "$list"
         echo " ${green}$list saved${nocolor}"
         sleep 2s
         break
@@ -21,7 +21,8 @@ _edit_playlist() {
 
 _edit_mpv-conf() {
     _check_editor
-    $VISUAL "$XDG_CONFIG_HOME"/mpv/mpv.conf
+    $VISUAL "$XDG_CONFIG_HOME"/mpv/mpv.conf \
+    || $EDITOR "$XDG_CONFIG_HOME"/mpv/mpv.conf
     echo " ${green}mpv.conf saved.${nocolor}"
     sleep 2s
     clear
