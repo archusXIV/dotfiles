@@ -29,6 +29,8 @@ videos_dir="$main_dir/videos"
 tmp_dir="$main_dir/tmp"
 QUEUE="$playlists_dir/default.m3u"
 
+# This function is called multiple times across this program,
+# but let's ensure temporary files are removed before we exit out. 
 _clean_tmp_dir() { rm -f "$tmp_dir"/*.txt >/dev/null 2>&1; }
 
 trap "_clean_tmp_dir; exit" SIGTERM EXIT
@@ -79,7 +81,7 @@ _menu() {
         echo -e "                        └─────────────────────────────────────────────────────────────┘"
         echo -e "                                               ${green}Select an item${nocolor}"
         echo ""
-        read -r action
+        read -rsn 1 action
         case "$action" in
             1)  _copy_video
                 echo "" ;;
@@ -126,23 +128,13 @@ _check_queue() {
 
     ## This looks ugly but everything will fit nicely...
     if (( $(grep "" -c "$QUEUE") > 1 )); then
-        if (( $(grep "" -c "$QUEUE") < 11 )); then
-            echo -e "                              ┌──────────────────────────────────────────────┐"
-            echo -e "                              │  ${red} There is" "$(_get_lines_queue)" "url(s) in default playlist.${nocolor}     │"
-            echo -e "                              │ Consider checking the url(s) list ${green}(option 6) ${nocolor}|"
-            echo -e "                              │ or delete them ${green}(option 7).${nocolor}                   |"
-            echo -e "                              └──────────────────────────────────────────────┘"
-            sleep 5s
-            _menu
-        else
-            echo -e "                              ┌───────────────────────────────────────────────┐"
-            echo -e "                              │  ${red} There is" "$(_get_lines_queue)" "url(s) in default playlist.${nocolor}     │"
-            echo -e "                              │ Consider checking the url(s) list ${green}(option 6) ${nocolor} |"
-            echo -e "                              │ or delete them ${green}(option 7).${nocolor}                    |"
-            echo -e "                              └───────────────────────────────────────────────┘"
-            sleep 5s
-            _menu
-        fi
+        echo -e "                              ┌──────────────────────────────────────────────┐"
+        echo -e "                              │      ${red}Default playlist contains $(_get_lines_queue) url(s).${nocolor}     │"
+        echo -e "                              │ Consider checking the url(s) list ${green}(option 6).${nocolor}|"
+        echo -e "                              │ Or delete them ${green}(option 7).${nocolor}                   |"
+        echo -e "                              └──────────────────────────────────────────────┘"
+        sleep 5s
+        _menu
     else
         _menu
     fi
@@ -213,7 +205,7 @@ _view_url_info() {
         echo " ${green}Getting url(s) infos, please wait...${nocolor}"
 
         while read -r urls; do
-            youtube-dl -j "$urls" \
+            youtube-dl -j $urls \
             | jq '(.title, .webpage_url)' >> "$COMPLETE_INFO"
         done < <(cat "$QUEUE" | sed '/#EXTM3U/d')
 
@@ -280,10 +272,10 @@ _copy_audio() {
 
         if (( $(grep "" -c "$QUEUE") < 3 )); then
             echo ""
-            echo " ${green}There is" "$(_get_lines_queue)" "url in the list${nocolor}."
+            echo " ${green}There is $(_get_lines_queue) url in the list${nocolor}."
         else
             echo ""
-            echo " ${green}There are" "$(_get_lines_queue)" "urls in the list${nocolor}."
+            echo " ${green}There are $(_get_lines_queue) urls in the list${nocolor}."
         fi
 
         echo ""
@@ -295,7 +287,7 @@ _copy_audio() {
         echo -e "                       └────────────────────────────────────────────────────────────┘"
         echo -e "                                             ${green}Select an item${nocolor}"
         echo ""
-        read -r options
+        read -rsn 1 options
         case "$options" in
             1) clear && continue
                echo "" ;;
@@ -328,10 +320,10 @@ _copy_video() {
 
         if (( $(grep "" -c "$QUEUE") < 3 )); then
             echo ""
-            echo " ${green}There is" "$(_get_lines_queue)" "url in the list${nocolor}."
+            echo " ${green}There is $(_get_lines_queue) url in the list${nocolor}."
         else
             echo ""
-            echo " ${green}There are" "$(_get_lines_queue)" "urls in the list${nocolor}."
+            echo " ${green}There are $(_get_lines_queue) urls in the list${nocolor}."
         fi
 
         echo ""
@@ -343,7 +335,7 @@ _copy_video() {
         echo -e "                       └────────────────────────────────────────────────────────────┘"
         echo -e "                                             ${green}Select an item${nocolor}"
         echo ""
-        read -r options
+        read -rsn 1 options
         case "$options" in
             1) clear && continue
                echo "" ;;
@@ -409,10 +401,10 @@ _download_audio() {
         # 2) the uniq url we've enter...if that's the case.
         if (( $(grep "" -c "$list") < 3 )); then
             echo ""
-            echo " ${green}There is" "$(_get_lines_list)" "audio file left to download.${nocolor}"
+            echo " ${green}There is $(_get_lines_list) audio file left to download.${nocolor}"
         else
             echo ""
-            echo " ${green}There are" "$(_get_lines_list)" "audio files left to download.${nocolor}"
+            echo " ${green}There are $(_get_lines_list) audio files left to download.${nocolor}"
         fi
 
         echo ""
@@ -463,10 +455,10 @@ _download_video() {
 
         if (( $(grep "" -c "$list") < 3 )); then
             echo ""
-            echo " ${green}There is" "$(_get_lines_list)" "video file left to download.${nocolor}"
+            echo " ${green}There is $(_get_lines_list) video file left to download.${nocolor}"
         else
             echo ""
-            echo " ${green}There are" "$(_get_lines_list)" "video files left to download.${nocolor}"
+            echo " ${green}There are $(_get_lines_list) video files left to download.${nocolor}"
         fi
 
         youtube-dl -F "$url" | sed '/^sb/d'
@@ -484,7 +476,7 @@ _download_video() {
         else
             echo " ${green}Please be patient while downloading:"
             echo " ${red}$(_get_media_title).${nocolor}"
-            youtube-dl -f "$code" "$url" --progress "$url"
+            youtube-dl -f "$code" --progress "$url"
         fi
 
         sed -i '2d' "$list"
@@ -593,10 +585,10 @@ _get_audio() {
 
         if (( $(grep "" -c "$QUEUE") < 3 )); then
             echo ""
-            echo " ${green}There is" "$(_get_lines_queue)" "audio file left to download.${nocolor}"
+            echo " ${green}There is $(_get_lines_queue) audio file left to download.${nocolor}"
         else
             echo ""
-            echo " ${green}There are" "$(_get_lines_queue)" "audio files left to download.${nocolor}"
+            echo " ${green}There are $(_get_lines_queue) audio files left to download.${nocolor}"
         fi
 
         youtube-dl -F "$url" | grep -e 'audio only' | sed 's/audio only      //'
@@ -645,10 +637,10 @@ _get_video() {
 
         if (( $(grep "" -c "$QUEUE") < 3 )); then
             echo ""
-            echo " ${green}There is" "$(_get_lines_queue)" "video file left to download.${nocolor}"
+            echo " ${green}There is $(_get_lines_queue) video file left to download.${nocolor}"
         else
             echo ""
-            echo " ${green}There are" "$(_get_lines_queue)" "video files left to download.${nocolor}"
+            echo " ${green}There are $(_get_lines_queue) video files left to download.${nocolor}"
         fi
 
         youtube-dl -F "$url" | sed '/^sb/d'
@@ -666,7 +658,7 @@ _get_video() {
         else
             echo " ${green}Please be patient while downloading:"
             echo " ${red}$(_get_media_title).${nocolor}"
-            youtube-dl -f "$code" "$url" --progress "$url"
+            youtube-dl -f "$code" --progress "$url"
         fi
 
         sed -i '2d' "$QUEUE"
@@ -704,7 +696,7 @@ _load_video() {
     echo ""
     if [[ ! -f "$COMPLETE_INFO" ]]; then
         while read -r line; do
-            youtube-dl -j "$line" \
+            youtube-dl -j $line \
             | jq '(.title)' >> "$COMPLETE_INFO"
         done < <(cat "$URLS_INFO")
         mapfile -t PLAYLIST < <(cat "$URLS_INFO")
@@ -751,7 +743,7 @@ _load_playlist() {
             rm "$URLS_INFO" >/dev/null 2>&1
 
             while read -r line; do
-                youtube-dl -j "$line" \
+                youtube-dl -j $line \
                 | jq '(.webpage_url)' \
                 | cat | sed 's/"//g' >> "$URLS_INFO"
             done < <(cat "$list" | sed '/#EXTM3U/d')
@@ -769,7 +761,7 @@ _load_playlist() {
         echo -e " ${green}Getting videos titles...please wait.${nocolor}\n"
 
         while read -r line; do
-            youtube-dl -j "$line" \
+            youtube-dl -j $line \
             | jq '(.title)' >> "$COMPLETE_INFO"
         done < <(cat "$list" | sed '/#EXTM3U/d')
 
@@ -820,7 +812,7 @@ _load_local() {
     read -rsn 1 answer
 
     case "$answer" in
-        d)  PS3=" Select a directory to QUEUE in mpv: "
+        d)  PS3=" Select a directory to queue in mpv: "
             select dir in $(find "$VIDEOS" -maxdepth 1 | sed 's,.*/,,'); do
                 if [[ $(find "$VIDEOS"/"$dir" -type d -empty) ]]; then
                     echo " ${red}$dir is empty. Wait and try again...${nocolor}"
