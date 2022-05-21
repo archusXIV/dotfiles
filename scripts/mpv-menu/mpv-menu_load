@@ -7,43 +7,39 @@ _stop_mpvipc() {
 }
 
 _load_audio() {
-    # _stop_mpvipc
     mpvc -a -Q "$QUEUE"
-    #_get_mpv_title
-    #rm "$METADATAS"
-    rm "$tmp_dir"/*.txt
+    _get_mpv_title
+    _clean_tmp_dir
     clear
     _menu
 }
 
 _load_video() {
-    # _stop_mpvipc
+
     echo ""
-    if [[ -f "$URLS_INFO" ]]; then
-        mapfile -t < <(cat "$URLS_INFO")
-        sed -i '/https/d;s/"//g' "$COMPLETE_INFO"
+    if [[ ! -f "$COMPLETE_INFO" ]]; then
+        while read -r line; do
+            youtube-dl -j "$line" \
+            | jq '(.title)' >> "$COMPLETE_INFO"
+        done < <(cat "$URLS_INFO")
+        mapfile -t PLAYLIST < <(cat "$URLS_INFO")
     else
-        grep -e 'https' "$COMPLETE_INFO" \
-        | sed 's/"//g' > "$URLS_INFO"
-        sed -i '/https/d;s/"//g' "$COMPLETE_INFO"
-        mapfile -t < <(cat "$URLS_INFO")
+        mapfile -t PLAYLIST < <(cat "$URLS_INFO")
     fi
 
-    for i in "${MAPFILE[@]}"; do
-        cat -n "$COMPLETE_INFO"
+    for i in "${PLAYLIST[@]}"; do
         echo ""
+        echo -e " ${green}Playing: $(cat "$COMPLETE_INFO" | sed -n '1p')\n"
         echo " ${red}Press 'q' in mpv to play next video.${nocolor}"
         mpv --ytdl-format=137+251 "$i" >/dev/null 2>&1 \
         || mpv --ytdl-format=299+251 "$i" >/dev/null 2>&1 \
         || mpv --ytdl-format=22 "$i" >/dev/null 2>&1 \
-        || mpvc -a "$QUEUE"
+        || mpv "$i" >/dev/null 2>&1
         sed -i '1d' "$COMPLETE_INFO"
         clear
     done
 
-    rm "$tmp_dir"/*.txt
-    #_get_mpv_title
-    #rm "$METADATAS"
+    _clean_tmp_dir
     _check_queue
 
 }
@@ -56,7 +52,7 @@ _load_playlist() {
     echo -e " ${green}Select a playlist to load (Press 'q' to quit mpv):\n${nocolor}"
     select list in $(find . -name "*.m3u" | sort -d | sed 's,.*/,,'); do
 
-        if ! grep -q -e 'https' -e 'http' "$list"; then
+        if ! grep -q -e 'https' "$list"; then
             echo " ${red}$list is empty...${nocolor}"
             sleep 3s
             break
@@ -76,9 +72,13 @@ _load_playlist() {
             done < <(cat "$list" | sed '/#EXTM3U/d')
 
             cat "$URLS_INFO" >> "$list"
+
             # Cleaning $list...
             sed -i '/playlist/d' "$list"
             sed -i -n 'G; s/\n/&&/; /^\([ -~]*\n\).*\n\1/d; s/\n//; h; P' "$list"
+            _check_code_load
+        else
+            cat "$list" | sed '/#EXTM3U/d' > "$URLS_INFO"
         fi
 
         echo -e " ${green}Getting videos titles...please wait.${nocolor}\n"
@@ -88,35 +88,32 @@ _load_playlist() {
             | jq '(.title)' >> "$COMPLETE_INFO"
         done < <(cat "$list" | sed '/#EXTM3U/d')
 
-        cat -n "$COMPLETE_INFO"
-        echo ""
+        [[ -n $(uniq -d "$COMPLETE_INFO") ]] && {
+            echo " ${red}Removing double entries...${nocolor}"
+            sleep 2s
+            sed -i -n \
+            'G; s/\n/&&/; /^\([ -~]*\n\).*\n\1/d; s/\n//; h; P' \
+            "$COMPLETE_INFO"
+        }
 
+        cat -n "$COMPLETE_INFO"
+
+        echo ""
         echo -e " ${green}Just load [l] download audio [a] or download video [v] \n (Press '^C' to quit youtube-dl):${nocolor} "
         read -rsn 1 letter
         case "$letter" in
             a)  _download_audio ;;
-            l)  # _stop_mpvipc
-                echo ""
+            l)  echo ""
                 read -rsn 1 -p  ${green}' Load audio only [a] or video [v] ?: '${nocolor} load
                 clear
                 case "$load" in
-                    a)  mpvc -a -Q "$list" ;;
-                    v)  while read -r url; do
-                            cat -n "$COMPLETE_INFO"
-                            echo ""
-                            echo -e " ${red}Press 'q' to play next video.${nocolor}\n"
-                            mpv --ytdl-format=137+251 "$url" >/dev/null 2>&1 \
-                            || mpv --ytdl-format=299+251 "$url" >/dev/null 2>&1 \
-                            || mpv --ytdl-format=22 "$url" >/dev/null 2>&1 \
-                            mpvc -a "$list"
-                            sed -i '1d' "$COMPLETE_INFO"
-                            clear
-                        done < <(cat "$list" | sed '/#EXTM3U/d') ;;
+                    a)  mpvc -a -Q "$list"; _get_mpv_title ;;
+                    v)  _check_code_load && _load_video ;;
                     *)  echo " ${red} Wrong option! Wait and try again...${nocolor}"
                         sleep 3s ;;
                 esac
 
-                rm "$tmp_dir"/*.txt >/dev/null 2>&1
+                _clean_tmp_dir
                 clear
                 _menu ;;
             v)  _download_video ;;
@@ -142,7 +139,7 @@ _load_local() {
             select dir in $(find "$VIDEOS" -maxdepth 1 | sed 's,.*/,,'); do
                 if [[ $(find "$VIDEOS"/"$dir" -type d -empty) ]]; then
                     echo " ${red}$dir is empty. Wait and try again...${nocolor}"
-                    sleep 3s
+                    sleep 2s
                     break
                 else
                     mpvc add "$VIDEOS"/"$dir"/* >/dev/null 2>&1
@@ -152,7 +149,8 @@ _load_local() {
                         break
                     }
                     echo " ${green}$dir added to the mpv playlist.${nocolor}"
-                    sleep 3s
+                    sleep 2s
+                    _get_mpv_title
                     break
                 fi
             done
