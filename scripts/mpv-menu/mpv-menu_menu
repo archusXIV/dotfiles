@@ -12,12 +12,12 @@ _menu() {
         echo -e "                        │   1) Create a video playlist    6) View default playlist    │"
         echo -e "                        │   2) Create an audio playlist   7) Clear default playlist   │"
         echo -e "                        │   3) Save/Remove playlist       8) Edit a playlist          │"
-        echo -e "                        │   4) Load a playlist            9) Edit mpv.conf            │"
+        echo -e "                        │   4) Load a playlist            9) Edit mpv.conf/Usage      │"
         echo -e "                        │   5) Load local dir/files       0) Exit                     │"
         echo -e "                        └─────────────────────────────────────────────────────────────┘"
         echo -e "                                               ${green}Select an item${nocolor}"
         echo ""
-        read -r action
+        read -rsn 1 action
         case "$action" in
             1)  _copy_video
                 echo "" ;;
