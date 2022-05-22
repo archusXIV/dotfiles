@@ -30,7 +30,7 @@ tmp_dir="$main_dir/tmp"
 QUEUE="$playlists_dir/default.m3u"
 
 # This function is called multiple times across this program,
-# but let's ensure temporary files are removed before we exit out. 
+# but let's ensure temporary files are removed before we exit out.
 _clean_tmp_dir() { rm -f "$tmp_dir"/*.txt >/dev/null 2>&1; }
 
 trap "_clean_tmp_dir; exit" SIGTERM EXIT
@@ -71,12 +71,12 @@ _menu() {
     while [[ -e $QUEUE ]]; do
         clear
         echo ""
-        echo -e "                                            ::mpv-menu options:: "
+        echo -e "                                            ${red}::MPV-MENU OPTIONS::${nocolor} "
         echo -e "                        ┌─────────────────────────────────────────────────────────────┐"
         echo -e "                        │   1) Create a video playlist    6) View default playlist    │"
         echo -e "                        │   2) Create an audio playlist   7) Clear default playlist   │"
         echo -e "                        │   3) Save/Remove playlist       8) Edit a playlist          │"
-        echo -e "                        │   4) Load a playlist            9) Edit mpv.conf            │"
+        echo -e "                        │   4) Load a playlist            9) Edit mpv.conf/Usage      │"
         echo -e "                        │   5) Load local dir/files       0) Exit                     │"
         echo -e "                        └─────────────────────────────────────────────────────────────┘"
         echo -e "                                               ${green}Select an item${nocolor}"
@@ -170,7 +170,7 @@ _check_code_load() {
     echo " ${green}Verifying media codes from $list...${nocolor}"
 
     for lines in $(cat "$list" | sed '/#EXTM3U/d'); do
-        
+
         youtube-dl -F "$(cat "$list" | sed -n '$ p')" >/dev/null 2>&1
 
         if [[ $? -eq 1 ]]; then
