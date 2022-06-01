@@ -350,14 +350,22 @@ _copy_video() {
 }
 
 _download_completed() {
+
     echo " ${green}Downloads are completed, do you want to delete $list? [N/y]: ${nocolor}"
     read -rsn 1 REPLY
     case "$REPLY" in
         N|n)    mv --force "$list"_origin "$list" && _menu ;;
-        y|Y)    rm "$list" "$list"_origin && _menu ;;
+        y|Y)    if [[ -f "$QUEUE"_origin ]]; then
+                    rm "$QUEUE"_origin
+                    _check_queue
+                else
+                    rm "$list" "$list"_origin
+                    _check_queue
+                fi ;;
         *  )    echo " ${red} Wrong option! Wait and try again...${nocolor}"
                 sleep 3s ;;
     esac
+    
 }
 
 _download_incompleted() {
