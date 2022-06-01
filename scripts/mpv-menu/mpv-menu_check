@@ -8,7 +8,7 @@ _check_dependencies() {
 
     for i in "${deps[@]}"; do
         [[ -z $(command -v "$i") ]] && {
-            echo " ${red}$i isn 't installed, bye..."
+            echo " ${red}$i isn 't installed, bye...${nocolor}"
             exit 127
         }
     done
@@ -37,7 +37,7 @@ _check_editor() {
         if [[ -z ${item+x} ]]; then
             echo " ${red}Your $item environment variable is not set..."
             echo " ${green}Please consider doing so."
-            echo " Example: ${red}export EDITOR='vim' ${nocolor}"
+            echo " Example: ${red}export EDITOR='vim'${nocolor}"
             sleep 7s
             _menu
         fi
@@ -46,10 +46,11 @@ _check_editor() {
 }
 
 _check_queue() {
+
     ## This looks ugly but everything will fit nicely...
     if (( $(grep "" -c "$QUEUE") > 1 )); then
         echo -e "                              ┌──────────────────────────────────────────────┐"
-        echo -e "                              │      ${red}Default playlist contains $(_get_lines_queue) url(s).${nocolor}     │"
+        echo -e "                              │ ${red}Default playlist contains one or more url(s) ${nocolor}│"
         echo -e "                              │ Consider checking the url(s) list ${green}(option 6).${nocolor}|"
         echo -e "                              │ Or delete them ${green}(option 7).${nocolor}                   |"
         echo -e "                              └──────────────────────────────────────────────┘"
@@ -67,12 +68,12 @@ _check_code_queue() {
 
     for lines in $(cat "$QUEUE" | sed '/#EXTM3U/d'); do
         # checking the last url we added.
-        youtube-dl -F "$(cat "$QUEUE" | sed -n '$ p')" >/dev/null 2>&1
+        youtube-dl -F $(sed -n '$ p' "$QUEUE") >"$YTOP"
 
         if [[ $? -eq 1 ]]; then
             echo " ${red}No format code found! Try again.${nocolor}"
             sed -i '$ d' "$QUEUE"
-            sleep 2s
+            sleep 3s
             if (( $(grep "" -c "$QUEUE" ) < 2 )); then
                 _menu
             else
@@ -91,23 +92,17 @@ _check_code_load() {
 
     for lines in $(cat "$list" | sed '/#EXTM3U/d'); do
         
-        youtube-dl -F "$(cat "$list" | sed -n '$ p')" >/dev/null 2>&1
+        youtube-dl -F $(sed -n '$ p' "$list") >"$YTOP"
 
         if [[ $? -eq 1 ]]; then
+            echo -e " ${red}No format code found!\n $lines removed${nocolor}"
+            sleep 2s
             sed -i '$ d' "$list"
-            echo -e " ${red}No format code found!\n ${green}Edit $list? [Y/n]: ${nocolor}"
-            read -rs answer
-            case "$answer" in
-                Y|y|yes)    _edit_playlist ;;
-                n|N|no )    if (( $(grep "" -c "$list" ) < 2 )); then
-                                _menu
-                            else
-                                continue
-                            fi ;;
-                *      )    echo " ${red}Wrong option...try again.${nocolor}"
-                            sleep 2s
-                            _menu ;;
-            esac
+            if (( $(grep "" -c "$list" ) < 2 )); then
+                _menu
+            else
+                continue
+            fi
         fi
         echo "$lines ${green}ok${nocolor}"
         sleep 1s
@@ -122,16 +117,16 @@ _view_url_info() {
         echo " ${green}Getting url(s) infos, please wait...${nocolor}"
 
         while read -r urls; do
-            youtube-dl -j "$urls" \
+            youtube-dl -j $urls \
             | jq '(.title, .webpage_url)' >> "$COMPLETE_INFO"
         done < <(cat "$QUEUE" | sed '/#EXTM3U/d')
 
-        cat -n "$COMPLETE_INFO"
+        cat -n "$COMPLETE_INFO" | sed 's/"//g'
         cat "$QUEUE" | sed '/#EXTM3U/d' > "$URLS_INFO"
         sed -i 's/"//g; /^https/d' "$COMPLETE_INFO"
 
         echo ""
-        read -rsn 1 -p ${green}' delete url(s) [d], play url(s) [p], save url(s) as playlist [s] or back to menu [m]: '${nocolor} opt
+        read -rsn 1 -p ${green}' [D]elete, [P]lay, [S]ave as a playlist or [B]ack to menu: '${nocolor} opt
         case "$opt" in
             d) rm "$COMPLETE_INFO" && _delete_url          ;;
             m) _menu                                       ;;
