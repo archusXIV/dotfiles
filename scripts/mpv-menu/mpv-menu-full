@@ -503,7 +503,7 @@ _edit_playlist() {
     cd "$playlists_dir"
 
     PS3=${green}' Choose a playlist to edit: '${nocolor}
-    echo -en "\nAvailable playlists\n\n"
+
     select list in $(find . -name "*.m3u" -o -name "*.m3u_origin" \
         | sort -d | sed 's,.*/,,'); do
         echo ""
