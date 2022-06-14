@@ -52,7 +52,7 @@ _check_updates() {
             perl -i -ne 'print if ! $x{$_}++' "$ARCHAUR" >/dev/null 2>&1
         fi
 
-        if [[ -n $(pidof polybar) ]]; then
+        if [[ -n $(pidof bspwm) ]]; then
             polybar-msg -p "$(pgrep --full bspwm-bar-1)" \
             action "#updates-ipc.hook.0" >/dev/null 2>&1
         elif [[ -n $(pidof i3) ]]; then
@@ -102,8 +102,6 @@ _reboot() {
     sudo cp -f "$MIRR" "$BCKP"
     sudo pacman -Syu --noconfirm
     sudo grub-mkconfig -o /boot/grub/grub.cfg
-    # cleaning our lists from old packages updates.
-    sed -i '/^[a-zA-Z]/d' {$ARCH,$AUR,$ARCHAUR}
     sudo reboot
 }
 
@@ -111,14 +109,14 @@ _noreboot() {
     sudo cp -f "$MIRR" "$BCKP"
     sudo pacman -Syu --noconfirm
     sudo grub-mkconfig -o /boot/grub/grub.cfg
+    # cleaning our lists from old packages updates.
     sed -i '/^[a-zA-Z]/d' {$ARCH,$AUR,$ARCHAUR}
 
     if [[ -n $(pidof polybar) ]]; then
         polybar-msg -p "$(pgrep --full bspwm-bar-1)" \
         action "#updates-ipc.hook.0" >/dev/null 2>&1
     elif [[ -n $(pidof i3blocks) ]]; then
-        polybar-msg -p "$(pgrep --full i3-bar-1)" \
-        action "#updates-ipc.hook.0" >/dev/null 2>&1
+        pkill -SIGRTMIN+10 i3blocks > /dev/null 2>&1
     else
         echo "no running bars found" && exit 1
     fi
@@ -129,7 +127,6 @@ _poweroff() {
     sudo cp -f "$MIRR" "$BCKP"
     sudo pacman -Syu --noconfirm
     sudo grub-mkconfig -o /boot/grub/grub.cfg
-    sed -i '/^[a-zA-Z]/d' {$ARCH,$AUR,$ARCHAUR}
     sudo poweroff
 }
 
@@ -177,15 +174,15 @@ _make_updates() {
 
 _list() {
 
-    while read -r line; do
-        echo "$line"
-    done < "$ARCHAUR"
-
     if [[ -z $(cat "$ARCHAUR") ]]; then
         echo " ${red}No available update."
         sleep 3s
         exit 0
     else
+        while read -r line; do
+            echo "$line"
+        done < "$ARCHAUR"
+        
         echo ""
         if (( $(grep "" -c $ARCHAUR) > 1 )); then
             echo -e "${green}There are "$(grep "" -c $ARCHAUR)" available updates.\n${nocolor}"
