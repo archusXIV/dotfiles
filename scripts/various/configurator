@@ -7,12 +7,13 @@ rc="$HOME/.config/dmenu/dmenurc"
 confDir="$HOME/.config/"
 
 dirOptions=$(cd ${confDir} && ls -d */ | cut -d " " -f 1)
-dirChoice=$(echo -e "${dirOptions[@]}\nquit" | dmenu -i $DMENU_OPTIONS -p 'Config directories: ')
-
-if [ "$dirChoice" == "quit" ]; then
-    echo dmenu closed.
-elif [ "$dirChoice" == ${dirChoice} ]; then
-    fileOptions=$(cd ${confDir}${dirChoice} && ls -Ap | cut -d " " -f 1 | grep -v / )
-    fileChoice=$(echo -e "${fileOptions[@]}" | dmenu -i -l 10 -p 'Edit this file: ')
-    exec geany ${confDir}${dirChoice}${fileChoice}
+dirChoice=$(echo "${dirOptions[@]}" | dmenu -i $DMENU_OPTIONS -p 'Config directories: ')
+fileOptions=$(cd ${confDir}${dirChoice} && ls -Ap | cut -d " " -f 1 | grep -v / )
+fileChoice=$(echo "${fileOptions[@]}" | dmenu -i -l 10 $DMENU_OPTIONS -p 'Edit this file: ')
+    
+if [ -z "$dirChoice" ]; then
+    exit 0
+else
+    [ -z "$fileChoice" ] && exit 0 \
+    || exec geany ${confDir}${dirChoice}${fileChoice}
 fi
