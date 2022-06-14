@@ -15,22 +15,22 @@ _copy_audio() {
 
         if (( $(grep "" -c "$QUEUE") < 3 )); then
             echo ""
-            echo " ${green}There is" "$(_get_lines_queue)" "url in the list${nocolor}."
+            echo " ${green}There is $(_get_lines_queue) url in the list${nocolor}."
         else
             echo ""
-            echo " ${green}There are" "$(_get_lines_queue)" "urls in the list${nocolor}."
+            echo " ${green}There are $(_get_lines_queue) urls in the list${nocolor}."
         fi
 
         echo ""
-        echo -e "                                           ::audio options:: "
-        echo -e "                       ┌────────────────────────────────────────────────────────────┐"
-        echo -e "                       │     1) Add more audio links      4) Play current list      │"
-        echo -e "                       │     2) Download current list     5) View current list      │"
-        echo -e "                       │     3) Save playlist as          6) Back to main menu      │"
-        echo -e "                       └────────────────────────────────────────────────────────────┘"
-        echo -e "                                             ${green}Select an item${nocolor}"
+        echo -e "                                                 ::audio options:: "
+        echo -e "                             ┌────────────────────────────────────────────────────────────┐"
+        echo -e "                             │     1) Add more audio links      4) Play current list      │"
+        echo -e "                             │     2) Download current list     5) View current list      │"
+        echo -e "                             │     3) Save playlist as          6) Back to main menu      │"
+        echo -e "                             └────────────────────────────────────────────────────────────┘"
+        echo -e "                                                   ${green}Select an item${nocolor}"
         echo ""
-        read -r options
+        read -rsn 1 options
         case "$options" in
             1) clear && continue
                echo "" ;;
@@ -63,22 +63,22 @@ _copy_video() {
 
         if (( $(grep "" -c "$QUEUE") < 3 )); then
             echo ""
-            echo " ${green}There is" "$(_get_lines_queue)" "url in the list${nocolor}."
+            echo " ${green}There is $(_get_lines_queue) url in the list${nocolor}."
         else
             echo ""
-            echo " ${green}There are" "$(_get_lines_queue)" "urls in the list${nocolor}."
+            echo " ${green}There are $(_get_lines_queue) urls in the list${nocolor}."
         fi
 
         echo ""
-        echo -e "                                           ::video options:: "
-        echo -e "                       ┌────────────────────────────────────────────────────────────┐"
-        echo -e "                       │     1) Add more video links      4) Play current list      │"
-        echo -e "                       │     2) Download current list     5) View current list      │"
-        echo -e "                       │     3) Save playlist as          6) Back to main menu      │"
-        echo -e "                       └────────────────────────────────────────────────────────────┘"
-        echo -e "                                             ${green}Select an item${nocolor}"
+        echo -e "                                                 ::video options:: "
+        echo -e "                             ┌────────────────────────────────────────────────────────────┐"
+        echo -e "                             │     1) Add more video links      4) Play current list      │"
+        echo -e "                             │     2) Download current list     5) View current list      │"
+        echo -e "                             │     3) Save playlist as          6) Back to main menu      │"
+        echo -e "                             └────────────────────────────────────────────────────────────┘"
+        echo -e "                                                   ${green}Select an item${nocolor}"
         echo ""
-        read -r options
+        read -rsn 1 options
         case "$options" in
             1) clear && continue
                echo "" ;;
