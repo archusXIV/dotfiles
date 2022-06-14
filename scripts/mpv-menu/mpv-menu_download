@@ -4,12 +4,13 @@
 _download_completed() {
 
     echo " ${green}Downloads are completed, do you want to delete $list? [N/y]: ${nocolor}"
-    read -rsn 1 REPLY
+    # Here we don't need any variable to set.
+    # Let's use the bash default one.
+    read -rsn 1
     case "$REPLY" in
         N|n)    mv --force "$list"_origin "$list" && _menu ;;
         y|Y)    if [[ -f "$QUEUE"_origin ]]; then
                     rm "$QUEUE"_origin
-                    _check_queue
                 else
                     rm "$list" "$list"_origin
                     _check_queue
@@ -43,7 +44,7 @@ _download_audio() {
     cp -f "$list" "$list"_origin
     _check_code_load
 
-    for url in $(grep 'https' "$list"); do
+    for url in $(grep '^https' "$list"); do
 
         # We compare if the content of $list is less than 3 because:
         # 1) we have expression #EXTM3U at the top.
@@ -83,7 +84,7 @@ _download_audio() {
         sleep 2s
         rm ./*.webm
         _clean_tmp_dir
-        mv *.mp3 "$audios_dir"
+        mv ./*.mp3 "$audios_dir"
         _download_incompleted
     elif [[ -n $(find . -iname "*.*") ]]; then
         echo " ${green}Please check out for none mp3 files in $playlists_dir${nocolor}"
