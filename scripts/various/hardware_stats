@@ -3,8 +3,6 @@
 # Hardware utilizations and temperatures displayed in polybar.
 
 _mpd() {
-
-    local pid
     
     if [[ -n $(pidof bspwm) ]]; then
         if [[ -z $(pidof ncmpcpp) ]]; then
