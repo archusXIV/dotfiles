@@ -4,9 +4,9 @@
 # let's get our file (web page) title.
 _get_media_title() { youtube-dl -j "$url" | jq '(.title)'; }
 
-_get_lines_queue() { sed '/#EXTM3U/d' "$QUEUE" | wc -l; }
+_get_lines_queue() { grep '^https' -c "$QUEUE"; }
 
-_get_lines_list() { sed '/#EXTM3U/d' "$list" | wc -l; }
+_get_lines_list() { grep '^https' -c "$list"; }
 
 _get_youtubeplaylist_urls() {
     if [[ $(grep -e 'playlist?list=' "$QUEUE") ]]; then
@@ -26,7 +26,7 @@ _get_youtubeplaylist_urls() {
 
 _get_completed() {
     echo " ${green}Downloads are completed, do you want to keep main playlist? [N/y]: ${nocolor}"
-    read -rsn 1 REPLY
+    read -rsn 1
     case "$REPLY" in
         N|n)    rm "$QUEUE"_origin && _menu ;;
         y|Y)    mv -f "$QUEUE"_origin "$QUEUE" && _menu ;;
@@ -36,7 +36,6 @@ _get_completed() {
 }
 
 _get_incompleted() {
-
     _main_playlist_edition() {
         read -rsn 1 -p ${green}' Edit "$QUEUE"_origin and try again later? [Y/n]: '${nocolor} edit
         case "$edit" in
@@ -65,17 +64,17 @@ _get_audio() {
 
     _check_code_queue
 
-    for url in $(grep 'https' "$QUEUE"); do
+    for url in $(grep '^https' "$QUEUE"); do
 
         if (( $(grep "" -c "$QUEUE") < 3 )); then
             echo ""
-            echo " ${green}There is" "$(_get_lines_queue)" "audio file left to download.${nocolor}"
+            echo " ${green}There is $(_get_lines_queue) audio file left to download.${nocolor}"
         else
             echo ""
-            echo " ${green}There are" "$(_get_lines_queue)" "audio files left to download.${nocolor}"
+            echo " ${green}There are $(_get_lines_queue) audio files left to download.${nocolor}"
         fi
 
-        youtube-dl -F "$url" | grep -e 'audio only' | sed 's/audio only      //'
+        youtube-dl -F "$url" | sed -n '/audio only/p'
         echo ""
         echo " ${green}Choose a format code: ${nocolor}"
         read -r code
@@ -117,14 +116,14 @@ _get_video() {
 
     _check_code_queue
 
-    for url in $(grep 'https' "$QUEUE"); do
+    for url in $(grep '^https' "$QUEUE"); do
 
         if (( $(grep "" -c "$QUEUE") < 3 )); then
             echo ""
-            echo " ${green}There is" "$(_get_lines_queue)" "video file left to download.${nocolor}"
+            echo " ${green}There is $(_get_lines_queue) video file left to download.${nocolor}"
         else
             echo ""
-            echo " ${green}There are" "$(_get_lines_queue)" "video files left to download.${nocolor}"
+            echo " ${green}There are $(_get_lines_queue) video files left to download.${nocolor}"
         fi
 
         youtube-dl -F "$url" | sed '/^sb/d'
@@ -142,7 +141,7 @@ _get_video() {
         else
             echo " ${green}Please be patient while downloading:"
             echo " ${red}$(_get_media_title).${nocolor}"
-            youtube-dl -f "$code" "$url" --progress "$url"
+            youtube-dl -f "$code" --progress "$url"
         fi
 
         sed -i '2d' "$QUEUE"
