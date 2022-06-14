@@ -1,25 +1,28 @@
 #!/bin/bash
 
 case "$1" in
-    -h) if [[ -z $(bspc query -N -n .hidden | tail -n1) ]]; then
-            bspc node -g hidden
-        else
-            bspc node $(bspc query -N -n .hidden | tail -n1) -g hidden=off
-        fi
-    ;;
-    -t) if [[ -n $(pidof bspwm) ]]; then
-            bspwm_scratchpad $TERMINAL
+    -h) if [[ -n $(pidof bspwm) ]]; then
+            if [[ -z $(bspc query -N -n .hidden) ]]; then
+                bspc node -g hidden
+            else
+                bspc node \
+                $(bspc query -N -n .hidden | tail -n1) -g \
+                hidden=off
+            fi
         elif [[ -n $(pidof i3) ]]; then
             i3-msg scratchpad show \
             || i3-msg move scratchpad
+            exit
         fi
     ;;
-    -m) if [[ -n $(pidof bspwm) ]]; then
-            bspwm_scratchpad mpv-menu
-        elif [[ -n $(pidof i3) ]]; then
-            i3-msg scratchpad show \
-            || i3-msg move scratchpad
-        fi
+    -m) [[ -n $(pidof bspwm) ]] && {
+            bspwm_scratchpad mpv-menu &
+            exit
+        }
+    ;;
+    -t) [[ -n $(pidof bspwm) ]] && {
+            bspwm_scratchpad $TERMINAL &
+            exit
+        }
     ;;
 esac
-
