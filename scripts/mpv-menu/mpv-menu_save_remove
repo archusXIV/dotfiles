@@ -70,30 +70,3 @@ _delete_url() {
         _menu
     fi
 }
-
-_remove_crap() {
-
-    # After some tests it appears that a single link copied from a youtube playlist
-    # causes the download of the entire playlist.
-    # So with the help of sed we cleanup the link to get the direct link to the desired video.
-    # Note that this behavior does not appear during a simple viewing/listening.
-
-    [[ -n $(grep -e '&list' "$QUEUE") ]] && {
-        echo " ${red}Cleaning entries...${nocolor}"
-        sleep 2s
-        sed -i 's/&.*//' "$QUEUE"
-    }
-
-    # Let's remove possible duplicates using regex.
-    [[ -n $(uniq -d "$QUEUE") ]] && {
-        echo " ${red}Removing double entries...${nocolor}"
-        sleep 2s
-        sed -i -n \
-        'G; s/\n/&&/; /^\([ -~]*\n\).*\n\1/d; s/\n//; h; P' \
-        "$QUEUE"
-    }
-
-    # Let's remove possible empty lines.
-    sed -i '/^\s*$/d' "$QUEUE"
-
-}
