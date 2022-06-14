@@ -19,7 +19,7 @@ _load_video() {
     echo ""
     if [[ ! -f "$COMPLETE_INFO" ]]; then
         while read -r line; do
-            youtube-dl -j "$line" \
+            youtube-dl -j $line \
             | jq '(.title)' >> "$COMPLETE_INFO"
         done < <(cat "$URLS_INFO")
         mapfile -t PLAYLIST < <(cat "$URLS_INFO")
@@ -32,7 +32,6 @@ _load_video() {
         echo -e " ${green}Playing: $(cat "$COMPLETE_INFO" | sed -n '1p')\n"
         echo " ${red}Press 'q' in mpv to play next video.${nocolor}"
         mpv --ytdl-format=137+251 "$i" >/dev/null 2>&1 \
-        || mpv --ytdl-format=299+251 "$i" >/dev/null 2>&1 \
         || mpv --ytdl-format=22 "$i" >/dev/null 2>&1 \
         || mpv "$i" >/dev/null 2>&1
         sed -i '1d' "$COMPLETE_INFO"
@@ -52,7 +51,7 @@ _load_playlist() {
     echo -e " ${green}Select a playlist to load (Press 'q' to quit mpv):\n${nocolor}"
     select list in $(find . -name "*.m3u" | sort -d | sed 's,.*/,,'); do
 
-        if ! grep -q -e 'https' "$list"; then
+        if ! grep -q -e '^https' "$list"; then
             echo " ${red}$list is empty...${nocolor}"
             sleep 3s
             break
@@ -63,10 +62,10 @@ _load_playlist() {
         if [[ $(grep -e 'playlist?list=' "$list") ]]; then
             echo ""
             echo -e " ${green}Checking youtube playlist availability...please wait.${nocolor}\n"
-            rm "$URLS_INFO" >/dev/null 2>&1
+            [[ -f $URLS_INFO ]] && rm "$URLS_INFO"
 
             while read -r line; do
-                youtube-dl -j "$line" \
+                youtube-dl -j $line \
                 | jq '(.webpage_url)' \
                 | cat | sed 's/"//g' >> "$URLS_INFO"
             done < <(cat "$list" | sed '/#EXTM3U/d')
@@ -84,7 +83,7 @@ _load_playlist() {
         echo -e " ${green}Getting videos titles...please wait.${nocolor}\n"
 
         while read -r line; do
-            youtube-dl -j "$line" \
+            youtube-dl -j $line \
             | jq '(.title)' >> "$COMPLETE_INFO"
         done < <(cat "$list" | sed '/#EXTM3U/d')
 
@@ -107,7 +106,7 @@ _load_playlist() {
                 read -rsn 1 -p  ${green}' Load audio only [a] or video [v] ?: '${nocolor} load
                 clear
                 case "$load" in
-                    a)  mpvc -a -Q "$list"; _get_mpv_title ;;
+                    a)  _check_code_load && mpvc -a -Q "$list"; _get_mpv_title ;;
                     v)  _check_code_load && _load_video ;;
                     *)  echo " ${red} Wrong option! Wait and try again...${nocolor}"
                         sleep 3s ;;
@@ -135,7 +134,7 @@ _load_local() {
     read -rsn 1 answer
 
     case "$answer" in
-        d)  PS3=" Select a directory to QUEUE in mpv: "
+        d)  PS3=" Select a directory to queue in mpv: "
             select dir in $(find "$VIDEOS" -maxdepth 1 | sed 's,.*/,,'); do
                 if [[ $(find "$VIDEOS"/"$dir" -type d -empty) ]]; then
                     echo " ${red}$dir is empty. Wait and try again...${nocolor}"
