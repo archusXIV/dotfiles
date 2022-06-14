@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# $DMENU_OPTIONS are in this file
-# https://github.com/archusXIV/dotfiles/blob/main/dmenu/dmenurc
-
 rc="$HOME/.config/dmenu/dmenurc"
 
 [ -f "$rc" ] && source "$rc"
@@ -58,258 +55,259 @@ case "$choice" in
 
                 selected=$(ls "$SCRIPTDIR" | dmenu -i -l 20 $DMENU_OPTIONS -p "edit/create a script ")
                 [[ -z $selected ]] && exit
-d
+
                 _autoscript "$selected"
     ;;
-    config)     confDir="$HOME/.config/"
+    config  )   confDir="$HOME/.config/"
                 
                 dirOptions=$(cd ${confDir} && ls -d */ | cut -d " " -f 1)
-                dirChoice=$(echo -e "${dirOptions[@]}\nquit" | dmenu -i $DMENU_OPTIONS -p 'Config directories: ')
-                
-                if [ "$dirChoice" == "quit" ]; then
-                    echo dmenu closed.
-                elif [ "$dirChoice" == ${dirChoice} ]; then
-                    fileOptions=$(cd ${confDir}${dirChoice} && ls -Ap | cut -d " " -f 1 | grep -v / )
-                    fileChoice=$(echo -e "${fileOptions[@]}" | dmenu -i -l 10 -p 'Edit this file: ')
-                    exec geany ${confDir}${dirChoice}${fileChoice}
+                dirChoice=$(echo "${dirOptions[@]}" | dmenu -i $DMENU_OPTIONS -p 'Config directories: ')
+                fileOptions=$(cd ${confDir}${dirChoice} && ls -Ap | cut -d " " -f 1 | grep -v / )
+                fileChoice=$(echo "${fileOptions[@]}" | dmenu -i -l 10 $DMENU_OPTIONS -p 'Edit this file: ')
+                    
+                if [ -z "$dirChoice" ]; then
+                    exit 0
+                else
+                    [ -z "$fileChoice" ] && exit 0 \
+                    || exec geany ${confDir}${dirChoice}${fileChoice}
                 fi
     ;;
-    find)   find ~ | sed 's/ /\\ /g' | sort -f | dmenu -i -l 20 $DMENU_OPTIONS -p 'finder: '| xargs xdg-open
+    find    )   find ~ | sed 's/ /\\ /g' | sort -f | dmenu -i -l 20 $DMENU_OPTIONS -p 'finder: '| xargs xdg-open
     ;;
-    keys)   if [[ -n $(pidof bspwm) ]]; then
-                awk '/^[a-zA-Z]/ \
-                && last {print $0,"\t",last} \
-                {last=""} /^#/{last=$0}' \
-                ~/.config/bspwm/bsp_sxhkdrc_memo \
-                | column -t -s $'\t' \
-                | dmenu -i -l 15 $DMENU_OPTIONS -p 'Sxhkd memo '
-                exit 0
-            elif [[ -n $(pidof i3) ]]; then
-                awk '/^[a-zA-Z]/ \
-                && last {print $0,"\t",last} \
-                {last=""} /^#/{last=$0}' \
-                ~/.config/i3/i3_sxhkdrc_memo \
-                | column -t -s $'\t' \
-                | dmenu -i -l 15 $DMENU_OPTIONS -p 'Sxhkd memo '
-                exit 0
-            else
-                echo "no bspwm or i3 session running" && exit 1
-            fi
+    keys    )   if [[ -n $(pidof bspwm) ]]; then
+                    awk '/^[a-zA-Z]/ \
+                    && last {print $0,"\t",last} \
+                    {last=""} /^#/{last=$0}' \
+                    ~/.config/sxhkd/bsp_sxhkdrc_memo \
+                    | column -t -s $'\t' \
+                    | dmenu -i -l 15 $DMENU_OPTIONS -p 'Sxhkd memo '
+                    exit 0
+                elif [[ -n $(pidof i3) ]]; then
+                    awk '/^[a-zA-Z]/ \
+                    && last {print $0,"\t",last} \
+                    {last=""} /^#/{last=$0}' \
+                    ~/.config/i3/i3_sxhkdrc_memo \
+                    | column -t -s $'\t' \
+                    | dmenu -i -l 15 $DMENU_OPTIONS -p 'Sxhkd memo '
+                    exit 0
+                else
+                    echo "no bspwm or i3 session running" && exit 1
+                fi
     ;;
-    man)    man-display.sh &
+    man     )   man-display.sh &
     ;;
-    pass)   shopt -s nullglob globstar
+    pass    )   shopt -s nullglob globstar
 
-            typeit=0
-            if [[ $1 == "--type" ]]; then
-                typeit=1
-                shift
-            fi
-            
-            if [[ -n $WAYLAND_DISPLAY ]]; then
-                dmenu=dmenu-wl
-                xdotool="ydotool type --file -"
-            elif [[ -n $DISPLAY ]]; then
-                dmenu=dmenu
-                xdotool="xdotool type --clearmodifiers --file -"
-            else
-                echo "Error: No Wayland or X11 display detected" >&2
-                exit 1
-            fi
-            
-            prefix=${PASSWORD_STORE_DIR-~/.password-store}
-            password_files=( "$prefix"/**/*.gpg )
-            password_files=( "${password_files[@]#"$prefix"/}" )
-            password_files=( "${password_files[@]%.gpg}" )
-            
-            password=$(printf '%s\n' "${password_files[@]}" | "$dmenu" "$@")
-            
-            [[ -n $password ]] || exit
-            
-            if [[ $typeit -eq 0 ]]; then
-                pass show -c "$password" 2>/dev/null
-            else
-                pass show "$password" | { IFS= read -r pass; printf %s "$pass"; } | $xdotool
-            fi
+                typeit=0
+                if [[ $1 == "--type" ]]; then
+                    typeit=1
+                    shift
+                fi
+                
+                if [[ -n $WAYLAND_DISPLAY ]]; then
+                    dmenu=dmenu-wl
+                    xdotool="ydotool type --file -"
+                elif [[ -n $DISPLAY ]]; then
+                    dmenu=dmenu
+                    xdotool="xdotool type --clearmodifiers --file -"
+                else
+                    echo "Error: No Wayland or X11 display detected" >&2
+                    exit 1
+                fi
+                
+                prefix=${PASSWORD_STORE_DIR-~/.password-store}
+                password_files=( "$prefix"/**/*.gpg )
+                password_files=( "${password_files[@]#"$prefix"/}" )
+                password_files=( "${password_files[@]%.gpg}" )
+                
+                password=$(printf '%s\n' "${password_files[@]}" | "$dmenu" "$@")
+                
+                [[ -n $password ]] || exit
+                
+                if [[ $typeit -eq 0 ]]; then
+                    pass show -c "$password" 2>/dev/null
+                else
+                    pass show "$password" | { IFS= read -r pass; printf %s "$pass"; } | $xdotool
+                fi
     ;;
-    power)  _main() {
-                # Possible actions
-                actions=('Lockscreen ' 'WM restart ' 'Exit ' 'Reboot ' 'Power off ')
+    power   )   _main() {
+                    # Possible actions
+                    actions=('Lockscreen ' 'WM restart ' 'Exit ' 'Reboot ' 'Power off ')
 
-                choice="$(_list_actions)"
+                    choice="$(_list_actions)"
 
-                # Run the selected command.
-                case "$choice" in
-                    E*) Xexit            ;;
-                    L*) i3lock -c 1A2833 ;;
-                    P*) _poweroff        ;;
-                    R*) _reboot          ;;
-                    W*) restart_wm       ;;
-                esac
-            }
+                    # Run the selected command.
+                    case "$choice" in
+                        E*) Xexit            ;;
+                        L*) i3lock -c 1A2833 ;;
+                        P*) _poweroff        ;;
+                        R*) _reboot          ;;
+                        W*) restart_wm       ;;
+                    esac
+                }
 
-            _check_systemd() {
-                [[ -d /run/systemd/system ]] \
-                    && sudo systemctl "$1" \
-                    || sudo "$1"
-            }
+                _check_systemd() {
+                    [[ -d /run/systemd/system ]] \
+                        && sudo systemctl "$1" \
+                        || sudo "$1"
+                }
 
-            _reboot() { _check_systemd 'reboot'; }
+                _reboot() { _check_systemd 'reboot'; }
 
-            _poweroff() { _check_systemd 'poweroff'; }
+                _poweroff() { _check_systemd 'poweroff'; }
 
-            _dynamic_menu() {
-                [[ -n $(command -v dmenu) ]] \
-                    && dmenu -i $DMENU_OPTIONS -p 'Power options' \
-                    || echo "dmenu command not found." && return 1
-            }
+                _dynamic_menu() {
+                    [[ -n $(command -v dmenu) ]] \
+                        && dmenu -i $DMENU_OPTIONS -p 'Power options' \
+                        || echo "dmenu command not found." && return 1
+                }
 
-            # List actions to choose from.  Output array items on a new line.
-            _list_actions() {
-                printf '%s\n' "${actions[@]}" | _dynamic_menu
-            }
+                # List actions to choose from.  Output array items on a new line.
+                _list_actions() {
+                    printf '%s\n' "${actions[@]}" | _dynamic_menu
+                }
 
-            _main "${@}"
+                _main "${@}"
     ;;
-    scrot)  scrot_path="$HOME/Documents/Pictures/screens"
-            viewer="feh" # Can edit images too.
+    scrot   )   scrot_path="$HOME/Documents/Pictures/screens"
+                viewer="feh" # Can edit images too.
 
-            choice=$(printf "quick_fullscreen\\ndelayed_fullscreen\\nselection\\nfocused_window" \
+                choice=$(printf "quick_fullscreen\\ndelayed_fullscreen\\nselection\\nfocused_window" \
                     | dmenu -i $DMENU_OPTIONS -p "Select a capture type:")
 
-            cd "$scrot_path" || exit 1
+                cd "$scrot_path" || exit 1
 
-            case "$choice" in
-                quick_fullscreen)   scrot '%d-%m-%Y-@%H-%M-%S-full.png' \
-                                    -e "$viewer \$f" && notify-send 'Fullscreen taken and saved'
-                ;;
-                delayed_fullscreen) scrot -d 15 '%d-%m-%Y-@%H-%M-%S-full.png' \
-                                    -e "$viewer \$f" && notify-send 'Fullscreen taken and saved'
-                ;;
-                selection)          scrot -s '%d-%m-%Y-@%H-%M-%S-selection.png' \
-                                    -e "$viewer \$f" && notify-send 'Scrot selection saved'
-                ;;
-                focused_window)     scrot -u -b '%d-%m-%Y-@%H-%M-%S-focused.png' \
-                                    -e "$viewer \$f" && notify-send 'Focused window captured'
-                ;;
-                *)                  notify-send 'No screenshot taken!'
-                ;;
-            esac
+                case "$choice" in
+                    quick_fullscreen)   scrot '%d-%m-%Y-@%H-%M-%S-full.png' \
+                                        -e "$viewer \$f" && notify-send 'Fullscreen taken and saved'
+                    ;;
+                    delayed_fullscreen) scrot -d 15 '%d-%m-%Y-@%H-%M-%S-full.png' \
+                                        -e "$viewer \$f" && notify-send 'Fullscreen taken and saved'
+                    ;;
+                    selection)          scrot -s '%d-%m-%Y-@%H-%M-%S-selection.png' \
+                                        -e "$viewer \$f" && notify-send 'Scrot selection saved'
+                    ;;
+                    focused_window)     scrot -u -b '%d-%m-%Y-@%H-%M-%S-focused.png' \
+                                        -e "$viewer \$f" && notify-send 'Focused window captured'
+                    ;;
+                    *)                  notify-send 'No screenshot taken!'
+                    ;;
+                esac
     ;;
-    timer)  _alarm() { mpv "$HOME"/Documents/mixkit-low-church-bell-calling-623.wav; }
+    timer   )   _alarm() { mpv "$HOME"/Documents/mixkit-low-church-bell-calling-623.wav; }
 
-            _fithteen() {
-                local hour min sec
-                hour=00
-                min=15
-                sec=0
+                _fithteen() {
+                    local hour min sec
+                    hour=00
+                    min=15
+                    sec=0
 
-                while [ $hour -ge 0 ]; do
-                    while [ $min -ge 0 ]; do
-                        while [ $sec -ge 0 ]; do
-                            echo "Timer: $hour:$min:$sec" > "$XDG_CACHE_HOME"/timer.txt
-                            let "sec=sec-1"
-                            sleep 1s
-                            polybar-msg hook timer-ipc 2 >/dev/null 2>&1
+                    while [ $hour -ge 0 ]; do
+                        while [ $min -ge 0 ]; do
+                            while [ $sec -ge 0 ]; do
+                                echo "Timer: $hour:$min:$sec" > "$XDG_CACHE_HOME"/timer.txt
+                                let "sec=sec-1"
+                                sleep 1s
+                                polybar-msg hook timer-ipc 2 >/dev/null 2>&1
+                            done
+                            sec=59
+                            let "min=min-1"
                         done
-                        sec=59
-                        let "min=min-1"
+                        min=59
+                        let "hour=hour-1"
                     done
-                    min=59
-                    let "hour=hour-1"
-                done
-                polybar-msg hook timer-ipc 1 >/dev/null 2>&1
-                pulsemixer --set-volume 20
-                _alarm &
-            }
+                    polybar-msg hook timer-ipc 1 >/dev/null 2>&1
+                    pulsemixer --set-volume 20
+                    _alarm &
+                }
 
-            _thirty() {
-                local hour min sec
-                hour=00
-                min=30
-                sec=0
+                _thirty() {
+                    local hour min sec
+                    hour=00
+                    min=30
+                    sec=0
 
-                while [ $hour -ge 0 ]; do
-                    while [ $min -ge 0 ]; do
-                        while [ $sec -ge 0 ]; do
-                            echo "Timer: $hour:$min:$sec" > "$XDG_CACHE_HOME"/timer.txt
-                            let "sec=sec-1"
-                            sleep 1s
-                            polybar-msg hook timer-ipc 2 >/dev/null 2>&1
+                    while [ $hour -ge 0 ]; do
+                        while [ $min -ge 0 ]; do
+                            while [ $sec -ge 0 ]; do
+                                echo "Timer: $hour:$min:$sec" > "$XDG_CACHE_HOME"/timer.txt
+                                let "sec=sec-1"
+                                sleep 1s
+                                polybar-msg hook timer-ipc 2 >/dev/null 2>&1
+                            done
+                            sec=59
+                            let "min=min-1"
                         done
-                        sec=59
-                        let "min=min-1"
+                        min=59
+                        let "hour=hour-1"
                     done
-                    min=59
-                    let "hour=hour-1"
-                done
-                polybar-msg hook timer-ipc 1 >/dev/null 2>&1
-                pulsemixer --set-volume 20
-                _alarm &
-            }
+                    polybar-msg hook timer-ipc 1 >/dev/null 2>&1
+                    pulsemixer --set-volume 20
+                    _alarm &
+                }
 
-            _fourty_five() {
-                local hour min sec
-                hour=00
-                min=45
-                sec=0
+                _fourty_five() {
+                    local hour min sec
+                    hour=00
+                    min=45
+                    sec=0
 
-                while [ $hour -ge 0 ]; do
-                    while [ $min -ge 0 ]; do
-                        while [ $sec -ge 0 ]; do
-                            echo "Timer: $hour:$min:$sec" > "$XDG_CACHE_HOME"/timer.txt
-                            let "sec=sec-1"
-                            sleep 1s
-                            polybar-msg hook timer-ipc 2 >/dev/null 2>&1
+                    while [ $hour -ge 0 ]; do
+                        while [ $min -ge 0 ]; do
+                            while [ $sec -ge 0 ]; do
+                                echo "Timer: $hour:$min:$sec" > "$XDG_CACHE_HOME"/timer.txt
+                                let "sec=sec-1"
+                                sleep 1s
+                                polybar-msg hook timer-ipc 2 >/dev/null 2>&1
+                            done
+                            sec=59
+                            let "min=min-1"
                         done
-                        sec=59
-                        let "min=min-1"
+                        min=59
+                        let "hour=hour-1"
                     done
-                    min=59
-                    let "hour=hour-1"
-                done
-                polybar-msg hook timer-ipc 1 >/dev/null 2>&1
-                pulsemixer --set-volume 20
-                _alarm &
-            }
+                    polybar-msg hook timer-ipc 1 >/dev/null 2>&1
+                    pulsemixer --set-volume 20
+                    _alarm &
+                }
 
-            _sixty() {
-                local hour min sec
-                hour=00
-                min=60
-                sec=0
+                _sixty() {
+                    local hour min sec
+                    hour=00
+                    min=60
+                    sec=0
 
-                while [ $hour -ge 0 ]; do
-                    while [ $min -ge 0 ]; do
-                        while [ $sec -ge 0 ]; do
-                            echo "Timer: $hour:$min:$sec" > "$XDG_CACHE_HOME"/timer.txt
-                            let "sec=sec-1"
-                            sleep 1s
-                            polybar-msg hook timer-ipc 2 >/dev/null 2>&1
+                    while [ $hour -ge 0 ]; do
+                        while [ $min -ge 0 ]; do
+                            while [ $sec -ge 0 ]; do
+                                echo "Timer: $hour:$min:$sec" > "$XDG_CACHE_HOME"/timer.txt
+                                let "sec=sec-1"
+                                sleep 1s
+                                polybar-msg hook timer-ipc 2 >/dev/null 2>&1
+                            done
+                            sec=59
+                            let "min=min-1"
                         done
-                        sec=59
-                        let "min=min-1"
+                        min=59
+                        let "hour=hour-1"
                     done
-                    min=59
-                    let "hour=hour-1"
-                done
-                polybar-msg hook timer-ipc 1 >/dev/null 2>&1
-                pulsemixer --set-volume 20
-                _alarm &
-            }
+                    polybar-msg hook timer-ipc 1 >/dev/null 2>&1
+                    pulsemixer --set-volume 20
+                    _alarm &
+                }
 
-            # shellcheck disable=SC2086
-            timer=$(printf "15m\\n30m\\n45m\\n1h" | dmenu $DMENU_OPTIONS -p "Set a timer:")
+                # shellcheck disable=SC2086
+                timer=$(printf "15m\\n30m\\n45m\\n1h" | dmenu $DMENU_OPTIONS -p "Set a timer:")
 
-            case "$timer" in
-                15m ) _fithteen
-                ;;
-                30m ) _thirty
-                ;;
-                45m ) _fourty_five
-                ;;
-                1h  ) _sixty
-                ;;
-            esac
+                case "$timer" in
+                    15m ) _fithteen
+                    ;;
+                    30m ) _thirty
+                    ;;
+                    45m ) _fourty_five
+                    ;;
+                    1h  ) _sixty
+                    ;;
+                esac
     ;;
 esac
