@@ -1,6 +1,6 @@
 #!/bin/bash
 
-choice=$(printf "applications\\nautoscript\\nconfigs\\nfind\\nfonts\\nkeybindings\\npass\\nthemes\\nwindow" \
+choice=$(printf "applications\\nautoscript\\nconfigs\\nfind\\nfonts\\nkeybindings\\npass\\nrecord\\nthemes\\nwindow" \
         | rofi -normal-window -dmenu -i -p 'Rofi scripts' -no-show-icons -width 500 -lines 8 -location 0)
 
 [[ -z $choice ]] && exit
@@ -72,17 +72,17 @@ _rofi_configs() {
     dirChoice=$(echo -e "${dirOptions[@]}\nquit" \
         | rofi -normal-window -dmenu -i -width 20 -hide-scrollbar \
         -line-padding 4 -padding 20 -lines 5 -p 'Config directories ')
-
-    if [[ $dirChoice == 'quit' ]]; then
-        echo dmenu closed.
-    elif [[ $dirChoice == ${dirChoice} ]]; then
-        fileOptions=$(cd ${confDir}${dirChoice} && ls -Ap | cut -d " " -f 1 | grep -v / )
-        fileChoice=$(echo -e "${fileOptions[@]}" \
+    fileOptions=$(cd ${confDir}${dirChoice} && ls -Ap | cut -d " " -f 1 | grep -v / )
+    fileChoice=$(echo -e "${fileOptions[@]}" \
         | rofi -normal-window -dmenu -i -width 20 -hide-scrollbar \
         -line-padding 4 -padding 20 -lines 4 -p 'Edit this file: ')
-        exec geany ${confDir}${dirChoice}${fileChoice} &
-    fi
 
+    if [ -z "$dirChoice" ]; then
+        exit 0
+    else
+        [ -z "$fileChoice" ] && exit 0 \
+        || exec geany ${confDir}${dirChoice}${fileChoice}
+    fi
 }
 
 _theme-selector() {
@@ -115,7 +115,6 @@ _theme-selector() {
         && restart_wm \
         && launch_polybar \
         && xre2rasi \
-        && xre2dmenu \
         && notify-send 'theme changed'
     )
 
@@ -153,7 +152,7 @@ case "$choice" in
                       awk '/^[a-zA-Z]/ \
                       && last {print $0,"\t",last} \
                       {last=""} /^#/{last=$0}' \
-                      ~/.config/bspwm/bsp_sxhkdrc_memo \
+                      ~/.config/sxhkd/bsp_sxhkdrc_memo \
                       | column -t -s $'\t' \
                       | rofi -normal-window \
                       -dmenu -i -p 'Sxhkd memo ' \
@@ -176,6 +175,8 @@ case "$choice" in
                   fi
     ;;
     pass        ) _passwd_copy
+    ;;
+    record      ) rofi-record &
     ;;
     themes      ) _theme-selector
     ;;
