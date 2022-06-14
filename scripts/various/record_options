@@ -1,37 +1,53 @@
 #!/bin/bash
 
 #  Author: Barret E (2021) <archus@protonmail.com>
-#  Dependencies: ffmpeg, polybar, rofi, simplescreenrecorder.
+#  Dependencies: ffmpeg, obs, polybar, rofi, simplescreenrecorder.
+#  Feel free to add/remove dependency group item to fit your settings.
 #
-#  This script uses two screen grabbing methods:
-#  simplescreenrecorder or anohter of my scripts called rofi-record.
-#  Each time you will be prompt to choose a screen (monitor) to capture.
+#  This script uses three screen grabbing methods:
+#  obs, simplescreenrecorder or anohter of my scripts called rofi_record-audio.
 #  Of course you will have to set profiles in simplescreenrecorder gui first
 #  to be able to use them later here.
 
-declare -a deps=( "ffmpeg" "polybar" "rofi" "simplescreenrecorder" )
+# checking dependencies
+declare -a deps=( "ffmpeg" "obs" "polybar" "rofi" "simplescreenrecorder" )
 
 for i in "${deps[@]}"; do
     [[ -z $(command -v "$i") ]] && {
         notify-send "$i isn 't installed, bye..."
-        exit 165
+        exit 127
     }
 done
+
+# getting the right bar pid
+if [[ -n $(pidof bspwm) ]]; then
+    barpid=$(pgrep --full bspwm-bar-2)
+else
+    barpid=$(pgrep --full i3-bar-2)
+fi
 
 _main() {
 
     case "$1" in
-        -r) rofi-record &         # external script
+        -a) rofi_record-audio &   # external script
             exit
         ;;
-        -s) _simplescreenrecorder # calls below function
+        -o) if [[ -z $(pidof -x ${deps[1]}) ]]; then
+                volume_control source --toggle
+                obs &
+                record_chrono 2 &
+            else
+                notify-send "obs-studio is already running..."
+            fi
+        ;;
+        -v) _simplescreenrecorder # calls functions below
             exit
         ;;
-        -k) if [[ -z $(pidof simplescreenrecorder) ]] \
-                || [[ -z $(pidof -x rofi-record) ]]; then
-                amixer set Capture,0 0%,0% mute nocap >/dev/null 2>&1
-                polybar-msg action "#mic-ipc.hook.0" >/dev/null 2>&1
-                exit
+        -k) if [[ -z $(pidof -x ${deps[1]}) ]]; then
+                pactl set-source-volume @DEFAULT_SOURCE@ 0%
+                pactl set-source-mute @DEFAULT_SOURCE@ 1
+                polybar-msg -p ${barpid} action "#mic-ipc.hook.0" >/dev/null 2>&1
+                record_chrono -k
             fi
         ;;
     esac
@@ -54,7 +70,7 @@ _simplescreenrecorder() {
     _all_monitors() (
 
         amixer set Capture,0 75%,75% unmute cap >/dev/null 2>&1
-        polybar-msg action "#mic-ipc.hook.1" >/dev/null 2>&1
+        polybar-msg -p ${barpid} action "#mic-ipc.hook.1" >/dev/null 2>&1
         record_chrono 2 &
 
         [[ $WM == 'bspwm' ]] && bspc desktop --focus '^5' \
@@ -67,8 +83,8 @@ _simplescreenrecorder() {
 
             killall --quiet record_chrono
             amixer set Capture,0 0%,0% mute nocap >/dev/null 2>&1
-            polybar-msg action "#mic-ipc.hook.0" >/dev/null 2>&1
-            polybar-msg action "#chrono-ipc-2.hook.1" >/dev/null 2>&1
+            polybar-msg -p ${barpid} action "#mic-ipc.hook.0" >/dev/null 2>&1
+            polybar-msg -p ${barpid} action "#chrono-ipc-2.hook.1" >/dev/null 2>&1
 
         }
     )
@@ -76,7 +92,7 @@ _simplescreenrecorder() {
     _screencast1() (
 
         amixer set Capture,0 75%,75% unmute cap >/dev/null 2>&1
-        polybar-msg action "#mic-ipc.hook.1" >/dev/null 2>&1
+        polybar-msg -p ${barpid} action "#mic-ipc.hook.1" >/dev/null 2>&1
         record_chrono 1 &
 
         [[ $WM == 'bspwm' ]] && bspc desktop --focus '^1' \
@@ -89,8 +105,8 @@ _simplescreenrecorder() {
 
             killall --quiet record_chrono
             amixer set Capture,0 0%,0% mute nocap >/dev/null 2>&1
-            polybar-msg action "#mic-ipc.hook.0" >/dev/null 2>&1
-            polybar-msg action "#chrono-ipc-1.hook.1" >/dev/null 2>&1
+            polybar-msg -p ${barpid} action "#mic-ipc.hook.0" >/dev/null 2>&1
+            polybar-msg -p ${barpid} action "#chrono-ipc-2.hook.1" >/dev/null 2>&1
 
         }
     )
@@ -98,8 +114,8 @@ _simplescreenrecorder() {
     _screencast2() (
 
         amixer set Capture,0 75%,75% unmute cap >/dev/null 2>&1
-        polybar-msg action "#mic-ipc.hook.1" >/dev/null 2>&1
-        record_chrono 2 &
+        polybar-msg -p ${barpid} action "#mic-ipc.hook.1" >/dev/null 2>&1
+        record_chrono 3 &
 
         [[ $WM == 'bspwm' ]] && bspc desktop --focus '^5' \
         || [[ $WM == 'i3' ]] && i3-msg workspace 5
@@ -111,8 +127,8 @@ _simplescreenrecorder() {
 
             killall --quiet record_chrono
             amixer set Capture,0 0%,0% mute nocap >/dev/null 2>&1
-            polybar-msg action "#mic-ipc.hook.0" >/dev/null 2>&1
-            polybar-msg action "#chrono-ipc-2.hook.1" >/dev/null 2>&1
+            polybar-msg -p ${barpid} action "#mic-ipc.hook.0" >/dev/null 2>&1
+            polybar-msg -p ${barpid} action "#chrono-ipc-2.hook.1" >/dev/null 2>&1
 
         }
     )
@@ -120,7 +136,7 @@ _simplescreenrecorder() {
     _screencast3() (
 
         amixer set Capture,0 75%,75% unmute cap >/dev/null 2>&1
-        polybar-msg action "#mic-ipc.hook.1" >/dev/null 2>&1
+        polybar-msg -p ${barpid} action "#mic-ipc.hook.1" >/dev/null 2>&1
         record_chrono 2 &
 
         [[ $WM == 'bspwm' ]] && bspc desktop --focus '^10' \
@@ -133,8 +149,8 @@ _simplescreenrecorder() {
 
             killall --quiet record_chrono
             amixer set Capture,0 0%,0% mute nocap >/dev/null 2>&1
-            polybar-msg action "#mic-ipc.hook.0" >/dev/null 2>&1
-            polybar-msg action "#chrono-ipc-2.hook.1" >/dev/null 2>&1
+            polybar-msg -p ${barpid} action "#mic-ipc.hook.0" >/dev/null 2>&1
+            polybar-msg -p ${barpid} action "#chrono-ipc-2.hook.1" >/dev/null 2>&1
 
         }
     )
