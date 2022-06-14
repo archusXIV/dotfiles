@@ -1,16 +1,26 @@
 #!/bin/bash
 
-# Hardware utilizations and temperatures.
+# Hardware utilizations and temperatures displayed in polybar.
 
-_kernel() { uname -r; }
+_mpd() {
 
-_mem() { free -h | awk '/Mem:/{print $3}'; }
+    local pid
+    
+    if [[ -n $(pidof bspwm) ]]; then
+        if [[ -z $(pidof ncmpcpp) ]]; then
+            polybar-msg -p "$(pgrep --full bspwm-bar-2)" \
+            action "#music_player-ipc.hook.1" >/dev/null 2>&1
+        fi
+    elif [[ -n $(pidof i3) ]]; then
+        if [[ -z $(pidof ncmpcpp) ]]; then
+            polybar-msg -p "$(pgrep --full i3-bar-2)" \
+            action "#music_player-ipc.hook.1" >/dev/null 2>&1
+        fi
+    fi
+    
+}
 
 _coreusage() { cut -d ' ' -f1 /proc/loadavg; }
-
-_disksusage() { df -h | awk '/sda2/{print $5}'; }
-
-_fanspeed() { sensors | awk '/fan2/{print $2}'; }
 
 _coretemp() {
     if [[ -n $(sensors | awk '/Tccd1/') ]]; then
@@ -33,18 +43,25 @@ _nvidia() {
         || echo "no nvidia driver installed"
 }
 
+_fanspeed() { sensors | awk '/fan2/{print $2" ""rpm"}'; }
+
+_mem() { free -h | awk '/Mem:/{print $3}'; }
+
+_disksusage() { df -h | awk '/sda2/{print $5}'; }
+
 # colored FontAwesome icons for polybar using ~/.Xresources parameters.
 # (p)oint is just a character that creates a kind of padding function,
 # for simulated blocks or modules.
+_icons_color() { xrdb -query | awk '/color4:/{print $NF}'; }
 
 p="%{F"$(xrdb -query | awk '/background:/{print $NF}')"}:%{F-}"
-icon_core="%{F"$(xrdb -query | awk '/color4:/{print $NF}')"}%{F-}"
-icon_nvidia="%{F"$(xrdb -query | awk '/color4:/{print $NF}')"}%{F-}"
-icon_fan="%{F"$(xrdb -query | awk '/color4:/{print $NF}')"}%{F-}"
-icon_mem="%{F"$(xrdb -query | awk '/color4:/{print $NF}')"}%{F-}"
-icon_disk="%{F"$(xrdb -query | awk '/color4:/{print $NF}')"}%{F-}"
-icon_kernel="%{F"$(xrdb -query | awk '/color4:/{print $NF}')"}%{F-}"
+icon_core="%{F"$(_icons_color)"}%{F-}"
+icon_nvidia="%{F"$(_icons_color)"}%{F-}"
+icon_fan="%{F"$(_icons_color)"}%{F-}"
+icon_mem="%{F"$(_icons_color)"}%{F-}"
+icon_disk="%{F"$(_icons_color)"}%{F-}"
+icon_kernel="%{F"$(_icons_color)"}%{F-}"
 
-echo "${icon_core}""${p}" "$(_coreusage)"% - "$(_coretemp)""${p}" "${icon_nvidia}""${p}" "$(_nvidia)""$p" \
-     "${icon_fan}""${p}" "$(_fanspeed)""${p}" "${icon_mem}""${p}" "$(_mem)""$p" \
-     "${icon_disk}""${p}" "$(_disksusage)""${p}" "${icon_kernel}""${p}" "$(_kernel)"
+echo "${icon_core}""${p}" "$(_coreusage)"% - "$(_coretemp)""${p}" \
+     "${icon_nvidia}""${p}" "$(_nvidia)""$p" "${icon_fan}""${p}" "$(_fanspeed)""${p}" \
+     "${icon_mem}""${p}" "$(_mem)""$p" "${icon_disk}""${p}" "$(_disksusage)" "$(_mpd)"
