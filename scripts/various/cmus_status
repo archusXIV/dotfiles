@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Optional dependencies 'polybar' 'mpc'
+# Optional dependency 'polybar'
 
 duration="$(cmus-remote -Q 2> /dev/null | awk '/duration/{print $2}')"
 artist=""
@@ -8,12 +8,13 @@ title=""
 file=""
 status="stopped"
 
-if (( ${duration} >= 3600 )); then
+# dollar sign isn't necessary in arithmetic test. (( ${duration} >= 3600 ))
+if (( duration >= 3600 )); then
     hours=$(printf "%02d" $((duration / 3600)))
     minutes=$(printf "%02d" $((duration / 60 - 60)))
     seconds=$(printf "%02d" $((duration % 60)))
     total_time=" |  ${hours}:${minutes}:${seconds}"
-elif (( ${duration} < 3600 )); then
+elif (( duration < 3600 )); then
     minutes=$(printf "%02d" $((duration / 60)))
     seconds=$(printf "%02d" $((duration % 60)))
     total_time=" |  ${minutes}:${seconds}"
@@ -39,8 +40,6 @@ msg=""
 if [[ ${status} = 'stopped' ]]; then
     msg=""
 else
-    # stop mpd if it's playing
-    [[ -n $(mpc --format %title% current) ]] && mpc stop
 
     if [[ ${status} = 'paused' ]]; then
         msg="%{F$(xrdb -query | awk '/color4:/{print $NF}')}${msg}"
@@ -62,13 +61,17 @@ else
 
 fi
 
-output="$XDG_CONFIG_HOME/cmus/cmus_output"
+output="$XDG_RUNTIME_DIR/music_player_output.txt"
 echo "${msg}" > "${output}"
 
-sleep 0.2;
+sleep 0.2
 
-if [[ -n $(pidof polybar) ]]; then
-    polybar-msg action "#cmus-ipc.hook.0" > /dev/null 2>&1
+if [[ -n $(pidof bspwm) ]]; then
+    polybar-msg -p "$(pgrep --full bspwm-bar-2)" \
+    action "#music_player-ipc.hook.2" >/dev/null 2>&1
+elif [[ -n $(pidof i3) ]]; then
+    polybar-msg -p "$(pgrep --full i3-bar-2)" \
+    action "#music_player-ipc.hook.2" >/dev/null 2>&1
 else
     notify-send "$(cat "${output}")"
 fi
