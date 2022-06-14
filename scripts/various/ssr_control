@@ -1,12 +1,6 @@
 #!/bin/bash
 
-# Dependencies: simplescreenrecorder, polybar (optional)
-# Launch it and you'll be prompted for $TIME. eg 600 will be 10mn
-
-[[ -z $(command -v simplescreenrecorder) ]] && {
-    echo "simplescreenrecorder isn't installed, exiting..."
-    exit 165
-   }
+# runs simplescreenrecorder in hidden mode for the entered time.
 
 PIPE="$XDG_RUNTIME_DIR/ssr.fifo"
 
@@ -16,26 +10,33 @@ else
     mkfifo "$PIPE" || exit 1
 fi
 
-amixer set Capture,0 85%,85% unmute cap >/dev/null 2>&1
-polybar-msg -p "$(pgrep --full "bspwm-bar-2")" hook mic-ipc 2 >/dev/null 2>&1
+amixer set Capture,0 75%,75% unmute cap >/dev/null 2>&1
+polybar-msg action "#mic-ipc.hook.1" >/dev/null 2>&1
 
-echo "How long do you want the desktop recording to last? (in seconds): "
+_how_long() {
+    convertString="$1"
+    IFS=: read -r minute second <<< "$convertString"
+    secondsValue=$(((minute) * 60 + second))
+    echo "$secondsValue"
+}
+
+echo "How long do you want the desktop recording to last? (in minutes eg: 02:30): "
 read -r TIME
 
 simplescreenrecorder \
     --start-hidden \
     --settingsfile="/home/archangel/.config/simplescreenrecorder/input-profiles/triplescreen.conf" < "$PIPE" &
 
-record_chrono 2 & # https://github.com/archusXIV/dotfiles/blob/main/scripts/various/record_chrono
+record_chrono 2 &
 
 exec 4> "$PIPE"
-sleep 3
+sleep 2
 
 echo "record-start" >&4
-sleep "$TIME"
+sleep $(_how_long $TIME)
 
 echo "record-save" >&4
-sleep 3
+sleep 2
 
 echo "quit" >&4
 exec 4>&-
@@ -43,8 +44,8 @@ exec 4>&-
 rm "$PIPE"
 
 amixer set Capture,0 0%,0% mute nocap >/dev/null 2>&1
-polybar-msg -p "$(pgrep --full "bspwm-bar-2")" action "#mic-ipc.hook.0" >/dev/null 2>&1
-killall record_chrono
+polybar-msg action "#mic-ipc.hook.0" >/dev/null 2>&1
+killall -q record_chrono
 polybar-msg action "#chrono-ipc-2.hook.1" >/dev/null 2>&1
 clear
 exit
