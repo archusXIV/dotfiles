@@ -126,9 +126,8 @@ _check_editor() {
 }
 
 _check_queue() {
-
     ## This looks ugly but everything will fit nicely...
-    if (( $(grep "" -c "$QUEUE") > 1 )); then
+    if (( $(grep '^https' -c "$QUEUE") > 0 )); then
         echo -e "                                    ┌──────────────────────────────────────────────┐"
         echo -e "                                    │ ${red}Default playlist contains one or more url(s) ${nocolor}│"
         echo -e "                                    │ Consider checking the url(s) list ${green}(option 6).${nocolor}|"
@@ -146,7 +145,7 @@ _check_code_queue() {
     # In case link is secured or no format code found.
     echo " ${green}Verifying media codes from default list...${nocolor}"
 
-    for lines in $(cat "$QUEUE" | sed '/#EXTM3U/d'); do
+    for lines in $(grep '^https' "$QUEUE"); do
         # checking the last url we added.
         youtube-dl -F $(sed -n '$ p' "$QUEUE") >/dev/null 2>&1
 
@@ -154,7 +153,7 @@ _check_code_queue() {
             echo -e " ${red}No format code found!\n $lines removed${nocolor}"
             sed -i '$ d' "$QUEUE"
             sleep 2s
-            if (( $(grep "" -c "$QUEUE" ) < 2 )); then
+            if (( $(grep '^https' -c "$QUEUE" ) == 0 )); then
                 _menu
             else
                 # _check_code function acts in _copy_audio/videeo loops...
@@ -170,7 +169,7 @@ _check_code_load() {
     # Same as above, but for the chosen already existing playlist.
     echo " ${green}Verifying media codes from $list...${nocolor}"
 
-    for lines in $(cat "$list" | sed '/#EXTM3U/d'); do
+    for lines in $(grep '^https' "$list"); do
         
         youtube-dl -F $(sed -n '$ p' "$list") >"$YTOP"
 
@@ -178,7 +177,7 @@ _check_code_load() {
             echo -e " ${red}No format code found!\n $lines removed${nocolor}"
             sleep 2s
             sed -i '$ d' "$list"
-            if (( $(grep "" -c "$list" ) < 2 )); then
+            if (( $(grep '^https' -c "$list" ) == 0 )); then
                 _menu
             else
                 continue
@@ -227,7 +226,6 @@ _view_url_info() {
 }
 
 _remove_crap() {
-
     # After some tests it appears that a single link copied from a youtube playlist
     # causes the download of the entire playlist.
     # So with the help of sed we cleanup the link to get the direct link to the desired video.
@@ -352,12 +350,13 @@ _copy_video() {
 _download_completed() {
 
     echo " ${green}Downloads are completed, do you want to delete $list? [N/y]: ${nocolor}"
-    read -rsn 1 REPLY
+    # Here we don't need any variable to set.
+    # Let's use the bash default one.
+    read -rsn 1
     case "$REPLY" in
         N|n)    mv --force "$list"_origin "$list" && _menu ;;
         y|Y)    if [[ -f "$QUEUE"_origin ]]; then
                     rm "$QUEUE"_origin
-                    _check_queue
                 else
                     rm "$list" "$list"_origin
                     _check_queue
@@ -388,7 +387,7 @@ _download_incompleted() {
 # let's get our file (web page) title.
 _get_media_title() { youtube-dl -j "$url" | jq '(.title)'; }
 
-_get_lines_list() { sed '/#EXTM3U/d' "$list" | wc -l; }
+_get_lines_list() { grep '^https' -c "$list"; }
 
 YTOP="$tmp_dir/youtube-dl_output.txt"
 FFOP="$tmp_dir/ffmpeg_output.txt"
@@ -399,7 +398,7 @@ _download_audio() {
     cp -f "$list" "$list"_origin
     _check_code_load
 
-    for url in $(grep 'https' "$list"); do
+    for url in $(grep '^https' "$list"); do
 
         # We compare if the content of $list is less than 3 because:
         # 1) we have expression #EXTM3U at the top.
@@ -525,7 +524,7 @@ _edit_mpv-conf() {
     _menu
 }
 
-_get_lines_queue() { sed '/#EXTM3U/d' "$QUEUE" | wc -l; }
+_get_lines_queue() { grep '^https' -c "$QUEUE"; }
 
 _get_youtubeplaylist_urls() {
     if [[ $(grep -e 'playlist?list=' "$QUEUE") ]]; then
@@ -545,7 +544,7 @@ _get_youtubeplaylist_urls() {
 
 _get_completed() {
     echo " ${green}Downloads are completed, do you want to keep main playlist? [N/y]: ${nocolor}"
-    read -rsn 1 REPLY
+    read -rsn 1
     case "$REPLY" in
         N|n)    rm "$QUEUE"_origin && _menu ;;
         y|Y)    mv -f "$QUEUE"_origin "$QUEUE" && _menu ;;
@@ -555,7 +554,6 @@ _get_completed() {
 }
 
 _get_incompleted() {
-
     _main_playlist_edition() {
         read -rsn 1 -p ${green}' Edit "$QUEUE"_origin and try again later? [Y/n]: '${nocolor} edit
         case "$edit" in
@@ -584,7 +582,7 @@ _get_audio() {
 
     _check_code_queue
 
-    for url in $(grep 'https' "$QUEUE"); do
+    for url in $(grep '^https' "$QUEUE"); do
 
         if (( $(grep "" -c "$QUEUE") < 3 )); then
             echo ""
@@ -636,7 +634,7 @@ _get_video() {
 
     _check_code_queue
 
-    for url in $(grep 'https' "$QUEUE"); do
+    for url in $(grep '^https' "$QUEUE"); do
 
         if (( $(grep "" -c "$QUEUE") < 3 )); then
             echo ""
@@ -712,7 +710,6 @@ _load_video() {
         echo -e " ${green}Playing: $(cat "$COMPLETE_INFO" | sed -n '1p')\n"
         echo " ${red}Press 'q' in mpv to play next video.${nocolor}"
         mpv --ytdl-format=137+251 "$i" >/dev/null 2>&1 \
-        || mpv --ytdl-format=299+251 "$i" >/dev/null 2>&1 \
         || mpv --ytdl-format=22 "$i" >/dev/null 2>&1 \
         || mpv "$i" >/dev/null 2>&1
         sed -i '1d' "$COMPLETE_INFO"
@@ -732,7 +729,7 @@ _load_playlist() {
     echo -e " ${green}Select a playlist to load (Press 'q' to quit mpv):\n${nocolor}"
     select list in $(find . -name "*.m3u" | sort -d | sed 's,.*/,,'); do
 
-        if ! grep -q -e 'https' "$list"; then
+        if ! grep -q -e '^https' "$list"; then
             echo " ${red}$list is empty...${nocolor}"
             sleep 3s
             break
@@ -743,7 +740,7 @@ _load_playlist() {
         if [[ $(grep -e 'playlist?list=' "$list") ]]; then
             echo ""
             echo -e " ${green}Checking youtube playlist availability...please wait.${nocolor}\n"
-            [[ -f $URLS_INFO ]] && rm "$URLS_INFO" >/dev/null 2>&1
+            [[ -f $URLS_INFO ]] && rm "$URLS_INFO"
 
             while read -r line; do
                 youtube-dl -j $line \
