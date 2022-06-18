@@ -3,7 +3,6 @@
 ##    Author: Barret E (2020-21) <archus@protonmail.com>
 ##    https://github.com/archusXIV/dotfiles
 ##    Dependencies: ffmpeg, jq,  mpv, ranger, youtube-dl.
-##    https://github.com/lwilletts/mpvc/blob/master/mpvc
 ##
 ##    Youtube-dl is for now kind of unmaintained so install and make a symlink with
 ##    https://github.com/yt-dlp/yt-dlp/releases
