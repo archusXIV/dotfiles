@@ -1,0 +1,19 @@
+#!/bin/bash
+## This is a part of main script: mpv-menu.
+
+_DeleteUrl() {
+    
+    if (( $(grep "" -c "$QUEUE") < 2 )); then
+        echo " ${green}There is nothing to do, main list is empty...${nocolor}"
+        sleep 3s
+        _Menu
+    else
+        echo ""
+        sed -i '/https/d' "$QUEUE"
+        _CleanTmpDir
+        echo " ${red}All urls removed.${nocolor}"
+        sleep 3s
+        _Menu
+    fi
+}
+

@@ -1,0 +1,27 @@
+#!/bin/bash
+## This is a part of main script: mpv-menu.
+
+_GetIncompleted() {
+    
+    _MainPlaylistEdition() {
+        read -rsn 1 -p ${green}' Edit "$QUEUE"_origin and try again later? [Y/n]: '${nocolor} edit
+        case "$edit" in
+            Y|y) _EditPlaylist ;;
+            n|N) echo "" && _GetCompleted ;;
+        esac
+    }
+
+    if [[ $(find "$audios_dir" -name "*.part") ]]; then
+        echo -e " ${red}Incomplete files in $audios_dir:\n"
+        find "$audios_dir" -name "*.part" | sort -d | sed 's,.*/,,'
+        _MainPlaylistEdition
+    elif [[ $(find "$videos_dir" -name "*.part") ]]; then
+        echo -e " ${red}Incomplete files in $videos_dir:\n"
+        find "$videos_dir" -name "*.part" | sort -d | sed 's,.*/,,'
+        _MainPlaylistEdition
+    else
+        _GetCompleted
+    fi
+    
+}
+

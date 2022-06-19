@@ -1,0 +1,18 @@
+#!/bin/bash
+## This is a part of main script: mpv-menu.
+
+_CheckQueue() {
+    ## This looks ugly but everything will fit nicely...
+    if (( $(grep '^https' -c "$QUEUE") > 0 )); then
+        echo -e "                                    ┌──────────────────────────────────────────────┐"
+        echo -e "                                    │ ${red}Default playlist contains one or more url(s) ${nocolor}│"
+        echo -e "                                    │ Consider checking the url(s) list ${green}(option 6).${nocolor}|"
+        echo -e "                                    │ Or delete them ${green}(option 7).${nocolor}                   |"
+        echo -e "                                    └──────────────────────────────────────────────┘"
+        sleep 4s
+        _Menu
+    else
+        _Menu
+    fi
+
+}

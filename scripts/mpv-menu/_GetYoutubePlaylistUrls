@@ -1,0 +1,23 @@
+#!/bin/bash
+## This is a part of main script: mpv-menu.
+
+_GetYoutubePlaylistUrls() {
+    
+    if grep -qe 'playlist?list=' "$QUEUE"; then
+        echo ""
+        echo -e " ${green}Checking youtube playlist availability...please wait.${nocolor}\n"
+
+        mapfile -t youtubeplaylist < <(cat "$QUEUE" | sed '/#EXTM3U/d')
+        
+        for line in "${youtubeplaylist[@]}"; {
+            youtube-dl -j $line \
+            | jq '(.webpage_url)' \
+            | cat | sed 's/"//g' >> "$URLS_INFO"
+        }
+
+        cat "$URLS_INFO" >> "$QUEUE"
+        sed -i '/playlist/d' "$QUEUE" "$URLS_INFO"
+    fi
+    
+}
+

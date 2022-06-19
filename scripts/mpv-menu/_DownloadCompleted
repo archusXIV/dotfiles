@@ -1,0 +1,24 @@
+#!/bin/bash
+## This is a part of main script: mpv-menu.
+
+_DownloadCompleted() {
+
+    echo " ${green}Downloads are completed, do you want to delete $list? [N/y]: ${nocolor}"
+    # Here we don't need any variable to set.
+    # Let's use the bash default one.
+    read -rsn 1
+    case "$REPLY" in
+        N|n)    mv --force "$list"_origin "$list" && _Menu ;;
+        y|Y)    if [[ -f "$QUEUE"_origin ]]; then
+                    rm -f "$QUEUE"_origin
+                    _CheckQueue
+                else
+                    rm "$list" "$list"_origin
+                    _CheckQueue
+                fi ;;
+        *  )    echo " ${red} Wrong option! Wait and try again...${nocolor}"
+                sleep 3s ;;
+    esac
+    
+}
+

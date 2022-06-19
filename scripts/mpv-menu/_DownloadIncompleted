@@ -1,0 +1,20 @@
+#!/bin/bash
+## This is a part of main script: mpv-menu.
+
+_DownloadIncompleted() {
+
+    if [[ $(find "$playlists_dir" -name "*.part") ]]; then
+        echo -e " ${red}Incomplete files in $playlists_dir:\n"
+        find "$playlists_dir" -name "*.part" | sort -d | sed 's,.*/,,'
+        echo " ${green}Edit "$list"_origin and try again later? [Y/n]:${nocolor}"
+        read -rsn 1 edit
+        case "$edit" in
+            Y|y) _EditPlaylist ;;
+            n|N) echo "" && _DownloadCompleted ;;
+        esac
+    else
+        _DownloadCompleted
+    fi
+
+}
+

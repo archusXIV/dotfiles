@@ -1,0 +1,9 @@
+#!/bin/bash
+## This is a part of main script: mpv-menu.
+
+_LoadAudio() {
+    mpv --no-video "$QUEUE"
+    _CleanTmpDir
+    _Menu
+}
+

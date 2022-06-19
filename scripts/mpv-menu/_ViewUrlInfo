@@ -1,0 +1,42 @@
+#!/bin/bash
+## This is a part of main script: mpv-menu.
+
+_ViewUrlInfo() {
+
+    [[ -f $COMPLETE_INFO ]] && rm "$COMPLETE_INFO"
+
+    if (( $(grep "" -c "$QUEUE") > 1 )); then
+        echo " ${green}Getting url(s) infos, please wait...${nocolor}"
+
+        mapfile -t urlinfo < <(cat "$QUEUE" | sed '/#EXTM3U/d')
+        
+        for urls in "${urlinfo[@]}"; {
+            youtube-dl -j $urls \
+            | jq '(.title, .webpage_url)' >> "$COMPLETE_INFO"
+        }
+
+        cat -n "$COMPLETE_INFO" | sed 's/"//g'
+        cat "$QUEUE" | sed '/#EXTM3U/d' > "$URLS_INFO"
+        _GetQualityCodes -q &
+        sed -i 's/"//g; /^https/d' "$COMPLETE_INFO"
+
+        echo ""
+        read -rsn 1 -p ${green}' [D]elete, [P]lay, [S]ave as a playlist or [B]ack to menu: '${nocolor} opt
+        case "$opt" in
+            d)  rm "$COMPLETE_INFO" && _DeleteUrl  ;;
+            b)  rm "$COMPLETE_INFO" && {
+                clear
+                _CheckQueue
+            } ;;
+            p)  echo ""
+                _CheckCode -q && _LoadVideo       ;;
+            s)  rm "$COMPLETE_INFO" && _SaveRemove ;;
+            *)  _Menu                               ;;
+        esac
+    else
+        echo " ${red}Default list is empty.${nocolor}"
+        sleep 2s && _Menu
+    fi
+
+}
+

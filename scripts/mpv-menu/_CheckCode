@@ -1,0 +1,55 @@
+#!/bin/bash
+## This is a part of main script: mpv-menu.
+
+_CheckCode() {
+    
+    case "$1" in
+        -q) # In case link is secured or no format code found.
+            echo " ${green}Verifying media codes from default list...${nocolor}"
+            
+            mapfile -t mediacode < <(grep '^https' "$QUEUE")
+            
+            for lines in "${mediacode[@]}"; do
+                # checking the last url we added.
+                youtube-dl -F $(sed -n '$ p' "$QUEUE") >/dev/null 2>&1
+        
+                if [[ $? -eq 1 ]]; then
+                    echo -e " ${red}No format code found!\n $lines removed${nocolor}"
+                    sed -i '$ d' "$QUEUE"
+                    sleep 2s
+                    if (( $(grep '^https' -c "$QUEUE" ) == 0 )); then
+                        _Menu
+                    else
+                        # _CheckCode function acts in _CopyAudio/videeo loops...
+                        continue
+                    fi
+                fi
+                echo "$lines ${green}ok${nocolor}"
+                sleep 1s
+            done ;;
+        -l) # Same as above, but for the chosen already existing playlist.
+            echo " ${green}Verifying media codes from $list...${nocolor}"
+        
+            mapfile -t mediacode < <(grep '^https' "$list")
+            
+            for lines in "${mediacode[@]}"; do
+                
+                youtube-dl -F $(sed -n '$ p' "$list") >"$YTOP"
+        
+                if [[ $? -eq 1 ]]; then
+                    echo -e " ${red}No format code found!\n $lines removed${nocolor}"
+                    sleep 2s
+                    sed -i '$ d' "$list"
+                    if (( $(grep '^https' -c "$list" ) == 0 )); then
+                        _Menu
+                    else
+                        continue
+                    fi
+                fi
+                echo "$lines ${green}ok${nocolor}"
+                sleep 1s
+            done ;;
+    esac
+
+}
+

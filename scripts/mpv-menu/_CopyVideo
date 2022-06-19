@@ -1,0 +1,49 @@
+#!/bin/bash
+
+_CopyVideo() {
+    
+    while (( $(grep "" -c "$QUEUE") > 0 )); do
+        echo ""
+        echo " Paste an url to fill the video playlist:"
+        read -r url
+        echo "$url" | tee -a "$QUEUE" >> "$URLS_INFO"
+        
+        _GetYoutubePlaylistUrls
+        _RemoveCrap
+        clear
+        
+        if (( $(grep "" -c "$QUEUE") < 3 )); then
+            echo ""
+            echo " ${green}There is $(_GetLinesQueue) url in the list${nocolor}."
+        else
+            echo ""
+            echo " ${green}There are $(_GetLinesQueue) urls in the list${nocolor}."
+        fi
+        
+        echo ""
+        echo -e "                                                 ::video options:: "
+        echo -e "                             ┌────────────────────────────────────────────────────────────┐"
+        echo -e "                             │     1) Add more video links      4) Play current list      │"
+        echo -e "                             │     2) Download current list     5) View current list      │"
+        echo -e "                             │     3) Save playlist as          6) Back to main menu      │"
+        echo -e "                             └────────────────────────────────────────────────────────────┘"
+        echo -e "                                                   ${green}Select an item${nocolor}"
+        echo ""
+        read -rsn 1 options
+        case "$options" in
+            1) clear && continue
+               echo "" ;;
+            2) _GetVideo
+               echo "" ;;
+            3) _SaveRemove
+               echo "" ;;
+            4) _GetQualityCodes -q &
+               _CheckCode -q && _LoadVideo
+               echo "" ;;
+            5) _ViewUrlInfo
+               echo "" ;;
+            6) _CheckQueue
+               echo "" ;;
+        esac
+    done
+}
