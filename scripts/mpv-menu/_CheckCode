@@ -7,9 +7,9 @@ _CheckCode() {
         -q) # In case link is secured or no format code found.
             echo " ${green}Verifying media codes from default list...${nocolor}"
             
-            mapfile -t mediacode < <(grep '^https' "$QUEUE")
+            mapfile -t CodeDefault < <(grep '^https' "$QUEUE")
             
-            for lines in "${mediacode[@]}"; do
+            for lines in "${CodeDefault[@]}"; do
                 # checking the last url we added.
                 youtube-dl -F $(sed -n '$ p' "$QUEUE") >/dev/null 2>&1
         
@@ -20,19 +20,18 @@ _CheckCode() {
                     if (( $(grep '^https' -c "$QUEUE" ) == 0 )); then
                         _Menu
                     else
-                        # _CheckCode function acts in _CopyAudio/videeo loops...
                         continue
                     fi
                 fi
                 echo "$lines ${green}ok${nocolor}"
                 sleep 1s
             done ;;
-        -l) # Same as above, but for the chosen already existing playlist.
+        -l) # Same as above, but for the chosen already existing (play)list.
             echo " ${green}Verifying media codes from $list...${nocolor}"
         
-            mapfile -t mediacode < <(grep '^https' "$list")
+            mapfile -t CodeList < <(grep '^https' "$list")
             
-            for lines in "${mediacode[@]}"; do
+            for lines in "${CodeList[@]}"; do
                 
                 youtube-dl -F $(sed -n '$ p' "$list") >"$YTOP"
         
@@ -52,4 +51,3 @@ _CheckCode() {
     esac
 
 }
-
