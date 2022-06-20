@@ -2,7 +2,8 @@
 ## This is a part of main script: mpv-menu.
 
 _GetYoutubePlaylistUrls() {
-    
+    # mapfile in addition of a for loop is faster
+    # than using while <condition>; do <command_2> done < <(command_1)
     if grep -qe 'playlist?list=' "$QUEUE"; then
         echo ""
         echo -e " ${green}Checking youtube playlist availability...please wait.${nocolor}\n"
@@ -11,13 +12,13 @@ _GetYoutubePlaylistUrls() {
         
         for line in "${youtubeplaylist[@]}"; {
             youtube-dl -j $line \
-            | jq '(.webpage_url)' \
-            | cat | sed 's/"//g' >> "$URLS_INFO"
+            | jq '(.title, .webpage_url)' \
+            | sed 's/"//g' >> "$COMPLETE_INFO"
         }
 
-        cat "$URLS_INFO" >> "$QUEUE"
+        awk '/^https/{print $0}' "$COMPLETE_INFO" \
+        | tee -a "$QUEUE" >> "$URLS_INFO"
         sed -i '/playlist/d' "$QUEUE" "$URLS_INFO"
     fi
     
 }
-
