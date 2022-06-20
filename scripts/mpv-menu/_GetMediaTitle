@@ -1,5 +1,5 @@
 #!/bin/bash
 ## This is a part of main script: mpv-menu.
 
-_GetMediaTitle() { youtube-dl -j "$url" | jq '(.title)'; }
+_GetMediaTitle() { youtube-dl --skip-download --get-title "$url"; }
 
