@@ -6,15 +6,13 @@ _WindowRules() {
     # If refreshing bspwmrc, remove all previous rules
     # to prevent doubling up.
     bspc rule -r "*"
-
-    # add windows class names to this list if you want them floating.
+    
+    # add windows class names to this file if you want them to float.
     local FloatingApps="$XDG_CONFIG_HOME/bspwm/FloatingApps"
     
-    mapfile -t < <(cat "$FloatingApps")
-    
-    for item in "${MAPFILE[@]}"; do
-        _Rules "$item" state=floating focus=on center=on
-    done
+    while read -r line; do
+        _Rules "$line" state=floating focus=on center=on
+    done < "$FloatingApps"
 
     # Monitor 1
     _Rules firefox              desktop=^1 follow=on
