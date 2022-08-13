@@ -163,12 +163,8 @@ _make_updates() {
         fi
     done
 
-    for i in "${criteria[@]}"; do
-        if ! grep -qw "$i" "$ARCHAUR"; then
-            echo " ${green}NO REBOOT NEEDED !${nocolor}"
-            _nocriteria
-        fi
-    done
+    echo " ${green}NO REBOOT NEEDED !${nocolor}"
+   _nocriteria
 
 }
 
