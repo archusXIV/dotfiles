@@ -4,12 +4,11 @@
 # direction.
 
 size=${2:-'10'}
-direction=$1
 
 bspc query -N -n focused.floating
 floating=$?
 
-case "$direction" in
+case "$1" in
     west)   [[ $floating = 0 ]] && bspc node -z right -"$size" 0 \
             || bspc node @west  -r -"$size" \
             || bspc node @east  -r -"$size"
