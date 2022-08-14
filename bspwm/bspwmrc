@@ -83,10 +83,10 @@ _GetColors() {
 
     local red cyn mag bkg
 
-    red="$(xrdb -query | awk '/color1:/{print $NF}')"
-    cyn="$(xrdb -query | awk '/color6:/{print $NF}')"
-    mag="$(xrdb -query | awk '/color5:/{print $NF}')"
-    bkg="$(xrdb -query | awk '/background:/{print $NF}')"
+    red=$(xrdb -query | awk '/color1:/{print $NF}')
+    cyn=$(xrdb -query | awk '/color6:/{print $NF}')
+    mag=$(xrdb -query | awk '/color5:/{print $NF}')
+    bkg=$(xrdb -query | awk '/background:/{print $NF}')
 
     bspc config active_border_color   "$bkg"
     bspc config focused_border_color  "$cyn"
