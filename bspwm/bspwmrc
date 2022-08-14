@@ -81,7 +81,7 @@ _Check() { command -v "$1" >/dev/null; }
 
 _GetColors() {
 
-    local red blu mag bkg
+    local red cyn mag bkg
 
     red="$(xrdb -query | awk '/color1:/{print $NF}')"
     cyn="$(xrdb -query | awk '/color6:/{print $NF}')"
