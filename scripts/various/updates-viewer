@@ -131,8 +131,7 @@ _NoReboot() {
         action "#updates-ipc.hook.0" >/dev/null 2>&1
     elif [[ -n $(pidof i3) ]]; then
             polybar-msg -p "$(pgrep --full bspwm-bar-1)" \
-            action "#updates-ipc.hook.0" >/dev/null 2>&1 \
-            || pkill -SIGRTMIN+10 i3blocks > /dev/null 2>&1
+            action "#updates-ipc.hook.0" >/dev/null 2>&1
     else
         echo "no running bars found" && exit 1
     fi
