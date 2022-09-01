@@ -24,17 +24,17 @@ for deps in checkupdates polybar yay; do
     [[ -z $(command -v "$deps") ]] && exit 1
 done
 
-_check_updates() {
+_CheckUpdates() {
     
-    # avoid running multiple instances
-    scriptname=$(basename $0)
-    pids=($(pidof -x $scriptname))
+    # avoids running multiple instances
+    updmngr=$(basename $0)
+    pids=($(pidof -x $updmngr))
     
     [[ ${#pids[@]} -gt 1 ]] && exit
     
     while true; do
 
-        touch "$ARCH" "$AUR" "$ARCHAUR"
+        touch {"$ARCH","$AUR","$ARCHAUR"}
         sleep 0.5
         
         sudo reflector --country 'France' --latest 10 \
@@ -67,7 +67,7 @@ _check_updates() {
     done &
 }
 
-_yesnoprompt() {
+_YesNoPrompt() {
     # stolen from budRich
     local screenprompt key default options status
 
@@ -98,82 +98,100 @@ _yesnoprompt() {
     return "${status:-0}"
 }
 
-_reboot() {
+_IfGrubUpdate() {
+    # Sometimes grub' updates can mess up the bootloader sector...
+    if grep -qw 'grub' "$ARCH"; then
+        sudo grub-install \
+        --target=x86_64-efi \
+        --efi-directory=/boot/efi \
+        --bootloader-id=ARCH_GRUB
+        sudo grub-mkconfig -o /boot/grub/grub.cfg
+    else
+        sudo grub-mkconfig -o /boot/grub/grub.cfg
+    fi
+}
+
+_Reboot() {
     sudo cp -f "$MIRR" "$BCKP"
     sudo pacman -Syu --noconfirm
-    sudo grub-mkconfig -o /boot/grub/grub.cfg
+    _IfGrubUpdate
     sudo reboot
 }
 
-_noreboot() {
+_NoReboot() {
     sudo cp -f "$MIRR" "$BCKP"
     sudo pacman -Syu --noconfirm
-    sudo grub-mkconfig -o /boot/grub/grub.cfg
+    _IfGrubUpdate
+    
     # cleaning our lists from old packages updates.
-    sed -i '/^[a-zA-Z]/d' {$ARCH,$AUR,$ARCHAUR}
-
-    if [[ -n $(pidof polybar) ]]; then
+    sed -i '/^[a-zA-Z]/d' {"$ARCH","$AUR","$ARCHAUR"}
+    
+    if [[ -n $(pidof bspwm) ]]; then
         polybar-msg -p "$(pgrep --full bspwm-bar-1)" \
         action "#updates-ipc.hook.0" >/dev/null 2>&1
-    elif [[ -n $(pidof i3blocks) ]]; then
-        pkill -SIGRTMIN+10 i3blocks > /dev/null 2>&1
+    elif [[ -n $(pidof i3) ]]; then
+            polybar-msg -p "$(pgrep --full bspwm-bar-1)" \
+            action "#updates-ipc.hook.0" >/dev/null 2>&1 \
+            || pkill -SIGRTMIN+10 i3blocks > /dev/null 2>&1
     else
         echo "no running bars found" && exit 1
     fi
-    exit
+    
+    exit 0
 }
 
-_poweroff() {
+_Poweroff() {
     sudo cp -f "$MIRR" "$BCKP"
     sudo pacman -Syu --noconfirm
-    sudo grub-mkconfig -o /boot/grub/grub.cfg
+    _IfGrubUpdate
     sudo poweroff
 }
 
-_criteria() {
+_Criteria() {
     # default is reboot.
     # by pressing Enter we will get the default action.
     echo ""
-    _yesnoprompt -n "Do you wish to ${red}poweroff ${nocolor}after updates?" || {
-        _yesnoprompt "Do you wish to ${red}reboot ${nocolor}after updates?" || {
-            _noreboot
+    _YesNoPrompt -n "Do you wish to ${red}poweroff ${nocolor}after updates?" || {
+        _YesNoPrompt "Do you wish to ${red}reboot ${nocolor}after updates?" || {
+            _NoReboot
         }
-        _reboot
+        _Reboot
     }
-    _poweroff
+    _Poweroff
 }
 
-_nocriteria() {
-    # Here the default is '_noreboot'.
+_NoCriteria() {
+    # Here the default is '_NoReboot'.
     echo ""
-    _yesnoprompt -n "Do you wish to ${red}poweroff ${nocolor}after updates?" || {
-        _noreboot
+    _YesNoPrompt -n "Do you wish to ${red}poweroff ${nocolor}after updates?" || {
+        _NoReboot
     }
-    _poweroff
+    _Poweroff
 }
 
-_make_updates() {
+_MakeUpdates() {
 
-    declare -a criteria=( "linux" "nvidia" "mesa" "systemd" "amd-ucode" "xf86-video-*" "xorg" )
-
-    for i in "${criteria[@]}"; do
-        if grep -qw "$i" "$ARCHAUR"; then
+    declare -a criteria=( "amd-ucode" "grub" "linux" "mesa" "nvidia" "systemd" "xf86-video-*" "xorg" )
+    
+    for item in "${criteria[@]}"; do
+        if grep -qw "$item" "$ARCHAUR"; then
             echo " ${red}REBOOT NEEDED !${nocolor}"
-            _criteria
+            _Criteria
         fi
     done
 
     echo " ${green}NO REBOOT NEEDED !${nocolor}"
-   _nocriteria
+    
+    _NoCriteria
 
 }
 
-_list() {
+_List() {
 
     if [[ -z $(cat "$ARCHAUR") ]]; then
         echo " ${red}No available update."
         sleep 3s
-        exit 0
+        return 0
     else
         while read -r line; do
             echo "$line"
@@ -186,20 +204,32 @@ _list() {
             echo -e "${green}There is "$(grep "" -c $ARCHAUR)" available update.\n${nocolor}"
         fi
 
-        _yesnoprompt "Proceed with installation?" || {
+        _YesNoPrompt "Proceed with installation?" || {
             echo "bye..."
             sleep 2s
-            exit 0
+            return 0
         }
+        
         if (( $(grep "" -c $AUR) > 0 )); then
             yay -Sua
+            
+            if (( $(grep "" -c $AUR) == $(grep "" -c $$ARCHAUR) )); then
+                sed -i '/^[a-zA-Z]/d' {$AUR,$ARCHAUR}
+                
+                polybar-msg -p "$(pgrep --full bspwm-bar-1)" \
+                action "#updates-ipc.hook.1" >/dev/null 2>&1 \
+                || polybar-msg -p "$(pgrep --full i3-bar-1)" \
+                action "#updates-ipc.hook.1" >/dev/null 2>&1
+                
+            else
+                sed -i '/^[a-zA-Z]/d' "$AUR"
+            fi
+            
             rm -rf "$HOME"/.ccache && {
-                (( $(grep "" -c $ARCH) > 0 )) && {
-                    _make_updates
-                }
+                (( $(grep "" -c $ARCH) > 0 )) && _MakeUpdates
             }
         else
-            _make_updates
+            _MakeUpdates
         fi
     fi
 
@@ -213,6 +243,6 @@ case "$1" in
                     polybar-msg -p "$(pgrep --full i3-bar-1)" \
                     action "#updates-ipc.hook.0" >/dev/null 2>&1
                 fi ;;
-    --list )    _list ;;
-    --check)    _check_updates ;;
+    --list )    _List ;;
+    --check)    _CheckUpdates ;;
 esac
