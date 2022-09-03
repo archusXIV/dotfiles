@@ -19,13 +19,13 @@ nocolor=$'\e[0m';
 red=$'\e[0;31m';
 green=$'\e[0;32m';
 
-# checking dependencies
-for deps in checkupdates polybar yay; do
-    [[ -z $(command -v "$deps") ]] && exit 1
-done
-
 _CheckUpdates() {
     
+    # checking dependencies
+    for deps in checkupdates polybar yay; do
+        [[ -z $(command -v "$deps") ]] && exit 1
+    done
+
     # avoids running multiple instances
     updmngr=$(basename $0)
     pids=($(pidof -x $updmngr))
