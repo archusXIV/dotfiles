@@ -19,16 +19,18 @@ nocolor=$'\e[0m';
 red=$'\e[0;31m';
 green=$'\e[0;32m';
 
+barpid=$(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-1)
+
 _CheckUpdates() {
     
     # checking dependencies
-    for deps in checkupdates polybar yay; do
+    for deps in checkupdates polybar yay wmctrl; do
         [[ -z $(command -v "$deps") ]] && exit 1
     done
-
+    
     # avoids running multiple instances
-    updmngr=$(basename $0)
-    pids=($(pidof -x $updmngr))
+    updmngr=$(basename "$0")
+    pids="($(pidof -x "$updmngr"))"
     
     [[ ${#pids[@]} -gt 1 ]] && exit
     
@@ -37,9 +39,14 @@ _CheckUpdates() {
         touch {"$ARCH","$AUR","$ARCHAUR"}
         sleep 0.5
         
-        sudo reflector --country 'France' --latest 10 \
-        --age 24 --protocol https --protocol http \
-        --sort rate --save "$MIRR" >/dev/null 2>&1
+        sudo reflector \
+        --country 'France' \
+        --latest 10 \
+        --age 24 \
+        --protocol https \
+        --protocol http \
+        --sort rate \
+        --save "$MIRR" >/dev/null 2>&1
 
         # because we want to check out the updates list.
         checkupdates | tee "$ARCH" > "$ARCHAUR"
@@ -51,16 +58,9 @@ _CheckUpdates() {
             # purge combined.list from possible duplicates.
             perl -i -ne 'print if ! $x{$_}++' "$ARCHAUR" >/dev/null 2>&1
         fi
-
-        if [[ -n $(pidof bspwm) ]]; then
-            polybar-msg -p "$(pgrep --full bspwm-bar-1)" \
-            action "#updates-ipc.hook.0" >/dev/null 2>&1
-        elif [[ -n $(pidof i3) ]]; then
-            polybar-msg -p "$(pgrep --full i3-bar-1)" \
-            action "#updates-ipc.hook.0" >/dev/null 2>&1
-        else
-            break
-        fi
+        
+        polybar-msg -p "$barpid" \
+        action "#updates-ipc.hook.0" >/dev/null 2>&1
 
         sleep 3588s
 
@@ -99,7 +99,6 @@ _YesNoPrompt() {
 }
 
 _IfGrubUpdate() {
-    # Sometimes grub' updates can mess up the bootloader sector...
     if grep -qw 'grub' "$ARCH"; then
         sudo grub-install \
         --target=x86_64-efi \
@@ -126,15 +125,8 @@ _NoReboot() {
     # cleaning our lists from old packages updates.
     sed -i '/^[a-zA-Z]/d' {"$ARCH","$AUR","$ARCHAUR"}
     
-    if [[ -n $(pidof bspwm) ]]; then
-        polybar-msg -p "$(pgrep --full bspwm-bar-1)" \
-        action "#updates-ipc.hook.0" >/dev/null 2>&1
-    elif [[ -n $(pidof i3) ]]; then
-            polybar-msg -p "$(pgrep --full bspwm-bar-1)" \
-            action "#updates-ipc.hook.0" >/dev/null 2>&1
-    else
-        echo "no running bars found" && exit 1
-    fi
+    polybar-msg -p "$barpid" \
+    action "#updates-ipc.hook.0" >/dev/null 2>&1 \
     
     exit 0
 }
@@ -197,10 +189,10 @@ _List() {
         done < "$ARCHAUR"
         
         echo ""
-        if (( $(grep "" -c $ARCHAUR) > 1 )); then
-            echo -e "${green}There are "$(grep "" -c $ARCHAUR)" available updates.\n${nocolor}"
+         if (( $(grep "" -c "$ARCHAUR") > 1 )); then
+            echo -e " ${green}There are $(grep "" -c "$ARCHAUR") available updates.\n${nocolor}"
         else
-            echo -e "${green}There is "$(grep "" -c $ARCHAUR)" available update.\n${nocolor}"
+            echo -e " ${green}There is $(grep "" -c "$ARCHAUR") available update.\n${nocolor}"
         fi
 
         _YesNoPrompt "Proceed with installation?" || {
@@ -209,23 +201,19 @@ _List() {
             return 0
         }
         
-        if (( $(grep "" -c $AUR) > 0 )); then
+        if (( $(grep "" -c "$AUR") > 0 )); then
             yay -Sua
             
-            if (( $(grep "" -c $AUR) == $(grep "" -c $$ARCHAUR) )); then
-                sed -i '/^[a-zA-Z]/d' {$AUR,$ARCHAUR}
-                
-                polybar-msg -p "$(pgrep --full bspwm-bar-1)" \
-                action "#updates-ipc.hook.1" >/dev/null 2>&1 \
-                || polybar-msg -p "$(pgrep --full i3-bar-1)" \
+            if (( $(grep "" -c "$AUR") == $(grep "" -c "$ARCHAUR") )); then
+                sed -i '/^[a-zA-Z]/d' {"$AUR","$ARCHAUR"}
+                polybar-msg -p "$barpid" \
                 action "#updates-ipc.hook.1" >/dev/null 2>&1
-                
             else
                 sed -i '/^[a-zA-Z]/d' "$AUR"
             fi
             
             rm -rf "$HOME"/.ccache && {
-                (( $(grep "" -c $ARCH) > 0 )) && _MakeUpdates
+                (( $(grep "" -c "$ARCH") > 0 )) && _MakeUpdates
             }
         else
             _MakeUpdates
@@ -235,13 +223,11 @@ _List() {
 }
 
 case "$1" in
-    --hook  )   if [[ -n $(pidof bspwm) ]]; then
-                    polybar-msg -p "$(pgrep --full bspwm-bar-1)" \
-                    action "#updates-ipc.hook.0" >/dev/null 2>&1
-                else
-                    polybar-msg -p "$(pgrep --full i3-bar-1)" \
-                    action "#updates-ipc.hook.0" >/dev/null 2>&1
-                fi ;;
-    --list )    _List ;;
-    --check)    _CheckUpdates ;;
+    --hook  )   polybar-msg -p "$barpid" \
+                action "#updates-ipc.hook.0" >/dev/null 2>&1
+    ;;
+    --list )    _List
+    ;;
+    --check)    _CheckUpdates
+    ;;
 esac
