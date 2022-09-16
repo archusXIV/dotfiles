@@ -24,8 +24,9 @@ barpid=$(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-1)
 _CheckUpdates() {
     
     # checking dependencies
-    for deps in checkupdates polybar yay wmctrl; do
-        [[ -z $(command -v "$deps") ]] && exit 1
+    deps=( "checkupdates" "polybar" "reflector" "wmctrl" "yay" )
+    for item in "${deps[@]}"; do
+        [[ -z $(command -v "$item") ]] && exit 1
     done
     
     # avoids running multiple instances
