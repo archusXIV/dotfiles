@@ -16,7 +16,7 @@ case "$1" in
         fi
     ;;
     -m) [[ -n $(pidof bspwm) ]] && {
-            bspwm_scratchpad mpv-menu &
+            bspwm_scratchpad mpm &
             exit
         }
     ;;
