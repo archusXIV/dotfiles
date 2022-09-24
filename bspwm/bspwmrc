@@ -14,8 +14,8 @@ _Main() {
     bspc monitor $MONITOR3 -d 8 9 10
 
     # External scripts.
+    _Check launch_polybar && launch_polybar
     _Check sxhkd-start && sxhkd-start &
-    _Check bspwm_xdo_polybar && bspwm_xdo_polybar
     _Check bspwm_backnforth && {
         if [[ -n $(pidof -x bspwm_backnforth) ]]; then
             killall -q bspwm_backnforth
