@@ -8,38 +8,39 @@
 # ▀▀▝▘ ▀    ▝▀▀ ▝▘ ▝▘ ▀▀▝▘▝▘ ▝▘ ▞▀▐▌ ▝▀▀   ▀▀
 #                               ▜█▛▘
 #
+#-------------------------------- Restart, Reload & Exit ---------------------------------------
+# restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
+$Super+$Alt+r restart
+# reload the configuration file
+$Super+$Sht+Escape reload; exec --no-startup-id notify-send 'i3 config reloaded'
+# exit i3 (back to tty)
+$Super+$Alt+q exec --no-startup-id prompt "Do you really want to logout ?" "Xexit"
 
+#-----------------------------------------------------------------------------------------------
+# let's import some other parts of i3 configuration.
 include $XDG_CONFIG_HOME/i3/conf.d/*.conf
 
-# font
+#------------------------------- bar & windows title font --------------------------------------
 font pango:DejaVu Sans Mono 11
 
-#--------------------------------------- keys code ---------------------------------------------
+#--------------------------------------- main variables ----------------------------------------
 # Mod4 = Super (Windows key)
 # Mod1 = Alt
 set $Mod   Mod4
 set $Alt   Mod1
 set $Super bindsym Mod4
-set $ws    workspace
 set $Sht   Shift
 set $Ctl   Control
 
-#-----------------------------------------------------------------------------------------------
-#------------------------------------------- modes ---------------------------------------------
-#-----------------------------------------------------------------------------------------------
+#------------------------------------ modes definitions ----------------------------------------
 #set $DMENU DMENU: [A]rchWiki [C]onfigurator [F]inder [H]elp [I]3-dmenu [M]pd command [S]creenshots
 #set $GUI GUI: [E]ditor [F]ile manager [V]box [W]eb browser
 #set $ROFI ROFI: [A]pps [E]xit [K]eys [L]ocate [S]cript-menu [T]heme-selector [W]indows
 #set $URXVT URXVT: [C]mus [H]top [J]nettop [M]ixer [N]cmpcpp [P]ackagelist [R]ss [S]earch & install [Y]outube
 
-#------------------------------------- autostart apps ------------------------------------------
-# start i3 focusing workspace one.
-exec --no-startup-id i3-msg $ws $WS1
-exec --no-startup-id sxhkd-start
-#exec --no-startup-id i3_alternate_layouts.py
-
 #------------------------------------ monitors settings ----------------------------------------
 # for non-free driver
+# see ~/.zshenv
 set $Mon1 DP-0
 set $Mon2 HDMI-0
 set $Mon3 DVI-D-0
@@ -60,51 +61,43 @@ set $WS8   "8"
 set $WS9   "9"
 set $WS10  "10"
 
-#-------------------------------- Restart, Reload & Exit ----------------------------------------
-# restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
-$Super+$Alt+r restart
-# reload the configuration file
-$Super+$Sht+Escape reload; exec --no-startup-id notify-send 'i3 config reloaded'
-# exit i3 (back to tty)
-$Super+$Alt+q exec --no-startup-id prompt "Do you really want to logout ?" "Xexit"
+#------------------------------------- autostart apps ------------------------------------------
+# start i3 focusing workspace one.
+exec --no-startup-id i3-msg workspace $WS5
+exec --no-startup-id sxhkd-start
+exec --no-startup-id launch_polybar
 
 #-------------------------------------- Screenshot ---------------------------------------------
 bindsym Print exec --no-startup-id screenshooter
 
-#--------------------- resizing tiled window with personal script ------------------------------
-$Super+$Alt+$Ctl+Up    exec --no-startup-id i3sizemode up
-$Super+$Alt+$Ctl+Down  exec --no-startup-id i3sizemode down
-$Super+$Alt+$Ctl+Left  exec --no-startup-id i3sizemode left
-$Super+$Alt+$Ctl+Right exec --no-startup-id i3sizemode right
-
 #-------------------------------------- Workspace Bindings --------------------------------------
 # workspace assignment
-$ws $WS1  output $Mon1
-$ws $WS2  output $Mon1
-$ws $WS3  output $Mon1
-$ws $WS4  output $Mon1
-$ws $WS5  output $Mon2
-$ws $WS6  output $Mon2
-$ws $WS7  output $Mon2
-$ws $WS8  output $Mon3
-$ws $WS9  output $Mon3
-$ws $WS10 output $Mon3
+workspace $WS1  output $Mon1
+workspace $WS2  output $Mon1
+workspace $WS3  output $Mon1
+workspace $WS4  output $Mon1
+workspace $WS5  output $Mon2
+workspace $WS6  output $Mon2
+workspace $WS7  output $Mon2
+workspace $WS8  output $Mon3
+workspace $WS9  output $Mon3
+workspace $WS10 output $Mon3
 
 # switch to workspace - numpad alternatives
-$Super+Mod2+KP_1 $ws $WS1
-$Super+Mod2+KP_2 $ws $WS2
-$Super+Mod2+KP_3 $ws $WS3
-$Super+Mod2+KP_4 $ws $WS4
-$Super+Mod2+KP_5 $ws $WS5
-$Super+Mod2+KP_6 $ws $WS6
-$Super+Mod2+KP_7 $ws $WS7
-$Super+Mod2+KP_8 $ws $WS8
-$Super+Mod2+KP_9 $ws $WS9
-$Super+Mod2+KP_0 $ws $WS10
+$Super+Mod2+KP_1 workspace $WS1
+$Super+Mod2+KP_2 workspace $WS2
+$Super+Mod2+KP_3 workspace $WS3
+$Super+Mod2+KP_4 workspace $WS4
+$Super+Mod2+KP_5 workspace $WS5
+$Super+Mod2+KP_6 workspace $WS6
+$Super+Mod2+KP_7 workspace $WS7
+$Super+Mod2+KP_8 workspace $WS8
+$Super+Mod2+KP_9 workspace $WS9
+$Super+Mod2+KP_0 workspace $WS10
 
 # switch to next or previous workspace
-$Super+$Alt+Left  $ws prev
-$Super+$Alt+Right $ws next
+$Super+$Alt+Left  workspace prev
+$Super+$Alt+Right workspace next
 workspace_auto_back_and_forth yes
 
 # switch between the current and the previously focused one.
@@ -112,16 +105,16 @@ $Super+b workspace back_and_forth
 $Super+$Ctl+b move container to workspace back_and_forth
 
 # move focused container to workspace and follow it.
-$Super+$Ctl+Mod2+KP_1 move container to $ws $WS1;  $ws $WS1
-$Super+$Ctl+Mod2+KP_2 move container to $ws $WS2;  $ws $WS2
-$Super+$Ctl+Mod2+KP_3 move container to $ws $WS3;  $ws $WS3
-$Super+$Ctl+Mod2+KP_4 move container to $ws $WS4;  $ws $WS4
-$Super+$Ctl+Mod2+KP_5 move container to $ws $WS5;  $ws $WS5
-$Super+$Ctl+Mod2+KP_6 move container to $ws $WS6;  $ws $WS6
-$Super+$Ctl+Mod2+KP_7 move container to $ws $WS7;  $ws $WS7
-$Super+$Ctl+Mod2+KP_8 move container to $ws $WS8;  $ws $WS8
-$Super+$Ctl+Mod2+KP_9 move container to $ws $WS9;  $ws $WS9
-$Super+$Ctl+Mod2+KP_0 move container to $ws $WS10; $ws $WS10
+$Super+$Ctl+Mod2+KP_1 move container to workspace $WS1;  workspace $WS1
+$Super+$Ctl+Mod2+KP_2 move container to workspace $WS2;  workspace $WS2
+$Super+$Ctl+Mod2+KP_3 move container to workspace $WS3;  workspace $WS3
+$Super+$Ctl+Mod2+KP_4 move container to workspace $WS4;  workspace $WS4
+$Super+$Ctl+Mod2+KP_5 move container to workspace $WS5;  workspace $WS5
+$Super+$Ctl+Mod2+KP_6 move container to workspace $WS6;  workspace $WS6
+$Super+$Ctl+Mod2+KP_7 move container to workspace $WS7;  workspace $WS7
+$Super+$Ctl+Mod2+KP_8 move container to workspace $WS8;  workspace $WS8
+$Super+$Ctl+Mod2+KP_9 move container to workspace $WS9;  workspace $WS9
+$Super+$Ctl+Mod2+KP_0 move container to workspace $WS10; workspace $WS10
 
 # move the whole workspace to the next output
 $Super+$Ctl+Right move workspace to output right
@@ -145,10 +138,13 @@ $Super+$Alt+$Ctl+c exec --no-startup-id xdo close -c
 $Super+$Alt+f fullscreen toggle
 
 # Scratchpad, Floating
-$Super+$Sht+z     move scratchpad
-$Super+z          scratchpad show
+# scratchpad controled by sxhkd
+#$Super+$Sht+z     move scratchpad
+#$Super+z          scratchpad show
 $Super+$Alt+s     floating toggle
 floating_modifier $Mod
+#floating_minimum_size 1300 x 800
+#floating_maximum_size 1300 x 800
 
 # change focus
 $Super+$Sht+p focus parent
@@ -169,23 +165,19 @@ $Super+$Sht+Right  move right 5px
 # move floating container in the center of the screen
 $Super+c move position center
 
-# switch to workspace with urgent window
-#for_window [urgent="latest"] focus
-#focus_on_window_activation   focus
-
-################# container layout ########################
-# default workspace layout: default|stacking|tabbed
-workspace_layout default
+#---------------------------- workspace layout: default|stacking|tabbed ------------------------
+workspace_layout tabbed
 
 $Super+h split h; exec --no-startup-id notify-send 'split vertically'
 $Super+v split v; exec --no-startup-id notify-send 'split horizontally'
 
-# layout toggle, keycode 23 is Tab
+# layout toggle, keycode 23 is Tab (we can use keycode too)
 bindcode $Alt+23 layout toggle tabbed stacking splitv splith
 default_orientation horizontal
 
 # master-stack keybinding (moves stack window to master and current master back to stack window)
-$Super+m exec "i3-msg \\"move left; focus up; move right; focus left\\""
+$Super+m exec --no-startup-id "i3-msg \\"move left; focus up; move right; focus left\\""
+
 #--------------------------------------- Borders & Gaps -----------------------------------------
 hide_edge_borders both
 $Super+shift+b border toggle
