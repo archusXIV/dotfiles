@@ -11,22 +11,19 @@ super + alt + q
 super + Escape
 
 # default terminal.
-super + Return
+alt + Return
 
-# ranger & ranger as root, search_install.
-super + t ; {r,s}
+# ranger & ranger as root.
+alt + x ; {r,s}
 
 # urxvt:cmus,htop,jnettop,mixer,ncmpcpp,newsboat,install,youtube.
-super + u ; {c,h,j,m,n,p,r,s,y}
+alt + u ; {c,h,j,m,n,p,r,s,y}
 
 # most used gui applications.
-super + g ; {e,f,v,w}
+alt + g ; {e,f,v,w}
 
-# dmenu: Wiki,configs,find,man,dmenu,mdp_command,scrots,openvideo.
-super + d ; {a,c,f,h,i,m,s,v}
-
-# rofi: apps,fonts,keys memo,locate,scipt-menu,theme,expose.
-super + r ; {a,f,k,l,s,t,w}
+# dmenu/rofi scripts.
+Menu + {d,r}
 
 # toggle/restart polybar(s) 1,2,3,all.
 ctrl + {_,shift + }{1,2,3,4}
@@ -115,6 +112,9 @@ super + control + {Right,Left}
 # toggle show borders.
 super + shift + b
 
+# swap containers across outputs
+super + shift + s, then arrow key and Return
+
 # kill focused window.
 super + shift + k
 
@@ -126,9 +126,6 @@ super + shift + p
 
 # focus: child.
 super + shift + x
-
-# scratchpad: floating.
-super + shift + z
 
 # move: floating window or swap position tiled window.
 super + shift + {Up,Down,Left,Right}
