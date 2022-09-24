@@ -13,6 +13,8 @@ Menu ; {d,r}
     {dmenu_chooser,rofi_chooser}
 
 [scratchpad]
+# we let these lines here because we use
+# sxhkd within i3wm too.
 alt + {h,m,t}
     { \
     i3orbsp_scratchpad -h, \
@@ -22,21 +24,18 @@ alt + {h,m,t}
 
 [applications bindings]
 # terminal emulators
-alt + Return
-    $TERMINAL
+alt + {_,shift +} Return
+    {$TERMINAL,urxvtc -name bashterm -geometry 124x36 -e bash}
 
-alt + shift + Return
-    urxvtc -name floaterm
-
-alt + t ; {r,s}
+alt + x ; {r,s}
     {\
-    xtranger, \
-    xterm -e 'sudo search_install' \
+    uranger, \
+    urxvtc -name ranger -e sudo ranger /etc \
     }
 
 # URxvt applications
-alt + u ; {b,c,d,e,h,j,m,n,p,r,s,x,y}
-    urxvt_apps -{b,c,d,e,h,j,m,n,p,r,s,x,y}
+alt + u ; {c,d,e,h,j,m,n,p,r,s,v,x,y}
+    urxvt_apps -{c,d,e,h,j,m,n,p,r,s,v,x,y}
 
 # gui applications
 alt + g ; {e,f,g,v,w}
@@ -58,8 +57,8 @@ alt + v ; {e,g,p,q}
     }
 
 # script to launch rofi-record or ssr.
-alt + shift + v ; {r,s,k}
-    record_options -{r,s,k}
+alt + shift + v ; {a,o,v,k}
+    record_options -{a,o,v,k}
 
 [polycontrol]
 # toggle/restart polybar(s)
@@ -73,8 +72,7 @@ alt + shift + {Left,Down,Up,Right}
 
 [volume/mic]
 XF86Audio{Lower,Raise}Volume
-    volume_control sink --{down,up}; \
-    notify-volume
+    volume_control sink --{down,up}
 
 XF86AudioMute
     volume_control sink --toggle
