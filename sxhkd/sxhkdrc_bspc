@@ -1,25 +1,13 @@
 [restart/quit bspwm.]
-super + alt + {r,q}
+ctrl + alt + {r,q}
     { \
     bspwm_restart, \
     prompt "Do you really want to quit Bspwm ?" "Xexit" \
     }
 
-[scratchpad]
-super + e
-    bspwm_scratchpad $EDITOR
-
-super + p
-    bspwm_scratchpad $MIXER
-
-alt + q
-    bspwm_scratchpad qvidcap
-
-super + y
-    bspwm_scratchpad mpv-menu
-
-super + z
-    bspwm_scratchpad $TERMINAL
+# center term in screens.
+super + c
+    center_default_terminal
 
 [close and kill]
 # close/kill focused window.
@@ -76,7 +64,7 @@ super + b ; super + {KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,KP_Home,KP
 [focus]
 # focus the next/previous empty desktop.
 ctrl + shift + {Left,Right}
-    bspc desktop -f {prev,next}.local.!occupied
+    bspc desktop --focus {prev,next}.local.!occupied
 
 # focus left/right occupied desktop.
 ctrl + alt + {Left,Right}
@@ -87,12 +75,12 @@ super + {_,shift + }less
     bspc {node,desktop} --focus last.occupied
 
 # focus the older or newer node in the focus history.
-super + {o,i}
+super + {o,n}
     bspc wm -h off; \
     bspc node {older,newer} -f; \
     bspc wm -h on
 
-# focus or send to the given desktop (using numpad).
+# focus or send (focused node) to the given desktop (using numpad).
 super + {_,alt + }{KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,KP_Home,KP_Up,KP_Prior,KP_Insert}
     bspc {desktop -f,node -d} '^{1-9,10}'
 
@@ -134,19 +122,15 @@ super + shift + r
 
 # focus or swap the node in the given direction.
 super + {_,shift + }{Left,Down,Up,Right}
-    bspc node -{f,s} {west,south,north,east}
+    bspc node --{focus,swap} {west,south,north,east}
 
-# swap current node with the next one.
-super + s
-    bspc node --swap next.active --focus
-
-# swap current node with the previous one.
-alt + s
-    bspc node --swap prev.active --focus
+# swap current node with the next/previous one.
+super + {_,shift + }s
+    bspc node --swap {next.active,prev.active}
 
 # swap the current node and the biggest node in the same desktop.
 super + shift + b
-    bspc node -s biggest.local
+    bspc node --swap biggest.local; bspc node --focus biggest.locals
 
 # swap focused window with the last one.
 super + x
@@ -155,7 +139,7 @@ super + x
 [copy/paste desktop]
 # copy and paste all window nodes from active workspace to another one.
 super + ctrl + {c,v}
-    bspwm_copy-paste_desktop -{cd,pd}
+    bspwm_copy-paste_desktop -{copy,paste}
 
 [preselect/receptacles]
 # swap nodes or create a receptacle in the given direction if none.
@@ -184,7 +168,7 @@ ctrl + {Left,Down,Up,Right}
     bspc node -v {-10 0,0 10,0 -10,10 0}
 
 # mode for dynamic gaps. Continuous input mode & Escape to exit mode.
-alt + g : {h,j,k,l}
+ctrl + g : {h,j,k,l}
     bspc config -d focused window_gap "$(($(bspc config -d focused window_gap) {-,+} 5 ))"
 
 # move floating windows with the arrow keys. Continuous input mode.
@@ -192,17 +176,17 @@ alt + f : {Left,Down,Up,Right}
     bspc node -v {-20 0,0 20,0 -20,20 0}
 
 # resize node in the given direction.
-alt + r : {Left,Down,Up,Right}
+alt + {Left,Down,Up,Right}
     bspwm_resize {west,south,north,east} 25
 
-[mouse control]
+#[mouse control]
 # move or resize window.
-alt + button{1-3}
-    bspc pointer -g {move,resize_side,resize_corner}
+#alt + button{1-3}
+#    bspc pointer -g {move,resize_side,resize_corner}
 
 # ungrab when releasing a mouse button.
-alt + @button{1-3}
-    bspc pointer -u
+#alt + button3
+#    bspc pointer -u
 
 # Move cursor
 super + ctrl + x : {_,shift + ,shift + super + }{h,j,k,l}
