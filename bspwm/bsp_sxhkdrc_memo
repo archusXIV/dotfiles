@@ -1,8 +1,8 @@
 # reload sxhkd configuration files.
 alt + Escape
 
-# launch the default terminal.
-alt + Return
+# launch default $TERMINAL,urxvtc -name floaterm
+alt + {_,shift +} Return
 
 # dmenu-chooser, rofi-chooser
 Menu ; {d,r}
@@ -16,8 +16,8 @@ super + b ; m
 # bring the windows of the given desktop to the current one.
 super + b ; super + {1-9,0}
 
-# most used gui applications.
-alt + g ; {e,f,g,v,w}
+# center $TERMINAL in screens.
+super + c
 
 # focus the older or newer node in the focus history.
 super + {i,o}
@@ -30,18 +30,6 @@ super + m
 
 # swap current node with the next one.
 super + s
-
-# scratchpad any, mpv-menu, terminal
-alt + {h,m,t}
-
-# ranger & ranger as root, search_install.
-alt + x ; {r,s}
-
-# URxvt cmus, mpm, mutt,htop,jnettop, ncmpvc, mixer, etc...
-alt + u ; {c,d,e,h,j,m,n,p,r,s,x,y}
-
-# pulseaudio-equalizer-gtk, qv4l2, pavucontrol, qvidcap.
-alt + v ; {e,g,p,q}
 
 # swap focused window with the last one.
 super + x
@@ -103,20 +91,17 @@ super + shift + b
 # rotate all the nodes in screen.
 super + shift + r
 
-# record_options (rofi-record,ssr,kill polybar_mic)
-alt + shift + v ; {r,s,k}
-
 # send focused window to next monitor.
 super + shift + BackSpace
 
-# center term in screens.
-super + shift + {KP_End,KP_Down,KP_Next}
-
-# focus or send to the given desktop (azerty keyboard).
+# focus/send (focused node) to the given desktop (azerty keyboard).
 super + {_,alt + }{1-9,0}
 
 # circulate the leaves of the tree.
 super + {_,shift + }c
+
+# hide/unhide
+super + {_,shift + }h
 
 # focus the last node/desktop.
 super + {_,shift + }less
@@ -133,11 +118,26 @@ alt + f : {Left,Down,Up,Right}
 # mode for dynamic gaps. Continuous input mode & Escape to exit mode.
 alt + g : {h,j,k,l}
 
-# resize node in the given direction.
-ctrl + r : {Left,Down,Up,Right}
+# most used gui applications.
+alt + g ; {e,f,g,v,w}
+
+# scratchpad for any, mpv-menu, $TERMINAL
+alt + {h,m,t}
 
 # swap current node with the previous one
 alt + s
+
+# URxvt cmus, mpm, mutt,htop,jnettop, ncmpcpp, mixer, etc...
+alt + u ; {c,d,e,h,j,m,n,p,r,s,x,y}
+
+# pulseaudio-equalizer-gtk, qv4l2, pavucontrol, qvidcap.
+alt + v ; {e,g,p,q}
+
+# ranger, ranger as root
+alt + x ; {r,s}
+
+# resize node in the given direction.
+alt + {Left,Down,Up,Right}
 
 # mouse: move or resize window.
 alt + button{1-3}
@@ -148,8 +148,8 @@ alt + @button{1-3}
 # controls the webcam rectangle position on the screen.
 alt + shift + {Left,Down,Up,Right}
 
-# amixer set Capture toggle
-alt + XF86AudioMute
+# record_options (rofi-record,ssr,kill polybar_mic)
+alt + shift + v ; {a,v,k}
 
 # toggle/restart polybar(s)
 ctrl + {_,shift + }{1,2,3,4}
@@ -166,11 +166,17 @@ ctrl + alt + delete
 # focus the next/previous empty desktop.
 ctrl + shift + {Left,Right}
 
-# volume control.
+# pulseaudio_control --sink {down,up}.
 Xf86Audio{Lower,Raise}Volume
 
-# mute volume.
+# pulseaudio_control --sink toggle
 Xf86AudioMute
+
+# pulseaudio_control --source {down,up}
+alt + XF86Audio{Lower,Raise}Volume
+
+# pulseaudio_control --source toggle
+alt + XF86AudioMute
 
 # mediacontrol play/pause.
 alt + F11
@@ -183,9 +189,3 @@ alt + F12
 
 # mediacontrol prev.
 alt + F9
-
-# mic_control toggle
-alt + XF86AudioMute
-
-# mic_control {down,up}
-alt + XF86Audio{Lower,Raise}Volume
