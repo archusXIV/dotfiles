@@ -168,7 +168,7 @@ _MakeUpdates() {
     
     for item in "${criteria[@]}"; do
         if grep -qw "$item" "$ARCHAUR"; then
-            echo " ${red}REBOOT NEEDED !${nocolor}"
+            echo " ${red}$item requires REBOOT!${nocolor}"
             _Criteria
         fi
     done
