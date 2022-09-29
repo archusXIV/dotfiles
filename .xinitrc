@@ -17,24 +17,26 @@ if [ ! -d "$MAIL" ]; then
     sudo systemctl restart shadow.service
 fi
 
+dbus-update-activation-environment --systemd --all
+systemctl --user import-environment DISPLAY
+
+# Some other early settings
+nvidia-settings -l
+xset s off -dpms
+xset r rate 250 80
+urxvtd -q -o -f &
+numlockx on &
+
 # These guys are environment variables.
 [ -f $MODMAP ] && xmodmap $MODMAP
 [ -f $RESOURCES_FILE ] && xrdb -load $RESOURCES_FILE
 
-# Some other early settings
-nvidia_layout &
-systemctl --user import-environment DISPLAY
-systemctl --user start pulseaudio.service
 autostart &
-xset s off -dpms
-xset r rate 300 70
-setxkbmap -layout fr
-urxvtd -q -o -f &
-numlockx on &
 
 # keyring and polkit daemon.
 /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
-gnome-keyring-daemon --start --components=pkcs11
+# now we use systemd gnome-keyring-deamon.service instead
+#gnome-keyring-daemon --start --components=pkcs11
 
 # launch the session, commands below these lines will be ignored
 # Starting Xsession depending on tty.
