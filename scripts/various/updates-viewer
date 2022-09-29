@@ -100,6 +100,7 @@ _YesNoPrompt() {
 }
 
 _IfGrubUpdate() {
+    # we could whrite a pacman hook instead.
     if grep -qw 'grub' "$ARCH"; then
         sudo grub-install \
         --target=x86_64-efi \
@@ -204,20 +205,15 @@ _List() {
         
         if (( $(grep "" -c "$AUR") > 0 )); then
             yay -Sua
-            
+            rm -rf "$HOME"/.ccache
             if (( $(grep "" -c "$AUR") == $(grep "" -c "$ARCHAUR") )); then
                 sed -i '/^[a-zA-Z]/d' {"$AUR","$ARCHAUR"}
-                polybar-msg -p "$barpid" \
-                action "#updates-ipc.hook.1" >/dev/null 2>&1
+                polybar-msg -p ${barpid} \
+                action "#updates-ipc.hook.0" >/dev/null 2>&1
+                return 0
             else
-                sed -i '/^[a-zA-Z]/d' "$AUR"
+                (( $(grep "" -c "$ARCH") > 1 )) && _MakeUpdates
             fi
-            
-            rm -rf "$HOME"/.ccache && {
-                (( $(grep "" -c "$ARCH") > 0 )) && _MakeUpdates
-            }
-        else
-            _MakeUpdates
         fi
     fi
 
