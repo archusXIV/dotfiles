@@ -33,7 +33,7 @@ path=("${path[@]:#}")
 # Source prompt settings
 #source "$ZDOTDIR"/themes/agnoster.zsh-theme.zsh
 #source "$ZDOTDIR"/themes/funcky-zsh-theme.zsh
-source /usr/lib/python3.9/site-packages/powerline/bindings/zsh/powerline.zsh
+source /usr/lib/python3.10/site-packages/powerline/bindings/zsh/powerline.zsh
 source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 PROMPT_USERFMT='%n%f@%F{red}%m'
