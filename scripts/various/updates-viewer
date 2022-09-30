@@ -203,6 +203,7 @@ _List() {
             return 0
         }
         
+        # AUR packages update first
         if (( $(grep "" -c "$AUR") > 0 )); then
             yay -Sua
             rm -rf "$HOME"/.ccache
@@ -211,10 +212,12 @@ _List() {
                 polybar-msg -p ${barpid} \
                 action "#updates-ipc.hook.0" >/dev/null 2>&1
                 return 0
-            else
-                (( $(grep "" -c "$ARCH") > 0 )) && _MakeUpdates
             fi
         fi
+        
+        # then Arch...
+        (( $(grep "" -c "$ARCH") > 0 )) && _MakeUpdates
+        
     fi
 
 }
