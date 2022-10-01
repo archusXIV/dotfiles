@@ -1,23 +1,26 @@
 #!/bin/bash
 
 # Terminate already polybar instances.
-killall -q polybar
+rm /tmp/polybar_mqueue.* 2>/dev/null
+killall -q {conky,polybar}
 
 # Wait until the process has been closed.
-while [[ -n $(pgrep -u $UID -x polybar) ]]; do
+while pgrep -u "$UID" -x polybar; do
     sleep 0.5
 done
 
-bars_bsp=( "bspwm-bar-1" "bspwm-bar-2" "bspwm-bar-3" )
-bars_i3=( "i3-bar-1" "i3-bar-2" "i3-bar-3" )
+bars=( "bspwm-bar-1" "bspwm-bar-2" "bspwm-bar-3" \
+        "i3-bar-1" "i3-bar-2" "i3-bar-3" )
 
 if [[ -n $(pidof bspwm) ]]; then
-    for b in "${bars_bsp[@]}"; do
+    unset {bars[3],bars[4],bars[5]}
+    for b in "${bars[@]}"; do
         polybar "$b" -q & disown
     done
     notify-send 'Bars launched...'
     exit 0
-elif [[ -n $(pidof i3) ]]; then
+elif [[ -n $(i3 --get-socketpath) ]]; then
+    unset {bars[0],bars[1],bars[2]}
     for b in "${bars_i3[@]}"; do
         polybar "$b" -q & disown
     done
