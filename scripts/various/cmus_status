@@ -2,6 +2,8 @@
 
 # Optional dependency 'polybar'
 
+: "${XDG_RUNTIME_DIR:-/run/user/1000}"
+
 duration="$(cmus-remote -Q 2> /dev/null | awk '/duration/{print $2}')"
 artist=""
 title=""
@@ -22,14 +24,10 @@ fi
 
 while [[ $1 != "" ]]; do
     case "$1" in
-        title) title="$2"
-        ;;
-        artist) artist="$2"
-        ;;
-        status) status="$2"
-        ;;
-        file) file="$2"
-        ;;
+        title ) title="$2"  ;;
+        artist) artist="$2" ;;
+        status) status="$2" ;;
+        file  ) file="$2"   ;;
     esac
     shift
     shift
@@ -41,37 +39,27 @@ if [[ ${status} = 'stopped' ]]; then
     msg=""
 else
 
-    if [[ ${status} = 'paused' ]]; then
-        msg="%{F$(xrdb -query | awk '/color4:/{print $NF}')}${msg}"
-    fi
+    [[ ${status} = 'paused' ]] \
+        && msg="%{F$(xrdb -query | awk '/color1:/{print $NF}')}${msg}"
 
-    if [[ -n ${artist} ]]; then
-        msg="${msg} ${artist}"
-    fi
+    [[ -n ${artist} ]] \
+        && msg="${msg} ${artist}"
 
     if [[ -n ${title} ]]; then
         msg="${msg} - ${title} ${total_time}"
     else
-        if [[ -n ${file} ]]; then
-            msg="${msg} $(basename "${file%.*}") ${total_time}"
-        else
-            msg=""
-        fi
+        [[ -n ${file} ]] \
+            && msg="${msg} $(basename "${file%.*}") ${total_time}"
     fi
 
 fi
 
 output="$XDG_RUNTIME_DIR/music_player_output.txt"
+barpid=$(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-2)
+
 echo "${msg}" > "${output}"
 
 sleep 0.2
 
-if [[ -n $(pidof bspwm) ]]; then
-    polybar-msg -p "$(pgrep --full bspwm-bar-2)" \
-    action "#music_player-ipc.hook.2" >/dev/null 2>&1
-elif [[ -n $(pidof i3) ]]; then
-    polybar-msg -p "$(pgrep --full i3-bar-2)" \
-    action "#music_player-ipc.hook.2" >/dev/null 2>&1
-else
-    notify-send "$(cat "${output}")"
-fi
+polybar-msg -p "$barpid" \
+action "#music_player-ipc.hook.2"
