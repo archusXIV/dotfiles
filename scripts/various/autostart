@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # User systemd services.
-systemctl --user start mpv-ipc
+# systemctl --user start mpv-ipc.service
 
 # Apply the lastest wallpaper
 if [[ -n $(command -v nitrogen) ]]; then
@@ -12,25 +12,22 @@ fi
 
 # Sound
 # muting HDMI source/sink & webcam mic too.
-for ids in 0 1; do
-    pactl set-source-mute "$ids" 1
-    pactl set-source-volume "$ids" 0%
+for id in 0 1; do
+    pactl set-source-mute "$id" 1
+    pactl set-source-volume "$id" 0%
 done
+
+unset id
 
 pactl set-sink-mute 0 1
 pactl set-sink-volume 0 0%
-pactl set-sink-volume 1 50%
-
-unset ids
-
-# Bars
-launch_polybar
+pactl set-sink-volume @DEFAULT_SINK@ 40%
 
 # Other settings
 cleanup &
 rsync -apq "$SCRIPTDIR"/* ~/Documents/scripts/ &
-rsync -apq --exclude \
-'VirtualBox' "$XDG_CONFIG_HOME"/* ~/Documents/configs/CONFIGS/ &
+rsync -apq --exclude 'VirtualBox' \
+"$XDG_CONFIG_HOME"/* ~/Documents/configs/CONFIGS/ &
 
-# Updates script
-sleep 10s && updates-viewer --updates
+# Updates checking script
+sleep 10s && updates-manager --check
