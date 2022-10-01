@@ -13,12 +13,12 @@ color_off=$'\e[0m';
 red=$'\e[0;31m';
 green=$'\e[0;32m';
 
-declare -a dependencies=( "fzf" "pacdiff" "reflector" "vim" "updates-viewer" )
+declare -a dependencies=( "fzf" "pacdiff" "reflector" "vim" )
 
-for i in "${dependencies[@]}"; do
-    [[ -z $(command -v "$i") ]] && {
-        echo " ${red}Missing dependency...$i"
-        exit 1
+for package in "${dependencies[@]}"; do
+    [[ -z $(command -v "$package") ]] && {
+        echo " ${red}Missing dependency...$package"
+        exit 127
     }
 done
 
@@ -27,7 +27,8 @@ _menu() {
     while [[ -f /etc/pacman.conf ]]; do
         clear
         echo ""
-        echo -e "                                            ::pacman options:: "
+        echo -e "                                            ::pacman options::\n"
+        echo -e "                        ::To select multiple packages in options 1 & 2 press Tab::  "
         echo -e "                       ┌───────────────────────────────────────────────────────────┐"
         echo -e "                       │    1) Search & Install           6) Update the system     │"
         echo -e "                       │    2) Uninstall a package(s)     7) Pacdiff               │"
@@ -38,7 +39,7 @@ _menu() {
         echo -e "                                             ${green}Select an item${color_off}"
         echo ""
         read -r option
-        case $option in
+        case "$option" in
             1)  _install
                 echo ""
             ;;
@@ -54,7 +55,7 @@ _menu() {
             5)  _reflector
                 echo ""
             ;;
-            6)  updates-viewer --list
+            6)  sudo pacman -Syu
                 echo ""
             ;;
             7)  _pacdiff
@@ -83,32 +84,41 @@ _install() {
     sudo pacman -Sy >/dev/null 2>&1
     sudo pacman -Fy >/dev/null 2>&1
     pacman -Slq \
-                | fzf --multi --preview 'cat <(sudo pacman -Si {1}) <(sudo pacman -Fl {1} | awk "{print \$2}")' \
-                | xargs -ro sudo pacman -S
+            | fzf \
+            --multi \
+            --preview \
+            'cat <(sudo pacman -Si {1}) <(sudo pacman -Fl {1} | awk "{print \$2}")' \
+            --layout=reverse \
+            | xargs -ro sudo pacman -S
 }
 
 _uninstall() {
     pacman -Slq \
-                | fzf --multi --preview  'cat <(sudo pacman -Si {1}) <(sudo pacman -Fl {1} | awk "{print \$2}")' \
-                | xargs -ro sudo pacman -Rns
+            | fzf \
+            --multi \
+            --preview \
+            'cat <(sudo pacman -Si {1}) <(sudo pacman -Fl {1} | awk "{print \$2}")' \
+            --layout=reverse \
+            | xargs -ro sudo pacman -Rns
 }
 
 _orphans() {
-    local pkgs
-    pkgs="$XDG_CACHE_HOME"/orphans_list.txt
+    local pkgs="$XDG_CACHE_HOME/orphans_list.txt"
     echo ""
-    if [[ -n $(pacman -Qtdq) ]]; then
-        pacman -Qtdq > "$pkgs" && cat "$pkgs"
+    if [[ -n $(pacman -Qdqt) ]]; then
+        touch "$pkgs"
+        pacman -Qdqt > "$pkgs" && cat "$pkgs"
         echo ""
         echo " ${red}Would you like to purge orphan packages? [N/y]:${color_off}"
         read -r purge
         case "$purge" in
-            N|n|no ) _menu
+            N|n|no )    _menu
             ;;
-            y|Y|yes) sudo pacman -Rdd "$(pacman -Qtdq)"
-                     echo " ${green}A list of removed packages has been created"
-                     echo " in $XDG_CACHE_HOME/orphans/orphans_list.txt${color_off}"
-                     sleep 5s
+            y|Y|yes)    sudo pacman -Rs $(pacman -Qdqt) && \
+                        sudo paccache -ruk0
+                        echo " ${green}A list of removed packages has been created"
+                        echo " in $pkgs${color_off}"
+                        sleep 5s
             ;;
             *      ) _menu
             ;;
@@ -170,4 +180,4 @@ _reflector() {
     done
 }
 
-_menu
+_menu "${@}"
