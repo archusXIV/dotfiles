@@ -103,7 +103,7 @@ def main():
         args = parser.parse_args()
 
         c = ['%{{F#090}}{}%{{F-}}'.format(BAR_CHAR),
-			 '%{{F#0d0}}{}%{{F-}}'.format(BAR_CHAR),
+	     '%{{F#0d0}}{}%{{F-}}'.format(BAR_CHAR),
              '%{{F#0d0}}{}%{{F-}}'.format(BAR_CHAR),
              '%{{F#0e0}}{}%{{F-}}'.format(BAR_CHAR),
              '%{{F#0f0}}{}%{{F-}}'.format(BAR_CHAR),
