@@ -1,62 +1,65 @@
 #!/bin/bash
 
 # Manage polybar instances individually using -p option.
+# For instance: 3 monitors (3 bars), 2 window managers
+# bspwm-bar-{1,2,3} i3-bar-{1,2,3}
+#
 # -r: Restarts the bar(s).
 # -t: Toggles between the hidden and visible state.
 # $MONITOR{1,2,3} are environment variables
 
-barpid1=$(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-1)
-barpid2=$(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-2)
-barpid3=$(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-3)
+barpid_1=$(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-1)
+barpid_2=$(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-2)
+barpid_3=$(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-3)
 
 if [[ -n $(pidof bspwm) ]]; then
     
     _fullscreen() {
         if [[ $(bspc query -N -n .focused.tiled) ]]; then
             bspc node focused -t fullscreen
+            return 0
         else
             bspc node focused -t tiled
+            return 0
         fi
     }
     
     case "$1" in
         -t1)    bspc monitor -f $MONITOR1 \
-                && polybar-msg -p "$barpid1" cmd toggle \
+                && polybar-msg -p "$barpid_1" cmd toggle \
                 && _fullscreen ;;
         -t2)    bspc monitor -f $MONITOR2 \
-                && polybar-msg -p "$barpid2" cmd toggle \
+                && polybar-msg -p "$barpid_2" cmd toggle \
                 && _fullscreen ;;
         -t3)    bspc monitor -f $MONITOR3 \
-                && polybar-msg -p "$barpid3" cmd toggle \
+                && polybar-msg -p "$barpid_3" cmd toggle \
                 && _fullscreen ;;
-        -r1)    polybar-msg -p "$barpid1" cmd restart ;;
-        -r2)    polybar-msg -p "$barpid2" cmd restart ;;
-        -r3)    polybar-msg -p "$barpid3" cmd restart ;;
+        -r1)    polybar-msg -p "$barpid_1" cmd restart ;;
+        -r2)    polybar-msg -p "$barpid_2" cmd restart ;;
+        -r3)    polybar-msg -p "$barpid_3" cmd restart ;;
         -ra)    "$SCRIPTDIR"/launch_polybar & ;;
     esac
     
 elif [[ -n $(pidof i3) ]]; then
     
-    _fullscreen() { i3-msg fullscreen toggle; }
+    _fullscreen() { i3-msg fullscreen toggle; return 0; }
     
     case "$1" in
         -t1)    i3-msg focus output $MONITOR1 \
-                && polybar-msg -p "$barpid1" cmd toggle \
+                && polybar-msg -p "$barpid_1" cmd toggle \
                 && _fullscreen ;;
         -t2)    i3-msg focus output $MONITOR2 \
-                && polybar-msg -p "$barpid2" cmd toggle \
+                && polybar-msg -p "$barpid_2" cmd toggle \
                 && _fullscreen ;;
         -t3)    i3-msg focus output $MONITOR3 \
-                && polybar-msg -p "$barpid3" cmd toggle \
+                && polybar-msg -p "$barpid_3" cmd toggle \
                 && _fullscreen ;;
-        -r1)    polybar-msg -p "$barpid1" cmd restart ;;
-        -r2)    polybar-msg -p "$barpid2" cmd restart ;;
-        -r3)    polybar-msg -p "$barpid3" cmd restart ;;
+        -r1)    polybar-msg -p "$barpid_1" cmd restart ;;
+        -r2)    polybar-msg -p "$barpid_2" cmd restart ;;
+        -r3)    polybar-msg -p "$barpid_3" cmd restart ;;
         -ra)    "$SCRIPTDIR"/launch_polybar & ;;
     esac
     
 else
     echo "no bspwm or i3 session running" && exit 1
 fi
-
-exit
