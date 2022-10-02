@@ -151,7 +151,7 @@ _NoCriteria() {
 _MakeUpdates() {
 
     declare -a criteria=( "amd-ucode" "grub" "linux" "mesa" "nvidia" "systemd" "xf86-video-*" "xorg" )
-    
+    # if grub is part of the updates, a pacman hook will launch the grub-install command to prevent issues.
     for item in "${criteria[@]}"; do
         if grep -qw "$item" "$ARCHAUR"; then
             echo " ${red}$item requires REBOOT!${nocolor}"
