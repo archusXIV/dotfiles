@@ -6,7 +6,7 @@
 #
 # -r: Restarts the bar(s).
 # -t: Toggles between the hidden and visible state.
-# $MONITOR{1,2,3} are environment variables
+# $MONITOR{1,2,3} are environment variables, see ~/.zshenv
 
 barpid_1=$(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-1)
 barpid_2=$(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-2)
