@@ -1,8 +1,15 @@
 #!/bin/bash
 
 # Terminate already polybar instances.
-rm /tmp/polybar_mqueue.* 2>/dev/null
-killall -q {conky,polybar}
+# First try gracefully then the hard way.
+socket="ipc.$(pgrep polybar | sed -n '1p').sock"
+
+if [[ -S $XDG_RUNTIME_DIR/polybar/$socket ]]; then
+    polybar-msg cmd quit >/dev/null 2>&1
+else
+    rm /tmp/polybar_mqueue.* 2>/dev/null
+    killall -q {conky,polybar}
+fi
 
 # Wait until the process has been closed.
 while pgrep -u "$UID" -x polybar; do
