@@ -11,7 +11,6 @@
 ARCH="$XDG_RUNTIME_DIR/archlinux.list"
 AUR="$XDG_RUNTIME_DIR/aur.list"
 ARCHAUR="$XDG_RUNTIME_DIR/combined.list"
-
 MIRR="/etc/pacman.d/mirrorlist"
 BCKP="/etc/pacman.d/mirrorlist_bckp"
 
@@ -24,9 +23,8 @@ barpid=$(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-1)
 _CheckUpdates() {
     
     # checking dependencies
-    deps=( "checkupdates" "polybar" "reflector" "wmctrl" "yay" )
-    for item in "${deps[@]}"; do
-        [[ -z $(command -v "$item") ]] && exit 1
+    for deps in checkupdates polybar yay wmctrl; do
+        [[ -z $(command -v "$deps") ]] && exit 1
     done
     
     # avoids running multiple instances
@@ -52,7 +50,7 @@ _CheckUpdates() {
         # because we want to check out the updates list.
         checkupdates | tee "$ARCH" > "$ARCHAUR"
 
-        if (( $(yay -Qum 2> /dev/null | wc -l) > 0 )); then
+        if (( $(yay -Qum 2>/dev/null | wc -l) > 0 )); then
             sleep 1.5s
             yay -Qum | tee "$AUR" >> "$ARCHAUR"
 
@@ -60,9 +58,9 @@ _CheckUpdates() {
             perl -i -ne 'print if ! $x{$_}++' "$ARCHAUR" >/dev/null 2>&1
         fi
         
-        polybar-msg -p "$barpid" \
+        polybar-msg -p ${barpid} \
         action "#updates-ipc.hook.0" >/dev/null 2>&1
-
+        
         sleep 3588s
 
     done &
@@ -80,6 +78,7 @@ _YesNoPrompt() {
 
     screenprompt="$* [${default^^}/${options/$default/}]"
 
+    # Is this function called from a terminal?
     if [[ -t 2 ]]; then
         >&2 echo "$screenprompt"
 
@@ -99,35 +98,22 @@ _YesNoPrompt() {
     return "${status:-0}"
 }
 
-_IfGrubUpdate() {
-    # we could whrite a pacman hook instead.
-    if grep -qw 'grub' "$ARCH"; then
-        sudo grub-install \
-        --target=x86_64-efi \
-        --efi-directory=/boot/efi \
-        --bootloader-id=ARCH_GRUB
-        sudo grub-mkconfig -o /boot/grub/grub.cfg
-    else
-        sudo grub-mkconfig -o /boot/grub/grub.cfg
-    fi
-}
-
 _Reboot() {
     sudo cp -f "$MIRR" "$BCKP"
     sudo pacman -Syu --noconfirm
-    _IfGrubUpdate
+    sudo grub-mkconfig -o /boot/grub/grub.cfg
     sudo reboot
 }
 
 _NoReboot() {
     sudo cp -f "$MIRR" "$BCKP"
     sudo pacman -Syu --noconfirm
-    _IfGrubUpdate
+    sudo grub-mkconfig -o /boot/grub/grub.cfg
     
     # cleaning our lists from old packages updates.
     sed -i '/^[a-zA-Z]/d' {"$ARCH","$AUR","$ARCHAUR"}
     
-    polybar-msg -p "$barpid" \
+    polybar-msg -p ${barpid} \
     action "#updates-ipc.hook.0" >/dev/null 2>&1 \
     
     exit 0
@@ -136,7 +122,7 @@ _NoReboot() {
 _Poweroff() {
     sudo cp -f "$MIRR" "$BCKP"
     sudo pacman -Syu --noconfirm
-    _IfGrubUpdate
+    sudo grub-mkconfig -o /boot/grub/grub.cfg
     sudo poweroff
 }
 
@@ -191,7 +177,7 @@ _List() {
         done < "$ARCHAUR"
         
         echo ""
-         if (( $(grep "" -c "$ARCHAUR") > 1 )); then
+        if (( $(grep "" -c "$ARCHAUR") > 1 )); then
             echo -e " ${green}There are $(grep "" -c "$ARCHAUR") available updates.\n${nocolor}"
         else
             echo -e " ${green}There is $(grep "" -c "$ARCHAUR") available update.\n${nocolor}"
@@ -203,7 +189,7 @@ _List() {
             return 0
         }
         
-        # AUR packages update first
+        # AUR packages update
         if (( $(grep "" -c "$AUR") > 0 )); then
             yay -Sua
             rm -rf "$HOME"/.ccache
@@ -223,11 +209,11 @@ _List() {
 }
 
 case "$1" in
-    --hook  )   polybar-msg -p "$barpid" \
+    --hook  )   polybar-msg -p ${barpid} \
                 action "#updates-ipc.hook.0" >/dev/null 2>&1
     ;;
-    --list )    _List
+    --list  )   _List
     ;;
-    --check)    _CheckUpdates
+    --check )   _CheckUpdates
     ;;
 esac
