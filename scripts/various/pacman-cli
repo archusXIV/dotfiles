@@ -2,7 +2,8 @@
 
 # Author: Barret E (2021) <archus@protonmail.com>
 # https://github.com/archusXIV/dotfiles
-# Dependencies: fzf, pacdiff, reflector, vim.
+# Dependencies: fzf, pacdiff, reflector, vim, updates-viewer.
+# https://github.com/archusXIV/dotfiles/blob/main/scripts/various/updates-viewer
 #
 # This script shows a menu to let you choose over severals pacman tools and options.
 # In order to install or remove packages it uses fzf utility on the fancy side.
@@ -13,7 +14,7 @@ color_off=$'\e[0m';
 red=$'\e[0;31m';
 green=$'\e[0;32m';
 
-declare -a dependencies=( "fzf" "pacdiff" "reflector" "vim" )
+declare -a dependencies=( "fzf" "pacdiff" "reflector" "vim" "updates-manager" )
 
 for package in "${dependencies[@]}"; do
     [[ -z $(command -v "$package") ]] && {
@@ -31,9 +32,9 @@ _menu() {
         echo -e "                        ::To select multiple packages in options 1 & 2 press Tab::  "
         echo -e "                       ┌───────────────────────────────────────────────────────────┐"
         echo -e "                       │    1) Search & Install           6) Update the system     │"
-        echo -e "                       │    2) Uninstall a package(s)     7) Pacdiff               │"
-        echo -e "                       │    3) List/Purge orphans         8) Edit pacman.conf      │"
-        echo -e "                       │    4) Purge the cache            9) Edit makepkg.conf     │"
+        echo -e "                       │    2) Uninstall package(s)       7) Pacdiff               │"
+        echo -e "                       │    3) List packages              8) Edit pacman.conf      │"
+        echo -e "                       │    4) Purge orphans/cache        9) Edit makepkg.conf     │"
         echo -e "                       │    5) Update mirrors             0) Exit                  │"
         echo -e "                       └───────────────────────────────────────────────────────────┘"
         echo -e "                                             ${green}Select an item${color_off}"
@@ -46,16 +47,16 @@ _menu() {
             2)  _uninstall
                 echo ""
             ;;
-            3)  _orphans
+            3)  _packageslist
                 echo ""
             ;;
-            4)  sudo pacman -Scc
+            4)  _purge
                 echo ""
             ;;
             5)  _reflector
                 echo ""
             ;;
-            6)  sudo pacman -Syu
+            6)  updates-viewer --list # ~/.local/bin/updates-viewer
                 echo ""
             ;;
             7)  _pacdiff
@@ -102,32 +103,50 @@ _uninstall() {
             | xargs -ro sudo pacman -Rns
 }
 
-_orphans() {
-    local pkgs="$XDG_CACHE_HOME/orphans_list.txt"
-    echo ""
-    if [[ -n $(pacman -Qdqt) ]]; then
-        touch "$pkgs"
-        pacman -Qdqt > "$pkgs" && cat "$pkgs"
-        echo ""
-        echo " ${red}Would you like to purge orphan packages? [N/y]:${color_off}"
-        read -r purge
-        case "$purge" in
-            N|n|no )    _menu
-            ;;
-            y|Y|yes)    sudo pacman -Rs $(pacman -Qdqt) && \
-                        sudo paccache -ruk0
-                        echo " ${green}A list of removed packages has been created"
-                        echo " in $pkgs${color_off}"
-                        sleep 5s
-            ;;
-            *      ) _menu
-            ;;
-        esac
-    else
-        echo " ${green}No orphan package found.${color_off}"
-        sleep 3s
-        _menu
-    fi
+_packageslist() {
+    pacman -Qq \
+        | fzf \
+        --preview 'pacman -Qil {}' \
+        --layout=reverse \
+        --bind 'enter:execute(pacman -Qil {} | less)'
+}
+
+_purge() {
+    
+    read -rn 1 -p ' Purge [O]rphans or [C]ache: ' purge
+    case "$purge" in
+        o|O)    local pkgs="$XDG_CACHE_HOME/orphans_list.txt"
+                echo ""
+                if [[ -n $(pacman -Qdqt) ]]; then
+                    touch "$pkgs"
+                    pacman -Qdqt > "$pkgs" && cat "$pkgs"
+                    echo ""
+                    echo " ${red}Would you like to purge orphan packages? [N/y]:${color_off}"
+                    read -r orphan
+                    case "$orphan" in
+                        N|n|no )    _menu
+                        ;;
+                        y|Y|yes)    sudo pacman -Rs $(pacman -Qdqt) && \
+                                    sudo paccache -ruk0
+                                    echo " ${green}A list of removed packages has been created"
+                                    echo " in $pkgs${color_off}"
+                                    sleep 5s
+                        ;;
+                        *      )    echo " Bad option..."; sleep 2s && _menu
+                        ;;
+                    esac
+                else
+                    echo " ${green}No orphan package found.${color_off}"
+                    sleep 3s
+                    _menu
+                fi
+        ;;
+        c|C)    sudo pacman -Scc
+        ;;
+    esac
+    
+    return 0
+    
 }
 
 _pacdiff() {
@@ -147,11 +166,11 @@ _reflector() {
     echo " More details in a terminal, type: ${color_off}reflector --list-countries | less"
     echo ""
     select country in $(reflector --list-countries \
-        | sed '1d;2d;8d' \
-        | sed 's/Hong Kong/Hong-Kong/;s/North Macedonia/North-Macedonia/' \
-        | sed 's/New Caledonia/New-Caledonia/;s/New Zealand/New-Zealand/' \
-        | sed 's/South Africa/South-Africa/;s/South Korea/South-Korea/' \
-        | sed 's/United States/United-States/;s/United Kingdom/United-Kingdom/' \
+        | sed '1d;2d;8d
+        s/Hong Kong/Hong-Kong/;s/North Macedonia/North-Macedonia/;
+        s/New Caledonia/New-Caledonia/;s/New Zealand/New-Zealand/;
+        s/South Africa/South-Africa/;s/South Korea/South-Korea/;
+        s/United States/United-States/;s/United Kingdom/United-Kingdom/' \
         | awk '{print $1}'); do
 
         case "$country" in
