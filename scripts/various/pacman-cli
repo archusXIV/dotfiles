@@ -41,31 +41,31 @@ _menu() {
         echo ""
         read -r option
         case "$option" in
-            1)  _install
+            1)  _install                   # Install one or multiple package(s)
                 echo ""
             ;;
-            2)  _uninstall
+            2)  _uninstall                 # Uninstall one or multiple package(s)
                 echo ""
             ;;
-            3)  _packageslist
+            3)  _packageslist              # List all installed packages, press ENTER to see more details
                 echo ""
             ;;
-            4)  _purge
+            4)  _purge                     # Clean orphan packages and /var/cache/pacman/pkg/*
                 echo ""
             ;;
-            5)  _reflector
+            5)  _reflector                 # Use reflector script to update and refresh /etc/pacman.d/mirrorlist
                 echo ""
             ;;
-            6)  updates-viewer --list # ~/.local/bin/updates-viewer
+            6)  updates-viewer --list      # ~/.local/bin/updates-viewer
                 echo ""
             ;;
-            7)  _pacdiff
+            7)  _pacdiff                   # remove, merge or replace configs in /etc
                 echo ""
             ;;
-            8)  sudo vim /etc/pacman.conf
+            8)  sudo vim /etc/pacman.conf  # Edit this file
                 echo ""
             ;;
-            9)  sudo vim /etc/makepkg.conf
+            9)  sudo vim /etc/makepkg.conf # Edit this file
                 echo ""
             ;;
             0)  clear
