@@ -15,12 +15,17 @@ Menu ; {d,r}
 [scratchpad]
 # we let these lines here because we use
 # sxhkd within i3wm too.
-alt + {h,m,t}
+alt + shift + {h,u}
     { \
     i3orbsp_scratchpad -h, \
-    i3orbsp_scratchpad -m, \
-    i3orbsp_scratchpad -t \
+    i3orbsp_scratchpad -u \
     }
+
+#alt + shift + {h,u}
+#    { \
+#    autohide_window -h, \
+#    autohide_window -u \
+#    }
 
 [applications bindings]
 # terminal emulators
