@@ -29,8 +29,8 @@ _i3() {
 }
 
 case "$1" in
-    -h) _bspwm || _i3
+    -h) _bspwm || _i3 --hide
     ;;
-    -u) _bspwm || _i3
+    -u) _bspwm || _i3 --unhide
     ;;
 esac
