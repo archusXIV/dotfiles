@@ -1,0 +1,34 @@
+#!/bin/bash
+
+barpid=$(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-3)
+
+_bspwm() {
+    if [[ -z $(bspc query -N -n .hidden) ]]; then
+        bspc node -g hidden
+        xset led 3
+        polybar-msg -p "$barpid" action "#scratchpad-ipc.hook.1" >/dev/null 2>&1
+    else
+        bspc node $(bspc query -N -n .hidden | tail -n1) -g hidden=off
+        xset -led 3
+        polybar-msg -p "$barpid" action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
+    fi
+}
+
+_i3() {
+    case "$1" in
+        --hide) i3-msg move scratchpad
+                xset led 3
+                polybar-msg -p "$barpid" action "#scratchpad-ipc.hook.1" >/dev/null 2>&1
+        ;;
+        --unhide) i3-msg scratchpad show; i3-msg floating toggle
+                  xset led 3
+                  polybar-msg -p "$barpid" action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
+    esac
+}
+
+case "$1" in
+    -h) _bspwm || _i3
+    ;;
+    -u) _bspwm || _i3
+    ;;
+esac
