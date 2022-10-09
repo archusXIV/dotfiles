@@ -23,7 +23,7 @@ _i3() {
                 polybar-msg -p "$barpid" action "#scratchpad-ipc.hook.1" >/dev/null 2>&1
         ;;
         --unhide) i3-msg scratchpad show; i3-msg floating toggle
-                  # xset led 3
+                  # xset -led 3
                   polybar-msg -p "$barpid" action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
     esac
 }
