@@ -6,13 +6,13 @@
 
 barpid=$(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-3)
 
-_activate_indicator() {
+_indicator_on() {
     xset led 3
     polybar-msg -p "$barpid" \
     action "#scratchpad-ipc.hook.1" >/dev/null 2>&1
 }
 
-_disactivate_indicator() {
+_indicator_off() {
     xset -led 3
     polybar-msg -p "$barpid" \
     action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
