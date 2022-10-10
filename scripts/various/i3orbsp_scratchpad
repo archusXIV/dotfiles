@@ -1,43 +1,53 @@
 #!/bin/bash
 
 # This script sends windows in the scratchpad,
-# and activates an indicator for us to know
-# that we have something hidden.
+# and activates an indicator (led 3 on the keyboard
+# and a polybar module) for us to know
+# how many of them we have hidden in i3wm/bspwm.
 # Dependencies: polybar, wmctrl, xorg-xset
+#
+# Polybar module example
+# [module/scratchpad-ipc]
+# type = custom/ipc
+# format = <output>
+# format-padding = 1
+# hook-0 = echo ""
+# hook-1 = echo " %{F#A6E074}scrachpad $(awk '/-1/ {count++} END {print count}' < <(wmctrl -l))%{F-}"
+# initial = 1
 
 barpid=$(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-3)
 
-_indicator_on() {
-    xset led 3
-    polybar-msg -p "$barpid" \
-    action "#scratchpad-ipc.hook.1" >/dev/null 2>&1
-}
-
-_indicator_off() {
-    xset -led 3
-    polybar-msg -p "$barpid" \
-    action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
+_indicator() {
+    if (( $(awk '/-1/ {count++} END {print count}' < <(wmctrl -l)) > 0 )); then
+        xset led 3
+        polybar-msg -p "$barpid" \
+        action "#scratchpad-ipc.hook.1" >/dev/null 2>&1
+    else
+        xset -led 3
+        polybar-msg -p "$barpid" \
+        action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
+    fi
 }
 
 _bspwm() {
     if [[ -z $(bspc query -N -n .hidden) ]]; then
         bspc node -g hidden
-        _activate_indicator
+        _indicator
     else
         bspc node \
         $(bspc query -N -n .hidden | tail -n1) -g \
         hidden=off
-        _disactivate_indicator
+        _indicator
     fi
 }
 
 _i3() {
     case "$1" in
         --hide  )   i3-msg move scratchpad
-                    _activate_indicator
+                    _indicator
         ;;
         --unhide)   i3-msg scratchpad show; i3-msg floating toggle
-                    _disactivate_indicator
+                    _indicator
         ;;
     esac
 }
@@ -56,4 +66,3 @@ case "$1" in
         fi
     ;;
 esac
-
