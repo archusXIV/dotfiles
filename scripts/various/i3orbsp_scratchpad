@@ -1,37 +1,49 @@
 #!/bin/bash
 
+# This script sends windows in the scratchpad,
+# and activates an indicator for us to know
+# that we have something hidden.
+
 barpid=$(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-3)
+
+_activate_indicator() {
+    xset led 3
+    polybar-msg -p "$barpid" \
+    action "#scratchpad-ipc.hook.1" >/dev/null 2>&1
+}
+
+_disactivate_indicator() {
+    xset -led 3
+    polybar-msg -p "$barpid" \
+    action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
+}
 
 _bspwm() {
     if [[ -z $(bspc query -N -n .hidden) ]]; then
         bspc node -g hidden
-        xset led 3
-        polybar-msg -p "$barpid" action "#scratchpad-ipc.hook.1" >/dev/null 2>&1
+        _activate_indicator
     else
         bspc node \
         $(bspc query -N -n .hidden | tail -n1) -g \
         hidden=off
-        xset -led 3
-        polybar-msg -p "$barpid" action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
+        _disactivate_indicator
     fi
 }
 
 _i3() {
     case "$1" in
         --hide  )   i3-msg move scratchpad
-                    xset led 3
-                    # polybar-msg -p "$barpid" action "#scratchpad-ipc.hook.1" >/dev/null 2>&1
+                    _activate_indicator
         ;;
         --unhide)   i3-msg scratchpad show; i3-msg floating toggle
-                    xset -led 3
-                    # polybar-msg -p "$barpid" action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
+                    _disactivate_indicator
         ;;
     esac
 }
 
 case "$1" in
-    -h) _bspwm || _i3 --hide
+    -h) [[ -z $(_bspwm) ]] && _i3 --hide
     ;;
-    -u) _bspwm || _i3 --unhide
+    -u) [[ -z $(_bspwm) ]] && _i3 --unhide
     ;;
 esac
