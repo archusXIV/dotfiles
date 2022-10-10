@@ -18,7 +18,9 @@
 barpid=$(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-3)
 
 _indicator() {
-    if (( $(awk '/-1/ {count++} END {print count}' < <(wmctrl -l)) > 0 )); then
+    local COUNT=$(awk '/-1/ {count++} END {print count}' < <(wmctrl -l))
+    
+    if (( COUNT > 0 )); then
         xset led 3
         polybar-msg -p "$barpid" \
         action "#scratchpad-ipc.hook.1" >/dev/null 2>&1
