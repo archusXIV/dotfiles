@@ -42,8 +42,17 @@ _i3() {
 }
 
 case "$1" in
-    -h) [[ -z $(_bspwm) ]] && _i3 --hide
+    -h) if [[ -z $(_bspwm) ]]; then
+            _i3 --hide
+        else
+            _bspwm
+        fi
     ;;
-    -u) [[ -z $(_bspwm) ]] && _i3 --unhide
+    -u) if [[ -z $(_bspwm) ]]; then
+            _i3 --unhide
+        else
+            _bspwm
+        fi
     ;;
 esac
+
