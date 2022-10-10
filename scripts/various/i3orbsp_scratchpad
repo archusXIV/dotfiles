@@ -3,6 +3,7 @@
 # This script sends windows in the scratchpad,
 # and activates an indicator for us to know
 # that we have something hidden.
+# Dependencies: polybar, wmctrl, xorg-xset
 
 barpid=$(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-3)
 
