@@ -18,7 +18,14 @@
 barpid=$(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-3)
 
 _indicator() {
-    local COUNT=$(awk '/-1/ {count++} END {print count}' < <(wmctrl -l))
+    
+    if [[ -n $(pidof i3) ]]; then
+        COUNT=$(awk '/-1/ {count++} END {print count}' < <(wmctrl -l))
+    else
+        # bspwm does'nt use desktop -1 like i3,
+        # so we count using grep
+        COUNT=$(grep "" -c < <(bspc query -N -n .hidden))
+    fi
     
     if (( COUNT > 0 )); then
         xset led 3
