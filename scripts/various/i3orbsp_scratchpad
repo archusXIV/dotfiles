@@ -55,39 +55,21 @@ _indicator() {
     
 }
 
-_bspwm() {
-    case "$1" in
-        --hide)     bspc node --flag hidden=on
-                    _indicator
-        ;;
-        --unhide)   bspc node $(bspc query -N -n .hidden.window | tail -n1) -g hidden=off
-                    _indicator
-        ;;
-    esac
-}
-
-_i3() {
-    case "$1" in
-        --hide  )   i3-msg move scratchpad
-                    _indicator
-        ;;
-        --unhide)   i3-msg scratchpad show; i3-msg floating toggle
-                    _indicator
-        ;;
-    esac
-}
-
 case "$1" in
     -h) if [[ -n $(pidof i3) ]]; then
-            _i3 --hide
+            i3-msg move scratchpad
+            _indicator
         else
-            _bspwm --hide
+            bspc node --flag hidden=on
+            _indicator
         fi
     ;;
     -u) if [[ -n $(pidof i3) ]]; then
-            _i3 --unhide
+            i3-msg scratchpad show; i3-msg floating toggle
+            _indicator
         else
-            _bspwm --unhide
+            bspc node $(bspc query -N -n .hidden.window | tail -n1) -g hidden=off
+            _indicator
         fi
     ;;
 esac
