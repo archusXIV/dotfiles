@@ -7,22 +7,16 @@
 # Dependencies: polybar, wmctrl, xorg-xset
 #
 # Polybar module for i3
-# [module/i3_scratchpad-ipc]
-# type = custom/ipc
-# format = <output>
-# format-padding = 1
-# hook-0 = echo ""
-# hook-1 = echo " %{F#A6E074}scrachpad $(awk '/-1/ {count++} END {print count}' < <(wmctrl -l))%{F-}"
-# initial = 1
-#
-# Polybar module for bspwm
-# [module/i3_scratchpad-ipc]
-# type = custom/ipc
-# format = <output>
-# format-padding = 1
-# hook-0 = echo ""
-# hook-1 = echo " %{F#A6E074}scrachpad $(grep "" -c < <(bspc query -N -n .hidden.window))%{F-}"
-# initial = 1
+#[module/scratchpad-ipc]
+#type = custom/ipc
+#format = <output>
+#format-padding = 1
+#hook-0 = echo ""
+#; for bspwm
+#hook-1 = echo " %{F#A6E074}scrachpad $(grep "" -c < <(bspc query -N -n .hidden.window))%{F-}"
+#; for i3wm
+#hook-2 = echo " %{F#A6E074}scrachpad $(awk '/-1/ {count++} END {print count}' < <(wmctrl -l))%{F-}"
+#initial = 1
 
 # ... my polybar name on monitor 3 is {bspwm,i3}-bar-3
 barpid=$(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-3)
@@ -34,22 +28,22 @@ _indicator() {
         if (( COUNT > 0 )); then
             xset led 3
             polybar-msg -p "$barpid" \
-            action "#i3_scratchpad-ipc.hook.1" >/dev/null 2>&1
+            action "#scratchpad-ipc.hook.2" >/dev/null 2>&1
         else
             xset -led 3
             polybar-msg -p "$barpid" \
-            action "#i3_scratchpad-ipc.hook.0" >/dev/null 2>&1
+            action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
         fi
     else
         COUNT=$(grep "" -c < <(bspc query -N -n .hidden.window))
         if (( COUNT > 0 )); then
             xset led 3
             polybar-msg -p "$barpid" \
-            action "#bsp_scratchpad-ipc.hook.1" >/dev/null 2>&1
+            action "#scratchpad-ipc.hook.1" >/dev/null 2>&1
         else
             xset -led 3
             polybar-msg -p "$barpid" \
-            action "#bsp_scratchpad-ipc.hook.0" >/dev/null 2>&1
+            action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
         fi
     fi
     
