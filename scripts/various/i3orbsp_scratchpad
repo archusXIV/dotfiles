@@ -6,48 +6,64 @@
 # how many of them we have hidden in i3wm/bspwm.
 # Dependencies: polybar, wmctrl, xorg-xset
 #
-# Polybar module example
-# [module/scratchpad-ipc]
+# Polybar module for i3
+# [module/i3_scratchpad-ipc]
 # type = custom/ipc
 # format = <output>
 # format-padding = 1
 # hook-0 = echo ""
 # hook-1 = echo " %{F#A6E074}scrachpad $(awk '/-1/ {count++} END {print count}' < <(wmctrl -l))%{F-}"
 # initial = 1
+#
+# Polybar module for bspwm
+# [module/i3_scratchpad-ipc]
+# type = custom/ipc
+# format = <output>
+# format-padding = 1
+# hook-0 = echo ""
+# hook-1 = echo " %{F#A6E074}scrachpad $(grep "" -c < <(bspc query -N -n .hidden.window))%{F-}"
+# initial = 1
 
+# ... my polybar name on monitor 3 is {bspwm,i3}-bar-3
 barpid=$(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-3)
 
 _indicator() {
     
     if [[ -n $(pidof i3) ]]; then
         COUNT=$(awk '/-1/ {count++} END {print count}' < <(wmctrl -l))
+        if (( COUNT > 0 )); then
+            xset led 3
+            polybar-msg -p "$barpid" \
+            action "#i3_scratchpad-ipc.hook.1" >/dev/null 2>&1
+        else
+            xset -led 3
+            polybar-msg -p "$barpid" \
+            action "#i3_scratchpad-ipc.hook.0" >/dev/null 2>&1
+        fi
     else
-        # bspwm does'nt use desktop -1 like i3,
-        # so we count using grep
-        COUNT=$(grep "" -c < <(bspc query -N -n .hidden))
+        COUNT=$(grep "" -c < <(bspc query -N -n .hidden.window))
+        if (( COUNT > 0 )); then
+            xset led 3
+            polybar-msg -p "$barpid" \
+            action "#bsp_scratchpad-ipc.hook.1" >/dev/null 2>&1
+        else
+            xset -led 3
+            polybar-msg -p "$barpid" \
+            action "#bsp_scratchpad-ipc.hook.0" >/dev/null 2>&1
+        fi
     fi
     
-    if (( COUNT > 0 )); then
-        xset led 3
-        polybar-msg -p "$barpid" \
-        action "#scratchpad-ipc.hook.1" >/dev/null 2>&1
-    else
-        xset -led 3
-        polybar-msg -p "$barpid" \
-        action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
-    fi
 }
 
 _bspwm() {
-    if [[ -z $(bspc query -N -n .hidden) ]]; then
-        bspc node -g hidden
-        _indicator
-    else
-        bspc node \
-        $(bspc query -N -n .hidden | tail -n1) -g \
-        hidden=off
-        _indicator
-    fi
+    case "$1" in
+        --hide)     bspc node --flag hidden=on
+                    _indicator
+        ;;
+        --unhide)   bspc node $(bspc query -N -n .hidden.window | tail -n1) -g hidden=off
+                    _indicator
+        ;;
+    esac
 }
 
 _i3() {
@@ -62,16 +78,16 @@ _i3() {
 }
 
 case "$1" in
-    -h) if [[ -z $(_bspwm) ]]; then
+    -h) if [[ -n $(pidof i3) ]]; then
             _i3 --hide
         else
-            _bspwm
+            _bspwm --hide
         fi
     ;;
-    -u) if [[ -z $(_bspwm) ]]; then
+    -u) if [[ -n $(pidof i3) ]]; then
             _i3 --unhide
         else
-            _bspwm
+            _bspwm --unhide
         fi
     ;;
 esac
