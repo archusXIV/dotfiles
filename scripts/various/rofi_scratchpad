@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+BARPID=$(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-3)
+HIDDEN=$(bspc query -N -n .hidden.window)
+
+N=$(for w in $HIDDEN; do
+		NAME=$(xprop -id "$w" WM_CLASS 2>/dev/null | sed -r 's/.+ "(.+)"$/\1/')
+		TITLE=$(xprop -id "$w" WM_NAME 2>/dev/null | sed -r 's/.+ "(.+)"$/\1/')
+		[[ "$NAME" = "WM_CLASS" ]] && echo "node $w" || echo "$NAME  \"$TITLE\""
+	done | rofi -dmenu -no-custom -format  i -p 'Unhide a window: ')
+
+if [[ -n "$N" ]]; then
+	
+	ID=$(echo "$HIDDEN" | sed -n "$((N+1))p")
+	
+	bspc node "$ID" --flag hidden=off --focus
+	
+	if (( $(bspc query -N -n .hidden.window) > 0 )); then
+		polybar-msg -p "$BARPID" \
+		action "#scratchpad-ipc.hook.1" >/dev/null 2>&1
+	else
+		xset -led 3
+		polybar-msg -p "$BARPID" \
+		action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
+	fi
+else
+	# for i3wm, rofi doesn't show workspace numbers whem
+	# hidden windows exist, so that's what we should select.
+	rofi -normal-window -modi window -show window -no-show-icons \
+    -hide-scrollbar -padding 70 -line-padding 4
+	i3-msg floating toggle focus
+    if (( $(awk '/-1/ {count++} END {print count}' < <(wmctrl -l)) > 0 )); then
+        xset led 3
+        polybar-msg -p "$BARPID" \
+        action "#scratchpad-ipc.hook.2" >/dev/null 2>&1
+    else
+        xset -led 3
+        polybar-msg -p "$BARPID" \
+        action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
+    fi
+	exit 0
+fi
