@@ -19,30 +19,31 @@
 #initial = 1
 
 # ... my polybar name on monitor 3 is {bspwm,i3}-bar-3
-barpid=$(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-3)
+WM_NAME=$(awk '/Name/{print $2}' < <(wmctrl -m))
+BARPID=$(pgrep --full $WM_NAME-bar-3)
 
 _indicator() {
     
-    if [[ -n $(pidof i3) ]]; then
+    if [[ $WM_NAME = i3 ]]; then
         COUNT=$(awk '/-1/ {count++} END {print count}' < <(wmctrl -l))
         if (( COUNT > 0 )); then
             xset led 3
-            polybar-msg -p "$barpid" \
+            polybar-msg -p "$BARPID" \
             action "#scratchpad-ipc.hook.2" >/dev/null 2>&1
         else
             xset -led 3
-            polybar-msg -p "$barpid" \
+            polybar-msg -p "$BARPID" \
             action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
         fi
-    else
+    elif [[ $WM_NAME = bspwm ]]; then
         COUNT=$(grep "" -c < <(bspc query -N -n .hidden.window))
         if (( COUNT > 0 )); then
             xset led 3
-            polybar-msg -p "$barpid" \
+            polybar-msg -p "$BARPID" \
             action "#scratchpad-ipc.hook.1" >/dev/null 2>&1
         else
             xset -led 3
-            polybar-msg -p "$barpid" \
+            polybar-msg -p "$BARPID" \
             action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
         fi
     fi
@@ -50,20 +51,22 @@ _indicator() {
 }
 
 case "$1" in
-    -h) if [[ -n $(pidof i3) ]]; then
+    -h) if [[ $WM_NAME = i3 ]]; then
             i3-msg move scratchpad
             _indicator
-        else
+        elif [[ $WM_NAME = bspwm ]]; then
             bspc node --flag hidden=on
             _indicator
         fi
     ;;
-    -u) if [[ -n $(pidof i3) ]]; then
+    -u) if [[ $WM_NAME = i3 ]]; then
             i3-msg scratchpad show; i3-msg floating toggle
             _indicator
-        else
-            bspc node $(bspc query -N -n .hidden.window | tail -n1) -g hidden=off
+        elif [[ $WM_NAME = bspwm ]]; then
+            bspc node $(bspc query -N -n .hidden.window | tail -1) \
+            -g hidden=off --focus
             _indicator
         fi
     ;;
 esac
+
