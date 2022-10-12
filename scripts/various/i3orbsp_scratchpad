@@ -4,7 +4,7 @@
 # and activates an indicator (led 3 on the keyboard
 # and a polybar module) for us to know
 # how many of them we have hidden in i3wm/bspwm.
-# Dependencies: polybar, wmctrl, xorg-xset
+# Dependencies: polybar (optional), wmctrl, xorg-xset
 #
 # Polybar module for i3
 #[module/scratchpad-ipc]
@@ -26,26 +26,27 @@ _indicator() {
     
     if [[ $WM_NAME = i3 ]]; then
         COUNT=$(awk '/-1/ {count++} END {print count}' < <(wmctrl -l))
-        if (( COUNT > 0 )); then
+        (( COUNT > 0 )) && {
             xset led 3
             polybar-msg -p "$BARPID" \
             action "#scratchpad-ipc.hook.2" >/dev/null 2>&1
-        else
+        } || {
             xset -led 3
             polybar-msg -p "$BARPID" \
             action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
-        fi
+        }
+        
     elif [[ $WM_NAME = bspwm ]]; then
         COUNT=$(grep "" -c < <(bspc query -N -n .hidden.window))
-        if (( COUNT > 0 )); then
+        (( COUNT > 0 )) && {
             xset led 3
             polybar-msg -p "$BARPID" \
             action "#scratchpad-ipc.hook.1" >/dev/null 2>&1
-        else
+        } || {
             xset -led 3
             polybar-msg -p "$BARPID" \
             action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
-        fi
+        }
     fi
     
 }
