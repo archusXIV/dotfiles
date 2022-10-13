@@ -4,16 +4,16 @@
 
 WDMNGR=$(awk '/Name/{print $2}' < <(wmctrl -m))
 BARPID=$(pgrep --full $WDMNGR-bar-3)
-HIDDEN=$(bspc query -N -n .hidden.window)
 
-N=$(for w in $HIDDEN; do
+if [[ $WDMNGR = bspwm ]]; then
+	HIDDEN=$(bspc query -N -n .hidden.window)
+
+	N=$(for w in $HIDDEN; do
 		NAME=$(xprop -id "$w" WM_CLASS 2>/dev/null | sed -r 's/.+ "(.+)"$/\1/')
 		TITLE=$(xprop -id "$w" WM_NAME 2>/dev/null | sed -r 's/.+ "(.+)"$/\1/')
 		[[ "$NAME" = "WM_CLASS" ]] && echo "node $w" || echo "$NAME  \"$TITLE\""
 	done | rofi -dmenu -no-custom -format  i -p 'Unhide a window: ')
-
-
-if [[ $WDMNGR = bspwm ]]; then
+	
 	if [[ -n "$N" ]]; then
 		
 		ID=$(echo "$HIDDEN" | sed -n "$((N+1))p")
