@@ -18,9 +18,8 @@ if [[ $WDMNGR = bspwm ]]; then
 		
 		ID=$(echo "$HIDDEN" | sed -n "$((N+1))p")
 		
-		bspc node "$ID" --flag hidden=off --focus
-		
 		if (( $(bspc query -N -n .hidden.window) > 0 )); then
+			bspc node "$ID" --flag hidden=off --focus
 			xset led 3
 			polybar-msg -p "$BARPID" \
 			action "#scratchpad-ipc.hook.1" >/dev/null 2>&1
