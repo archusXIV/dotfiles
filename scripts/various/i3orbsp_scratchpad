@@ -24,30 +24,31 @@ BARPID=$(pgrep --full $WM_NAME-bar-3)
 
 _indicator() {
     
-    if [[ $WM_NAME = i3 ]]; then
+    [[ $WM_NAME = i3 ]] && {
         COUNT=$(awk '/-1/ {count++} END {print count}' < <(wmctrl -l))
-        (( COUNT > 0 )) && {
+        if (( COUNT > 0 )); then
             xset led 3
             polybar-msg -p "$BARPID" \
             action "#scratchpad-ipc.hook.2" >/dev/null 2>&1
-        } || {
+        else
             xset -led 3
             polybar-msg -p "$BARPID" \
             action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
-        }
-        
-    elif [[ $WM_NAME = bspwm ]]; then
+        fi
+    }
+    
+    [[ $WM_NAME = bspwm ]] && {
         COUNT=$(grep "" -c < <(bspc query -N -n .hidden.window))
-        (( COUNT > 0 )) && {
+        if (( COUNT > 0 )); then
             xset led 3
             polybar-msg -p "$BARPID" \
             action "#scratchpad-ipc.hook.1" >/dev/null 2>&1
-        } || {
+        else
             xset -led 3
             polybar-msg -p "$BARPID" \
             action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
-        }
-    fi
+        fi
+    }
     
 }
 
@@ -70,4 +71,3 @@ case "$1" in
         fi
     ;;
 esac
-
