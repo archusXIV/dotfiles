@@ -4,13 +4,14 @@
 # First try gracefully then the hard way.
 sockets_dir="$XDG_RUNTIME_DIR/polybar/"
 
-[[ -d $sockets_dir ]] && \
+if [[ -d $sockets_dir ]]; then
     polybar-msg cmd quit >/dev/null 2>&1 \
     || {
         rm /tmp/polybar_mqueue.* 2>/dev/null
         killall -q --signal SIGKILL {conky,polybar}
         rm -rf "$sockets_dir" 2>/dev/null
     }
+fi
 
 # Wait until the process has been closed.
 while pgrep -u "$UID" -x polybar; do
