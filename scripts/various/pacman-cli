@@ -28,6 +28,7 @@ _menu() {
     while [[ -f /etc/pacman.conf ]]; do
         clear
         echo ""
+        echo -e "                                          ${green}Installed packages: $(pacman -Q | wc -l)${color_off}\n"
         echo -e "                                            ::pacman options::\n"
         echo -e "                        ::To select multiple packages in options 1 & 2 press Tab::  "
         echo -e "                       ┌───────────────────────────────────────────────────────────┐"
