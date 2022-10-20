@@ -2,14 +2,15 @@
 
 # Terminate already polybar instances.
 # First try gracefully then the hard way.
-socket="ipc.$(pgrep polybar | sed -n '1p').sock"
+sockets_dir="$XDG_RUNTIME_DIR/polybar/"
 
-if [[ -S $XDG_RUNTIME_DIR/polybar/$socket ]]; then
-    polybar-msg cmd quit >/dev/null 2>&1
-else
-    rm /tmp/polybar_mqueue.* 2>/dev/null
-    killall -q {conky,polybar}
-fi
+[[ -d $sockets_dir ]] && \
+    polybar-msg cmd quit >/dev/null 2>&1 \
+    || {
+        rm /tmp/polybar_mqueue.* 2>/dev/null
+        killall -q --signal SIGKILL {conky,polybar}
+        rm -rf "$sockets_dir" 2>/dev/null
+    }
 
 # Wait until the process has been closed.
 while pgrep -u "$UID" -x polybar; do
@@ -26,9 +27,9 @@ if [[ -n $(pidof bspwm) ]]; then
     done
     notify-send 'Bars launched...'
     exit 0
-elif [[ -n $(i3 --get-socketpath) ]]; then
+elif [[ -n $(pidof i3) ]]; then
     unset {bars[0],bars[1],bars[2]}
-    for b in "${bars_i3[@]}"; do
+    for b in "${bars[@]}"; do
         polybar "$b" -q & disown
     done
     notify-send 'Bars launched...'
