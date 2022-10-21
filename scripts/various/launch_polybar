@@ -22,13 +22,13 @@ done
 WM_NAME=$(awk '/Name/{print $2}' < <(wmctrl -m))
 BARS=( "$WM_NAME"-bar-1 "$WM_NAME"-bar-2 "$WM_NAME"-bar-3 )
 
-if [[ -n $(pidof bspwm) ]]; then
+if [[ $WM_NAME = bspwm ]]; then
     for b in "${BARS[@]}"; do
         polybar "$b" -q & disown
     done
     notify-send 'Bars launched...'
     exit 0
-elif [[ -n $(pidof i3) ]]; then
+elif [[ $WM_NAME = i3 ]]; then
     for b in "${BARS[@]}"; do
         polybar "$b" -q & disown
     done
