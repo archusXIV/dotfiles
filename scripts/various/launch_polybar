@@ -2,10 +2,11 @@
 
 # Terminate already polybar instances.
 # First try gracefully then the hard way.
-sockets_dir="$XDG_RUNTIME_DIR/polybar/"
+
+sockets_dir="$XDG_RUNTIME_DIR/polybar"
 
 if [[ -d $sockets_dir ]]; then
-    polybar-msg cmd quit >/dev/null 2>&1 \
+    polybar-msg cmd quit >/dev/null 2>&1
     [[ $? -eq 1 ]] && {
         rm /tmp/polybar_mqueue.* 2>/dev/null
         killall -q --signal SIGKILL {conky,polybar}
@@ -18,19 +19,17 @@ while pgrep -u "$UID" -x polybar; do
     sleep 0.5
 done
 
-bars=( "bspwm-bar-1" "bspwm-bar-2" "bspwm-bar-3" \
-        "i3-bar-1" "i3-bar-2" "i3-bar-3" )
+WM_NAME=$(awk '/Name/{print $2}' < <(wmctrl -m))
+BARS=( "$WM_NAME"-bar-1 "$WM_NAME"-bar-2 "$WM_NAME"-bar-3 )
 
 if [[ -n $(pidof bspwm) ]]; then
-    unset {bars[3],bars[4],bars[5]}
-    for b in "${bars[@]}"; do
+    for b in "${BARS[@]}"; do
         polybar "$b" -q & disown
     done
     notify-send 'Bars launched...'
     exit 0
 elif [[ -n $(pidof i3) ]]; then
-    unset {bars[0],bars[1],bars[2]}
-    for b in "${bars[@]}"; do
+    for b in "${BARS[@]}"; do
         polybar "$b" -q & disown
     done
     notify-send 'Bars launched...'
