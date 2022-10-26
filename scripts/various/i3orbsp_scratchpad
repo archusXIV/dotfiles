@@ -5,6 +5,8 @@
 # and a polybar module) for us to know
 # how many of them we have hidden in i3wm/bspwm.
 # Dependencies: polybar (optional), wmctrl, xorg-xset
+# It also optionaly work in combination with:
+# https://github.com/archusXIV/dotfiles/blob/main/scripts/various/rofi_scratchpad
 #
 # Polybar module for i3
 #[module/scratchpad-ipc]
@@ -19,55 +21,59 @@
 #initial = 1
 
 # ... my polybar name on monitor 3 is {bspwm,i3}-bar-3
-WM_NAME=$(awk '/Name/{print $2}' < <(wmctrl -m))
-BARPID=$(pgrep --full $WM_NAME-bar-3)
+WDMNGR=$(awk '/Name/{print $2}' < <(wmctrl -m))
+BARPID=$(pgrep --full $WDMNGR-bar-3)
+
+_empty() {
+    xset -led 3
+    polybar-msg -p "$BARPID" \
+    action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
+    notify-send 'nothing else in scratchpad'
+}
 
 _indicator() {
     
-    [[ $WM_NAME = i3 ]] && {
-        COUNT=$(awk '/-1/ {count++} END {print count}' < <(wmctrl -l))
-        if (( COUNT > 0 )); then
-            xset led 3
-            polybar-msg -p "$BARPID" \
-            action "#scratchpad-ipc.hook.2" >/dev/null 2>&1
-        else
-            xset -led 3
-            polybar-msg -p "$BARPID" \
-            action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
-        fi
-    }
-    
-    [[ $WM_NAME = bspwm ]] && {
+    [[ $WDMNGR = bspwm ]] && {
         COUNT=$(grep "" -c < <(bspc query -N -n .hidden.window))
-        if (( COUNT > 0 )); then
+        if ((COUNT > 0)); then
             xset led 3
             polybar-msg -p "$BARPID" \
             action "#scratchpad-ipc.hook.1" >/dev/null 2>&1
         else
-            xset -led 3
+            _empty
+        fi
+    }
+    
+    [[ $WDMNGR = i3 ]] && {
+        COUNT=$(awk '/-1/ {count++} END {print count}' < <(wmctrl -l))
+        if ((COUNT > 0)); then
+            xset led 3
             polybar-msg -p "$BARPID" \
-            action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
+            action "#scratchpad-ipc.hook.2" >/dev/null 2>&1
+        else
+            _empty
         fi
     }
     
 }
 
 case "$1" in
-    -h) if [[ $WM_NAME = i3 ]]; then
+    -h) if [[ $WDMNGR = i3 ]]; then
             i3-msg move scratchpad
             _indicator
-        elif [[ $WM_NAME = bspwm ]]; then
+        elif [[ $WDMNGR = bspwm ]]; then
             bspc node --flag hidden=on
             _indicator
         fi
     ;;
-    -u) if [[ $WM_NAME = i3 ]]; then
-            i3-msg scratchpad show; i3-msg floating toggle
+    -u) if [[ $WDMNGR = i3 ]]; then
+            i3-msg scratchpad show; i3-msg floating toggle focus
             _indicator
-        elif [[ $WM_NAME = bspwm ]]; then
+        elif [[ $WDMNGR = bspwm ]]; then
             bspc node $(bspc query -N -n .hidden.window | tail -1) \
             -g hidden=off --focus
             _indicator
         fi
     ;;
 esac
+
