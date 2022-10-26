@@ -6,9 +6,9 @@
 sockets_dir="$XDG_RUNTIME_DIR/polybar"
 
 if [[ -d $sockets_dir ]]; then
-    polybar-msg cmd quit >/dev/null 2>&1
     rm /tmp/polybar_mqueue.* 2>/dev/null
     rm -rf "$sockets_dir" 2>/dev/null
+    polybar-msg cmd quit >/dev/null 2>&1
     
     [[ $? -eq 1 ]] && {
         rm /tmp/polybar_mqueue.* 2>/dev/null
