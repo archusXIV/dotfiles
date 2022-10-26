@@ -7,6 +7,9 @@ sockets_dir="$XDG_RUNTIME_DIR/polybar"
 
 if [[ -d $sockets_dir ]]; then
     polybar-msg cmd quit >/dev/null 2>&1
+    rm /tmp/polybar_mqueue.* 2>/dev/null
+    rm -rf "$sockets_dir" 2>/dev/null
+    
     [[ $? -eq 1 ]] && {
         rm /tmp/polybar_mqueue.* 2>/dev/null
         killall -q --signal SIGKILL {conky,polybar}
@@ -19,19 +22,11 @@ while pgrep -u "$UID" -x polybar; do
     sleep 0.5
 done
 
+# We have two window managers installed.
 WM_NAME=$(awk '/Name/{print $2}' < <(wmctrl -m))
 BARS=( "$WM_NAME"-bar-1 "$WM_NAME"-bar-2 "$WM_NAME"-bar-3 )
 
-if [[ $WM_NAME = bspwm ]]; then
-    for b in "${BARS[@]}"; do
-        polybar "$b" -q & disown
-    done
-    notify-send 'Bars launched...'
-    exit 0
-elif [[ $WM_NAME = i3 ]]; then
-    for b in "${BARS[@]}"; do
-        polybar "$b" -q & disown
-    done
-    notify-send 'Bars launched...'
-    exit 0
-fi
+for b in "${BARS[@]}"; do
+    polybar "$b" -q & disown
+done
+notify-send 'Bars launched...'
