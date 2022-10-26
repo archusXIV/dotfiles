@@ -10,7 +10,7 @@ if [[ $WDMNGR = bspwm ]]; then
 
 	N=$(for w in $HIDDEN; do
 		NAME=$(xprop -id "$w" WM_CLASS 2>/dev/null | sed -r 's/.+ "(.+)"$/\1/')
-		TITLE=$(xprop -id "$w" WM_NAME 2>/dev/null | sed -r 's/.+ "(.+)"$/\1/')
+		TITLE=$(xprop -id "$w" _NET_WM_NAME 2>/dev/null | sed -r 's/.+ "(.+)"$/\1/')
 		[[ "$NAME" = "WM_CLASS" ]] && echo "node $w" || echo "$NAME  \"$TITLE\""
 	done | rofi -dmenu -no-custom -format  i -p 'Unhide a window: ')
 	
@@ -27,7 +27,7 @@ if [[ $WDMNGR = bspwm ]]; then
 			xset -led 3
 			polybar-msg -p "$BARPID" \
 			action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
-			notify-send 'nothing in scratchpad'
+			notify-send 'nothing else in scratchpad'
 		fi
 		
 	}
@@ -48,3 +48,4 @@ elif [[ $WDMNGR = i3 ]]; then
     fi
 	exit 0
 fi
+
