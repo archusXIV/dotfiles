@@ -21,7 +21,6 @@ set cursorline         " highlight the cursor line
 set cursorcolumn       " highlight the column line
 set modeline           " enable vim modelines
 set hlsearch           " highlight search items
-set incsearch          " searches are performed as you type
 set number             " enable line numbers
 set confirm            " ask confirmation like save before quit.
 set wildmenu           " Tab completion menu when using command mode
@@ -29,7 +28,7 @@ set expandtab          " Tab key inserts spaces not tabs
 set softtabstop=4      " spaces to enter for each tab
 set shiftwidth=4       " amount of spaces for indentation
 set shortmess+=aAcIws  " Hide or shorten certain messages
-set rtp+=/usr/lib/python3.9/site-packages/powerline/bindings/vim
+set rtp+=/usr/lib/python3.10/site-packages/powerline/bindings/vim
 let g:netrw_banner=0
 let g:netrw_altv=1
 let g:netrw_liststyle=3
