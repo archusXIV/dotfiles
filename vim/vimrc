@@ -22,6 +22,7 @@ set cursorcolumn       " highlight the column line
 set modeline           " enable vim modelines
 set hlsearch           " highlight search items
 set number             " enable line numbers
+set relativenumber
 set confirm            " ask confirmation like save before quit.
 set wildmenu           " Tab completion menu when using command mode
 set expandtab          " Tab key inserts spaces not tabs
@@ -80,7 +81,6 @@ set laststatus=2
 set t_Co=256
 
 syntax on
-set relativenumber
 let g:rehash256 = 1
 
 " Uncomment to prevent non-normal modes showing in powerline and below powerline.
