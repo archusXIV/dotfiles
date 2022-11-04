@@ -1,26 +1,46 @@
 #!/bin/bash
 
 # Hardware utilizations and temperatures displayed in polybar.
+# I had to include mpd stuff not to create another polybar module.
+# Same thing for mpv...
+
+WM_NAME=$(wmctrl -m | awk '/Name/{print $2}')
 
 _mpd() {
-    # I know itsn't relared to hardware stufff but I had to do this...
     # if ncmpcpp is running it will activate the same polybar module,
     # but if it's not the case...
-    if [[ -z $(pidof ncmpcpp) ]]; then
-        polybar-msg -p "$(pgrep --full bspwm-bar-2)" \
-        action "#music_player-ipc.hook.1" >/dev/null 2>&1 \
-        || polybar-msg -p "$(pgrep --full i3-bar-2)" \
+    [[ -z $(pidof ncmpcpp) ]] && {
+        polybar-msg \
+        -p "$(pgrep --full "$WM_NAME"-bar-2)" \
         action "#music_player-ipc.hook.1" >/dev/null 2>&1
-    fi
+    }
+}
+
+_mpv() {
+    
+    [[ -n $(pidof mpv) ]] && {
+        
+        local metadata="$XDG_RUNTIME_DIR/mpv.txt"
+        
+        [[ ! -f "$metadata" ]] && touch "$metadata"
+        echo '{ "command": ["get_property", "media-title"] }' \
+        | socat - /tmp/mpvsocket | awk -F '"' '{print $4}' > "$metadata"
+        
+        polybar-msg -p "$(pgrep --full "$WM_NAME"-bar-3)" \
+        action "#mpv-ipc.hook.1"
+        
+    } || polybar-msg -p "$(pgrep --full "$WM_NAME"-bar-3)" \
+    action "#mpv-ipc.hook.0"
+    
 }
 
 _coreusage() { cut -d ' ' -f1 /proc/loadavg; }
 
 _coretemp() {
     if [[ -n $(sensors | awk '/Tccd1/') ]]; then
-        sensors | awk '/Tccd1/{ sub("+",""); print $2 }'
+        sensors | awk '/Tccd1/{ sub("[+]",""); print $2 }'
     else
-        sensors | awk '/Tdie/{ sub("+",""); print $2 }'
+        sensors | awk '/Tdie/{ sub("[+]",""); print $2 }'
     fi
 }
 
@@ -42,8 +62,8 @@ _fanspeed() { sensors | awk '/fan2/{print $2" ""rpm"}'; }
 _mem() { free -h | awk '/Mem:/{print $3}'; }
 
 _disksusage() {
-    if (( $(df -h | awk '/sda2/{ sub("%",""); print $5 }') > 65 )); then
-        sudo paccache --quiet -rk0
+    if (( $(df -h | awk '/sda2/{ sub("[%]",""); print $5 }') > 65 )); then
+        echo "%{F#FF4747}"$(df -h | awk '/sda2/{print $5}')"%{F-}"
     else
         df -h | awk '/sda2/{print $5}'
     fi
@@ -66,3 +86,4 @@ echo "${icon_core}""${p}" "$(_coreusage)"% - "$(_coretemp)""${p}" \
      "${icon_nvidia}""${p}" "$(_nvidia)""$p" "${icon_fan}""${p}" "$(_fanspeed)""${p}" \
      "${icon_mem}""${p}" "$(_mem)""$p" "${icon_disk}""${p}" "$(_disksusage)"
 $(_mpd)
+$(_mpv)
