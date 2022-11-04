@@ -60,7 +60,7 @@ super + c
 super + {_,ctrl + }q
     { \
     xdo close, \
-    i3-msg kill window \
+    xdo kill \
     }
 
 # Close all windows with the same WM_CLASS in the present desktop.
