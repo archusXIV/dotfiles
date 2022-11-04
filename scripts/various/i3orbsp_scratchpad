@@ -8,7 +8,7 @@
 # It also optionaly work in combination with:
 # https://github.com/archusXIV/dotfiles/blob/main/scripts/various/rofi_scratchpad
 #
-# Polybar module for i3
+# Polybar module for bspwm/i3
 #[module/scratchpad-ipc]
 #type = custom/ipc
 #format = <output>
