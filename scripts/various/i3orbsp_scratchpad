@@ -63,6 +63,7 @@ case "$1" in
             _indicator
         elif [[ $WDMNGR = bspwm ]]; then
             bspc node --flag hidden=on
+            bspc node --focus last.active
             _indicator
         fi
     ;;
@@ -70,10 +71,11 @@ case "$1" in
             i3-msg scratchpad show; i3-msg floating toggle focus
             _indicator
         elif [[ $WDMNGR = bspwm ]]; then
-            bspc node $(bspc query -N -n .hidden.window | tail -1) \
+            # if multiple windows are hidden;
+            # let's bring back the first one in history.
+            bspc node $(bspc query -N -n .hidden.window | sed -n '1p') \
             -g hidden=off --focus
             _indicator
         fi
     ;;
 esac
-
