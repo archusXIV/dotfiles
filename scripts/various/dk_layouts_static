@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# dependencies: polybar & wmctrl
 function _wslayout {
 	awk '
 	/^workspaces:/ {sub(/^workspaces: /, ""); gsub(/(*)?[0-9]*:\w*:/, ""); print; exit}
