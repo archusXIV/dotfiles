@@ -1,6 +1,6 @@
-################################################################
-# THIS FILE IS USED ACROSS BSPWM, I3 & DK FOR COMMON SHORTCUTS #
-################################################################
+##############################################################
+# THIS FILE IS USED WITH BSPWM, I3 & DK FOR COMMON SHORTCUTS #
+##############################################################
 [reload the hotkeys daemon]
 # reload sxhkd configuration files.
 alt + Escape
