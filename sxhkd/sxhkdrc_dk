@@ -1,0 +1,74 @@
+# sxhkdrc for use with dkwm
+############################
+
+#reload, restart, exit dk
+ctrl + alt + {c,r,q}
+    { \
+    dkcmd reload, \
+    dkcmd restart, \
+    prompt "Do you really want to quit dk ?" "Xexit" \
+    }
+
+# focus window/workspace/monitor next/previous
+super + {_,alt + ,ctrl + }{Right,Left}
+	dkcmd {win focus,ws,mon} {next,prev}
+
+# focus the given monitor
+super + shift + {KP_End,KP_Down,KP_Next}
+	dkcmd mon {$MONITOR1,$MONITOR2,$MONITOR3}
+
+# swap tiled window in/out of master, cycle tiled windows in place
+super + {space,Tab}
+	dkcmd win {swap,cycle}
+
+# close/kill focused window.
+super + {_,ctrl + }q
+    {dkcmd win kill,xdo kill}
+
+# toggle floating or sticky
+super + alt + {s,space}
+	dkcmd win {float,stick}
+
+# toggle fullscreen and fake fullscreen (enable manipulating fullscreen window)
+{_,ctrl + }F11
+	dkcmd win {full,fakefull}
+
+# move window, signed (+/-) for relative changes
+ctrl + {Left,Down,Up,Right}
+	dkcmd win resize {x=-20,y=+20,y=-20,x=+20}
+
+# resize window, signed (+/-) for relative changes
+alt + {Left,Down,Up,Right}
+	dkcmd win resize {w=-20,h=+20,h=-20,w=+20}
+
+# move the active window up/down the stack
+ctrl + alt + {j,k}
+	dkcmd win mvstack {up,down}
+
+# view, send, or follow to a workspace (by number)
+super + {_,alt + ,ctrl + }{KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,KP_Home,KP_Up,KP_Prior,KP_Insert}
+	dkcmd ws {_,send,follow} {1-9,10}
+
+# view, send, or follow to monitor number
+alt + {_,shift + ,ctrl + }{KP_End,KP_Down,KP_Next}
+	dkcmd mon {view,send,follow} {$MONITOR1,$MONITOR2,$MONITOR3}
+
+# change active workspace layout from static=true
+alt + t ; {d,f,g,m,n,r,s,t,w}
+	dk_layouts_static -{d,f,g,m,n,r,s,t,w}
+
+# change active workspace layout from static=false
+alt + shift + t ; {d,g,m,n,r,s,t,w,z}
+	dk_layouts_dynamic -{d,g,m,n,r,s,t,w,z}
+
+# change number of windows in master or first stack
+alt + {_,shift + }{i,d}
+	dkcmd set {master,stack} {+1,-1}
+
+# change gap width
+alt + {equal,minus}
+	dkcmd set gap width {+5,-5}
+
+# change border widths
+#alt + ctrl + {_,shift + }{equal,minus}
+#	dkcmd set border {width,outer_width} {+1,-1}
