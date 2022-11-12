@@ -8,13 +8,13 @@
 [ -d /sbin ] && PATH="$PATH:/sbin"
 
 if [ -n "$(pidof nvidia-persistenced)" ]; then
-    export MONITOR1="DP-0"
+    export MONITOR1="DVI-D-0"
     export MONITOR2="HDMI-0"
-    export MONITOR3="DVI-D-0"
+    export MONITOR3="DP-0"
 else
-    export MONITOR1="DP-1"
+    export MONITOR1="DVI-D-1"
     export MONITOR2="HDMI-1"
-    export MONITOR3="DVI-D-1"
+    export MONITOR3="DP-1"
 fi
 
 # Desktop & directories.
