@@ -1,0 +1,96 @@
+#!/bin/bash
+
+# DK WINDOW MANAGER CONFIGURATION FILE
+
+source "$XDG_CONFIG_HOME"/dk/_WindowsRules
+
+# workspaces/monitors settings using xrandr.
+if [[ -n $(pidof nvidia-persistenced) ]]; then
+    xrandr --output DVI-D-0 --primary --mode 1920x1080 --pos 0x0 --rotate normal \
+           --output HDMI-0 --mode 1920x1080 --pos 1920x0 --rotate normal \
+           --output DP-0 --mode 1920x1080 --pos 3840x0 --rotate normal
+            MONITOR1=DVI-D-0
+            MONITOR2=HDMI-0
+            MONITOR3=DP-0
+else
+    xrandr --output DVI-D-1 --primary --mode 1920x1080 --pos 0x0 --rotate normal \
+           --output HDMI-1 --mode 1920x1080 --pos 1920x0 --rotate normal \
+           --output DP-1 --mode 1920x1080 --pos 3840x0 --rotate normal
+            MONITOR1=DVI-D-1
+            MONITOR2=HDMI-1
+            MONITOR3=DP-1
+fi
+
+# initialize 10 workspaces (1-10) (default: 1/monitor)
+dkcmd set numws=10
+
+# default workspace '_' values used when allocating new workspaces
+# can be applied to all existing workspaces when passed 'apply' after ws=_
+dkcmd set ws=_ apply layout=tile master=1 stack=3 gap=0 msplit=0.55 ssplit=0.5
+dkcmd set ws=7 layout=none
+
+function _wslayout {
+    awk '
+    /^workspaces:/ {sub(/^workspaces: /, ""); gsub(/(*)?[0-9]*:\w*:/, ""); print; exit}
+    ' <(dkcmd status type=full num=1) \
+    | sed 's/dwindle/D/g;s/grid/G/g;s/mono/M/g;
+    s/none/N/g;s/rtile/R/g;s/spiral/S/g;s/tile/T/g;s/tstack/W/g'
+}
+
+# Indicates the active startup workspace layout beside the name.
+# The polybar ewmh module will look like this:
+# 1:T 2:S 3:N etc...(name:layout)
+# dwindle=D grid=G mono=M none=N rtile=R spiral=S tile=T tstack=W
+dkcmd set static_ws=true \
+    ws=1 name=1:$(_wslayout | awk '{print $1}') mon="$MONITOR1" \
+    ws=2 name=2:$(_wslayout | awk '{print $2}') mon="$MONITOR1" \
+    ws=3 name=3:$(_wslayout | awk '{print $3}') mon="$MONITOR1" \
+    ws=4 name=4:$(_wslayout | awk '{print $4}') mon="$MONITOR1" \
+    ws=5 name=5:$(_wslayout | awk '{print $5}') mon="$MONITOR2" \
+    ws=6 name=6:$(_wslayout | awk '{print $6}') mon="$MONITOR2" \
+    ws=7 name=7:$(_wslayout | awk '{print $7}') mon="$MONITOR2" \
+    ws=8 name=8:$(_wslayout | awk '{print $8}') mon="$MONITOR3" \
+    ws=9 name=9:$(_wslayout | awk '{print $9}') mon="$MONITOR3" \
+    ws=10 name=10:$(_wslayout | awk '{print $10}') mon="$MONITOR3"
+
+# checking external scripts
+_check() { command -v "$1" >/dev/null; }
+
+_check launch_polybar && launch_polybar &
+_check sxhkd-start && sxhkd-start &
+
+# global settings
+dkcmd set focus_{open,urgent,mouse}=true
+dkcmd set tile_{tohead,hints}=true
+dkcmd set win_minwh=50 win_minxy=10
+dkcmd set smart_{gap,border}=true
+dkcmd set mouse mod=alt move=button1 resize=button3
+
+
+function _colours {
+    
+    local blu cyn grn mag red
+    
+    blu=$(xrdb -query | awk '/color4:/{print $NF}')
+    cyn=$(xrdb -query | awk '/color6:/{print $NF}')
+    grn=$(xrdb -query | awk '/color2:/{print $NF}')
+    mag=$(xrdb -query | awk '/color5:/{print $NF}')
+    red=$(xrdb -query | awk '/color1:/{print $NF}')
+    
+    dkcmd set border width=2 outer_width=1 \
+    colour \
+    focus="$cyn" \
+    urgent="$red" \
+    unfocus="$mag" \
+    outer_focus="$blu" \
+    outer_urgent="$grn" \
+    outer_unfocus="$blu"
+}
+
+[[ -f $HOME/.Xresources ]] && _colours
+
+_WindowsRules
+
+dkcmd rule apply '*'
+dkcmd ws 1
+

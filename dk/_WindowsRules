@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# Windows rules
+# open window(s) on a specific workspace (assigned monitor)
+
+_WindowsRules() {
+    # list of applications names
+    local FloatingApps="$XDG_CONFIG_HOME/dk/FloatingApps"
+    
+    while read -r line; do
+        dkcmd rule class="^$line$" float=true
+        dkcmd rule instance="^$line$" float=true
+    done < "$FloatingApps"
+
+    # for window class
+    dkcmd rule class="^firefox$" ws=1 focus=true
+    dkcmd rule class="^file-roller$" ws=2 focus=true
+    dkcmd rule class="^filezilla$" ws=2 focus=true
+    dkcmd rule class="^pcmanfm$" ws=2 focus=true
+    dkcmd rule class="^obs$" ws=3 focus=true
+    dkcmd rule class="^SimpleScreenRecorder$" ws=3 focus=true
+    dkcmd rule class="^feh$" ws=4 focus=true
+    dkcmd rule class="^mumble$" ws=4 focus=true
+    dkcmd rule class="^zathura$" ws=4 focus=true
+    dkcmd rule class="^geany$" ws=5 focus=true
+    dkcmd rule class="^lite-xl$" ws=5 focus=true
+    dkcmd rule class="^mpv$" ws=6 focus=true
+    dkcmd rule class="^five-or-more$" ws=7 focus=true
+    dkcmd rule class="^sol$" ws=7 focus=true
+    
+    # for window instance
+    dkcmd rule instance="^mpm$" ws=1 focus=true
+    dkcmd rule instance="^ncmpcpp$" ws=8 focus=true
+    dkcmd rule instance="^cmus$" ws=8 focus=true
+    dkcmd rule instance="^ripper$" ws=8 focus=true
+    dkcmd rule instance="^htop$" ws=9 focus=true
+    dkcmd rule instance="^newsboat$" ws=9 focus=true
+    dkcmd rule instance="^mutt$" ws=9 focus=true
+    dkcmd rule instance="^ranger$" ws=10 focus=true
+
+}
+
