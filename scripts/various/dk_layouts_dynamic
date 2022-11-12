@@ -1,0 +1,64 @@
+#!/bin/bash
+
+function _wslayout {
+	awk '
+	/^workspaces:/ {sub(/^workspaces: /, ""); gsub(/(*)?[0-9]*:\w*:/, ""); print; exit}
+	' <(dkcmd status type=full) \
+	| sed 's/dwindle/D/g;s/grid/G/g;s/mono/M/g;
+	s/none/N/g;s/rtile/R/g;s/spiral/S/g;s/tile/T/g;s/tstack/W/g'
+}
+
+# dwindle=D grid=G mono=M none=N rtile=R spiral=S tile=T tstack=W
+function _static_false {
+	# we have to clean the startup workspaces name definition
+	# before renaming them with the second block below using wslayout function
+	# Note that we don't attribute monitors here.
+	dkcmd set \
+		ws=1 name=1 \
+		ws=2 name=2 \
+		ws=3 name=3 \
+		ws=4 name=4 \
+		ws=5 name=5 \
+		ws=6 name=6 \
+		ws=7 name=7 \
+		ws=8 name=8 \
+		ws=9 name=9 \
+		ws=10 name=10
+	
+	# The bar workspaces module will look like this:
+	# 1:T 2:S 3:N etc...(name:layout)
+	dkcmd set \
+		ws=1 name=1:$(_wslayout | awk '{print $1}') \
+		ws=2 name=2:$(_wslayout | awk '{print $2}') \
+		ws=3 name=3:$(_wslayout | awk '{print $3}') \
+		ws=4 name=4:$(_wslayout | awk '{print $4}') \
+		ws=5 name=5:$(_wslayout | awk '{print $5}') \
+		ws=6 name=6:$(_wslayout | awk '{print $6}') \
+		ws=7 name=7:$(_wslayout | awk '{print $7}') \
+		ws=8 name=8:$(_wslayout | awk '{print $8}') \
+		ws=9 name=9:$(_wslayout | awk '{print $9}') \
+		ws=10 name=10:$(_wslayout | awk '{print $10}')
+}
+
+function _static_ws {
+	polybar-msg -p \
+	$(pgrep --full $(wmctrl -m | awk '/Name/{print $2}')-bar-3) \
+	action "#static_ws-ipc.hook.0" >/dev/null 2>&1
+}
+
+# change active workspace layout in sxhkdrc
+# alt + t ; {d,g,m,n,r,s,t,w,z}
+##### dk_layouts_dynamic -{d,g,m,n,r,s,t,w,z}
+
+case "$1" in
+    -d) dkcmd set layout dwindle && _static_false ;;
+    -g) dkcmd set layout grid && _static_false ;;
+    -m) dkcmd set layout mono && _static_false ;;
+    -n) dkcmd set layout none && _static_false ;;
+    -r) dkcmd set layout rtile && _static_false ;;
+    -s) dkcmd set layout spiral && _static_false ;;
+    -t) dkcmd set layout tile && _static_false ;;
+    -w) dkcmd set layout tstack && _static_false ;;
+    -z) dkcmd set static_ws=true && _static_ws ;;
+esac
+
