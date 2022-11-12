@@ -1,0 +1,83 @@
+# Reload, restart, quit i3.
+super + alt + {c,r,q}
+
+# reload sxhkd configuration files.
+alt + Escape
+
+# launch default $TERMINAL,urxvtc -name floaterm
+alt + {_,shift +} Return
+
+# dmenu-chooser, rofi-chooser
+Menu ; {d,r}
+
+# most used gui applications.
+alt + g ; {e,f,g,v,w}
+
+# URxvt myplayer_audio, cmus, mpm, mutt, htop, jnettop, ncmpcpp, mixer, etc...
+alt + u ; {a,c,d,e,h,j,m,n,p,r,s,x,y}
+
+# qv4l2, pavucontrol, qvidcap.
+alt + v ; {g,p,q}
+
+# Ranger, ranger as root
+alt + x ; {r,s}
+
+# Focus the given direction.
+super + {Up,down,Left,Right}
+
+# Focus parent/child
+super + shift + {p,x}
+
+# Focus workspace {1-9,10} or send focused to the given desktop.
+super + {_,alt + }{1-9,10}
+
+# Switch to next or previous workspace
+super + alt + {Left,Right}
+
+# Swap containers.
+super + shift + {Up,down,Left,Right}
+
+# Scratchpad hide/unhide & rofi_scratchpad
+alt + shift + {h,u,r}
+
+# Mode swap (between workspaces/outputs)
+super + shift + s
+
+# Mode resize
+super + r
+
+# Toggle fullscreen/floating state
+super + alt + {f,s}
+
+# Move floating window
+ctrl + {Left,Up,Down,Right}
+
+# Move floating container in the center of the screen
+super + c
+
+# Close/kill current window
+super + {_,ctrl + }q
+
+# Close all windows with the same WM_CLASS.
+super + alt + ctrl + c
+
+# Set splitting direction
+super + {v,h}
+
+# Layout toggle
+alt + Tab
+
+# Switch between the current-previously focused workspace/output.
+super + {_,ctrl +}b
+
+# Cycle between all occupied workspaces and outputs
+ctrl + alt + {left,right}
+
+# Move the whole workspace to the next output
+super + ctl + {Right,Left}
+
+# Simulate mouse button click
+super + ctrl + m : {_,shift + ,ctrl + }space
+
+# Mouse: move or resize window.
+super + button{1,3}
