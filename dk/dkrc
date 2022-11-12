@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# dependencies: polybar, wmctrl
 # DK WINDOW MANAGER CONFIGURATION FILE
 
 source "$XDG_CONFIG_HOME"/dk/_WindowsRules
@@ -59,6 +60,11 @@ _check() { command -v "$1" >/dev/null; }
 _check launch_polybar && launch_polybar &
 _check sxhkd-start && sxhkd-start &
 
+# polybar "witness" module for static/dynamic workspaces option.
+polybar-msg -p \
+	$(pgrep --full $(wmctrl -m | awk '/Name/{print $2}')-bar-3) \
+	action "#static_ws-ipc.hook.0" >/dev/null 2>&1
+    
 # global settings
 dkcmd set focus_{open,urgent,mouse}=true
 dkcmd set tile_{tohead,hints}=true
