@@ -46,5 +46,5 @@ autostart &
 case $(tty | cut -b9-) in
     (1) exec bspwm  ;;
     (2) exec i3     ;;
-    (3) qtile start ;;
+    (3) exec dk     ;;
 esac
