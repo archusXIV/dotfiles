@@ -15,30 +15,30 @@ ctrl + alt + Delete
 Menu ; {d,r}
     {dmenu_chooser,rofi_chooser}
 
-[scratchpad]
+[scratchpad custom script]
 # we let these lines here because we use
-# sxhkd within i3wm too.
+# sxhkd within bspwm, i3wm & dkwm too.
 alt + shift + {h,u,r}
-    { \
-    i3orbsp_scratchpad -h, \
-    i3orbsp_scratchpad -u, \
-    rofi_scratchpad \
+    {\
+    scratchpad -h, \
+    scratchpad -u, \
+    scratchpad -r \
     }
 
 [applications bindings]
 # terminal emulators
-alt + {_,shift +} Return
-    {$TERMINAL,urxvtc -name bashterm -geometry 124x36 -e bash}
-
-alt + x ; {r,s}
+alt + {_,shift + }Return
     {\
-    uranger, \
-    urxvtc -name ranger -e sudo ranger /etc \
+    xterm, \
+    urxvtc -name bashterm -geometry 124x36 -e bash \
     }
 
+alt + x ; {r,s}
+    urxvtc -name ranger -e {ranger,sudo ranger /etc}
+
 # URxvt applications
-alt + u ; {c,d,e,h,j,m,n,p,r,s,v,x,y}
-    urxvt_apps -{c,d,e,h,j,m,n,p,r,s,v,x,y}
+alt + u ; {a,c,d,e,h,j,m,n,p,r,s,v,x,y}
+    urxvt_apps -{a,c,d,e,h,j,m,n,p,r,s,v,x,y}
 
 # gui applications
 alt + g ; {e,f,g,v,w}
@@ -51,15 +51,14 @@ alt + g ; {e,f,g,v,w}
     }
 
 # audio-video applications
-alt + v ; {e,g,p,q}
+alt + v ; {g,p,q}
     {\
-    pulseaudio-equalizer-gtk, \
     qv4l2, \
     pavucontrol, \
     qvidcap \
     }
 
-# script to launch rofi-record or ssr.
+# script to launch rofi-record, obs/ssr.
 alt + shift + v ; {a,o,v,k}
     record_options -{a,o,v,k}
 
@@ -74,31 +73,13 @@ alt + shift + {Left,Down,Up,Right}
     webcam_rectangle {1435 0,0 715,0 0,1435 715}
 
 [volume/mic]
-XF86Audio{Lower,Raise}Volume
-    volume_control sink --{down,up}
+{_,alt + }XF86Audio{Lower,Raise}Volume
+    {volume_control sink,volume_control source} --{down,up}
 
-XF86AudioMute
-    volume_control sink --toggle
-
-alt + XF86Audio{Lower,Raise}Volume
-    volume_control source --{down,up}
-
-alt + XF86AudioMute
-    volume_control source --toggle
+{_,alt + }XF86AudioMute
+    {volume_control sink --toggle,volume_control source --toggle}
 
 [player control]
-#XF86Audio{Play,Pause}
-alt + F11
-    mediacontrol --toggle
-
-#XF86AudioNext
-alt + F12
-    mediacontrol --next
-
-#XF86AudioPrev
-alt + F9
-    mediacontrol --prev
-
-#XF86AudioStop
-alt + F10
-    mediacontrol --stop
+# XF86Audio{Prev,Stop,Play,Next}
+alt + {F9,F10,F11,F12}
+    mediacontrol --{prev,stop,toggle,next}
