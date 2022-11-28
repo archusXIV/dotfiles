@@ -1,25 +1,24 @@
 #!/bin/bash
 
-# dependencies: polybar, wmctrl
 # DK WINDOW MANAGER CONFIGURATION FILE
+# dependencies: polybar, wmctrl
 
+source "$XDG_CONFIG_HOME"/dk/_WindowsRules
+
+logfile="$XDG_CONFIG_HOME/dk/dkrc.log"
+
+# let's include windows rules function
 source "$XDG_CONFIG_HOME"/dk/_WindowsRules
 
 # workspaces/monitors settings using xrandr.
 if [[ -n $(pidof nvidia-persistenced) ]]; then
-    xrandr --output DVI-D-0 --primary --mode 1920x1080 --pos 0x0 --rotate normal \
-           --output HDMI-0 --mode 1920x1080 --pos 1920x0 --rotate normal \
-           --output DP-0 --mode 1920x1080 --pos 3840x0 --rotate normal
-            MONITOR1="DVI-D-0"
-            MONITOR2="HDMI-0"
-            MONITOR3="DP-0"
+    MONITOR1="DVI-D-0"
+    MONITOR2="HDMI-0"
+    MONITOR3="DP-0"
 else
-    xrandr --output DVI-D-1 --primary --mode 1920x1080 --pos 0x0 --rotate normal \
-           --output HDMI-1 --mode 1920x1080 --pos 1920x0 --rotate normal \
-           --output DP-1 --mode 1920x1080 --pos 3840x0 --rotate normal
-            MONITOR1="DVI-D-1"
-            MONITOR2="HDMI-1"
-            MONITOR3="DP-1"
+    MONITOR1="DVI-D-1"
+    MONITOR2="HDMI-1"
+    MONITOR3="DP-1"
 fi
 
 # initialize 10 workspaces (1-10) (default: 1/monitor)
@@ -27,7 +26,8 @@ dkcmd set numws=10
 
 # default workspace '_' values used when allocating new workspaces
 # can be applied to all existing workspaces when passed 'apply' after ws=_
-dkcmd set ws=_ apply layout=tile master=1 stack=3 gap=0 msplit=0.55 ssplit=0.5
+dkcmd set ws=_ apply layout=tile master=1 stack=3 gap=0 msplit=0.52 ssplit=0.5
+dkcmd set ws=1 layout=grid
 dkcmd set ws=7 layout=none
 
 function _wslayout {
@@ -42,6 +42,7 @@ function _wslayout {
 # The polybar ewmh module will look like this:
 # 1:T 2:S 3:N etc...(name:layout)
 # dwindle=D grid=G mono=M none=N rtile=R spiral=S tile=T tstack=W
+
 dkcmd set static_ws=true \
     ws=1 name=1:$(_wslayout | awk '{print $1}') mon="$MONITOR1" \
     ws=2 name=2:$(_wslayout | awk '{print $2}') mon="$MONITOR1" \
@@ -54,49 +55,56 @@ dkcmd set static_ws=true \
     ws=9 name=9:$(_wslayout | awk '{print $9}') mon="$MONITOR3" \
     ws=10 name=10:$(_wslayout | awk '{print $10}') mon="$MONITOR3"
 
+if ! hash polybar wmctrl >/dev/null 2>&1; then
+	notify-send -t 0 -u critical 'polybar, wmctrl should be installed...'
+fi
+
 # checking external scripts
-_check() { command -v "$1" >/dev/null; }
+function _check { command -v "$1" >/dev/null; }
 
 _check launch_polybar && launch_polybar &
 _check sxhkd-start && sxhkd-start &
 
-# polybar "witness" module for static/dynamic workspaces option.
-polybar-msg -p \
-	$(pgrep --full $(wmctrl -m | awk '/Name/{print $2}')-bar-3) \
-	action "#static_ws-ipc.hook.0" >/dev/null 2>&1
-    
+polybar-msg \
+    -p $(pgrep --full $(wmctrl -m | awk '/Name/{print $2}')) \
+    action "#static_ws-ipc.hook.1" >/dev/null 2>&1
+
 # global settings
 dkcmd set focus_{open,urgent,mouse}=true
 dkcmd set tile_{tohead,hints}=true
-dkcmd set win_minwh=50 win_minxy=10
+dkcmd set win_{minwh,minxy}=50
 dkcmd set smart_{gap,border}=true
-dkcmd set mouse mod=alt move=button1 resize=button3
-
+dkcmd set mouse mod=super move=button1 resize=button3
 
 function _colours {
-    
+
     local blu cyn grn mag red
-    
+
     blu=$(xrdb -query | awk '/color4:/{print $NF}')
     cyn=$(xrdb -query | awk '/color6:/{print $NF}')
     grn=$(xrdb -query | awk '/color2:/{print $NF}')
-    mag=$(xrdb -query | awk '/color5:/{print $NF}')
     red=$(xrdb -query | awk '/color1:/{print $NF}')
-    
+    ylw=$(xrdb -query | awk '/color3:/{print $NF}')
+
     dkcmd set border width=2 outer_width=1 \
     colour \
     focus="$cyn" \
     urgent="$red" \
-    unfocus="$mag" \
+    unfocus="$ylw" \
     outer_focus="$blu" \
     outer_urgent="$grn" \
-    outer_unfocus="$blu"
+    outer_unfocus="$ylw"
 }
 
 [[ -f $HOME/.Xresources ]] && _colours
 
 _WindowsRules
 
-dkcmd rule apply '*'
-dkcmd ws 1
+dkcmd ws 5
+dkcmd set static_ws=false
 
+polybar-msg \
+    -p $(pgrep --full $(wmctrl -m | awk '/Name/{print $2}')) \
+    action "#static_ws-ipc.hook.0" >/dev/null 2>&1
+
+dkcmd status type=full num=1 > "$logfile"
