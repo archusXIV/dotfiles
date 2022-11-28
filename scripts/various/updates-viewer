@@ -11,39 +11,36 @@
 ARCH="$XDG_RUNTIME_DIR/archlinux.list"
 AUR="$XDG_RUNTIME_DIR/aur.list"
 ARCHAUR="$XDG_RUNTIME_DIR/combined.list"
-MIRR="/etc/pacman.d/mirrorlist"
-BCKP="/etc/pacman.d/mirrorlist_bckp"
 
 nocolor=$'\e[0m';
 red=$'\e[0;31m';
 green=$'\e[0;32m';
 
-barpid=$(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-1)
-
 _CheckUpdates() {
+
+    local updmngr pids
     
     # checking dependencies
     for deps in checkupdates polybar yay wmctrl; do
-        [[ -z $(command -v "$deps") ]] && exit 1
+        [[ -z $(command -v "$deps") ]] && exit 127
     done
-    
+
     # avoids running multiple instances
     updmngr=$(basename "$0")
     pids="($(pidof -x "$updmngr"))"
-    
+
     [[ ${#pids[@]} -gt 1 ]] && exit
-    
+
     while true; do
 
         touch {"$ARCH","$AUR","$ARCHAUR"}
         sleep 0.5
-        
+    
         sudo reflector \
         --country 'France' \
         --latest 10 \
         --age 24 \
         --protocol https \
-        --protocol http \
         --sort rate \
         --save "$MIRR" >/dev/null 2>&1
 
@@ -57,10 +54,13 @@ _CheckUpdates() {
             # purge combined.list from possible duplicates.
             perl -i -ne 'print if ! $x{$_}++' "$ARCHAUR" >/dev/null 2>&1
         fi
+    
+        wm=$(wmctrl -m | awk '/Name/{print $2}')
+        barpid=$(pgrep --full $wm-bar-1)
         
         polybar-msg -p ${barpid} \
         action "#updates-ipc.hook.0" >/dev/null 2>&1
-        
+    
         sleep 3588s
 
     done &
@@ -98,6 +98,9 @@ _YesNoPrompt() {
     return "${status:-0}"
 }
 
+MIRR="/etc/pacman.d/mirrorlist"
+BCKP="/etc/pacman.d/mirrorlist_bckp"
+
 _Reboot() {
     sudo cp -f "$MIRR" "$BCKP"
     sudo pacman -Syu --noconfirm
@@ -105,17 +108,20 @@ _Reboot() {
     sudo reboot
 }
 
+WM=$(wmctrl -m | awk '/Name/{print $2}')
+BARPID=$(pgrep --full $WM-bar-1)
+
 _NoReboot() {
     sudo cp -f "$MIRR" "$BCKP"
     sudo pacman -Syu --noconfirm
     sudo grub-mkconfig -o /boot/grub/grub.cfg
-    
+
     # cleaning our lists from old packages updates.
     sed -i '/^[a-zA-Z]/d' {"$ARCH","$AUR","$ARCHAUR"}
-    
-    polybar-msg -p ${barpid} \
+
+    polybar-msg -p ${BARPID} \
     action "#updates-ipc.hook.0" >/dev/null 2>&1 \
-    
+
     exit 0
 }
 
@@ -130,8 +136,8 @@ _Criteria() {
     # default is reboot.
     # by pressing Enter we will get the default action.
     echo ""
-    _YesNoPrompt -n "Do you wish to ${red}poweroff ${nocolor}after updates?" || {
-        _YesNoPrompt "Do you wish to ${red}reboot ${nocolor}after updates?" || {
+    _YesNoPrompt -n " ${red}Poweroff ${nocolor}after updates?" || {
+        _YesNoPrompt " ${red}Reboot ${nocolor}after updates?" || {
             _NoReboot
         }
         _Reboot
@@ -142,7 +148,7 @@ _Criteria() {
 _NoCriteria() {
     # Here the default is '_NoReboot'.
     echo ""
-    _YesNoPrompt -n "Do you wish to ${red}poweroff ${nocolor}after updates?" || {
+    _YesNoPrompt -n " ${red}Poweroff ${nocolor}after updates?" || {
         _NoReboot
     }
     _Poweroff
@@ -150,8 +156,17 @@ _NoCriteria() {
 
 _MakeUpdates() {
 
-    declare -a criteria=( "amd-ucode" "grub" "linux" "mesa" "nvidia" "systemd" "xf86-video-*" "xorg" )
-    # if grub is part of the updates, a pacman hook will launch the grub-install command to prevent issues.
+    declare -a criteria=(
+    "amd-ucode" \
+    "grub" \
+    "linux" \
+    "mesa" \
+    "nvidia" \
+    "systemd" \
+    "xf86-video-*" \
+    "xorg"
+    )
+
     for item in "${criteria[@]}"; do
         if grep -qw "$item" "$ARCHAUR"; then
             echo " ${red}$item requires REBOOT!${nocolor}"
@@ -160,56 +175,58 @@ _MakeUpdates() {
     done
 
     echo " ${green}NO REBOOT NEEDED !${nocolor}"
-    
+
     _NoCriteria
 
 }
 
 _List() {
 
-    if [[ -z $(cat "$ARCHAUR") ]]; then
+    local TOTALUPDATES=$(grep "" -c "$ARCHAUR")
+
+    if ((TOTALUPDATES == 0)); then
         echo " ${red}No available update."
         sleep 3s
         return 0
     else
         while read -r line; do
-            echo "$line"
+            echo " $line"
         done < "$ARCHAUR"
-        
+    
         echo ""
-        if (( $(grep "" -c "$ARCHAUR") > 1 )); then
-            echo -e " ${green}There are $(grep "" -c "$ARCHAUR") available updates.\n${nocolor}"
+        if ((TOTALUPDATES > 1)); then
+            echo -e " ${green}There are $TOTALUPDATES available updates.\n${nocolor}"
         else
-            echo -e " ${green}There is $(grep "" -c "$ARCHAUR") available update.\n${nocolor}"
+            echo -e " ${green}There is $TOTALUPDATES available update.\n${nocolor}"
         fi
 
-        _YesNoPrompt "Proceed with installation?" || {
-            echo "bye..."
+        _YesNoPrompt " Proceed with installation?" || {
+            echo " bye..."
             sleep 2s
             return 0
         }
-        
-        # AUR packages update
+     
+        # first AUR packages update
         if (( $(grep "" -c "$AUR") > 0 )); then
             yay -Sua
             rm -rf "$HOME"/.ccache
-            if (( $(grep "" -c "$AUR") == $(grep "" -c "$ARCHAUR") )); then
+            if (( $(grep "" -c "$AUR") == TOTALUPDATES )); then
                 sed -i '/^[a-zA-Z]/d' {"$AUR","$ARCHAUR"}
-                polybar-msg -p ${barpid} \
+                polybar-msg -p ${BARPID} \
                 action "#updates-ipc.hook.0" >/dev/null 2>&1
                 return 0
             fi
         fi
-        
+     
         # then Arch...
         (( $(grep "" -c "$ARCH") > 0 )) && _MakeUpdates
-        
+     
     fi
 
 }
 
 case "$1" in
-    --hook  )   polybar-msg -p ${barpid} \
+    --hook  )   polybar-msg -p ${BARPID} \
                 action "#updates-ipc.hook.0" >/dev/null 2>&1
     ;;
     --list  )   _List
