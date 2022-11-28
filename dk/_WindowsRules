@@ -4,39 +4,37 @@
 # open window(s) on a specific workspace (assigned monitor)
 
 _WindowsRules() {
-    # list of applications names
-    local FloatingApps="$XDG_CONFIG_HOME/dk/FloatingApps"
+    # list of floating applications names
+    local FloatingApps="$HOME/.config/dk/FloatingApps"
     
+    classes="" instances=""
     while read -r line; do
-        dkcmd rule class="^$line$" float=true
-        dkcmd rule instance="^$line$" float=true
+        { [[ $classes ]] && classes+="|$line"; } || classes="$line"
+        { [[ $instances ]] && instances+="|$line"; } || instances="$line"
     done < "$FloatingApps"
-
+    
+    dkcmd rule class="^($classes)$" float=true
+    dkcmd rule instance="^($instances)$" float=true
+    
     # for window class
-    dkcmd rule class="^firefox$" ws=1 focus=true
-    dkcmd rule class="^file-roller$" ws=2 focus=true
-    dkcmd rule class="^filezilla$" ws=2 focus=true
-    dkcmd rule class="^pcmanfm$" ws=2 focus=true
-    dkcmd rule class="^obs$" ws=3 focus=true
-    dkcmd rule class="^SimpleScreenRecorder$" ws=3 focus=true
-    dkcmd rule class="^feh$" ws=4 focus=true
-    dkcmd rule class="^mumble$" ws=4 focus=true
-    dkcmd rule class="^zathura$" ws=4 focus=true
-    dkcmd rule class="^geany$" ws=5 focus=true
-    dkcmd rule class="^lite-xl$" ws=5 focus=true
-    dkcmd rule class="^mpv$" ws=6 focus=true
-    dkcmd rule class="^five-or-more$" ws=7 focus=true
-    dkcmd rule class="^sol$" ws=7 focus=true
+    dkcmd rule class="^(feh|Mumble|obs)$" ws=4 focus=true
+    dkcmd rule class="^(Geany|lite-xl)$" ws=5 focus=true
+    dkcmd rule class="^(mpv|VirtualBox)$" ws=6 focus=true
+    dkcmd rule class="^(Five-or-more|Sol)$" ws=7 focus=true
+    dkcmd rule class="^firefox$" ws=8 focus=true
+    dkcmd rule class="^(file-roller|filezilla|pcmanfm)$" ws=9 focus=true
+    dkcmd rule class="^(SimpleScreenRecorder|Zathura)$" ws=10 focus=true
     
     # for window instance
-    dkcmd rule instance="^mpm$" ws=1 focus=true
-    dkcmd rule instance="^ncmpcpp$" ws=8 focus=true
-    dkcmd rule instance="^cmus$" ws=8 focus=true
-    dkcmd rule instance="^ripper$" ws=8 focus=true
-    dkcmd rule instance="^htop$" ws=9 focus=true
-    dkcmd rule instance="^newsboat$" ws=9 focus=true
-    dkcmd rule instance="^mutt$" ws=9 focus=true
-    dkcmd rule instance="^ranger$" ws=10 focus=true
-
+    dkcmd rule class="^URxvt$" instance="^(ncmpcpp|cmus|pulsemixer|ripper)$" ws=1 focus=true
+    dkcmd rule class="^URxvt$" instance="^(htop|jnettop|newsboat|mutt)$" ws=2 focus=true
+    dkcmd rule class="^URxvt$" instance="^ranger$" ws=3 focus=true
+    dkcmd rule class="^URxvt$" instance="^youtube$" ws=6 focus=true
+    dkcmd rule class="^URxvt$" instance="^mpm$" ws=8 focus=true
+    
+    # no desktop rules
+    dkcmd rule class="^bashterm$" x=center y=center
+    dkcmd rule class="^floaterm$" x=center y=center
+    
+    dkcmd rule apply '*'
 }
-
