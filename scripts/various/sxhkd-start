@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
-#export SXHKD_FIFO="$XDG_RUNTIME_DIR"/sxhkd.fifo
 
-declare -a proc=( "sxhkd" "sxhkd-watcher" )
+declare -a proc=( "sxhkd" "sxhkd-watcher" "sxhkd-listener" )
 
 # Terminate existing sxhkd scripts instances
 if [[ -n $(pidof sxhkd) ]]; then
     for i in "${proc[@]}"; do
-        kill -9 "$(ps -ef \
+        kill -15 "$(ps -ef \
         | grep "$i" \
         | awk 'NR==1 {print $2}')" >/dev/null 2>&1
-
         # Wait until the processes has been shut down
         while pidof -x "$i" >/dev/null; do
             sleep 0.2
@@ -20,25 +18,16 @@ fi
 
 [[ -e $SXHKD_FIFO ]] && rm -f "$SXHKD_FIFO"
 sleep 0.5
+
+WM_NAME=$(awk '/Name/{print $2}' < <(wmctrl -m))
+
+# Launch sxhkd, with the -s option for the listener script.
 mkfifo "$SXHKD_FIFO"
-
-if [[ -n $(pidof bspwm) ]]; then
-    # Launch sxhkd, with the -s option for the listener script.
-    sxhkd -t 5 \
-    -s "$SXHKD_FIFO" \
-    -c "$XDG_CONFIG_HOME"/sxhkd/sxhkdrc{,_bspc} &
-
-    sxhkd-watcher &
-    notify-send 'hotkeys daemon ready'
-    rm -f "$HOME"/1 >/dev/null
-elif [[ -n $(pidof i3) ]]; then
-    # Launch sxhkd within i3
-    sxhkd -t 5 \
-    -c "$XDG_CONFIG_HOME"/sxhkd/sxhkdrc &
-    notify-send 'hotkeys daemon ready'
-    rm -f "$HOME"/1 >/dev/null
-else
-    exit 165
-fi
+sxhkd -t 5 \
+-s "$SXHKD_FIFO" \
+-c "$XDG_CONFIG_HOME"/sxhkd/sxhkdrc{,_$WM_NAME} &
+sxhkd-watcher &
+notify-send 'hotkeys daemon ready'
+rm -f "$HOME"/1 >/dev/null
 
 exit
