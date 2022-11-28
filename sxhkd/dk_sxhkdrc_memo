@@ -1,11 +1,56 @@
 #reload, restart, exit dk
 ctrl + alt + {c,r,q}
 
-# focus window/workspace/monitor next/previous
-super + {_,alt + ,ctrl + }{Right,Left}
+# reload sxhkd configuration files.
+alt + Caps_Lock
 
-# focus the given monitor
-super + shift + {KP_End,KP_Down,KP_Next}
+# Invoke the session managemnt menu.
+ctrl + alt + Delete
+
+# dmenu/rofi
+Menu ; {d,r}
+
+# scratchpad hide/show/rofi
+alt + shift + {h,u,r}
+
+# terminal emulators $TERMINAL, URxvt
+alt + {_,shift +}Return
+
+# urxvtc -name ranger -e {ranger,sudo ranger /etc}
+alt + x ; {r,s}
+
+# URxvt applications
+alt + u ; {a,c,d,e,h,j,m,n,p,r,s,v,x,y}
+
+# gui applications $EDITOR, $FILEMNGR, geany, $VIRTMNGR, $BROWSER
+alt + g ; {e,f,g,v,w}
+
+# audio-video applications qv4l2, pavucontrol, qvidcap
+alt + v ; {g,p,q}
+
+# script to launch rofi-record, obs/ssr.
+alt + shift + v ; {a,o,v,k}
+
+# toggle/restart polybar(s)
+ctrl + {_,shift + }{KP_End,KP_Down,KP_Next,KP_Left}
+
+# controls the webcam rectangle position on the screen.
+alt + shift + {Left,Down,Up,Right}
+
+# output/input volume
+XF86Audio{Lower,Raise}Volume {_,alt + }
+
+# output/input mute
+XF86AudioMute {_,alt + }
+
+# mediacontrol --{prev,stop,toggle,next}
+XF86Audio{Prev,Stop,Play,Next}
+
+# focus window/workspace previous/next
+super + alt + {Left,Right}
+
+# focus monitor next/previous
+super + ctrl + {Left,Right}
 
 # swap tiled window in/out of master, cycle tiled windows in place
 super + {space,Tab}
@@ -13,38 +58,38 @@ super + {space,Tab}
 # close/kill focused window.
 super + {_,ctrl + }q
 
+# close all windows with the same WM_CLASS in the present desktop.
+super + alt + ctrl + c
+
 # toggle floating or sticky
 super + alt + {s,space}
 
 # toggle fullscreen and fake fullscreen (enable manipulating fullscreen window)
-{_,ctrl + }F11
+F11 {_,ctrl + }
 
-# move window, signed (+/-) for relative changes
-ctrl + {Left,Down,Up,Right}
+# toggle between monocle and tile layouts
+alt + m
 
-# resize window, signed (+/-) for relative changes
-alt + {Left,Down,Up,Right}
+# resize/move window using custom script
+alt + {_,ctrl + }{Left,Up,Down,Right}
 
 # move the active window up/down the stack
-ctrl + alt + {j,k}
+ctrl + alt + {Up,Down}
 
 # view, send, or follow to a workspace (by number)
 super + {_,alt + ,ctrl + }{1-9,10}
 
-# view, send, or follow to monitor number
-alt + {_,shift + ,ctrl + }{1,2,3}
+# view, send, or follow to monitor number 1, 2, 3
+alt + {_,shift + ,ctrl + }{KP_End,KP_Down,KP_Next}
 
-# change active workspace layout from static=true
-alt + t ; {d,f,g,m,n,r,s,t,w}
-
-# change active workspace layout from static=false
-alt + shift + t ; {d,g,m,n,r,s,t,w,z}
+# change active workspace layout (f is false)
+alt + {_,shift + }t ; {d,f,g,m,n,r,s,t,w}
 
 # change number of windows in master or first stack
-alt + {_,shift + }{i,d}
+super + {_,shift + }{KP_Add,KP_Subtract}
 
 # change gap width
-alt + {equal,minus}
+alt + {KP_Add,KP_Subtract}
 
 # change border widths
 alt + ctrl + {_,shift + }{equal,minus}
