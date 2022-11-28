@@ -1,6 +1,6 @@
 # sxhkdrc for use with dkwm
 ############################
-
+# https://pastebin.com/Uaw2sUdt
 #reload, restart, exit dk
 ctrl + alt + {c,r,q}
     { \
@@ -9,13 +9,13 @@ ctrl + alt + {c,r,q}
     prompt "Do you really want to quit dk ?" "Xexit" \
     }
 
-# focus window/workspace/monitor next/previous
-super + {_,alt + ,ctrl + }{Right,Left}
-	dkcmd {win focus,ws,mon} {next,prev}
+# focus window/workspace next/previous
+super + {_,alt + }{Left,Right}
+	dkcmd {win focus,ws} {prev,next}
 
-# focus the given monitor
-super + shift + {KP_End,KP_Down,KP_Next}
-	dkcmd mon {$MONITOR1,$MONITOR2,$MONITOR3}
+# focus monitor next/previous
+super + ctrl {Left,Right}
+	dkcmd mon {next,prev}
 
 # swap tiled window in/out of master, cycle tiled windows in place
 super + {space,Tab}
@@ -25,6 +25,10 @@ super + {space,Tab}
 super + {_,ctrl + }q
     {dkcmd win kill,xdo kill}
 
+# close all windows with the same WM_CLASS in the present desktop.
+super + alt + ctrl + c
+    xdo close -c
+
 # toggle floating or sticky
 super + alt + {s,space}
 	dkcmd win {float,stick}
@@ -33,42 +37,38 @@ super + alt + {s,space}
 {_,ctrl + }F11
 	dkcmd win {full,fakefull}
 
-# move window, signed (+/-) for relative changes
-ctrl + {Left,Down,Up,Right}
-	dkcmd win resize {x=-20,y=+20,y=-20,x=+20}
+# toggle between monocle and tile layouts
+alt + m
+	dk_layouts_dynamic -m
 
-# resize window, signed (+/-) for relative changes
-alt + {Left,Down,Up,Right}
-	dkcmd win resize {w=-20,h=+20,h=-20,w=+20}
+# resize/move window using custom script
+alt + {_,ctrl + }{Left,Up,Down,Right}
+	dk_winresize -{r,m} {Left,Up,Down,Right}
 
 # move the active window up/down the stack
-ctrl + alt + {j,k}
+ctrl + alt + {Up,Down}
 	dkcmd win mvstack {up,down}
 
 # view, send, or follow to a workspace (by number)
 super + {_,alt + ,ctrl + }{KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,KP_Home,KP_Up,KP_Prior,KP_Insert}
-	dkcmd ws {_,send,follow} {1-9,10}
+	dkcmd ws {view,send,follow} {1-9,10}
 
 # view, send, or follow to monitor number
 alt + {_,shift + ,ctrl + }{KP_End,KP_Down,KP_Next}
 	dkcmd mon {view,send,follow} {$MONITOR1,$MONITOR2,$MONITOR3}
 
-# change active workspace layout from static=true
-alt + t ; {d,f,g,m,n,r,s,t,w}
-	dk_layouts_static -{d,f,g,m,n,r,s,t,w}
-
-# change active workspace layout from static=false
-alt + shift + t ; {d,g,m,n,r,s,t,w,z}
-	dk_layouts_dynamic -{d,g,m,n,r,s,t,w,z}
+# change active workspace layout
+alt + {_,shift + }t ; {d,f,g,m,n,r,s,t,w}
+	{dk_layouts_dynamic,dk_layouts_static} -{d,f,g,m,n,r,s,t,w}
 
 # change number of windows in master or first stack
-alt + {_,shift + }{i,d}
+super + {_,shift + }{KP_Add,KP_Subtract}
 	dkcmd set {master,stack} {+1,-1}
 
 # change gap width
-alt + {equal,minus}
+alt + {KP_Add,KP_Subtract}
 	dkcmd set gap width {+5,-5}
 
 # change border widths
-#alt + ctrl + {_,shift + }{equal,minus}
+#alt + ctrl + {_,shift + }{KP_Add,KP_Subtract}
 #	dkcmd set border {width,outer_width} {+1,-1}
