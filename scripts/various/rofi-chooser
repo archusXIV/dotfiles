@@ -1,9 +1,10 @@
 #!/bin/bash
 
+WM_NAME=$(wmctrl -m | awk '/Name/{print $2}')
 choice=$(printf "applications\\nautoscript\\nconfigs\\nfind\\nfonts\\nkeybindings\\npass\\nrecord\\nthemes\\nwindow" \
-        | rofi -normal-window -dmenu -i -p 'Rofi scripts' -no-show-icons -width 500 -lines 8 -location 0)
+        | rofi -normal-window -dmenu -i -p 'Rofi scripts' -no-show-icons -width 500 -lines 10 -location 0)
 
-[[ -z $choice ]] && exit
+[[ -z $choice ]] && exit 0
 
 _autoscript_menu() {
     [[ -z ${SCRIPTDIR+x} ]] && exit 1
@@ -82,21 +83,22 @@ _rofi_configs() {
     else
         [ -z "$fileChoice" ] && exit 0 \
         || exec geany ${confDir}${dirChoice}${fileChoice}
+        exit
     fi
 }
 
-_theme-selector() {
+_theme_selector() {
     local xres_file selected
-    xres_file="$RESOURCES_FILE"
+    xres_file="${RESOURCES_FILE:-$HOME/.Xresources}"
 
     selected="$(ls "$XDG_CONFIG_HOME/xfiles/themes" \
                 | rofi -normal-window \
-                -dmenu -width 25 \
+                -dmenu -width 40 \
                 -hide-scrollbar \
                 -line-padding  \
                 -padding 20 \
                 -lines 10 \
-                -columns 2 \
+                -columns 4 \
                 -p "The actual theme is $(grep themes "$xres_file" | sed 's,.*/,,;s/"//')")"
 
     [[ ! -f "$xres_file" ]] && echo "$xres_file: no such file or directory" && exit 1
@@ -108,21 +110,13 @@ _theme-selector() {
 
     sleep 1s
 
-    # Function below calls other scripts.
-    _reload() (
-        xrdb -load "$xres_file" \
-        && Terminal_theme_changer \
-        && restart_wm \
-        && launch_polybar \
-        && xre2rasi \
-        && notify-send 'theme changed'
-    )
-
-    if [[ -n $(pidof bspwm) ]] || [[ -n $(pidof i3) ]]; then
-        _reload
-    else
-        exit 1
-    fi
+    xrdb -load "$xres_file" \
+    && Terminal_theme_changer \
+    && killall conky \
+    && restart_wm \
+    && xre2rasi \
+    && notify-send 'theme changed'
+    exit 0
 }
 
 case "$choice" in
@@ -146,39 +140,25 @@ case "$choice" in
                              -dmenu -i \
                              -p "locate " | xargs -r -0 xdg-open
     ;;
-    fonts       ) fontawesomemenu -f "$HOME"/Documents/theming/fa4-icon-list.txt
+    fonts       ) fontawesomemenu -f "$HOME"/Documents/theming/fa4-icon-list.txt; exit
     ;;
-    keybindings ) if [[ -n $(pidof bspwm) ]]; then
-                      awk '/^[a-zA-Z]/ \
-                      && last {print $0,"\t",last} \
-                      {last=""} /^#/{last=$0}' \
-                      ~/.config/sxhkd/bsp_sxhkdrc_memo \
-                      | column -t -s $'\t' \
-                      | rofi -normal-window \
-                      -dmenu -i -p 'Sxhkd memo ' \
-                      -no-show-icons \
-                      -width 1200 \
-                      -location 0
-                  elif [[ -n $(pidof i3) ]]; then
-                      awk '/^[a-zA-Z]/ \
-                      && last {print $0,"\t",last} \
-                      {last=""} /^#/{last=$0}' \
-                      ~/.config/i3/i3_sxhkdrc_memo \
-                      | column -t -s $'\t' \
-                      | rofi -normal-window \
-                      -dmenu -i -p 'i3_memo ' \
-                      -no-show-icons \
-                      -width 1200 \
-                      -location 0
-                  else
-                      echo "no bspwm or i3 session running" && exit 1
-                  fi
+    keybindings )   awk '/^[a-zA-Z]/ \
+                    && last {print $0,"\t",last} \
+                    {last=""} /^#/{last=$0}' \
+                    ~/.config/sxhkd/"$WM_NAME"_sxhkdrc_memo \
+                    | column -t -s $'\t' \
+                    | rofi -normal-window \
+                    -dmenu -no-show-icons \
+                    -width 1200 \
+                    -location 0 \
+                    -i -p "$WM_NAME keybindings memo" \
+                    exit 0
     ;;
     pass        ) _passwd_copy
     ;;
     record      ) rofi-record &
     ;;
-    themes      ) _theme-selector
+    themes      ) _theme_selector
     ;;
     window      ) rofi \
                   -modi window \
