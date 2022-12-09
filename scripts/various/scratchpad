@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script hide and show focused windows whithin you favorite
+# This script hides and shows focused windows whithin you favorite
 # window manager or DE by using xdo to proceed
 # We can also use rofi to select and show back hidden windows
 
