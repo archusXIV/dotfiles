@@ -1,0 +1,12 @@
+[Unit]
+Description=Start G213Colors profile
+After=suspend.target
+After=hibernate.target
+After=hybrid-sleep.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/g213colors-gui -t
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,11 @@
+[Unit]
+Description=Mpv listener
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=simple
+RemainAfterExit=no
+ExecStart=bash -c /home/archangel/.local/bin/mpv-ipc on
+ExecStop=bash -c /home/archangel/.local/bin/mpv-ipc off

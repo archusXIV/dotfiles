@@ -1,0 +1,10 @@
+[Unit]
+Description=Polkit-gnome user service
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=simple
+RemainAfterExit=no
+ExecStart=/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
