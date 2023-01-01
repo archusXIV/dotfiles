@@ -8,7 +8,7 @@ _Main() {
 
     #### MONITORS & DESKTOP SETTINGS ####
     # $MONITOR{1,2,3} are environment variables.
-
+    bspc wm -O $MONITOR1 $MONITOR2 $MONITOR3
     bspc monitor $MONITOR1 -d 1 2 3 4
     bspc monitor $MONITOR2 -d 5 6 7
     bspc monitor $MONITOR3 -d 8 9 10
