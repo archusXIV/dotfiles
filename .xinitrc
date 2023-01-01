@@ -20,7 +20,7 @@ fi
 dbus-update-activation-environment --systemd --all
 systemctl --user import-environment DISPLAY
 # personal startup services
-systemctl --user start Xsession.target
+systemctl --user start Xsession.target &
 
 # These guys are environment variables.
 [ -f "$MODMAP" ] && xmodmap "$MODMAP"
