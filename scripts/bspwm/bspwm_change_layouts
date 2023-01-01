@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# changing workspaces layouts using bsp-layout
+# (https://github.com/phenax/bsp-layout)
+# and update the layout name in polybar.
+
+_QueryMonitor() {
+    if [[ $(bspc query -M -m .focused) == $(bspc query -M -m $MONITOR1) ]]; then
+        BARPID=$(pgrep --full bspwm-bar-1)
+        polybar-msg -p "$BARPID" \
+        action "#bsp1_layout-ipc.hook.1" >/dev/null 2>&1
+    elif [[ $(bspc query -M -m .focused) == $(bspc query -M -m $MONITOR2) ]]; then
+        BARPID=$(pgrep --full bspwm-bar-2)
+        polybar-msg -p "$BARPID" \
+        action "#bsp2_layout-ipc.hook.1" >/dev/null 2>&1
+    elif [[ $(bspc query -M -m .focused) == $(bspc query -M -m $MONITOR3) ]]; then
+        BARPID=$(pgrep --full bspwm-bar-3)
+        polybar-msg -p "$BARPID" \
+        action "#bsp3_layout-ipc.hook.1" >/dev/null 2>&1
+    fi
+}
+
+case "$1" in
+    -e ) bsp-layout set even && _QueryMonitor ;;
+    -f ) bsp-layout remove && _QueryMonitor ;;
+    -g ) bsp-layout set grid && _QueryMonitor ;;
+    -rg) bsp-layout set rgrid && _QueryMonitor ;;
+    -m ) bsp-layout set monocle && _QueryMonitor ;;
+    -t ) bsp-layout set tall && _QueryMonitor ;;
+    -rt) bsp-layout set rtall && _QueryMonitor ;;
+    -w ) bsp-layout set wide && _QueryMonitor ;;
+    -rw) bsp-layout set rwide && _QueryMonitor ;;
+    -x ) _QueryMonitor ;;
+esac
+
