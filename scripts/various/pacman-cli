@@ -4,6 +4,7 @@
 # https://github.com/archusXIV/dotfiles
 # Dependencies: fzf, pacdiff, reflector, vim, updates-viewer.
 # https://github.com/archusXIV/dotfiles/blob/main/scripts/various/updates-viewer
+# Otherwise use: pacman -Syu in option 6
 #
 # This script shows a menu to let you choose over severals pacman tools and options.
 # In order to install or remove packages it uses fzf utility on the fancy side.
@@ -14,7 +15,7 @@ color_off=$'\e[0m';
 red=$'\e[0;31m';
 green=$'\e[0;32m';
 
-declare -a dependencies=( "fzf" "pacdiff" "reflector" "vim" "updates-viewer" )
+declare -a dependencies=( "fzf" "pacdiff" "reflector" "vim" "updates-manager" )
 
 for package in "${dependencies[@]}"; do
     [[ -z $(command -v "$package") ]] && {
@@ -23,7 +24,7 @@ for package in "${dependencies[@]}"; do
     }
 done
 
-_menu() {
+_Menu() {
     clear
     while [[ -f /etc/pacman.conf ]]; do
         clear
@@ -34,39 +35,39 @@ _menu() {
         echo -e "                       ┌───────────────────────────────────────────────────────────┐"
         echo -e "                       │    1) Search & Install           6) Update the system     │"
         echo -e "                       │    2) Uninstall package(s)       7) Pacdiff               │"
-        echo -e "                       │    3) List packages              8) Edit pacman.conf      │"
-        echo -e "                       │    4) Purge orphans/cache        9) Edit makepkg.conf     │"
+        echo -e "                       │    3) List installed packages    8) Edit pacman.conf      │"
+        echo -e "                       │    4) Purge orphans/cache        9) AUR managemnt         │"
         echo -e "                       │    5) Update mirrors             0) Exit                  │"
         echo -e "                       └───────────────────────────────────────────────────────────┘"
         echo -e "                                             ${green}Select an item${color_off}"
         echo ""
         read -r option
         case "$option" in
-            1)  _install                   # Install one or multiple package(s)
+            1)  _Install
                 echo ""
             ;;
-            2)  _uninstall                 # Uninstall one or multiple package(s)
+            2)  _Uninstall
                 echo ""
             ;;
-            3)  _packageslist              # List all installed packages, press ENTER to see more details
+            3)  _PackagesList
                 echo ""
             ;;
-            4)  _purge                     # Clean orphan packages and /var/cache/pacman/pkg/*
+            4)  _Purge
                 echo ""
             ;;
-            5)  _reflector                 # Use reflector script to update and refresh /etc/pacman.d/mirrorlist
+            5)  _Reflector
                 echo ""
             ;;
-            6)  updates-viewer --list      # ~/.local/bin/updates-viewer
+            6)  updates-manager --list # ~/.local/bin/updates-manager
                 echo ""
             ;;
-            7)  _pacdiff                   # remove, merge or replace configs in /etc
+            7)  _Pacdiff
                 echo ""
             ;;
-            8)  sudo vim /etc/pacman.conf  # Edit this file
+            8)  sudo vim /etc/pacman.conf
                 echo ""
             ;;
-            9)  sudo vim /etc/makepkg.conf # Edit this file
+            9)  _Aur
                 echo ""
             ;;
             0)  clear
@@ -82,7 +83,114 @@ _menu() {
     done
 }
 
-_install() {
+_AurPackagesList() {
+    pacman -Qm | awk '{print $1}' \
+        | fzf \
+        --preview 'yay -Qila {}' \
+        --layout=reverse \
+        --bind 'enter:execute(yay -Qila {} | less)'
+}
+
+_InstallAur() {
+    local buildir editor
+    buildir=${BUILDIR:-$XDG_CACHE_HOME/makepkg}
+    editor=${VISUAL:-vim}
+
+    mkdir -p "$buildir"
+    cd "$buildir" || exit  1
+
+    echo ""
+    read -r -p ${green}' Please enter the desired package name and press Enter: ' PACKAGE
+    echo -e " Downloading sources...${color_off}\n"
+    git clone https://aur.archlinux.org/"$PACKAGE"
+
+    dir=$PACKAGE
+    echo "${green}The git directory is:" "$dir${color_off}"
+
+    if [[ -d $dir ]]; then
+        cd "$dir"
+        if [[ -f PKGBUILD ]]; then
+            read -rp ' Edit PKGBUILD? [N/y]:' ans
+            case "$ans" in
+                Y*|y*) $editor PKGBUILD ;;
+                *)     echo "" ;;
+            esac
+        fi
+
+        read -rp " Only [b]uild , build & [i]nstall $PACKAGE: " build
+        case "$build" in
+            b)  makepkg --syncdeps --rmdeps
+                if [[ $? -eq 1 ]]; then
+                    echo "${red}Something went wrong...${color_off}"
+                    sleep 3s
+                    _Menu
+                else
+                    cd $HOME
+                    rm -rf $HOME/.ccache
+                    echo " ${green}$PACKAGE is in $XDG_CACHE_HOME/makepkg"
+                    sleep 3s; return
+                fi
+            ;;
+            i)  makepkg --syncdeps --rmdeps
+                if [[ $? -eq 1 ]]; then
+                    echo "${red}Something went wrong...${color_off}"
+                    sleep 3s
+                    _Menu
+                else
+                    for i in $(find . -name "*.zst" -o -name "*.xz"); do
+                        echo "Install $i ? [n/Y]:"
+                        read -r answer
+                        case "$answer" in
+                            Y|y) sudo pacman -U "$i" --needed --noconfirm ;;
+                            n|*) break ;;
+                        esac
+                    done
+
+                    cd $HOME
+                    rm -rf $HOME/.ccache
+                    rm -rf $buildir
+                fi
+            ;;
+            *)  echo " ${red}Unknown option, exiting...${color_off}"
+                sleep 2s
+                _Menu
+            ;;
+        esac
+    else
+        echo " ${red}$dir does not exist.${color_off}"
+        sleep 2s
+        _Menu
+    fi
+}
+
+_Aur() {
+    if (( $(pacman -Qm | wc -l) < 1 )); then
+        echo -e " ${red}No AUR package installed yet.${color_off}\n"
+        sleep 2s
+        read -rn1 -p ' Do you want to install a package from the AUR [N/y]? : ' aurinstall
+        case "$aurinstall" in
+            N|n)    _Menu
+            ;;
+            y|Y)    _InstallAur
+            ;; 
+        esac
+    else
+        read -rn1 -p ' What do you want to do: [L]ist installed, [I]nstall or [U]ninstall an AUR package? : ' askaur
+        case "$askaur" in
+            L|l)    _AurPackagesList
+            ;;
+            I|i)    _InstallAur
+            ;;
+            U|u)    echo " Please enter the desired package name: "
+                    read -r PACKAGE
+                    sudo pacman -Rdd "$PACKAGE"
+                    _Menu
+            ;; 
+        esac
+    fi
+}
+
+_Install() {
     sudo pacman -Sy >/dev/null 2>&1
     sudo pacman -Fy >/dev/null 2>&1
     pacman -Slq \
@@ -94,7 +202,7 @@ _install() {
             | xargs -ro sudo pacman -S
 }
 
-_uninstall() {
+_Uninstall() {
     pacman -Slq \
             | fzf \
             --multi \
@@ -104,7 +212,7 @@ _uninstall() {
             | xargs -ro sudo pacman -Rns
 }
 
-_packageslist() {
+_PackagesList() {
     pacman -Qq \
         | fzf \
         --preview 'pacman -Qil {}' \
@@ -112,8 +220,7 @@ _packageslist() {
         --bind 'enter:execute(pacman -Qil {} | less)'
 }
 
-_purge() {
-    
+_Purge() {
     read -rn 1 -p ' Purge [O]rphans or [C]ache: ' purge
     case "$purge" in
         o|O)    local pkgs="$XDG_CACHE_HOME/orphans_list.txt"
@@ -127,8 +234,7 @@ _purge() {
                     case "$orphan" in
                         N|n|no )    _menu
                         ;;
-                        y|Y|yes)    sudo pacman -Rs $(pacman -Qdqt) && \
-                                    sudo paccache -ruk0
+                        y|Y|yes)    sudo pacman -Rdd $(pacman -Qdqt)
                                     echo " ${green}A list of removed packages has been created"
                                     echo " in $pkgs${color_off}"
                                     sleep 5s
@@ -145,27 +251,25 @@ _purge() {
         c|C)    sudo pacman -Scc
         ;;
     esac
-    
     return 0
-    
 }
 
-_pacdiff() {
-    if [[ -z $(find /etc -regextype posix-extended -regex ".+\.pac(new|save)" 2> /dev/null) ]]; then
-        echo " ${green}No pac{new,save} files found.${color_off}"
+
+_Pacdiff() {
+    if [[ -z $(find /etc -name "*.pacnew" 2> /dev/null) ]]; then
+        echo " ${green}No pacnew files found.${color_off}"
         sleep 3s
     else
         sudo pacdiff
     fi
 }
 
-_reflector() {
+_Reflector() {
     PS3=""
     echo ""
     echo " ${green}Select your country:"
     echo " Example for France: 19"
-    echo " More details in a terminal, type: ${color_off}reflector --list-countries | less"
-    echo ""
+    echo -e " More details in a terminal, type: reflector --list-countries | less${color_off}\n"
     select country in $(reflector --list-countries \
         | sed '1d;2d;8d
         s/Hong Kong/Hong-Kong/;s/North Macedonia/North-Macedonia/;
@@ -200,4 +304,4 @@ _reflector() {
     done
 }
 
-_menu "${@}"
+_Menu "${@}"
