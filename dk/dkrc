@@ -1,11 +1,19 @@
 #!/bin/bash
 
 # DK WINDOW MANAGER CONFIGURATION FILE
-# dependencies: polybar, wmctrl
 
-source "$XDG_CONFIG_HOME"/dk/_WindowsRules
-
-logfile="$XDG_CONFIG_HOME/dk/dkrc.log"
+# sxhkd shortcut: "$HOME"/.config/dk/dkrc -r
+case "$1" in
+    -r) source "$XDG_CONFIG_HOME"/dk/_WindowsRules
+        _WindowsRules
+        _colours
+        date > "$XDG_CONFIG_HOME/dk/dkrc.log"
+        dkcmd status type=full num=1 \
+        | sed -n '/^rule:/,/^$/p' >> "$XDG_CONFIG_HOME/dk/dkrc.log"
+        notify-send 'windows rules reloaded'
+        exit 0
+    ;;
+esac
 
 # let's include windows rules function
 source "$XDG_CONFIG_HOME"/dk/_WindowsRules
@@ -26,7 +34,7 @@ dkcmd set numws=10
 
 # default workspace '_' values used when allocating new workspaces
 # can be applied to all existing workspaces when passed 'apply' after ws=_
-dkcmd set ws=_ apply layout=tile master=1 stack=3 gap=0 msplit=0.52 ssplit=0.5
+dkcmd set ws=_ apply layout=tile master=1 stack=3 gap=2 msplit=0.52 ssplit=0.5
 dkcmd set ws=1 layout=grid
 dkcmd set ws=7 layout=none
 
@@ -34,8 +42,8 @@ function _wslayout {
     awk '
     /^workspaces:/ {sub(/^workspaces: /, ""); gsub(/(*)?[0-9]*:\w*:/, ""); print; exit}
     ' <(dkcmd status type=full num=1) \
-    | sed 's/dwindle/D/g;s/grid/G/g;s/mono/M/g;
-    s/none/N/g;s/rtile/R/g;s/spiral/S/g;s/tile/T/g;s/tstack/W/g'
+    | sed 's/dwindle/D/g;s/grid/G/g;s/mono/M/g;s/none/N/g;
+    s/rtile/R/g;s/spiral/S/g;s/tile/T/g;s/tstack/W/g'
 }
 
 # Indicates the active startup workspace layout beside the name.
@@ -47,7 +55,7 @@ dkcmd set static_ws=true \
     ws=1 name=1:$(_wslayout | awk '{print $1}') mon="$MONITOR1" \
     ws=2 name=2:$(_wslayout | awk '{print $2}') mon="$MONITOR1" \
     ws=3 name=3:$(_wslayout | awk '{print $3}') mon="$MONITOR1" \
-    ws=4 name=4:$(_wslayout | awk '{print $4}') mon="$MONITOR1" \
+    ws=4 name=4:$(_wslayout | awk '{print $4}') mon="$MONITOR2" \
     ws=5 name=5:$(_wslayout | awk '{print $5}') mon="$MONITOR2" \
     ws=6 name=6:$(_wslayout | awk '{print $6}') mon="$MONITOR2" \
     ws=7 name=7:$(_wslayout | awk '{print $7}') mon="$MONITOR2" \
@@ -56,7 +64,7 @@ dkcmd set static_ws=true \
     ws=10 name=10:$(_wslayout | awk '{print $10}') mon="$MONITOR3"
 
 if ! hash polybar wmctrl >/dev/null 2>&1; then
-	notify-send -t 0 -u critical 'polybar, wmctrl should be installed...'
+    notify-send -t 0 -u critical 'polybar, wmctrl should be installed...'
 fi
 
 # checking external scripts
@@ -65,9 +73,8 @@ function _check { command -v "$1" >/dev/null; }
 _check launch_polybar && launch_polybar &
 _check sxhkd-start && sxhkd-start &
 
-polybar-msg \
-    -p $(pgrep --full $(wmctrl -m | awk '/Name/{print $2}')) \
-    action "#static_ws-ipc.hook.1" >/dev/null 2>&1
+polybar-msg -p $(pgrep --full dk-bar-3) \
+action "#static_ws-ipc.hook.0" >/dev/null 2>&1
 
 # global settings
 dkcmd set focus_{open,urgent,mouse}=true
@@ -77,23 +84,21 @@ dkcmd set smart_{gap,border}=true
 dkcmd set mouse mod=super move=button1 resize=button3
 
 function _colours {
+    # let's use Xresources theme colors
+    local bkg blu red
 
-    local blu cyn grn mag red
-
+    bkg=$(xrdb -query | awk '/background:/{print $NF}')
     blu=$(xrdb -query | awk '/color4:/{print $NF}')
-    cyn=$(xrdb -query | awk '/color6:/{print $NF}')
-    grn=$(xrdb -query | awk '/color2:/{print $NF}')
     red=$(xrdb -query | awk '/color1:/{print $NF}')
-    ylw=$(xrdb -query | awk '/color3:/{print $NF}')
 
     dkcmd set border width=2 outer_width=1 \
     colour \
-    focus="$cyn" \
+    focus="$blu" \
     urgent="$red" \
-    unfocus="$ylw" \
+    unfocus="$bkg" \
     outer_focus="$blu" \
-    outer_urgent="$grn" \
-    outer_unfocus="$ylw"
+    outer_urgent="$red" \
+    outer_unfocus="$bkg"
 }
 
 [[ -f $HOME/.Xresources ]] && _colours
@@ -101,10 +106,11 @@ function _colours {
 _WindowsRules
 
 dkcmd ws 5
-dkcmd set static_ws=false
 
-polybar-msg \
-    -p $(pgrep --full $(wmctrl -m | awk '/Name/{print $2}')) \
-    action "#static_ws-ipc.hook.0" >/dev/null 2>&1
+sleep 3 && dkcmd set static_ws=false
 
-dkcmd status type=full num=1 > "$logfile"
+polybar-msg -p $(pgrep --full dk-bar-3) \
+action "#static_ws-ipc.hook.1" >/dev/null 2>&1
+
+date > "$XDG_CONFIG_HOME/dk/dkrc.log"
+dkcmd status type=full num=1 >> "$XDG_CONFIG_HOME/dk/dkrc.log"
