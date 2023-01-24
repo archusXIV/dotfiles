@@ -2,39 +2,89 @@
 
 # Windows rules
 # open window(s) on a specific workspace (assigned monitor)
+# to see all rules: dkcmd status type=full num=1 | sed -n '/^rule:/,/^$/p'
 
 _WindowsRules() {
-    # list of floating applications names
-    local FloatingApps="$HOME/.config/dk/FloatingApps"
     
-    classes="" instances=""
+    local CLASSES FLOATINGAPPS
+
+    CLASSES=""
+    
+    # list of floating applications instances/classes
+    FLOATINGAPPS="$HOME/.config/dk/FloatingApps"
+
     while read -r line; do
-        { [[ $classes ]] && classes+="|$line"; } || classes="$line"
-        { [[ $instances ]] && instances+="|$line"; } || instances="$line"
-    done < "$FloatingApps"
-    
-    dkcmd rule class="^($classes)$" float=true
-    dkcmd rule instance="^($instances)$" float=true
+        { [[ $CLASSES ]] && CLASSES+="|$line"; } \
+        || CLASSES="$line"
+    done < "$FLOATINGAPPS"
+
+    dkcmd rule class="^($CLASSES)$" float=true
     
     # for window class
-    dkcmd rule class="^(feh|Mumble|obs)$" ws=4 focus=true
+    dkcmd rule class="^obs$" ws=3 focus=true
+    dkcmd rule class="^(feh|Mumble)$" ws=4 focus=true
     dkcmd rule class="^(Geany|lite-xl)$" ws=5 focus=true
     dkcmd rule class="^(mpv|VirtualBox)$" ws=6 focus=true
-    dkcmd rule class="^(Five-or-more|Sol)$" ws=7 focus=true
+    dkcmd rule class="^Sol$" ws=7 focus=true
+    dkcmd rule class="^Five-or-more$" ws=7 w=616 h=691 focus=true
     dkcmd rule class="^firefox$" ws=8 focus=true
     dkcmd rule class="^(file-roller|filezilla|pcmanfm)$" ws=9 focus=true
     dkcmd rule class="^(SimpleScreenRecorder|Zathura)$" ws=10 focus=true
-    
-    # for window instance
+
+    # for URxvt instances
     dkcmd rule class="^URxvt$" instance="^(ncmpcpp|cmus|pulsemixer|ripper)$" ws=1 focus=true
     dkcmd rule class="^URxvt$" instance="^(htop|jnettop|newsboat|mutt)$" ws=2 focus=true
     dkcmd rule class="^URxvt$" instance="^ranger$" ws=3 focus=true
     dkcmd rule class="^URxvt$" instance="^youtube$" ws=6 focus=true
     dkcmd rule class="^URxvt$" instance="^mpm$" ws=8 focus=true
-    
+
     # no desktop rules
-    dkcmd rule class="^bashterm$" x=center y=center
-    dkcmd rule class="^floaterm$" x=center y=center
-    
+    dkcmd rule instance="^(Browser|pacman-cli|floaterm|bashterm)$" float=true
     dkcmd rule apply '*'
+    
+}
+#!/bin/bash
+
+# Windows rules
+# open window(s) on a specific workspace (assigned monitor)
+# to see all rules: dkcmd status type=full num=1 | sed -n '/^rule:/,/^$/p'
+
+_WindowsRules() {
+    
+    local CLASSES FLOATINGAPPS
+
+    CLASSES=""
+    
+    # list of floating applications instances/classes
+    FLOATINGAPPS="$HOME/.config/dk/FloatingApps"
+
+    while read -r line; do
+        { [[ $CLASSES ]] && CLASSES+="|$line"; } \
+        || CLASSES="$line"
+    done < "$FLOATINGAPPS"
+
+    dkcmd rule class="^($CLASSES)$" float=true
+    
+    # for window class
+    dkcmd rule class="^obs$" ws=3 focus=true
+    dkcmd rule class="^(feh|Mumble)$" ws=4 focus=true
+    dkcmd rule class="^(Geany|lite-xl)$" ws=5 focus=true
+    dkcmd rule class="^(mpv|VirtualBox)$" ws=6 focus=true
+    dkcmd rule class="^Sol$" ws=7 focus=true
+    dkcmd rule class="^Five-or-more$" ws=7 w=616 h=691 focus=true
+    dkcmd rule class="^firefox$" ws=8 focus=true
+    dkcmd rule class="^(file-roller|filezilla|pcmanfm)$" ws=9 focus=true
+    dkcmd rule class="^(SimpleScreenRecorder|Zathura)$" ws=10 focus=true
+
+    # for URxvt instances
+    dkcmd rule class="^URxvt$" instance="^(ncmpcpp|cmus|pulsemixer|ripper)$" ws=1 focus=true
+    dkcmd rule class="^URxvt$" instance="^(htop|jnettop|newsboat|mutt)$" ws=2 focus=true
+    dkcmd rule class="^URxvt$" instance="^ranger$" ws=3 focus=true
+    dkcmd rule class="^URxvt$" instance="^youtube$" ws=6 focus=true
+    dkcmd rule class="^URxvt$" instance="^mpm$" ws=8 focus=true
+
+    # no desktop rules
+    dkcmd rule instance="^(Browser|pacman-cli|floaterm|bashterm)$" float=true
+    dkcmd rule apply '*'
+    
 }
