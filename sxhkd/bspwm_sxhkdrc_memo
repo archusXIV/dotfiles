@@ -1,0 +1,177 @@
+# reload sxhkd configuration files.
+alt + Escape
+
+# Invoke the session managemnt menu.
+ctrl + alt + Delete
+
+# dmenu_chooser,rofi_chooser
+Menu ; {d,r}
+
+# scratchpad custom script
+alt + shift + {h,u,r}
+
+# terminal emulators urxvtc, xterm, urxvtc -name bashterm
+alt + {_,shift + ,ctrl + }Return
+
+# ranger,sudo ranger /etc
+alt + x ; {r,s}
+
+# URxvt applications
+alt + u ; {a,c,d,e,h,j,m,n,p,r,s,v,x,y}
+
+# gui applications: $EDITOR, $FILEMNGR, geany, $VIRTMNGR, $BROWSER
+alt + g ; {e,f,g,v,w}
+
+# audio-video applications: qv4l2, pavucontrol, qvidcap
+alt + v ; {g,p,q}
+
+# script to launch rofi-record, obs/ssr.
+alt + shift + v ; {a,o,v,k}
+
+# toggle/restart polybar(s)
+ctrl + {_,shift + }{KP_End,KP_Down,KP_Next,KP_Left}
+
+# controls the webcam rectangle position on the screen.
+alt + shift + {Left,Down,Up,Right}
+
+# volume/mic
+XF86Audio{Lower,Raise}Volume {_,alt + }
+
+# on the fly output/input volume
+alt + {_,shift + }{1-9,0}
+
+# volume/mic mute 
+XF86AudioMute {_,alt + }
+
+# player control
+alt + {F9,F10,F11,F12}
+
+# restart/quit bspwm
+ctrl + alt + {r,q}
+
+# center term in screens.
+super + c
+
+# close/kill focused window.
+super + {_,ctrl + }q
+
+# close {or kill} all windows or except the focused/marked ones.
+super + alt + {n,c,k}
+
+# close all windows with the same WM_CLASS in the present desktop.
+super + alt + ctrl + c
+
+# change focus to next monitor.
+super + BackSpace
+
+# send focused window to next monitor.
+super + shift + BackSpace
+
+# change active workspace layout
+alt + t ; {e,f,g,m,t,w}
+
+# change active workspace reverse/layout
+alt + shift + t ; {f,g,t,w}
+
+# alternate between the tiled and monocle layout.
+super + m
+
+# set the window state. fullscreen, pseudo-tiled, floating, tiled
+super + alt + {f,p,s,t}
+
+# set the node flag. {marked,locked,sticky,private}
+super + ctrl + {m,l,s,p}
+
+# assign/remove the locked flag to all windows in the current desktop.
+super + Caps_Lock ; {l,u}
+
+# Summon all marked windows across all desktops to the current one.
+super + b ; m
+
+# bring the windows of the given desktop to the current one.
+super + b ; super + {1-9,10}
+
+# focus the next/previous empty desktop.
+ctrl + shift + {Left,Right}
+
+# focus left/right occupied desktop.
+ctrl + alt + {Left,Right}
+
+# focus the last node/desktop.
+super + {_,shift + }less
+
+# focus the older or newer node in the focus history.
+super + {o,n}
+
+# focus or send (focused node) to the given desktop (using numpad).
+super + {_,alt + }{1-9,10}
+
+# send and follow focused node to given desktop (using numpad).
+super + shift + {1-9,10}
+
+# send and follow all nodes in the current desktop to the given one
+super + ctrl + shift + {1-9,10}
+
+# send window to last split.
+super + y
+
+# send the marked/focused node to a receptacle.
+super + ctrl + r
+
+# send window to left/right empty desktop.
+super + ctrl + {Left,Right}
+
+# circulate the leaves of the tree.
+super + {_,shift + }c
+
+# flip layout vertically/horizontally.
+super + {_,shift + }l
+
+# rotate all the nodes in screen.
+super + shift + r
+
+# focus or swap the node in the given direction.
+super + {_,shift + }{Left,Down,Up,Right}
+
+# swap current node with the next/previous one.
+super + {_,shift + }s
+
+# swap the current node and the biggest node in the same desktop.
+super + shift + b
+
+# swap focused window with the last one.
+super + x
+
+# copy and paste all window nodes from active workspace to another one.
+super + ctrl + {c,v}
+
+# swap nodes or create a receptacle in the given direction if none.
+super + alt + {Left,Down,Up,Right}
+
+# kill all existing receptacles.
+super + k
+
+# insert a preselection in the given direction.
+super + Insert ; {Left,Down,Up,Right}
+
+# preselect the ratio.
+super + ctrl + {1-9,10}
+
+# cancel the preselection for the focused node/desktop.
+super + space
+
+# move a floating window
+ctrl + {Left,Up,Down,Right}
+
+# resize a window (even floating)
+alt + {Left,Down,Up,Right}
+
+# mode for dynamic gaps. Continuous input mode & Escape to exit mode.
+ctrl + g : {h,j,k,l}
+
+# move floating windows with the arrow keys. Continuous input mode.
+alt + f : {Left,Down,Up,Right}
+
+# move or resize window.
+alt + button{1-3}
+
