@@ -4,7 +4,7 @@
 #reload, restart, exit dk
 ctrl + alt + {c,r,q}
     { \
-    dkcmd reload, \
+    $HOME/.config/dk/dkrc -r, \
     dkcmd restart, \
     prompt "Do you really want to quit dk ?" "Xexit" \
     }
