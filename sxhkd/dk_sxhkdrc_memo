@@ -13,8 +13,8 @@ Menu ; {d,r}
 # scratchpad hide/show/rofi
 alt + shift + {h,u,r}
 
-# terminal emulators $TERMINAL, URxvt
-alt + {_,shift +}Return
+# terminal emulators floaterm, bashterm & xterm
+alt + {_,shift + ,ctrl + }Return
 
 # urxvtc -name ranger -e {ranger,sudo ranger /etc}
 alt + x ; {r,s}
@@ -39,6 +39,9 @@ alt + shift + {Left,Down,Up,Right}
 
 # output/input volume
 XF86Audio{Lower,Raise}Volume {_,alt + }
+
+# on the fly output/input volume
+alt + {_,shift + }{1-9,0}
 
 # output/input mute
 XF86AudioMute {_,alt + }
@@ -67,7 +70,7 @@ super + alt + {s,space}
 # toggle fullscreen and fake fullscreen (enable manipulating fullscreen window)
 F11 {_,ctrl + }
 
-# toggle between monocle and tile layouts
+# toggle between monocle and tiled
 alt + m
 
 # resize/move window using custom script
@@ -80,10 +83,13 @@ ctrl + alt + {Up,Down}
 super + {_,alt + ,ctrl + }{1-9,10}
 
 # view, send, or follow to monitor number 1, 2, 3
-alt + {_,shift + ,ctrl + }{KP_End,KP_Down,KP_Next}
+super + {_,alt + ,ctrl + }{Home,Prior,Next}
+
+# send/follow all windows of the current ws to ws n°
+super + shift + {_,alt + }{1-9,10}
 
 # change active workspace layout (f is false)
-alt + {_,shift + }t ; {d,f,g,m,n,r,s,t,w}
+alt + {_,shift + }t ; {d,f,g,n,r,s,t,w}
 
 # change number of windows in master or first stack
 super + {_,shift + }{KP_Add,KP_Subtract}
