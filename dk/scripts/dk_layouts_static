@@ -1,0 +1,79 @@
+#!/bin/bash
+
+function _WsLayout {
+	awk '
+	/^workspaces:/ {sub(/^workspaces: /, ""); gsub(/(*)?[0-9]*:\w*:/, ""); print; exit}
+	' <(dkcmd status type=full) \
+	| sed 's/dwindle/D/g;s/grid/G/g;s/mono/M/g;
+	s/none/N/g;s/rtile/R/g;s/spiral/S/g;s/tile/T/g;s/tstack/W/g'
+}
+
+# dwindle=D grid=G mono=M none=N rtile=R spiral=S tile=T tstack=W
+function _StaticTrue {
+	# we have to clean the startup workspaces name definition
+	# before renaming them with the second block below using wslayout function
+	dkcmd set \
+		ws=1 name=1 mon="$MONITOR1" \
+		ws=2 name=2 mon="$MONITOR1" \
+		ws=3 name=3 mon="$MONITOR1" \
+		ws=4 name=4 mon="$MONITOR1" \
+		ws=5 name=5 mon="$MONITOR2" \
+		ws=6 name=6 mon="$MONITOR2" \
+		ws=7 name=7 mon="$MONITOR2" \
+		ws=8 name=8 mon="$MONITOR3" \
+		ws=9 name=9 mon="$MONITOR3" \
+		ws=10 name=10 mon="$MONITOR3"
+	
+	# The bar workspaces module will look like this:
+	# 1:T 2:S 3:N etc...(name:layout)
+    dkcmd set \
+		ws=1 name=1:$(_WsLayout | awk '{print $1}') mon="$MONITOR1" \
+		ws=2 name=2:$(_WsLayout | awk '{print $2}') mon="$MONITOR1" \
+		ws=3 name=3:$(_WsLayout | awk '{print $3}') mon="$MONITOR1" \
+		ws=4 name=4:$(_WsLayout | awk '{print $4}') mon="$MONITOR1" \
+		ws=5 name=5:$(_WsLayout | awk '{print $5}') mon="$MONITOR2" \
+		ws=6 name=6:$(_WsLayout | awk '{print $6}') mon="$MONITOR2" \
+		ws=7 name=7:$(_WsLayout | awk '{print $7}') mon="$MONITOR2" \
+		ws=8 name=8:$(_WsLayout | awk '{print $8}') mon="$MONITOR3" \
+		ws=9 name=9:$(_WsLayout | awk '{print $9}') mon="$MONITOR3" \
+		ws=10 name=10:$(_WsLayout | awk '{print $10}') mon="$MONITOR3"
+	
+}
+
+function _BarStaticFalse {
+	polybar-msg -p \
+	$(pgrep --full dk-bar-3) \
+	action "#static_ws-ipc.hook.1" >/dev/null 2>&1
+}
+
+function _ToggleTileMono {
+	
+	local last_layouts="$XDG_CACHE_HOME/layouts"
+	
+	if [[ ! -f $last_layouts ]]; then
+		_WsLayout > "$last_layouts"
+		dkcmd set layout mono
+	else
+		rm "$last_layouts"
+		# if there was another window next to the focused one
+		dkcmd win focus next 2>/dev/null
+		dkcmd set layout tile
+	fi
+}
+
+# change active workspace layout in sxhkdrc
+# alt + shift + t ; {d,f,g,m,n,r,s,t,w}
+##### dk_layouts_static -{d,f,g,m,n,r,s,t,w}
+
+case "$1" in
+    -d) dkcmd set layout dwindle && _StaticTrue ;;
+    -f) dkcmd set static_ws=false && _BarStaticFalse ;;
+    -g) dkcmd set layout grid && _StaticTrue ;;
+    -m) _ToggleTileMono && _StaticTrue ;;
+    -n) dkcmd set layout none && _StaticTrue ;;
+    -r) dkcmd set layout rtile && _StaticTrue ;;
+    -s) dkcmd set layout spiral && _StaticTrue ;;
+    -t) dkcmd set layout tile && _StaticTrue ;;
+    -w) dkcmd set layout tstack && _StaticTrue ;;
+esac
+

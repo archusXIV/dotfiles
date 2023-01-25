@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# send/follow all windows of the current ws to ws n°
+# options: dk_sendthemall -s (send) <workspace>
+#          dk_sendthemall -f (follow) <workspace>
+
+case "$1" in
+    -s) for win in $(xdo id -d); do
+            dkcmd ws send "$2"
+        done
+    ;;
+    -f) for win in $(xdo id -d); do
+            dkcmd ws send "$2"
+        done
+        dkcmd ws "$2"
+    ;;
+esac
