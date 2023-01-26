@@ -41,7 +41,7 @@ case "$1" in
         done
         
         # let's remove downloaded links from the original file
-        # by sending them in a second temporary file...
+        # and sending the other ones in a second temporary file...
         for line in $(grep '^https' "$TMP1"); do
             grep -v "${line}" "$file" >> "$TMP2"
         done
