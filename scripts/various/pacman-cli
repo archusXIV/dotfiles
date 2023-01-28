@@ -2,9 +2,8 @@
 
 # Author: Barret E (2021) <archus@protonmail.com>
 # https://github.com/archusXIV/dotfiles
-# Dependencies: fzf, pacdiff, reflector, vim, updates-viewer.
+# Dependencies: fzf, pacdiff, reflector, vim, updates-manager.
 # https://github.com/archusXIV/dotfiles/blob/main/scripts/various/updates-viewer
-# Otherwise use: pacman -Syu in option 6
 #
 # This script shows a menu to let you choose over severals pacman tools and options.
 # In order to install or remove packages it uses fzf utility on the fancy side.
@@ -15,7 +14,7 @@ color_off=$'\e[0m';
 red=$'\e[0;31m';
 green=$'\e[0;32m';
 
-declare -a dependencies=( "fzf" "pacdiff" "reflector" "vim" "updates-manager" )
+declare -a dependencies=( "fzf" "pacdiff" "reflector" "vim" "updates-manager" "yay" )
 
 for package in "${dependencies[@]}"; do
     [[ -z $(command -v "$package") ]] && {
@@ -31,12 +30,12 @@ _Menu() {
         echo ""
         echo -e "                                          ${green}Installed packages: $(pacman -Q | wc -l)${color_off}\n"
         echo -e "                                            ::pacman options::\n"
-        echo -e "                        ::To select multiple packages in options 1 & 2 press Tab::  "
+        echo -e "                        ::To select multiple packages in listing views, press Tab:: "
         echo -e "                       ┌───────────────────────────────────────────────────────────┐"
         echo -e "                       │    1) Search & Install           6) Update the system     │"
         echo -e "                       │    2) Uninstall package(s)       7) Pacdiff               │"
         echo -e "                       │    3) List installed packages    8) Edit pacman.conf      │"
-        echo -e "                       │    4) Purge orphans/cache        9) AUR managemnt         │"
+        echo -e "                       │    4) Purge orphans/cache        9) AUR pkgs management   │"
         echo -e "                       │    5) Update mirrors             0) Exit                  │"
         echo -e "                       └───────────────────────────────────────────────────────────┘"
         echo -e "                                             ${green}Select an item${color_off}"
@@ -109,17 +108,18 @@ _InstallAur() {
 
     if [[ -d $dir ]]; then
         cd "$dir"
-        if [[ -f PKGBUILD ]]; then
+        [[ -f PKGBUILD ]] && {
             read -rp ' Edit PKGBUILD? [N/y]:' ans
             case "$ans" in
                 Y*|y*) $editor PKGBUILD ;;
                 *)     echo "" ;;
             esac
-        fi
-
+        }
+        
         read -rp " Only [b]uild , build & [i]nstall $PACKAGE: " build
         case "$build" in
-            b)  makepkg --syncdeps --rmdeps
+            b)
+                makepkg --syncdeps --rmdeps
                 if [[ $? -eq 1 ]]; then
                     echo "${red}Something went wrong...${color_off}"
                     sleep 3s
@@ -131,7 +131,8 @@ _InstallAur() {
                     sleep 3s; return
                 fi
             ;;
-            i)  makepkg --syncdeps --rmdeps
+            i)
+                makepkg --syncdeps --rmdeps
                 if [[ $? -eq 1 ]]; then
                     echo "${red}Something went wrong...${color_off}"
                     sleep 3s
@@ -151,7 +152,8 @@ _InstallAur() {
                     rm -rf $buildir
                 fi
             ;;
-            *)  echo " ${red}Unknown option, exiting...${color_off}"
+            *)
+                echo " ${red}Unknown option, exiting...${color_off}"
                 sleep 2s
                 _Menu
             ;;
@@ -169,22 +171,30 @@ _Aur() {
         sleep 2s
         read -rn1 -p ' Do you want to install a package from the AUR [N/y]? : ' aurinstall
         case "$aurinstall" in
-            N|n)    _Menu
+            N|n)
+                _Menu
             ;;
-            y|Y)    _InstallAur
+            y|Y)
+                _InstallAur
             ;; 
         esac
     else
         read -rn1 -p ' What do you want to do: [L]ist installed, [I]nstall or [U]ninstall an AUR package? : ' askaur
         case "$askaur" in
-            L|l)    _AurPackagesList
+            L|l)
+                _AurPackagesList
             ;;
-            I|i)    _InstallAur
+            I|i)
+                _InstallAur
             ;;
-            U|u)    echo " Please enter the desired package name: "
-                    read -r PACKAGE
-                    sudo pacman -Rdd "$PACKAGE"
-                    _Menu
+            U|u)
+                pacman -Qm | awk '{print $1}' \
+                | fzf \
+                --multi \
+                --preview 'yay -Qila {}' \
+                --layout=reverse \
+                | xargs -ro sudo pacman -Rdd
+                _Menu
             ;; 
         esac
     fi
@@ -194,22 +204,22 @@ _Install() {
     sudo pacman -Sy >/dev/null 2>&1
     sudo pacman -Fy >/dev/null 2>&1
     pacman -Slq \
-            | fzf \
-            --multi \
-            --preview \
-            'cat <(sudo pacman -Si {1}) <(sudo pacman -Fl {1} | awk "{print \$2}")' \
-            --layout=reverse \
-            | xargs -ro sudo pacman -S
+        | fzf \
+        --multi \
+        --preview \
+        'cat <(sudo pacman -Si {1}) <(sudo pacman -Fl {1} | awk "{print \$2}")' \
+        --layout=reverse \
+        | xargs -ro sudo pacman -S
 }
 
 _Uninstall() {
     pacman -Slq \
-            | fzf \
-            --multi \
-            --preview \
-            'cat <(sudo pacman -Si {1}) <(sudo pacman -Fl {1} | awk "{print \$2}")' \
-            --layout=reverse \
-            | xargs -ro sudo pacman -Rns
+        | fzf \
+        --multi \
+        --preview \
+        'cat <(sudo pacman -Si {1}) <(sudo pacman -Fl {1} | awk "{print \$2}")' \
+        --layout=reverse \
+        | xargs -ro sudo pacman -Rns
 }
 
 _PackagesList() {
@@ -223,32 +233,37 @@ _PackagesList() {
 _Purge() {
     read -rn 1 -p ' Purge [O]rphans or [C]ache: ' purge
     case "$purge" in
-        o|O)    local pkgs="$XDG_CACHE_HOME/orphans_list.txt"
+        o|O)
+            local pkgs="$XDG_CACHE_HOME/orphans_list.txt"
+            echo ""
+            if [[ -n $(pacman -Qdqt) ]]; then
+                touch "$pkgs"
+                pacman -Qdqt > "$pkgs" && cat "$pkgs"
                 echo ""
-                if [[ -n $(pacman -Qdqt) ]]; then
-                    touch "$pkgs"
-                    pacman -Qdqt > "$pkgs" && cat "$pkgs"
-                    echo ""
-                    echo " ${red}Would you like to purge orphan packages? [N/y]:${color_off}"
-                    read -r orphan
-                    case "$orphan" in
-                        N|n|no )    _menu
-                        ;;
-                        y|Y|yes)    sudo pacman -Rdd $(pacman -Qdqt)
-                                    echo " ${green}A list of removed packages has been created"
-                                    echo " in $pkgs${color_off}"
-                                    sleep 5s
-                        ;;
-                        *      )    echo " Bad option..."; sleep 2s && _menu
-                        ;;
-                    esac
-                else
-                    echo " ${green}No orphan package found.${color_off}"
-                    sleep 3s
-                    _menu
-                fi
+                echo " ${red}Would you like to purge orphan packages? [N/y]:${color_off}"
+                read -r orphan
+                case "$orphan" in
+                    N|n|no )
+                        _menu
+                    ;;
+                    y|Y|yes)
+                        sudo pacman -Rdd $(pacman -Qdqt)
+                        echo " ${green}A list of removed packages has been created"
+                        echo " in $pkgs${color_off}"
+                        sleep 5s
+                    ;;
+                    *)
+                        echo " Bad option..."; sleep 2s && _menu
+                    ;;
+                esac
+            else
+                echo " ${green}No orphan package found.${color_off}"
+                sleep 3s
+                _menu
+            fi
         ;;
-        c|C)    sudo pacman -Scc
+        c|C)
+            sudo pacman -Scc
         ;;
     esac
     return 0
@@ -268,7 +283,7 @@ _Reflector() {
     PS3=""
     echo ""
     echo " ${green}Select your country:"
-    echo " Example for France: 19"
+    echo " Example for France: 21"
     echo -e " More details in a terminal, type: reflector --list-countries | less${color_off}\n"
     select country in $(reflector --list-countries \
         | sed '1d;2d;8d
@@ -279,25 +294,41 @@ _Reflector() {
         | awk '{print $1}'); do
 
         case "$country" in
-            Hong-Kong      ) country='Hong Kong'       ;;
-            New-Caledonia  ) country='New Caledonia'   ;;
-            New-Zealand    ) country='New Zealand'     ;;
-            North-Macedonia) country='North Macedonia' ;;
-            South-Africa   ) country='South Africa'    ;;
-            South-Korea    ) country='South Korea'     ;;
-            United-Kingdom ) country='United Kingdom'  ;;
-            United-States  ) country='United States'   ;;
+            Hong-Kong)
+                country='Hong Kong'
+            ;;
+            New-Caledonia)
+                country='New Caledonia'
+            ;;
+            New-Zealand)
+                country='New Zealand'
+            ;;
+            North-Macedonia)
+                country='North Macedonia'
+            ;;
+            South-Africa)
+                country='South Africa'
+            ;;
+            South-Korea)
+                country='South Korea'
+            ;;
+            United-Kingdom)
+                country='United Kingdom'
+            ;;
+            United-States)
+                country='United States'
+            ;;
         esac
 
         sudo reflector \
-        --country "$country" \
-        --verbose \
-        --latest 10 \
-        --age 24 \
-        --protocol http \
-        --protocol https \
-        --sort rate \
-        --save /etc/pacman.d/mirrorlist
+            --country "$country" \
+            --verbose \
+            --latest 10 \
+            --age 24 \
+            --protocol http \
+            --protocol https \
+            --sort rate \
+            --save /etc/pacman.d/mirrorlist
         echo " ${green}New mirrorlist saved.${color_off}"
         sleep 3s
         break
