@@ -5,7 +5,7 @@
 # Simple script to control pulseaudio volume/microphone.
 # For instance I use the polybar [module/pulseaudio-ipc] (sink) for sound output,
 # and for my microphone (source) [module/mic-ipc]
-# https://github.com/archusXIV/dotfiles/blob/main/polybar/active-modules-bar2.conf
+# https://github.com/archusXIV/dotfiles/blob/main/polybar/active-modules-bar2.ini
 # Usage: volume_control sink --{up,down,toggle} (preset is -/+5%)
 #        volume_control source --{up,down,toggle} (preset is -/+1%)
 
