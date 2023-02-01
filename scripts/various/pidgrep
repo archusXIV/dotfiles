@@ -38,7 +38,7 @@ if (( $(pgrep -fc "$1") > 1 )); then
     perl -E 'say "-" x 81'
     echo " ${green}USER    |   PID   |   COMMAND${nocolor}"
     perl -E 'say "-" x 81'
-    ps -ef | grep ${1} | sed '/grep/d' | awk '{ print $1"  "$2"      "$8" "$9" "$10 }'
+    ps -ef | grep ${1} | sed '/grep/d' | awk '{ print $1"  "$2"      "$8" "$9" "$10" "$11 }'
     perl -E 'say "-" x 81'
     echo ""
     echo " ${red}Do you wish to kill them all [a] or just one [x] or quit [q]?${nocolor}"
