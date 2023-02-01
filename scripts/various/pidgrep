@@ -7,44 +7,39 @@
 # We are prompted to kill it or not...
 # Of course we could use xkill but what about a background process?
 # eg: pidgrep my_script_name (use sudo for root privileges).
-# ---------------------------------------------------------------------------------
-# USER    |   PID   |  COMMAND
-#---------------------------------------------------------------------------------
-#usernam+  1281203    htop -u username
-#---------------------------------------------------------------------------------
-#
-# Do you want to kill my_script_name? [N/y]:
-# Enter the pid number to kill.
-# 1281203
-# 1281203 my_script_name does not exist anymore...
+# ----------------------------------------------
+#  PID: 712 COMMAND: my_script_name
+# ----------------------------------------------
 
 green=$'\e[0;32m';
 red=$'\e[0;31m';
 nocolor=$'\e[0m';
 
+# first test if $1 is a service.
+if [[ -n $(systemctl list-units | grep "$1") ]]; then
+    printf '%s\n' " ${green}$1 is a running systemd unit," \
+    " ${red}PLEASE USE: sudo systemctl <option> to manage it.${nocolor}"
+    systemctl status "$1"* | awk '/Main PID:/{print " " $1" "$2" "$3}'
+    exit 0
+elif [[ -n $(systemctl --user list-units | grep -w "$1") ]]; then
+    printf '%s\n' " ${green}$1 is a running systemd --user unit," \
+    " ${red}PLEASE USE: systemctl --user <option> to manage it.${nocolor}"
+    systemctl --user status "$1"* | awk '/Main PID:/{print " " $1" "$2" "$3}'
+    exit 0
+fi
+
+# then a regular process.
 [[ -z $(pidof -x "$1") ]] && {
     echo "No such process!"
     exit 0
 }
 
-if [[ -n $(systemctl list-units | grep "$1") ]]; then
-    printf '%s\n' " ${red}$1 is a running systemd unit," \
-    " ${green}PLEASE USE: sudo systemctl <option> to manage it.${nocolor}"
-    systemctl status "$1"* | awk '/Main PID:/{print $1" "$2" "$3}'
-    exit 0
-elif [[ -n $(systemctl --user list-units | grep -w "$1") ]]; then
-    printf '%s\n' " ${red}$1 is a running systemd --user unit," \
-    " ${green}PLEASE USE: systemctl --user <option> to manage it.${nocolor}"
-    systemctl --user status "$1"* | awk '/Main PID:/{print $1" "$2" "$3}'
-    exit 0
-fi
-
 if (( $(pgrep -fc "$1") > 1 )); then
-    echo "---------------------------------------------------------------------------------"
-    echo " ${green}USER    |   PID   |  COMMAND${nocolor}"
-    echo "---------------------------------------------------------------------------------"
-    ps -ef | grep ${1} | sed '/grep/d' | awk '{ print $1"  "$2"    "$8" "$9" "$10 }'
-    echo "---------------------------------------------------------------------------------"
+    perl -E 'say "-" x 81'
+    echo " ${green}USER    |   PID   |   COMMAND${nocolor}"
+    perl -E 'say "-" x 81'
+    ps -ef | grep ${1} | sed '/grep/d' | awk '{ print $1"  "$2"      "$8" "$9" "$10 }'
+    perl -E 'say "-" x 81'
     echo ""
     echo " ${red}Do you wish to kill them all [a] or just one [x] or quit [q]?${nocolor}"
     read -rsn 1 answer
@@ -68,9 +63,9 @@ if (( $(pgrep -fc "$1") > 1 )); then
         ;;
     esac
 else
-    echo "----------------------------------------------"
+    perl -E 'say "-" x 46'
     echo " PID:" ${green}$(pidof -x "$1") ${nocolor}"COMMAND:" ${green}"$1"${nocolor}
-    echo "----------------------------------------------"
+    perl -E 'say "-" x 46'
     echo ""
     echo " ${red}Do you want to kill "$1"? [N/y]:${nocolor}"
     read -rsn 1 answer
