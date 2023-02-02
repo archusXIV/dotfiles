@@ -42,7 +42,11 @@ elif (( $(pgrep -u "$USER" -fc "$1") >= 1 )); then
     echo " ${green}USER    |   PID   |   COMMAND${nocolor}"
     perl -E 'say "-" x 81'
     ps -fp $(pgrep -x "$1") \
-    | awk '{if(NR!=1) { print $1"  "$2"      "$8" "$9" "$10" "$11 }}'
+    | awk '
+        {if(NR!=1)
+        { print $1"   "$2"     "$8" "$9" "$10" "$11" "$12 }}
+    '
+    
     perl -E 'say "-" x 81'
     printf '%s\n'
     read -rsn 1 -p ${red}' Kill all processes [a] or just one [x] ? (press q to quit).'${nocolor} answer
