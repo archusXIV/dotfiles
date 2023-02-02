@@ -6,10 +6,14 @@
 # Simple script to get the pid(s) number(s) of a running process.
 # We are prompted to kill it or not...
 # Of course we could use xkill but what about a background process?
-# eg: pidgrep my_script_name (use sudo for root privileges).
-# ----------------------------------------------
-#  PID: 712 COMMAND: my_script_name
-# ----------------------------------------------
+# eg: pidgrep updates-manager (use sudo for root privileges).
+# ---------------------------------------------------------------------------------
+#  USER    |   PID   |   COMMAND
+# ---------------------------------------------------------------------------------
+# archang+  156439      /bin/bash /home/archangel/.local/bin/updates-manager --check 
+# ---------------------------------------------------------------------------------
+#
+# Kill all processes [a] or just one [x] ? (press q to quit).
 
 green=$'\e[0;32m';
 red=$'\e[0;31m';
@@ -29,37 +33,38 @@ elif [[ -n $(systemctl --user list-units | grep -w "$1") ]]; then
 fi
 
 # then a regular process.
-if (( $(pgrep -u "$USER" -fc "$1") >= 1 )); then
+if [[ -z $(pgrep -x "$1") ]]; then
+    echo "No such process!"
+    printf '%s\n'; exit 0
+elif (( $(pgrep -u "$USER" -fc "$1") >= 1 )); then
     printf '%s\n'
     perl -E 'say "-" x 81'
     echo " ${green}USER    |   PID   |   COMMAND${nocolor}"
     perl -E 'say "-" x 81'
-    ps -ef | grep -w "$1" \
-    | sed '/grep/d;/root/d' \
-    | awk '{ print $1"  "$2"      "$8" "$9" "$10" "$11 }'
+    ps -fp $(pgrep -x "$1") \
+    | awk '{if(NR!=1) { print $1"  "$2"      "$8" "$9" "$10" "$11 }}'
     perl -E 'say "-" x 81'
     printf '%s\n'
     read -rsn 1 -p ${red}' Kill all processes [a] or just one [x] ? (press q to quit).'${nocolor} answer
+    
     case "$answer" in
-        q)  echo "exiting...bye." && exit 0
+        q)  printf '%s\n'; exit 0
         ;;
         a)  for pid in $(pidof -x "$1"); do
                 kill -KILL "$pid"
             done
             echo " ${red}$1 ${nocolor}does not exist anymore..."
+            printf '%s\n'; exit 0
         ;;
-        x) 
+        x)  printf '%s\n'
             read -r -p ${red}" Enter the pid number to kill: "${nocolor} pid
             if [[ -z $(pgrep --full "$1" | grep "$pid") ]]; then
                 echo " ${red}wrong pid number...$1 still alive."
                 exit 1
             else
-                kill -KILL "$pid" && echo " ${red}$pid ${nocolor}does not exist anymore..."
-                exit 0
+                kill -KILL "$pid" && echo " ${red}$1 ${nocolor}does not exist anymore..."
+                printf '%s\n'; exit 0
             fi
         ;;
     esac
-else
-    echo "No such process!"
-    exit 0
 fi
