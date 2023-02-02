@@ -23,12 +23,12 @@ nocolor=$'\e[0m';
 if [[ -n $(systemctl list-units | grep -w "$1") ]]; then
     printf '%s\n' " ${green}$1 is a running systemd unit" \
     " ${red}PLEASE USE: sudo systemctl <option> to manage it.${nocolor}"
-    systemctl status "$1"* | awk '/Main PID:/{print " " $1" "$2" "$3}'
+    systemctl status "$1"* | awk '/Main PID:/{print}'
     exit 0
 elif [[ -n $(systemctl --user list-units | grep -w "$1") ]]; then
     printf '%s\n' " ${green}$1 is a running systemd --user unit" \
     " ${red}PLEASE USE: systemctl --user <option> to manage it.${nocolor}"
-    systemctl --user status "$1"* | awk '/Main PID:/{print " " $1" "$2" "$3}'
+    systemctl --user status "$1"* | awk '/Main PID:/{print}'
     exit 0
 fi
 
