@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# This script hides and shows focused windows whithin you favorite
+# This script hide and show focused windows whithin you favorite
 # window manager or DE by using xdo to proceed
 # We can also use rofi to select and show back hidden windows
 
 _Dependencies() {
     DEPS=( "polybar" "rofi" "wmctrl" "xdo" "xprop" "xset" )
-    
+
     for pkg in "${DEPS[@]}"; do
         [[ -z $(which $pkg) ]] \
         && notify-send "$pkg is not installed...exiting" \
@@ -14,19 +14,21 @@ _Dependencies() {
     done
 }
 
+# Place your polybar module in bar-3
 BARPID=$(pgrep --full $(wmctrl -m | awk '/Name/{print $2}')-bar-3)
 
-_IndicatorEmpty() {
-    xset -led 3
-    polybar-msg -p "$BARPID" \
-    action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
-    notify-send 'nothing else in scratchpad'
-}
-
-_IndicatorFull() {
-    xset led 3
-    polybar-msg -p "$BARPID" \
-    action "#scratchpad-ipc.hook.1" >/dev/null 2>&1
+_Indicator() {
+    case "$1" in
+        off)    xset -led 3
+                polybar-msg -p "$BARPID" \
+                action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
+                notify-send 'nothing else in scratchpad'
+        ;;
+        on )    xset led 3
+                polybar-msg -p "$BARPID" \
+                action "#scratchpad-ipc.hook.1" >/dev/null 2>&1
+        ;;
+    esac
 }
 
 TARGET=$(xdo id ${1})
@@ -40,58 +42,50 @@ case "$1" in
         # using lowercases will match ids in $ID_LIST_ALL
         echo "$TARGET" | tr [:upper:] [:lower:] >> "$ID_LIST"
         xdo hide "$TARGET"
-        _IndicatorFull
+        _Indicator on
     ;;
     -u) if [[ $(xprop -id $(sed -n '1p' "$ID_LIST") \
             | awk '/window state: / {print $3}') = Withdrawn ]]; then
             # show the first entry
-            xdo show $(sed -n '1p' "$ID_LIST")
+            xdo show "$(sed -n '1p' "$ID_LIST")"
             # remove it from the list
             sed -i '1d' "$ID_LIST"
             if (( $(grep "" -c "$ID_LIST") > 0 )); then
-                _IndicatorFull
+                _Indicator on
             else
-                _IndicatorEmpty
+                _Indicator off
             fi
         else
-            _IndicatorEmpty
+            _Indicator off
         fi
     ;;
     -r) if (( $(grep "" -c $ID_LIST) > 0 )); then
-            
+
             HIDDEN=$(cat $ID_LIST)
-            
+
             # making a rofi menu
             N=$(for w in $HIDDEN; do
                 NAME=$(xprop -id "$w" WM_CLASS 2>/dev/null | sed -r 's/.+ "(.+)"$/\1/')
                 TITLE=$(xprop -id "$w" _NET_WM_NAME 2>/dev/null | sed -r 's/.+ "(.+)"$/\1/')
                 [[ "$NAME" = "WM_CLASS" ]] && echo "$w" || echo "$NAME  \"$TITLE\""
-            done | rofi -dmenu -no-custom -format  i -p 'Unhide a window: ')
-                     
+            done | rofi -dmenu -no-custom -format i -p 'Unhide a window: ')
+
             [[ -n "$N" ]] && {
-                
+
                 ID=$(echo "$HIDDEN" | sed -n "$((N+1))p")
                 xdo show "$ID"
-                
-                mapfile -t < <(wmctrl -lx | awk '{print $1}')
-                for line in "${MAPFILE[@]}"; do
-                    if [[ $(grep $line "$ID_LIST") ]]; then
-                        # removing the right line
-                        sed -i "/${line}/d;/^\s*$/d" "$ID_LIST"
-                        break
-                    else
-                        continue
-                    fi
-                done
-                
+
+                sed -i "/${ID}/d;/^\s*$/d" "$ID_LIST"
+
                 if (( $(grep "" -c $ID_LIST) > 0 )); then
-                    _IndicatorFull
+                    _Indicator on
                 else
-                    _IndicatorEmpty
+                    _Indicator off
                 fi
             }
+
         else
-            _IndicatorEmpty
+            _Indicator off
         fi
     ;;
 esac
