@@ -213,7 +213,7 @@ _Install() {
 }
 
 _Uninstall() {
-    pacman -Slq \
+    pacman -Qnq \
         | fzf \
         --multi \
         --preview \
