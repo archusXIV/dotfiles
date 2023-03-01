@@ -1,0 +1,19 @@
+#!/bin/bash
+
+#[URxvt terminals]
+#super + u ; {b,c,d,e,h,j,m,n,p,r,s,v,x,y}
+#    bspwm_run \
+#    {\
+#    bash,cmus,mpm,mutt,htop,jnettop,pulsemixer,ncmpcpp, \
+#    pacman-cli,newsboat,vim_script,ripper,youtube \
+#    }
+
+win=$(cut -d ' ' -f1 < <(wmctrl -lx | grep "$1"))
+
+if [[ $(wmctrl -lx | grep "$1" \
+    | awk '{sub(/\..*$/,""); print $3}') = "$1" ]]; then
+    bspc node $win -d ^2 --focus
+else
+    urxvtc -name "$1" -e "$1"
+fi
+

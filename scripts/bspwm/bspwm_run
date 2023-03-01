@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# gui applications
+#super + g ; {e,f,g,p,w}
+#    {\
+#    bspwm_run lite-xl, \
+#    bspwm_run pcmanfm, \
+#    bspwm_run geany, \
+#    bspwm_run pavucontrol, \
+#    bspwm_run Navigator \
+#    }
+
+win=$(cut -d ' ' -f1 < <(wmctrl -lx | grep "$1"))
+
+if [[ $(wmctrl -lx | grep "$1" \
+    | awk '{sub(/\..*$/,""); print $3}') = "$1" ]]; then
+    bspc node $win -d ^2 --focus
+else
+    notify-send 'achtung'
+fi
