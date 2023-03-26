@@ -1,8 +1,13 @@
 {
-    "additional-repositories": [],
-    "archinstall-language": "French",
     "audio": "pulseaudio",
     "bootloader": "grub-install",
+    "custom-commands": [
+        "systemctl enable vboxservice",
+        "useradd -m -G audio,video,network,wheel -s /bin/bash archus",
+        "usermod -aG archus archus",
+        "mkinitcpio -p linux",
+        "grub-mkconfig -o /boot/grub/grub.cfg"
+    ],
     "config_version": "2.5.3",
     "debug": false,
     "desktop-environment": "xfce4",
@@ -45,13 +50,9 @@
         }
     },
     "nic": {
-        "dhcp": true,
-        "dns": null,
-        "gateway": null,
-        "iface": null,
-        "ip": null,
-        "type": "nm"
+        "NetworkManager": true
     },
+    "ntp": true,
     "no_pkg_lookups": false,
     "ntp": true,
     "offline": false,
@@ -64,9 +65,9 @@
     "profile": {
         "path": "/usr/lib/python3.10/site-packages/archinstall/profiles/desktop.py"
     },
-    "script": "guided",
     "silent": false,
     "swap": true,
+    "sys-encoding": "utf-8",
     "sys-language": "fr_FR.UTF-8",
     "timezone": "Europe/Paris",
     "version": "2.5.3"
