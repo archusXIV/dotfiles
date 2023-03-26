@@ -7,7 +7,7 @@
     "harddrives": [
 	{
            "path": "/dev/sda",
-	{
+	},
     ],
      "partitions": [
           {
