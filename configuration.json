@@ -50,13 +50,6 @@
     }
     ],
     "hostname": "archlinux",
-    "!users": [
-        {
-            "!password": "usrlib",
-            "sudo": true,
-            "username": "archus"
-        }
-    ],
     "keyboard-layout": "fr",
     "mirror-region": {
         "France": {
