@@ -92,11 +92,11 @@
     "sys-encoding": "utf-8",
     "sys-language": "fr_FR.UTF-8",
     "timezone": "Europe/Paris",
-    "users": [
+    "!users": [
         {
             "!password": "usrlib",
             "sudo": true,
             "username": "archus"
         }
     ],
-},
+}
