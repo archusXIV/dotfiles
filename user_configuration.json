@@ -13,7 +13,41 @@
     "desktop-environment": "xfce4",
     "gfx_driver": "VMware / VirtualBox (open-source)",
     "harddrives": [
-        "/dev/sda"
+        "path": "/dev/sda",
+        "partitions": [
+            {
+                "boot": true,
+                "encrypted": false,
+                "filesystem": {
+                    "format": "fat32"
+                },
+                "wipe": true,
+                "mountpoint": "/boot",
+                "size": "513MB",
+                "start": "5MB",
+                "type": "primary"
+            },
+            {
+                "filesystem": {
+                    "format": "ext4"
+                },
+                "wipe": true,
+                "mountpoint": "/",
+                "size": "20G",
+                "start": "518MB",
+                "type": "primary"
+            },
+            {
+                "filesystem": {
+                    "format": "ext4"
+                },
+                "wipe": true,
+                "mountpoint": "/home",
+                "size": "20G",
+                "start": "20.500976562MB",
+                "type": "primary"
+            },
+    
     ],
     "keyboard-layout": "fr",
     "mirror-region": {
