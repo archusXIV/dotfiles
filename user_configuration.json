@@ -49,6 +49,7 @@
                 "start": "21000MB",
                 "type": "primary"
             },
+        ],
     
     ],
     "keyboard-layout": "fr",
