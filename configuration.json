@@ -4,11 +4,9 @@
     "bootloader": "grub-install",
     "desktop-environment": "xfce4",
     "gfx_driver": "VMware / VirtualBox (open-source)",
-    "harddrives": [
-	{
-           "path": "/dev/sda",
-	},
-    ],
+    "harddrive": {
+        "path": "/dev/sda"
+    },
      "partitions": [
           {
               "boot": true,
