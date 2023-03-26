@@ -12,9 +12,7 @@
     "debug": false,
     "desktop-environment": "xfce4",
     "gfx_driver": "VMware / VirtualBox (open-source)",
-    "harddrives": {
-        "path": { "/dev/sda" }
-    },
+    "harddrives": "/dev/sda",
     "keyboard-layout": "fr",
     "mirror-region": {
         "France": {
