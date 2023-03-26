@@ -14,42 +14,7 @@
     "gfx_driver": "VMware / VirtualBox (open-source)",
     "harddrives": [
         "path": "/dev/sda",
-        ],
-     "partitions": [
-            {
-                "boot": true,
-                "encrypted": false,
-                "filesystem": {
-                    "format": "fat32"
-                },
-                "wipe": true,
-                "mountpoint": "/boot",
-                "size": "513MB",
-                "start": "5MB",
-                "type": "primary"
-            },
-            {
-                "filesystem": {
-                    "format": "ext4"
-                },
-                "wipe": true,
-                "mountpoint": "/",
-                "size": "20G",
-                "start": "518MB",
-                "type": "primary"
-            },
-            {
-                "filesystem": {
-                    "format": "ext4"
-                },
-                "wipe": true,
-                "mountpoint": "/home",
-                "size": "20G",
-                "start": "21000MB",
-                "type": "primary"
-            },
-    
-    ],
+     ],
     "keyboard-layout": "fr",
     "mirror-region": {
         "France": {
@@ -96,6 +61,41 @@
         "virtualbox-guest-utils",
         "vim",
         "firefox"
+    ],
+    "partitions": [
+            {
+                "boot": true,
+                "encrypted": false,
+                "filesystem": {
+                    "format": "fat32"
+                },
+                "wipe": true,
+                "mountpoint": "/boot",
+                "size": "513MB",
+                "start": "5MB",
+                "type": "primary"
+            },
+            {
+                "filesystem": {
+                    "format": "ext4"
+                },
+                "wipe": true,
+                "mountpoint": "/",
+                "size": "20G",
+                "start": "518MB",
+                "type": "primary"
+            },
+            {
+                "filesystem": {
+                    "format": "ext4"
+                },
+                "wipe": true,
+                "mountpoint": "/home",
+                "size": "20G",
+                "start": "21000MB",
+                "type": "primary"
+            },
+    
     ],
     "profile": {
         "path": "/usr/lib/python3.10/site-packages/archinstall/profiles/desktop.py"
