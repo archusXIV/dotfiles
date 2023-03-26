@@ -13,7 +13,9 @@
     "desktop-environment": "xfce4",
     "gfx_driver": "VMware / VirtualBox (open-source)",
     "harddrives": [
+        {
         "path": "/dev/sda",
+        },
         "partitions": [
             {
                 "boot": true,
