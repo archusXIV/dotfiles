@@ -7,45 +7,44 @@
     "harddrive": {
         "path": "/dev/sda"
     },
-     "partitions": [
-          {
-              "boot": true,
-              "encrypted": false,
-              "filesystem": {
-              "format": "fat32"
-           },
-              "mountpoint": "/boot",
-              "size": "512MiB",
-              "start": "1MiB",
-              "type": "primary",
-              "wipe": true
-            },
-            {
-               "encrypted": false,
-               "filesystem": {
-               "format": "ext4",
-               "mount_options": []
-            },
-               "mountpoint": "/",
-               "size": "20GiB",
-               "start": "513MiB",
-               "type": "primary",
-               "wipe": true
-            },
-            {
-               "encrypted": false,
-               "filesystem": {
-               "format": "ext4",
-               "mount_options": []
-            },
-                "mountpoint": "/home",
-                "size": "100%",
-                "start": "20GiB",
-                "type": "primary",
-                "wipe": true
-            }
-                "wipe": true
-            }
+    "partitions": [
+        {
+            "boot": true,
+            "encrypted": false,
+            "filesystem": {
+            "format": "fat32"
+        },
+            "mountpoint": "/boot",
+            "size": "512MiB",
+            "start": "1MiB",
+            "type": "primary",
+            "wipe": true
+        },
+        {
+             "encrypted": false,
+             "filesystem": {
+             "format": "ext4",
+             "mount_options": []
+        },
+             "mountpoint": "/",
+             "size": "20GiB",
+             "start": "513MiB",
+             "type": "primary",
+             "wipe": true
+        },
+        {
+             "encrypted": false,
+             "filesystem": {
+             "format": "ext4",
+             "mount_options": []
+        },
+             "mountpoint": "/home",
+             "size": "100%",
+             "start": "20GiB",
+             "type": "primary",
+             "wipe": true
+        }
+             "wipe": true
         }
     ],
     "hostname": "archlinux",
