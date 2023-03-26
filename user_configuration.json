@@ -8,11 +8,12 @@
         "mkinitcpio -p linux",
         "grub-mkconfig -o /boot/grub/grub.cfg"
     ],
-    "config_version": "2.5.3",
     "debug": false,
     "desktop-environment": "xfce4",
     "gfx_driver": "VMware / VirtualBox (open-source)",
-    "harddrives": "/dev/sda",
+    "harddrive": {
+        "path": "/dev/sda"
+    },
     "keyboard-layout": "fr",
     "mirror-region": {
         "France": {
@@ -53,5 +54,4 @@
     "sys-encoding": "utf-8",
     "sys-language": "fr_FR.UTF-8",
     "timezone": "Europe/Paris",
-    "version": "2.5.3"
 }
