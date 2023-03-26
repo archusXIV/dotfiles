@@ -1,5 +1,5 @@
 {
-    "archinstall-language": "French"
+    "archinstall-language": "French",
     "audio": "pulseaudio",
     "bootloader": "grub-install",
     "config_version": "2.5.3",
