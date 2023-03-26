@@ -13,10 +13,9 @@
     "desktop-environment": "xfce4",
     "gfx_driver": "VMware / VirtualBox (open-source)",
     "harddrives": [
-        {
         "path": "/dev/sda",
-        },
-        "partitions": [
+        ],
+     "partitions": [
             {
                 "boot": true,
                 "encrypted": false,
@@ -49,7 +48,6 @@
                 "start": "21000MB",
                 "type": "primary"
             },
-        ],
     
     ],
     "keyboard-layout": "fr",
