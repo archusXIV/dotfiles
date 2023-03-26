@@ -42,7 +42,7 @@
         "linux-headers",
         "virtualbox-guest-utils",
         "vim",
-        "firefox"
+        "firefox",
         "network-manager-applet"
     ],
     "profile": {
