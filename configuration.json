@@ -53,13 +53,7 @@
     "keyboard-layout": "fr",
     "mirror-region": {
         "France": {
-            "https://arch.yourlabs.org/$repo/os/$arch": true,"!users": [
-        {
-            "!password": "usrlib",
-            "sudo": true,
-            "username": "archus"
-        }
-    ]
+            "https://arch.yourlabs.org/$repo/os/$arch": true,
             "https://archlinux.mailtunnel.eu/$repo/os/$arch": true,
             "https://mirroir.labhouse.fr/arch/$repo/os/$arch": true,
             "https://mirror.cyberbits.eu/archlinux/$repo/os/$arch": true,
