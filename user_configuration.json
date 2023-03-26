@@ -1,103 +1,101 @@
 {
-    "audio": "pulseaudio",
-    "bootloader": "grub-install",
-    "custom-commands": [
-        "systemctl enable vboxservice",
-        "useradd -m -G audio,video,network,wheel -s /bin/bash archus",
-        "usermod -aG archus archus",
-        "mkinitcpio -p linux",
-        "grub-mkconfig -o /boot/grub/grub.cfg"
-    ],
-    "debug": false,
-    "desktop-environment": "xfce4",
-    "gfx_driver": "VMware / VirtualBox (open-source)",
-    "harddrive": {
-        "path": "/dev/sda"
+  "audio": "pulseaudio",
+  "bootloader": "grub-install",
+  "custom-commands": [
+    "systemctl enable vboxservice",
+    "useradd -m -G audio,video,network,wheel -s /bin/bash archus",
+    "usermod -aG archus archus",
+    "mkinitcpio -p linux",
+    "grub-mkconfig -o /boot/grub/grub.cfg"
+  ],
+  "debug": false,
+  "desktop-environment": "xfce4",
+  "gfx_driver": "VMware / VirtualBox (open-source)",
+  "harddrive": {
+    "path": "/dev/sda"
+  },
+  "keyboard-layout": "fr",
+  "mirror-region": {
+    "France": {
+      "https://arch.yourlabs.org/$repo/os/$arch": true,
+      "https://archlinux.mailtunnel.eu/$repo/os/$arch": true,
+      "https://mirroir.labhouse.fr/arch/$repo/os/$arch": true,
+      "https://mirror.cyberbits.eu/archlinux/$repo/os/$arch": true,
+      "https://mirror.ibakerserver.pt/Arch/$repo/os/$arch": true,
+      "https://mirror.jordanrey.me/archlinux/$repo/os/$arch": true,
+      "https://mirror.sysa.tech/archlinux/$repo/os/$arch": true,
+      "https://mirror.thekinrar.fr/archlinux/$repo/os/$arch": true,
+      "https://mirror.theo546.fr/archlinux/$repo/os/$arch": true,
+      "https://mirror.wormhole.eu/archlinux/$repo/os/$arch": true,
+      "https://mirrors.celianvdb.fr/archlinux/$repo/os/$arch": true,
+      "https://mirrors.eric.ovh/arch/$repo/os/$arch": true,
+      "https://mirrors.gandi.net/archlinux/$repo/os/$arch": true,
+      "https://mirrors.slaanesh.org/archlinux/$repo/os/$arch": true
+    }
+  },
+  "nic": {
+    "NetworkManager": true
+  },
+  "ntp": true,
+  "no_pkg_lookups": false,
+  "offline": false,
+  "packages": [
+    "linux-headers",
+    "virtualbox-guest-utils",
+    "vim",
+    "firefox"
+  ],
+  "partitions": [
+    {
+      "boot": true,
+      "encrypted": false,
+      "filesystem": {
+        "format": "fat32"
+      },
+      "mountpoint": "/boot",
+      "size": "512MiB",
+      "start": "1MiB",
+      "type": "primary",
+      "wipe": true
     },
-    "keyboard-layout": "fr",
-    "mirror-region": {
-        "France": {
-            "https://arch.yourlabs.org/$repo/os/$arch": true,
-            "https://archlinux.mailtunnel.eu/$repo/os/$arch": true,
-            "https://mirroir.labhouse.fr/arch/$repo/os/$arch": true,
-            "https://mirror.cyberbits.eu/archlinux/$repo/os/$arch": true,
-            "https://mirror.ibakerserver.pt/Arch/$repo/os/$arch": true,
-            "https://mirror.jordanrey.me/archlinux/$repo/os/$arch": true,
-            "https://mirror.sysa.tech/archlinux/$repo/os/$arch": true,
-            "https://mirror.thekinrar.fr/archlinux/$repo/os/$arch": true,
-            "https://mirror.theo546.fr/archlinux/$repo/os/$arch": true,
-            "https://mirror.wormhole.eu/archlinux/$repo/os/$arch": true,
-            "https://mirrors.celianvdb.fr/archlinux/$repo/os/$arch": true,
-            "https://mirrors.eric.ovh/arch/$repo/os/$arch": true,
-            "https://mirrors.gandi.net/archlinux/$repo/os/$arch": true,
-            "https://mirrors.slaanesh.org/archlinux/$repo/os/$arch": true
-        }
+    {
+      "encrypted": false,
+      "filesystem": {
+        "format": "ext4",
+        "mount_options": []
+      },
+      "mountpoint": "/",
+      "size": "20GiB",
+      "start": "513MiB",
+      "type": "primary",
+      "wipe": true
     },
-    "nic": {
-        "NetworkManager": true
-    },
-    "ntp": true,
-    "no_pkg_lookups": false,
-    "ntp": true,
-    "offline": false,
-    "packages": [
-        "linux-headers",
-        "virtualbox-guest-utils",
-        "vim",
-        "firefox"
-    ],
-    "partitions": [
-            {
-                "boot": true,
-                "encrypted": false,
-                "filesystem": {
-                    "format": "fat32"
-                },
-                "mountpoint": "/boot",
-                "size": "512MiB",
-                "start": "1MiB",
-                "type": "primary",
-                "wipe": true
-            },
-            {
-                "encrypted": false,
-                "filesystem": {
-                    "format": "ext4",
-                    "mount_options": []
-                },
-                "mountpoint": "/",
-                "size": "20GiB",
-                "start": "513MiB",
-                "type": "primary",
-                "wipe": true
-            },
-            {
-                "encrypted": false,
-                "filesystem": {
-                    "format": "ext4",
-                    "mount_options": []
-                },
-                "mountpoint": "/home",
-                "size": "100%",
-                "start": "20GiB",
-                "type": "primary",
-                "wipe": true
-            }
-    ],
-    "profile": {
-        "path": "/usr/lib/python3.10/site-packages/archinstall/profiles/desktop.py"
-    },
-    "silent": false,
-    "swap": true,
-    "sys-encoding": "utf-8",
-    "sys-language": "fr_FR.UTF-8",
-    "timezone": "Europe/Paris",
-    "!users": [
-        {
-            "!password": "usrlib",
-            "sudo": true,
-            "username": "archus"
-        }
-    ],
-
+    {
+      "encrypted": false,
+      "filesystem": {
+        "format": "ext4",
+        "mount_options": []
+      },
+      "mountpoint": "/home",
+      "size": "100%",
+      "start": "20GiB",
+      "type": "primary",
+      "wipe": true
+    }
+  ],
+  "profile": {
+    "path": "/usr/lib/python3.10/site-packages/archinstall/profiles/desktop.py"
+  },
+  "silent": false,
+  "swap": true,
+  "sys-encoding": "utf-8",
+  "sys-language": "fr_FR.UTF-8",
+  "timezone": "Europe/Paris",
+  "!users": [
+    {
+      "!password": "usrlib",
+      "sudo": true,
+      "username": "archus"
+    }
+  ]
 }
