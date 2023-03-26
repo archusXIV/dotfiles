@@ -44,7 +44,7 @@
                 "wipe": true,
                 "mountpoint": "/home",
                 "size": "20G",
-                "start": "20.500976562MB",
+                "start": "21000MB",
                 "type": "primary"
             },
     
