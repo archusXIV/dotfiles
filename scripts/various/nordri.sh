@@ -11,8 +11,8 @@
 ## (-) -> Supprimer quelque chose
 ##
 ## If you test it in real hardware please send me an email to contact.nordri.vollenberg.ca with
-## the machine description and tell me if somethig goes wrong or all works fine.The script is 
-## optimized to work with Dell hardware
+## the machine description and tell me if somethig goes wrong or all works fine. The script is 
+## optimized to work with Dell hardware.
 ##
 ## Si vous testez ce script avec du matériel réel,
 ## veuillez m'envoyer un courriel à contact.nordri.vollenberg.ca avec
@@ -27,7 +27,6 @@
 ## (m) mardi 14 février 2023 Yannick V : Modification du fonctionnement
 
 # COULEURS
-Orange='\e[0;33m'
 Neutre='\e[0;m'
 Vert='\e[1;32m'
 Rouge='\e[0;31m'
@@ -175,7 +174,6 @@ progress() {
 
 valider_usager() {
     date=$(date)
-    Orange='\e[0;33m'
     Neutre='\e[0;m'
     Vert='\e[1;32m'
     Rouge='\e[0;31m'
@@ -223,8 +221,8 @@ choix_langue() {
             english_install
         ;;
         *)
-            echo " Your answer must be between 1 to 2" && sleep 3 &&
-            clear && copyright && choix_langue
+            echo " Your answer must be between 1 to 2" \
+            && sleep 3 && clear && copyright && choix_langue
         ;;
     esac
 }
@@ -316,10 +314,10 @@ type_install() {
 
 installation_base() {
     pacstrap /mnt base linux linux-firmware base-devel pacman-contrib \
-    grub efibootmgr networkmanager network-manager-applet zip unzip \
-    p7zip vi nano wget vim mc alsa-utils syslog-ng mtools dosfstools \
-    lsb-release ntfs-3g exfat-utils bash-completion xdg-user-dirs \
-    xf86-video-intel neofetch os-prober man-db man-pages
+    grub efibootmgr networkmanager zip unzip p7zip vi nano wget vim mc git \
+    syslog-ng mtools dosfstools lsb-release ntfs-3g exfat-utils bash-completion \
+    xf86-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,openchrome,qxl,sisusb,vesa} \
+    neofetch os-prober man-db man-pages
     if [[ $? -eq 0 ]]; then 
         echo -e "${Vert} Succès""${Neutre} de l'installation de la base"
     else
@@ -329,13 +327,13 @@ installation_base() {
  }
 
 installation() {
-    pacstrap /mnt base linux linux-firmware base-devel pacman-contrib \
-    grub efibootmgr networkmanager network-manager-applet zip unzip \
-    p7zip vi nano wget vim mc alsa-utils syslog-ng mtools dosfstools \
-    lsb-release ntfs-3g exfat-utils bash-completion man-db man-pages \
-    xdg-user-dirs xf86-video-intel ttf-{bitstream-vera,liberation,freefont,dejavu} \
-    freetype2 cups hplip python-pyqt5 os-prober \
-    foomatic-{db,db-ppds,db-gutenprint-ppds,db-nonfree,db-nonfree-ppds} \
+    pacstrap /mnt base linux linux-headers linux-firmware base-devel \
+    pacman-contrib grub efibootmgr networkmanager network-manager-applet \
+    zip unzip p7zip vi nano wget vim mc alsa-utils syslog-ng mtools dosfstools \
+    lsb-release ntfs-3g exfat-utils bash-completion man-db man-pages xdg-user-dirs \
+    xf86-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,openchrome,qxl,sisusb,vesa} \
+    ttf-{bitstream-vera,liberation,freefont,dejavu} freetype2 cups hplip python-pyqt5 \
+    os-prober foomatic-{db,db-ppds,db-gutenprint-ppds,db-nonfree,db-nonfree-ppds} \
     gutenprint libreoffice-still-fr hunspell-fr firefox firefox-i18n-fr \
     thunderbird thunderbird-i18n-fr keepass geany simplescreenrecorder \
     wireshark-cli wireshark-qt nmap net-tools tcpdump bind firewalld \
@@ -601,7 +599,7 @@ english_heures() {
 }
 
 english_Part() {
-    disque=$(lsblk -r |grep disk |cut -d " " -f1| sed -n 1p)
+    disque=$(lsblk -r | grep disk | cut -d " " -f1 | sed -n '1p')
     cfdisk /dev/$disque
     if [[ $? -eq 0 ]]; then
         echo -e "${Vert} OK""${Neutre} disk partitioning "
@@ -644,9 +642,9 @@ english_monter_part() {
 }
 
 english_mirroir() {
-    pays=$(curl --fail -s https://ipapi.co/country) \
-        && curl -s -L "https://archlinux.org/mirrorlist/?country=$pays&protocol=https" -o mirrorlist \
-        && grep -E 'https' mirrorlist |sed -s 's/^#Server/Server/'
+    pays=$(curl --fail -s https://ipapi.co/country)
+    curl -s -L "https://archlinux.org/mirrorlist/?country=$pays&protocol=https" -o mirrorlist \
+    && grep -E 'https' mirrorlist | sed -s 's/^#Server/Server/'
     if [[ $? -eq 0 ]]; then
         echo -e "${Vert}OK""${Neutre} mirror configuration"
     else
@@ -658,10 +656,10 @@ english_mirroir() {
 
 english_installation_base() {
     pacstrap /mnt base linux linux-firmware base-devel pacman-contrib \
-    grub efibootmgr networkmanager network-manager-applet zip unzip \
-    p7zip vi nano wget vim mc alsa-utils syslog-ng mtools dosfstools \
-    lsb-release ntfs-3g exfat-utils bash-completion xdg-user-dirs \
-    xf86-video-intel neofetch os-prober man-db man-pages
+    grub efibootmgr networkmanager zip unzip p7zip vi nano wget vim mc git \
+    syslog-ng mtools dosfstools lsb-release ntfs-3g exfat-utils bash-completion \
+    xf86-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,openchrome,qxl,sisusb,vesa} \
+    neofetch os-prober man-db man-pages
     if [[ $? -eq 0 ]]; then 
         echo -e "${Vert} OK""${Neutre} of the installation of the base"
     else
@@ -671,13 +669,13 @@ english_installation_base() {
  }
 
 english_installation() {
-    pacstrap /mnt base linux linux-firmware base-devel pacman-contrib \
-    grub efibootmgr networkmanager network-manager-applet zip unzip \
-    p7zip vi nano wget vim mc alsa-utils syslog-ng mtools dosfstools \
-    lsb-release ntfs-3g exfat-utils bash-completion man-db man-pages \
-    xdg-user-dirs xf86-video-intel ttf-{bitstream-vera,liberation,freefont,dejavu} \
-    freetype2 cups hplip python-pyqt5 os-prober \
-    foomatic-{db,db-ppds,db-gutenprint-ppds,db-nonfree,db-nonfree-ppds} \
+    pacstrap /mnt base linux linux-headers linux-firmware base-devel \
+    pacman-contrib grub efibootmgr networkmanager network-manager-applet \
+    zip unzip p7zip vi nano wget vim mc alsa-utils syslog-ng mtools dosfstools \
+    lsb-release ntfs-3g exfat-utils bash-completion man-db man-pages xdg-user-dirs \
+    xf86-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,openchrome,qxl,sisusb,vesa} \
+    ttf-{bitstream-vera,liberation,freefont,dejavu} freetype2 cups hplip python-pyqt5 \
+    os-prober foomatic-{db,db-ppds,db-gutenprint-ppds,db-nonfree,db-nonfree-ppds} \
     gutenprint libreoffice-still hunspell-en_us firefox firefox-i18n-en-us \
     thunderbird thunderbird-i18n-en-us keepass geany simplescreenrecorder \
     wireshark-cli wireshark-qt nmap net-tools tcpdump bind firewalld \
@@ -856,4 +854,3 @@ valider_usager
 valider_uefi
 choix_langue
 type_install
-
