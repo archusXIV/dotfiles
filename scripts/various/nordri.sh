@@ -202,7 +202,7 @@ erreur() {
 }
 
 valider_uefi() {
-    if [ -n $(ls /sys/firmware/efi/efivars > /dev/null) ]; then
+    if [[ -n $(ls /sys/firmware/efi/efivars > /dev/null) ]]; then
         echo -e "${Vert} Succès""${Neutre} système UEFI présent!"
     else
         erreur
