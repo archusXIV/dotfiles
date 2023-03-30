@@ -1,30 +1,33 @@
 #!/bin/bash
 ## Auteur: Yannick Vollenberg
-## Version : 2.0.2 - nordri.sh 
+## Contibuteur: LinuxInFrench (https://www.youtube.com/@linuxinfrench9388)
+## Version : 2.0.3 - nordri.sh
 ## Date : sam 14 mai 2022 08:14:02 EST
 ##
 ## Sous licence CC-BY-SA 4.0 https://creativecommons.org/licenses/by-sa/4.0/deed.en
 ## Historique :
-## (+) -> Ajouter quelque chose
-## (b) -> Correction de bogue
-## (m) -> Modifier le fonctionnement des choses
-## (-) -> Supprimer quelque chose
+## (+)   -> Ajouter quelque chose
+## (b)   -> Correction de bogue
+## (m)   -> Modifier le fonctionnement des choses
+## (-)   -> Supprimer quelque chose
 ##
-## If you test it in real hardware please send me an email to contact.nordri.vollenberg.ca with
-## the machine description and tell me if somethig goes wrong or all works fine. The script is 
-## optimized to work with Dell hardware.
+## If you test it in real hardware please send me an email to info@vollenberg.ca with
+## the machine description and tell me if somethig goes wrong or all works fine.
 ##
 ## Si vous testez ce script avec du matériel réel,
-## veuillez m'envoyer un courriel à contact.nordri.vollenberg.ca avec
+## veuillez m'envoyer un courriel à contact info(at)vollenberg.ca avec
 ## la description de la machine et dites-moi si quelque chose ne va pas
-## ou si tout fonctionne bien. Le script est optimisé pour fonctionner avec du matériel Dell
+## ou si tout fonctionne bien.
 ##
-## (+) jeudi 03 février 2022    Yannick V : Création du script
-## (+) dimanche 06 février 2022 Yannick V : Ajout choix installation de la base d'Archlinux
-## (m) samedi 14 mai 2022 Yannick V : Modification du fonctionnement
-## (m) mardi 23 août 2022 Yannick V : Modification du fonctionnement
-## (m) mercredi 8 février 2023 Yannick V : Modification du fonctionnement
-## (m) mardi 14 février 2023 Yannick V : Modification du fonctionnement
+## (+) jeudi    03 février 2022    Yannick V     : Création du script
+## (+) dimanche 06 février 2022    Yannick V     : Ajout choix installation de la base d'Archlinux
+## (m) samedi   14 mai 2022        Yannick V     : Modification du fonctionnement
+## (m) mardi    23 août 2022       Yannick V     : Modification du fonctionnement
+## (m) mercredi 8 février 2023     Yannick V     : Modification du fonctionnement
+## (m) mardi    14 février 2023    Yannick V     : Modification du fonctionnement
+## (b) mercredi 29 mars 2023       LinuxInFrench : Correction de bogue
+## (+) mercredi 29 mars 2023       LinuxInFrench : Ajouter quelque chose
+## 
 
 # COULEURS
 Neutre='\e[0;m'
@@ -139,13 +142,11 @@ copyright() {
     BOLDGREEN="\e[1;${GREEN}m"
     ENDCOLOR="\e[0m"
     printf """${BOLDGREEN}
-
         _   __               __     _
     / | / /___  _________/ /____(_)
     /  |/ / __ \/ ___/ __  / ___/ /
     / /|  / /_/ / /  / /_/ / /  / /
     /_/ |_/\____/_/   \__,_/_/  /_/
-
     Auteur: Yannick Vollenberg @neoquebecois
     Url: https://nordri.vollenberg.ca
     Blogue: https://blogue.vollenberg.ca
@@ -196,16 +197,17 @@ valider_usager() {
 erreur() {
     clear && echo ""
     echo -e "${Rouge} MACHINE NON UEFI""${Neutre}"
-    echo "" && exit 0
+    echo ""  sleep 4s && exit 0
 }
 
 valider_uefi() {
-    if [[ -n $(ls /sys/firmware/efi/efivars) ]]; then
-        echo -e "${Vert} Succès""${Neutre} système UEFI présent!"
+    ls /sys/firmware/efi/efivars > /dev/null
+    if [ $? -eq 0 ]; then
+       echo -e "${Vert} Succès""${Neutre} systême UEFI présent! "
     else
-        erreur
-        exit
-    fi
+       erreur
+    exit
+   fi
 }
 
 choix_langue() {
@@ -239,7 +241,7 @@ heures() {
 }
 
 Part() {
-    disque=$(lsblk -r | awk '/disk/{print $1}' | sed -n '1p')
+    disque=$(lsblk -r | grep disk | cut -d " " -f1 | sed -n '1p')
     cfdisk /dev/$disque
     if [[ $? -eq 0 ]]; then
         echo -e "${Vert} Succès""${Neutre} du partitionnement du disque "
@@ -313,11 +315,11 @@ type_install() {
  }
 
 installation_base() {
-    pacstrap /mnt base base-devel linux linux-headers linux-firmware \
-    pacman-contrib grub efibootmgr networkmanager zip unzip p7zip vi \
-    nano wget vim mc git syslog-ng mtools dosfstools lsb-release \
-    ntfs-3g exfat-utils bash-completion neofetch os-prober man-db man-pages \
-    xf86-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,openchrome,qxl,sisusb,vesa}
+    pacstrap /mnt base linux linux-firmware base-devel pacman-contrib \
+    grub efibootmgr networkmanager zip unzip p7zip vi nano wget vim mc git \
+    syslog-ng mtools dosfstools lsb-release ntfs-3g exfat-utils bash-completion \
+    xf86-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,openchrome,qxl,sisusb,vesa} \
+    neofetch os-prober man-db man-pages
     if [[ $? -eq 0 ]]; then 
         echo -e "${Vert} Succès""${Neutre} de l'installation de la base"
     else
@@ -327,7 +329,7 @@ installation_base() {
  }
 
 installation() {
-    pacstrap /mnt base base-devel linux linux-headers linux-firmware \
+    pacstrap /mnt base linux linux-headers linux-firmware base-devel \
     pacman-contrib grub efibootmgr networkmanager network-manager-applet \
     zip unzip p7zip vi nano wget vim mc alsa-utils syslog-ng mtools dosfstools \
     lsb-release ntfs-3g exfat-utils bash-completion man-db man-pages xdg-user-dirs \
@@ -335,11 +337,11 @@ installation() {
     ttf-{bitstream-vera,liberation,freefont,dejavu} freetype2 cups hplip python-pyqt5 \
     os-prober foomatic-{db,db-ppds,db-gutenprint-ppds,db-nonfree,db-nonfree-ppds} \
     gutenprint libreoffice-still-fr hunspell-fr firefox firefox-i18n-fr \
-    thunderbird thunderbird-i18n-fr keepass geany geany-plugins simplescreenrecorder \
+    thunderbird thunderbird-i18n-fr keepass geany simplescreenrecorder \
     wireshark-cli wireshark-qt nmap net-tools tcpdump bind firewalld \
     neofetch ntp cronie gst-plugins-{base,good,bad,ugly} gst-libav \
     virtualbox virtualbox-host-modules-arch git gvfs-{afc,goa,google,gphoto2,mtp,nfs,smb} \
-    gvfs xfce4 xfce4-goodies python-pyinotify lightdm-gtk-greeter \
+    xfce4 xfce4-goodies gvfs python-pyinotify lightdm-gtk-greeter \
     xarchiver galculator evince ffmpegthumbnailer pavucontrol pulseaudio-{alsa,bluetooth} \
     blueman system-config-printer lightdm-gtk-greeter-settings
     if [[ $? -eq 0 ]]; then 
@@ -470,10 +472,10 @@ network() {
     xorg=$(cat clavierxorg)
     arch-chroot /mnt /bin/bash -c "
         systemctl enable NetworkManager && systemctl enable lightdm.service \
+        && systemctl enable cups \
         && curl -s -O "https://nordri.vollenberg.ca/sh/extra.sh" && chmod +x ./extra.sh \
         && curl -s -O "https://nordri.vollenberg.ca/sh/LISEZ-MOI.txt" \
-        && mv {extra.sh,LISEZ-MOI.txt} /home/$session \
-        && mv 00-$xorg-keyboard.conf /etc/X11/xorg.conf.d/
+        && mv {extra.sh,LISEZ-MOI.txt} /home/$session
     "
     if [[ $? -eq 0 ]]; then
         echo -e "${Vert} Succès""${Neutre} de l'installation NetworkManager"
@@ -573,13 +575,11 @@ english_copyright(){
     BOLDGREEN="\e[1;${GREEN}m"
     ENDCOLOR="\e[0m"
     printf """${BOLDGREEN}
-
         _   __               __     _
     / | / /___  _________/ /____(_)
     /  |/ / __ \/ ___/ __  / ___/ /
     / /|  / /_/ / /  / /_/ / /  / /
     /_/ |_/\____/_/   \__,_/_/  /_/
-
     Author: Yannick Vollenberg @neoquebecois
     Url: https://nordri.vollenberg.ca
     Blog: https://blogue.vollenberg.ca
@@ -813,10 +813,10 @@ english_network() {
     xorg=$(cat clavierxorg)
     arch-chroot /mnt /bin/bash -c "
         systemctl enable NetworkManager && systemctl enable lightdm.service \
+        && systemctl enable cups \
         && curl -s -O "https://nordri.vollenberg.ca/sh/extra.sh" && chmod +x ./extra.sh \
         && curl -s -O "https://nordri.vollenberg.ca/sh/LISEZ-MOI.txt" \
-        && mv {extra.sh,LISEZ-MOI.txt} /home/$session \
-        && mv 00-$xorg-keyboard.conf /etc/X11/xorg.conf.d/
+        && mv {extra.sh,LISEZ-MOI.txt} /home/$session && mv 00-$xorg-keyboard.conf /etc/X11/xorg.conf.d/
     "
     if [[ $? -eq 0 ]]; then
         echo -e "${Vert} OK""${Neutre} NetworkManager installation"
