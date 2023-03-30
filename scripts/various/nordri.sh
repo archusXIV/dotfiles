@@ -429,8 +429,7 @@ compteusager() {
     echo -e "${Vert} Quel nom utiliser pour l'ouverture de session:"
     read session
     arch-chroot /mnt /bin/bash -c "
-        groupadd users \
-        && useradd -m -g wheel,users -c '$nom' -s /bin/bash $session \
+        useradd -m -g wheel -c '$nom' -s /bin/bash $session \
         && passwd $session && gpasswd -a $session vboxusers
     "
     if [[ $? -eq 0 ]]; then
@@ -773,8 +772,7 @@ english_compteusager() {
     echo -e "${Vert} What name to use for login:"
     read session
     arch-chroot /mnt /bin/bash -c "
-        groupadd users \
-        && useradd -m -g wheel,users -c '$nom' -s /bin/bash $session \
+        useradd -m -g wheel -c '$nom' -s /bin/bash $session \
         && passwd $session && gpasswd -a $session vboxusers
     "
     if [[ $? -eq 0 ]]; then
