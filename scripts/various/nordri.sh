@@ -201,8 +201,9 @@ erreur() {
 }
 
 valider_uefi() {
-    ls /sys/firmware/efi/efivars > /dev/null
-    if [ $? -eq 0 ]; then
+    # ls /sys/firmware/efi/efivars > /dev/null
+    # removing "> /dev/null" will work
+    if [[ -n $(ls /sys/firmware/efi/efivars) ]]; then
        echo -e "${Vert} Succès""${Neutre} systême UEFI présent! "
     else
        erreur
