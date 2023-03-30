@@ -109,13 +109,13 @@ valider_usager() {
                 exit
             "
             umount -R /mnt && reboot
-        else
-            erreur
-            exit
         fi
+    else
+        erreur
+        exit
+    fi
 
 }
 
 progress
 valider_usager
-
