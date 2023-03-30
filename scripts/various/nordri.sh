@@ -817,7 +817,7 @@ english_network() {
         && systemctl enable cups \
         && curl -s -O "https://nordri.vollenberg.ca/sh/extra.sh" && chmod +x ./extra.sh \
         && curl -s -O "https://nordri.vollenberg.ca/sh/LISEZ-MOI.txt" \
-        && mv {extra.sh,LISEZ-MOI.txt} /home/$session && mv 00-$xorg-keyboard.conf /etc/X11/xorg.conf.d/
+        && mv {extra.sh,LISEZ-MOI.txt} /home/$session
     "
     if [[ $? -eq 0 ]]; then
         echo -e "${Vert} OK""${Neutre} NetworkManager installation"
