@@ -86,6 +86,7 @@ valider_usager() {
                 echo $machine > /etc/hostname \
                 && echo KEYMAP=fr-latin9\nFONT=eurlatgr > /etc/vconsole.conf \
                 && nano /etc/locale.gen \
+                && locale-gen \
                 && echo LANG=fr_FR.UTF-8 > /etc/locale.conf \
                 && echo LC_COLLATE=C >> /etc/locale.conf
                 
@@ -94,14 +95,14 @@ valider_usager() {
                 
                 ln -sf /usr/share/zoneinfo/$timezone /etc/localtime
                 
-                vim /etc/locale.gen && locale-gen && hwclock --systohc --utc
+                hwclock --systohc --utc
                 
                 mkinitcpio -p linux
                 
-                echo -e "${Vert} Changer le mot de passe de $USER:"
+                echo Changer le mot de passe de $USER
                 passwd $USER
                 
-                echo ${Vert}Installation du bootloader...
+                echo Installation du bootloader...
                 grub-install --target=x86_64-efi --efi-directory=/boot \
                 --bootloader-id=GRUB && grub-mkconfig -o /boot/grub/grub.cfg
                 
