@@ -472,7 +472,7 @@ network() {
         systemctl enable NetworkManager && systemctl enable lightdm.service \
         && curl -s -O "https://nordri.vollenberg.ca/sh/extra.sh" && chmod +x ./extra.sh \
         && curl -s -O "https://nordri.vollenberg.ca/sh/LISEZ-MOI.txt" \
-        && mv {extra.sh,LISEZ-MOI.txt} /home/$session && chown users:users ./extra.sh \
+        && mv {extra.sh,LISEZ-MOI.txt} /home/$session \
         && mv 00-$xorg-keyboard.conf /etc/X11/xorg.conf.d/
     "
     if [[ $? -eq 0 ]]; then
@@ -815,7 +815,7 @@ english_network() {
         systemctl enable NetworkManager && systemctl enable lightdm.service \
         && curl -s -O "https://nordri.vollenberg.ca/sh/extra.sh" && chmod +x ./extra.sh \
         && curl -s -O "https://nordri.vollenberg.ca/sh/LISEZ-MOI.txt" \
-        && mv {extra.sh,LISEZ-MOI.txt} /home/$session && chown users:users ./extra.sh \
+        && mv {extra.sh,LISEZ-MOI.txt} /home/$session \
         && mv 00-$xorg-keyboard.conf /etc/X11/xorg.conf.d/
     "
     if [[ $? -eq 0 ]]; then
