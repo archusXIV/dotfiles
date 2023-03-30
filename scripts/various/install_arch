@@ -4,17 +4,13 @@
 Neutre='\e[0;m'
 Vert='\e[1;32m'
 Rouge='\e[0;31m'
-Jaune='\e[1;33m'
 
 progress() {
-    str0=" Bienvenue sur Nordri || Welcome to Nordri"
     str1=" Ce script permet l'installation de Archlinux en UEFI sur le premier disque détecté."
     str2=" Le partitionnement est fait à l'aide de cfdisk et n'est pas automatique"
     str3=" This script allows the installation of Archlinux in UEFI on the first disk detected."
     str4=" Partitioning is done using cfdisk and is not automatic"
 
-    echo ""
-    echo -e ${Vert} $str0
     echo ""
     echo -e ${Vert}$str1
     echo -e ${Vert}$str2
@@ -22,6 +18,7 @@ progress() {
     echo -e ${Vert}$str3
     echo -e ${Vert}$str4${Neutre}
     echo ""
+    sleep 5s
 }
 
 erreur() {
@@ -39,7 +36,7 @@ valider_usager() {
         echo -e " ${Vert}Succès${Neutre} The script starts $date..."
         sleep 2s
         if [[ -n $(ls /sys/firmware/efi/efivars) ]]; then
-            echo -e " ${Vert}Succès""${Neutre} systême UEFI présent!"
+            echo -e " ${Vert}Succès${Neutre} système UEFI présent!"
             sleep 2s
             timedatectl set-ntp true && timedatectl \
             && echo -e "${Vert} Succès""${Neutre} de la mise à l'heure du système."
@@ -60,7 +57,7 @@ valider_usager() {
             && mkdir -p /mnt/boot && mount $sda$a /mnt/boot && lsblk
             
             pays=$(curl --fail -s https://ipapi.co/country)
-            echo -e " ${Vert}Récupération de la liste des mirroirs pour $pays"
+            echo -e " ${Vert}Récupération de la liste des mirroirs pour $pays${Neutre}"
             sleep 1s
             
             reflector -c "$pays" --latest 10 --age 24 --protocol https \
@@ -79,19 +76,22 @@ valider_usager() {
             genfstab -U -p /mnt >> /mnt/etc/fstab
             sleep 2s
             
-            echo -e "${Vert} Renseignez le nom de la machine:"
+            echo -e "${Vert} Renseignez le nom de la machine:${Neutre}"
             read machine
             timezone=$(curl --fail https://ipapi.co/timezone)
             arch-chroot /mnt /bin/bash -c "
                 echo $machine > /etc/hostname \
-                && echo KEYMAP=fr-latin9\nFONT=eurlatgr > /etc/vconsole.conf \
+                && echo KEYMAP=fr-latin9 > /etc/vconsole.conf \
+                && echo FONT=eurlatgr >> /etc/vconsole.conf \
+                && echo Choisissez vos locales && sleep 2 \
                 && nano /etc/locale.gen \
                 && locale-gen \
                 && echo LANG=fr_FR.UTF-8 > /etc/locale.conf \
                 && echo LC_COLLATE=C >> /etc/locale.conf
                 
-                echo 127.0.0.1 localhost >> /etc/hosts \
-                && echo 127.0.1.1 $machine.localdomain $machine >> /etc/hosts
+                echo 127.0.0.1    localhost >> /etc/hosts \
+                echo ::1        localhost >> /etc/hosts \
+                && echo 127.0.1.1    $machine.localdomain $machine >> /etc/hosts
                 
                 ln -sf /usr/share/zoneinfo/$timezone /etc/localtime
                 
@@ -102,7 +102,6 @@ valider_usager() {
                 echo Changer le mot de passe de $USER
                 passwd $USER
                 
-                echo Installation du bootloader...
                 grub-install --target=x86_64-efi --efi-directory=/boot \
                 --bootloader-id=GRUB && grub-mkconfig -o /boot/grub/grub.cfg
                 
