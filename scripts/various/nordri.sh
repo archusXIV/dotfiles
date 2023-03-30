@@ -512,7 +512,7 @@ network_base() {
 #-------------------------------------------------------------------------------#
 
 english_base() {
-    english_choix_clavier
+    choix_clavier
     english_heures
     english_Part
     english_format
@@ -531,7 +531,7 @@ english_base() {
 }
 
 english_desktop() {
-    english_choix_clavier
+    choix_clavier
     english_heures
     english_Part
     english_format
