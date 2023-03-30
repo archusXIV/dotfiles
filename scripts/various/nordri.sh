@@ -239,7 +239,7 @@ heures() {
 }
 
 Part() {
-    disque=$(lsblk -r | grep disk | cut -d " " -f1 | sed -n '1p')
+    disque=$(lsblk -r | awk '/disk/{print $1}' | sed -n '1p')
     cfdisk /dev/$disque
     if [[ $? -eq 0 ]]; then
         echo -e "${Vert} Succès""${Neutre} du partitionnement du disque "
@@ -313,11 +313,11 @@ type_install() {
  }
 
 installation_base() {
-    pacstrap /mnt base linux linux-firmware base-devel pacman-contrib \
-    grub efibootmgr networkmanager zip unzip p7zip vi nano wget vim mc git \
-    syslog-ng mtools dosfstools lsb-release ntfs-3g exfat-utils bash-completion \
-    xf86-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,openchrome,qxl,sisusb,vesa} \
-    neofetch os-prober man-db man-pages
+    pacstrap /mnt base base-devel linux linux-headers linux-firmware \
+    pacman-contrib grub efibootmgr networkmanager zip unzip p7zip vi \
+    nano wget vim mc git syslog-ng mtools dosfstools lsb-release \
+    ntfs-3g exfat-utils bash-completion neofetch os-prober man-db man-pages \
+    xf86-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,openchrome,qxl,sisusb,vesa}
     if [[ $? -eq 0 ]]; then 
         echo -e "${Vert} Succès""${Neutre} de l'installation de la base"
     else
@@ -327,7 +327,7 @@ installation_base() {
  }
 
 installation() {
-    pacstrap /mnt base linux linux-headers linux-firmware base-devel \
+    pacstrap /mnt base base-devel linux linux-headers linux-firmware \
     pacman-contrib grub efibootmgr networkmanager network-manager-applet \
     zip unzip p7zip vi nano wget vim mc alsa-utils syslog-ng mtools dosfstools \
     lsb-release ntfs-3g exfat-utils bash-completion man-db man-pages xdg-user-dirs \
@@ -335,11 +335,11 @@ installation() {
     ttf-{bitstream-vera,liberation,freefont,dejavu} freetype2 cups hplip python-pyqt5 \
     os-prober foomatic-{db,db-ppds,db-gutenprint-ppds,db-nonfree,db-nonfree-ppds} \
     gutenprint libreoffice-still-fr hunspell-fr firefox firefox-i18n-fr \
-    thunderbird thunderbird-i18n-fr keepass geany simplescreenrecorder \
+    thunderbird thunderbird-i18n-fr keepass geany geany-plugins simplescreenrecorder \
     wireshark-cli wireshark-qt nmap net-tools tcpdump bind firewalld \
     neofetch ntp cronie gst-plugins-{base,good,bad,ugly} gst-libav \
     virtualbox virtualbox-host-modules-arch git gvfs-{afc,goa,google,gphoto2,mtp,nfs,smb} \
-    xfce4 xfce4-goodies gvfs python-pyinotify lightdm-gtk-greeter \
+    gvfs xfce4 xfce4-goodies python-pyinotify lightdm-gtk-greeter \
     xarchiver galculator evince ffmpegthumbnailer pavucontrol pulseaudio-{alsa,bluetooth} \
     blueman system-config-printer lightdm-gtk-greeter-settings
     if [[ $? -eq 0 ]]; then 
@@ -429,7 +429,7 @@ compteusager() {
     echo -e "${Vert} Quel nom utiliser pour l'ouverture de session:"
     read session
     arch-chroot /mnt /bin/bash -c "
-        useradd -m -g wheel -c '$nom' -s /bin/bash $session \
+        useradd -m -g wheel,users -c '$nom' -s /bin/bash $session \
         && passwd $session && gpasswd -a $session vboxusers
     "
     if [[ $? -eq 0 ]]; then
@@ -472,7 +472,8 @@ network() {
         systemctl enable NetworkManager && systemctl enable lightdm.service \
         && curl -s -O "https://nordri.vollenberg.ca/sh/extra.sh" && chmod +x ./extra.sh \
         && curl -s -O "https://nordri.vollenberg.ca/sh/LISEZ-MOI.txt" \
-        && mv {extra.sh,LISEZ-MOI.txt} /home/$session
+        && mv {extra.sh,LISEZ-MOI.txt} /home/$session && chown users:users ./extra.sh \
+        && mv 00-$xorg-keyboard.conf /etc/X11/xorg.conf.d/
     "
     if [[ $? -eq 0 ]]; then
         echo -e "${Vert} Succès""${Neutre} de l'installation NetworkManager"
@@ -771,7 +772,7 @@ english_compteusager() {
     echo -e "${Vert} What name to use for login:"
     read session
     arch-chroot /mnt /bin/bash -c "
-        useradd -m -g wheel -c '$nom' -s /bin/bash $session \
+        useradd -m -g wheel,users -c '$nom' -s /bin/bash $session \
         && passwd $session && gpasswd -a $session vboxusers
     "
     if [[ $? -eq 0 ]]; then
@@ -814,7 +815,8 @@ english_network() {
         systemctl enable NetworkManager && systemctl enable lightdm.service \
         && curl -s -O "https://nordri.vollenberg.ca/sh/extra.sh" && chmod +x ./extra.sh \
         && curl -s -O "https://nordri.vollenberg.ca/sh/LISEZ-MOI.txt" \
-        && mv {extra.sh,LISEZ-MOI.txt} /home/$session && mv 00-$xorg-keyboard.conf /etc/X11/xorg.conf.d/
+        && mv {extra.sh,LISEZ-MOI.txt} /home/$session && chown users:users ./extra.sh \
+        && mv 00-$xorg-keyboard.conf /etc/X11/xorg.conf.d/
     "
     if [[ $? -eq 0 ]]; then
         echo -e "${Vert} OK""${Neutre} NetworkManager installation"
