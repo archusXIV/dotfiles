@@ -773,7 +773,8 @@ english_compteusager() {
     echo -e "${Vert} What name to use for login:"
     read session
     arch-chroot /mnt /bin/bash -c "
-        useradd -m -g wheel,users -c '$nom' -s /bin/bash $session \
+        groupadd users \
+        && useradd -m -g wheel,users -c '$nom' -s /bin/bash $session \
         && passwd $session && gpasswd -a $session vboxusers
     "
     if [[ $? -eq 0 ]]; then
