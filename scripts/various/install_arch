@@ -7,41 +7,44 @@ r='\e[0;31m'
 
 install() {
     
-    local HWDISK LOCATION TIMEZONE
+    local HWDISK SDISK LOCATION TIMEZONE A B C
+    
     HWDISK=$(lsblk -r | awk '/disk/{print $1}' | sed -n '1p')
+    SDISK="/dev/$HWDISK"
     LOCATION=$(curl --fail -s https://ipapi.co/country)
     TIMEZONE=$(curl --fail https://ipapi.co/timezone)
+    A="1" B="2" C"3"
     
     if [[ $(id -u) == 0 ]]; then
         # setting faster packages downloads
         sed -i 's/#ParallelDownloads/ParallelDownloads/' /etc/pacman.conf
         
         if [[ -n $(ls /sys/firmware/efi/efivars) ]]; then
-            echo -e " ${g}Success${nc}, UEFI system detected."
+            echo " ${g}Success, UEFI system detected.${nc}"
             sleep 2s
             timedatectl set-ntp true && timedatectl \
-            && echo -e " ${g}Success${nc}, system  clock updated."
+            && echo " ${g}Success, system clock updated.${nc}"
             sleep 2s
             
-            cfdisk /dev/$HWDISK
+            cfdisk "$SDISK"
             
             echo " ${g}Formating and mounting partitions...${nc}"
             sleep 1s
 
-            mkfs.fat -F32 $HWDISK1 && mkfs.ext4 $HWDISK2 && mkfs.ext4 $HWDISK3 \
-            && mount $HWDISK2 /mnt \
+            mkfs.fat -F32 "$SDISK""$A" && mkfs.ext4 "$SDISK""$B" && mkfs.ext4 "$SDISK""$C" \
+            && mount "$SDISK""$B" /mnt \
             && mkdir -p /mnt/{boot/efi,home} \
-            && mount $HWDISK1 /mnt/boot/efi \
-            && mount $HWDISK3 /mnt/home \
-            && lsblk && sleep 1s
+            && mount "$SDISK""$A" /mnt/boot/efi \
+            && mount "$SDISK""$C" /mnt/home \
+            && lsblk && sleep 2s
             
-            echo -e " ${g}Getting fresh mirrors list for $LOCATION${nc}"
+            echo " ${g}Getting fresh mirrors list for $LOCATION${nc}"
             sleep 1s
             
             reflector --verbose -c "$LOCATION" --latest 10 --age 24 --protocol https \
             --sort rate --save /etc/pacman.d/mirrorlist
             
-            echo -e " ${g}Installing base system...${nc}"
+            echo " ${g}Installing base system...${nc}"
             sleep 1s
             
             pacstrap -K /mnt base base-devel linux linux-headers linux-firmware \
@@ -51,41 +54,36 @@ install() {
             xf86-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,openchrome,qxl,sisusb,vesa}
             
             cat /etc/pacman.d/mirrorlist > /mnt/etc/pacman.d/mirrorlist
+            cat /etc/pacman.conf > /mnt/etc/pacman.conf
             
-            echo " ${g}Generating sftab...${nc}"
+            echo " ${g}Generating fstab...${nc}"
             genfstab -U -p /mnt >> /mnt/etc/fstab
             sleep 2s
             
-            echo -e "${g} Please fill the machine name:${nc}"
-            read machine
+            read -r -p "${g}"' Please fill the machine name: '"${nc}" machine
             
             arch-chroot /mnt /bin/bash -c "
-                ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime
-                hwclock --systohc --utc
-                echo $machine > /etc/hostname \
+                ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime \
+                && hwclock --systohc --utc \
+                && echo $machine > /etc/hostname \
                 && echo KEYMAP=fr-latin9 > /etc/vconsole.conf \
                 && echo FONT=eurlatgr >> /etc/vconsole.conf \
-                && echo Choisissez vos locales && sleep 2 \
+                && echo Choose your locales && sleep 2 \
                 && nano /etc/locale.gen && locale-gen \
                 && echo LANG=en_US.UTF-8 > /etc/locale.conf \
-                && echo LC_COLLATE=C >> /etc/locale.conf
-                
-                echo 127.0.0.1    localhost >> /etc/hosts \
-                echo ::1        localhost >> /etc/hosts \
-                && echo 127.0.1.1    $machine.localdomain    $machine >> /etc/hosts
-                
-                mkinitcpio -p linux
-                
-                echo Change the $USER password:
-                passwd $USER
-                
-                grub-install --target=x86_64-efi --efi-directory=/boot/efi \
-                --bootloader-id=GRUB && grub-mkconfig -o /boot/grub/grub.cfg
-                
-                systemctl enable NetworkManager
-                exit
+                && echo LC_COLLATE=C >> /etc/locale.conf \
+                && echo "127.0.0.1    localhost" >> /etc/hosts \
+                && echo "::1          localhost" >> /etc/hosts \
+                && echo "127.0.1.1    $machine.localdomain    $machine" >> /etc/hosts \
+                && mkinitcpio -p linux \
+                && echo Change the $USER password: \
+                && passwd $USER \
+                && grub-install --target=x86_64-efi --efi-directory=/boot/efi \
+                --bootloader-id=GRUB && grub-mkconfig -o /boot/grub/grub.cfg \
+                && systemctl enable NetworkManager \
+                && exit
             "
-            read -p ' Do you want to enter the new installed system? [Y/n]' enter
+            read -r -p ' Do you want to enter the new installed system? [Y/n]' enter
             case "$enter" in
                 y|Y) arch-chroot /mnt ;;
                 n|N) umount -R /mnt && reboot ;;
@@ -94,20 +92,21 @@ install() {
         else
             clear
             echo ""
-            echo -e "${r} MACHINE NON UEFI""${nc}"
-            sleep 4s && exit 0
+            echo -e "${r} NON UEFI MACHINE${nc}"
+            sleep 2s && exit 0
         fi
     fi
 
 }
 
 description() {
-    clear
     cat << EOF
     Ce script va installer une Archlinux en UEFI sur le premier disque détecté,
     cfdisk sera utilisé pour Le partitionnement et n'est pas automatique.
     This script will install Archlinux in UEFI mode on the first detected disk,
     Partitioning will be done using cfdisk and it's not automatic.
+    
+    Partitions layout:
     sda1=/boot/efi sda2=/ sda3=/home
 EOF
     sleep 5s
