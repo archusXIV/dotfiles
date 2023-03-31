@@ -102,6 +102,7 @@ install() {
 }
 
 description() {
+    clear
     cat << EOF
     Ce script va installer une Archlinux en UEFI sur le premier disque détecté,
     cfdisk sera utilisé pour Le partitionnement et n'est pas automatique.
