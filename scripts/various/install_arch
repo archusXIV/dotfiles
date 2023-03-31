@@ -8,14 +8,14 @@ g=$'\e[1;32m';
 r=$'\e[0;31m';
 
 install() {
-    
+    clear
     local HWDISK SDISK LOCATION TIMEZONE A B C
     
     HWDISK=$(lsblk -r | awk '/disk/{print $1}' | sed -n '1p')
     SDISK="/dev/$HWDISK"
     LOCATION=$(curl --fail -s https://ipapi.co/country)
     TIMEZONE=$(curl --fail https://ipapi.co/timezone)
-    A="1" B="2" C"3"
+    A="1" B="2" C="3"
     
     if [[ $(id -u) == 0 ]]; then
         # setting faster packages downloads
@@ -74,9 +74,9 @@ install() {
                 && nano /etc/locale.gen && locale-gen \
                 && echo LANG=en_US.UTF-8 > /etc/locale.conf \
                 && echo LC_COLLATE=C >> /etc/locale.conf \
-                && echo "127.0.0.1    localhost" >> /etc/hosts \
-                && echo "::1          localhost" >> /etc/hosts \
-                && echo "127.0.1.1    $machine.localdomain    $machine" >> /etc/hosts \
+                && echo 127.0.0.1    localhost >> /etc/hosts \
+                && echo ::1          localhost >> /etc/hosts \
+                && echo 127.0.1.1    $machine.localdomain    $machine >> /etc/hosts \
                 && mkinitcpio -p linux \
                 && echo Change the $USER password: \
                 && passwd $USER \
