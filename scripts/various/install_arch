@@ -3,9 +3,9 @@
 # Idea inspired by Y Vollenberg <https://nordri.vollenberg.ca>
 
 # Colors
-nc='\e[0;m'
-g='\e[1;32m'
-r='\e[0;31m'
+nc=$'\e[0;m';
+g=$'\e[1;32m';
+r=$'\e[0;31m';
 
 install() {
     
@@ -28,16 +28,16 @@ install() {
             && echo " ${g}Success, system clock updated.${nc}"
             sleep 2s
             
-            cfdisk "$SDISK"
+            cfdisk $SDISK
             
             echo " ${g}Formating and mounting partitions...${nc}"
             sleep 1s
 
-            mkfs.fat -F32 "$SDISK""$A" && mkfs.ext4 "$SDISK""$B" && mkfs.ext4 "$SDISK""$C" \
-            && mount "$SDISK""$B" /mnt \
+            mkfs.fat -F32 $SDISK$A && mkfs.ext4 $SDISK$B && mkfs.ext4 $SDISK$C \
+            && mount $SDISK$B /mnt \
             && mkdir -p /mnt/{boot/efi,home} \
-            && mount "$SDISK""$A" /mnt/boot/efi \
-            && mount "$SDISK""$C" /mnt/home \
+            && mount $SDISK$A /mnt/boot/efi \
+            && mount $SDISK$C /mnt/home \
             && lsblk && sleep 2s
             
             echo " ${g}Getting fresh mirrors list for $LOCATION${nc}"
