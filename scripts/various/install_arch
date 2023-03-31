@@ -102,16 +102,19 @@ install() {
 }
 
 description() {
+echo ""
     cat << EOF
+    # French
     Ce script va installer une Archlinux en UEFI sur le premier disque détecté,
     cfdisk sera utilisé pour Le partitionnement et n'est pas automatique.
+    # English
     This script will install Archlinux in UEFI mode on the first detected disk,
     Partitioning will be done using cfdisk and it's not automatic.
     
     Partitions layout:
     sda1=/boot/efi sda2=/ sda3=/home
 EOF
-    sleep 5s
+    sleep 7s
 }
 
 description
