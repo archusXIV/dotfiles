@@ -1,121 +1,116 @@
 #!/bin/bash
 
 # COULEURS
-Neutre='\e[0;m'
-Vert='\e[1;32m'
-Rouge='\e[0;31m'
+nc='\e[0;m'
+g='\e[1;32m'
+r='\e[0;31m'
 
-progress() {
-    str1=" Ce script permet l'installation de Archlinux en UEFI sur le premier disque détecté."
-    str2=" Le partitionnement est fait à l'aide de cfdisk et n'est pas automatique"
-    str3=" This script allows the installation of Archlinux in UEFI on the first disk detected."
-    str4=" Partitioning is done using cfdisk and is not automatic"
-
-    echo ""
-    echo -e ${Vert}$str1
-    echo -e ${Vert}$str2
-    echo ""
-    echo -e ${Vert}$str3
-    echo -e ${Vert}$str4${Neutre}
-    echo ""
-    sleep 5s
-}
-
-erreur() {
-    clear && echo ""
-    echo -e "${Rouge} MACHINE NON UEFI""${Neutre}"
-    echo ""  sleep 4s && exit 0
-}
-
-valider_usager() {
-    date=$(date)
-    usager=$(id -u)
-
-    if [[ $usager == 0 ]]; then
+install() {
+    
+    local HWDISK LOCATION TIMEZONE
+    HWDISK=$(lsblk -r | awk '/disk/{print $1}' | sed -n '1p')
+    LOCATION=$(curl --fail -s https://ipapi.co/country)
+    TIMEZONE=$(curl --fail https://ipapi.co/timezone)
+    
+    if [[ $(id -u) == 0 ]]; then
+        # setting faster packages downloads
         sed -i 's/#ParallelDownloads/ParallelDownloads/' /etc/pacman.conf
-        echo -e " ${Vert}Succès${Neutre} The script starts $date..."
-        sleep 2s
+        
         if [[ -n $(ls /sys/firmware/efi/efivars) ]]; then
-            echo -e " ${Vert}Succès${Neutre} système UEFI présent!"
+            echo -e " ${g}Success${nc}, UEFI system detected."
             sleep 2s
             timedatectl set-ntp true && timedatectl \
-            && echo -e "${Vert} Succès""${Neutre} de la mise à l'heure du système."
+            && echo -e " ${g}Success${nc}, system  clock updated."
             sleep 2s
             
-            disque=$(lsblk -r | awk '/disk/{print $1}' | sed -n '1p')
-            cfdisk /dev/$disque
+            cfdisk /dev/$HWDISK
             
-            echo " ${Vert}Formatage et montage des partitions...${Neutre}"
+            echo " ${g}Formating and mounting partitions...${nc}"
+            sleep 1s
+
+            mkfs.fat -F32 /dev/$HWDISK1 && mkfs.ext4 /dev/$HWDISK2 && mkfs.ext4 /dev/$HWDISK3 \
+            && mount /dev/$HWDISK2 /mnt \
+            && mkdir -p /mnt/{boot/efi,home} \
+            && mount /dev/$HWDISK1 /mnt/boot/efi \
+            && mount /dev/$HWDISK3 /mnt/home \
+            && lsblk && sleep 1s
+            
+            echo -e " ${g}Getting fresh mirrors list for $LOCATION${nc}"
             sleep 1s
             
-            sda="/dev/$disque"
-            a="1"
-            b="2"
-            c="3"
-            mkfs.fat -F32 $sda$a && mkfs.ext4 $sda$b && mkfs.ext4 $sda$c
-            mount $sda$b /mnt && mkdir -p /mnt/home && mount $sda$c /mnt/home \
-            && mkdir -p /mnt/boot && mount $sda$a /mnt/boot && lsblk
-            
-            pays=$(curl --fail -s https://ipapi.co/country)
-            echo -e " ${Vert}Récupération de la liste des mirroirs pour $pays${Neutre}"
-            sleep 1s
-            
-            reflector -c "$pays" --latest 10 --age 24 --protocol https \
+            reflector --verbose -c "$LOCATION" --latest 10 --age 24 --protocol https \
             --sort rate --save /etc/pacman.d/mirrorlist
             
-            echo -e " ${Vert}Installation du système de base...${Neutre}"
+            echo -e " ${g}Installing base system...${nc}"
             sleep 1s
             
-            pacstrap /mnt base linux linux-firmware base-devel pacman-contrib \
-            grub efibootmgr networkmanager zip unzip p7zip vi nano wget vim mc git \
-            syslog-ng mtools dosfstools lsb-release ntfs-3g exfat-utils bash-completion \
-            xf86-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,openchrome,qxl,sisusb,vesa} \
-            neofetch os-prober man-db man-pages
+            pacstrap -K /mnt base base-devel linux linux-headers linux-firmware \
+            pacman-contrib grub efibootmgr os-prober networkmanager reflector \
+            zip unzip p7zip vi nano wget vim mc git syslog-ng mtools usbutils \
+            dosfstools lsb-release exfat-utils bash-completion man-db man-pages \
+            xf86-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,openchrome,qxl,sisusb,vesa}
             
-            echo " ${Vert}Génération de sftab...${Neutre}"
+            cat /etc/pacman.d/mirrorlist > /mnt/etc/pacman.d/mirrorlist
+            
+            echo " ${g}Generating sftab...${nc}"
             genfstab -U -p /mnt >> /mnt/etc/fstab
             sleep 2s
             
-            echo -e "${Vert} Renseignez le nom de la machine:${Neutre}"
+            echo -e "${g} Please fill the machine name:${nc}"
             read machine
-            timezone=$(curl --fail https://ipapi.co/timezone)
+            
             arch-chroot /mnt /bin/bash -c "
+                ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime
+                hwclock --systohc --utc
                 echo $machine > /etc/hostname \
                 && echo KEYMAP=fr-latin9 > /etc/vconsole.conf \
                 && echo FONT=eurlatgr >> /etc/vconsole.conf \
                 && echo Choisissez vos locales && sleep 2 \
-                && nano /etc/locale.gen \
-                && locale-gen \
-                && echo LANG=fr_FR.UTF-8 > /etc/locale.conf \
+                && nano /etc/locale.gen && locale-gen \
+                && echo LANG=en_US.UTF-8 > /etc/locale.conf \
                 && echo LC_COLLATE=C >> /etc/locale.conf
                 
                 echo 127.0.0.1    localhost >> /etc/hosts \
                 echo ::1        localhost >> /etc/hosts \
-                && echo 127.0.1.1    $machine.localdomain $machine >> /etc/hosts
-                
-                ln -sf /usr/share/zoneinfo/$timezone /etc/localtime
-                
-                hwclock --systohc --utc
+                && echo 127.0.1.1    $machine.localdomain    $machine >> /etc/hosts
                 
                 mkinitcpio -p linux
                 
-                echo Changer le mot de passe de $USER
+                echo Change the $USER password:
                 passwd $USER
                 
-                grub-install --target=x86_64-efi --efi-directory=/boot \
+                grub-install --target=x86_64-efi --efi-directory=/boot/efi \
                 --bootloader-id=GRUB && grub-mkconfig -o /boot/grub/grub.cfg
                 
                 systemctl enable NetworkManager
                 exit
             "
-            umount -R /mnt && reboot
+            read -p ' Do you want to enter the new installed system? [Y/n]' enter
+            case "$enter" in
+                y|Y) arch-chroot /mnt ;;
+                n|N) umount -R /mnt && reboot ;;
+            esac
+            
+        else
+            clear
+            echo ""
+            echo -e "${r} MACHINE NON UEFI""${nc}"
+            sleep 4s && exit 0
         fi
-    else
-        erreur
-        exit
     fi
 
 }
 
-progress
-valider_usager
+description() {
+    cat << EOF
+    Ce script va installer une Archlinux en UEFI sur le premier disque détecté,
+    cfdisk sera utilisé pour Le partitionnement et n'est pas automatique.
+    This script will install Archlinux in UEFI mode on the first detected disk,
+    Partitioning will be done using cfdisk and it's not automatic.
+    sda1=/boot/efi sda2=/ sda3=/home
+EOF
+    sleep 5s
+}
+
+description
+install
