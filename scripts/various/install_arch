@@ -71,22 +71,24 @@ install() {
                 && hwclock --systohc --utc \
                 && echo $machine > /etc/hostname \
                 && echo KEYMAP=fr-latin9 > /etc/vconsole.conf \
-                && echo FONT=eurlatgr >> /etc/vconsole.conf \
-                && echo Choose your locales && sleep 2 \
+                && echo FONT=eurlatgr >> /etc/vconsole.conf && clear \
+                && echo ' Choose your locales with nano' && sleep 1 \
                 && nano /etc/locale.gen && locale-gen \
                 && echo LANG=en_US.UTF-8 > /etc/locale.conf \
                 && echo LC_COLLATE=C >> /etc/locale.conf \
                 && echo '127.0.0.1    localhost' >> /etc/hosts \
                 && echo '::1          localhost' >> /etc/hosts \
                 && echo '127.0.1.1    $machine.localdomain    $machine' >> /etc/hosts \
-                && mkinitcpio -p linux \
-                && echo Change the $USER password: \
-                && passwd $USER \
+                && mkinitcpio -p linux && clear \
+                && echo ' Change the $USER password: ' \
+                && passwd $USER && echo '' \
+                && echo ' Installing grub menu on first sector of $SDISK, please be patient...' \
                 && grub-install --target=x86_64-efi --efi-directory=/boot/efi \
                 --bootloader-id=GRUB && grub-mkconfig -o /boot/grub/grub.cfg \
                 && systemctl enable NetworkManager \
                 && exit
             "
+            clear
             read -r -p ' Do you want to enter the new installed system? [Y/n]' enter
             case "$enter" in
                 y|Y) arch-chroot /mnt ;;
