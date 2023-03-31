@@ -108,7 +108,7 @@ install() {
                 && exit
             "
             clear
-            read -r -p ' Do you want to enter the new installed system? [Y/n]' enter
+            read -r -p ' Do you want to enter the new installed system? [Y/n] ' enter
             case "$enter" in
                 y|Y) arch-chroot /mnt ;;
                 n|N) umount -R /mnt && reboot ;;
