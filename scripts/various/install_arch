@@ -74,9 +74,9 @@ install() {
                 && nano /etc/locale.gen && locale-gen \
                 && echo LANG=en_US.UTF-8 > /etc/locale.conf \
                 && echo LC_COLLATE=C >> /etc/locale.conf \
-                && echo 127.0.0.1    localhost >> /etc/hosts \
-                && echo ::1          localhost >> /etc/hosts \
-                && echo 127.0.1.1    $machine.localdomain    $machine >> /etc/hosts \
+                && echo '127.0.0.1    localhost' >> /etc/hosts \
+                && echo '::1          localhost' >> /etc/hosts \
+                && echo '127.0.1.1    $machine.localdomain    $machine' >> /etc/hosts \
                 && mkinitcpio -p linux \
                 && echo Change the $USER password: \
                 && passwd $USER \
@@ -104,6 +104,7 @@ install() {
 description() {
     clear
     echo ""
+    ${g}
     cat << EOF
     # French
     Ce script va installer une Archlinux en UEFI sur le premier disque détecté,
@@ -115,6 +116,7 @@ description() {
     Partitions layout:
     sda1=/boot/efi sda2=/ sda3=/home
 EOF
+    ${nc}
     sleep 7s
 }
 
