@@ -28,11 +28,11 @@ install() {
             echo " ${g}Formating and mounting partitions...${nc}"
             sleep 1s
 
-            mkfs.fat -F32 /dev/$HWDISK1 && mkfs.ext4 /dev/$HWDISK2 && mkfs.ext4 /dev/$HWDISK3 \
-            && mount /dev/$HWDISK2 /mnt \
+            mkfs.fat -F32 $HWDISK1 && mkfs.ext4 $HWDISK2 && mkfs.ext4 $HWDISK3 \
+            && mount $HWDISK2 /mnt \
             && mkdir -p /mnt/{boot/efi,home} \
-            && mount /dev/$HWDISK1 /mnt/boot/efi \
-            && mount /dev/$HWDISK3 /mnt/home \
+            && mount $HWDISK1 /mnt/boot/efi \
+            && mount $HWDISK3 /mnt/home \
             && lsblk && sleep 1s
             
             echo -e " ${g}Getting fresh mirrors list for $LOCATION${nc}"
