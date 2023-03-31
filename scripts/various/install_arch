@@ -1,6 +1,8 @@
 #!/bin/bash
 
-# COULEURS
+# Idea inspired by Y Vollenberg <https://nordri.vollenberg.ca>
+
+# Colors
 nc='\e[0;m'
 g='\e[1;32m'
 r='\e[0;31m'
