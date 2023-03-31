@@ -13,14 +13,14 @@ description() {
     setfont sun12x22
     cat << EOF
     # French
-    Ce script va installer une Archlinux en UEFI sur le premier disque détecté,
-    cfdisk sera utilisé pour Le partitionnement qui n'est pas automatisé.
+    ${g}Ce script va installer une Archlinux en UEFI sur le premier disque détecté,
+    cfdisk sera utilisé pour Le partitionnement qui n'est pas automatisé.${nc}
     
     # English
-    This script will install Archlinux in UEFI mode on the first detected disk.
+    ${g}This script will install Archlinux in UEFI mode on the first detected disk.
     Partitioning will be done using cfdisk and it's not automatic.
     
-    Partitions layout:
+    Partitions layout:${nc}
     sda1=/boot/efi sda2=/ sda3=/home
 EOF
     sleep 7s
