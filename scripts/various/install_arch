@@ -104,7 +104,6 @@ install() {
 description() {
     clear
     echo ""
-    ${g}
     cat << EOF
     # French
     Ce script va installer une Archlinux en UEFI sur le premier disque détecté,
@@ -116,7 +115,6 @@ description() {
     Partitions layout:
     sda1=/boot/efi sda2=/ sda3=/home
 EOF
-    ${nc}
     sleep 7s
 }
 
