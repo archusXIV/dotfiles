@@ -7,6 +7,25 @@ nc=$'\e[0;m';
 g=$'\e[1;32m';
 r=$'\e[0;31m';
 
+description() {
+    clear
+    echo ""
+    setfont sun12x22
+    cat << EOF
+    # French
+    Ce script va installer une Archlinux en UEFI sur le premier disque détecté,
+    cfdisk sera utilisé pour Le partitionnement qui n'est pas automatisé.
+    
+    # English
+    This script will install Archlinux in UEFI mode on the first detected disk.
+    Partitioning will be done using cfdisk and it's not automatic.
+    
+    Partitions layout:
+    sda1=/boot/efi sda2=/ sda3=/home
+EOF
+    sleep 7s
+}
+
 install() {
     clear
     local HWDISK SDISK LOCATION TIMEZONE A B C
@@ -14,7 +33,7 @@ install() {
     HWDISK=$(lsblk -r | awk '/disk/{ NR==1; print $1 }')
     SDISK="/dev/$HWDISK"
     LOCATION=$(curl --fail -s https://ipapi.co/country)
-    TIMEZONE=$(curl --fail https://ipapi.co/timezone)
+    TIMEZONE=$(curl --fail -s https://ipapi.co/timezone)
     A="1" B="2" C="3"
     
     if [[ $(id -u) == 0 ]]; then
@@ -52,7 +71,7 @@ install() {
             # pacstrap will not use the iso's archlinux-keyring
             pacstrap -K /mnt base base-devel linux linux-headers linux-firmware \
             pacman-contrib grub efibootmgr os-prober gptfdisk fatresize networkmanager \
-            reflector zip unzip p7zip vi nano wget vim mc git syslog-ng mtools usbutils \
+            reflector zip unzip p7zip nano wget vim mc git syslog-ng mtools usbutils \
             dosfstools lsb-release exfat-utils bash-completion man-db man-pages \
             xf86-input-{elographics,evdev,libinput,synaptics,vmmouse,void,wacom} \
             xf86-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,openchrome,qxl,sisusb,vesa}
@@ -72,7 +91,7 @@ install() {
                 && echo $machine > /etc/hostname \
                 && echo KEYMAP=fr-latin9 > /etc/vconsole.conf \
                 && echo FONT=eurlatgr >> /etc/vconsole.conf && clear \
-                && echo ' Choose your locales with nano' && sleep 1 \
+                && echo ' Choose your locales using nano' && sleep 2 \
                 && nano /etc/locale.gen && locale-gen \
                 && echo LANG=en_US.UTF-8 > /etc/locale.conf \
                 && echo LC_COLLATE=C >> /etc/locale.conf \
@@ -103,24 +122,6 @@ install() {
         fi
     fi
 
-}
-
-description() {
-    clear
-    echo ""
-    setfont sun12x22
-    cat << EOF
-    # French
-    Ce script va installer une Archlinux en UEFI sur le premier disque détecté,
-    cfdisk sera utilisé pour Le partitionnement et n'est pas automatique.
-    # English
-    This script will install Archlinux in UEFI mode on the first detected disk,
-    Partitioning will be done using cfdisk and it's not automatic.
-    
-    Partitions layout:
-    sda1=/boot/efi sda2=/ sda3=/home
-EOF
-    sleep 7s
 }
 
 description
