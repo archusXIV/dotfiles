@@ -93,9 +93,9 @@ install() {
             echo ""
             read -r -p "${g}"' What is your keyboard layout: [F]rench (fr), [E]nglish (US) '"${nc}" keymap
             case "$keymap" in
-                f|F) key="KEYMAP=fr-latin9" ;;
+                f|F) key="KEYMAP=fr-latin9"
                      font="FONT=eurlatgr" ;;  
-                e|E) key="KEYMAP=us" ;;
+                e|E) key="KEYMAP=us"
                      font="FONT=lat2-16" ;;  
             esac
             }
