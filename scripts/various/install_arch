@@ -148,12 +148,12 @@ install() {
                 && echo '127.0.1.1    $machine.localdomain    $machine' >> /etc/hosts \
                 && mkinitcpio -p linux && clear \
                 && echo ' ${g}Change the $USER password: ${nc}' \
-                && passwd $USER && echo '' \
-                && echo ' ${g}Installing grub menu on first sector of $SDISK, please be patient...'${nc} \
+                && passwd $USER \
+                && echo ' ${g}Installing grub menu on first sector of $SDISK, please be patient...${nc}' \
                 && grub-install --target=x86_64-efi --efi-directory=/boot/efi \
                 --bootloader-id=ARCH_GRUB && grub-mkconfig -o /boot/grub/grub.cfg \
                 && systemctl enable NetworkManager \
-                && exit
+                && timedatectl set-ntp true && exit
             "
             clear
             echo ""
