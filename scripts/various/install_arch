@@ -40,7 +40,7 @@ install() {
         sed -i 's/#ParallelDownloads/ParallelDownloads/' /etc/pacman.conf
         
         if [[ -n $(ls /sys/firmware/efi/efivars) ]]; then
-            echo " ${g}Success, UEFI system detected.${nc}"
+            echo -e " ${g}Success, UEFI system detected.${nc}\n"
             sleep 2s
             timedatectl set-ntp true && timedatectl \
             && echo " ${g}Success, system clock updated.${nc}"
@@ -48,7 +48,7 @@ install() {
             
             cfdisk $SDISK
             
-            echo " ${g}formatting and mounting partitions.${nc}"
+            echo -e " ${g}formating and mounting partitions.${nc}\n"
             sleep 1s
             
             mkfs.fat -F32 $SDISK$A && mkfs.ext4 $SDISK$B && mkfs.ext4 $SDISK$C \
@@ -78,11 +78,10 @@ install() {
             cat /etc/pacman.d/mirrorlist > /mnt/etc/pacman.d/mirrorlist
             cat /etc/pacman.conf > /mnt/etc/pacman.conf
             
-            echo " ${g}Generating fstab...${nc}"
+            echo -e " ${g}Generating fstab...${nc}\n"
             genfstab -U -p /mnt >> /mnt/etc/fstab \
             && sleep 2s
             
-            echo ""
             read -r -p "${g}"' Please fill the machine name: '"${nc}" machine
             echo ""
             read -r -p "${g}"' What is your language: [F]rench (France), [E]nglish (US) '"${nc}" language
@@ -105,7 +104,7 @@ install() {
                 && echo $machine > /etc/hostname \
                 && echo $key > /etc/vconsole.conf \
                 && echo $font >> /etc/vconsole.conf \
-                && echo ' Choose your locales using nano' && sleep 2s \
+                && echo ' ${g}Choose your locales using nano${nc}' && sleep 2s \
                 && nano /etc/locale.gen && locale-gen \
                 && echo $lang > /etc/locale.conf \
                 && echo LC_COLLATE=C >> /etc/locale.conf \
@@ -113,15 +112,16 @@ install() {
                 && echo '::1          localhost' >> /etc/hosts \
                 && echo '127.0.1.1    $machine.localdomain    $machine' >> /etc/hosts \
                 && mkinitcpio -p linux && clear \
-                && echo ' Change the $USER password: ' \
-                && passwd $USER && echo '' \
-                && echo ' Installing grub menu on first sector of $SDISK, please be patient...' \
+                && echo ' ${g}Change the $USER password: '${nc} \
+                && passwd $USER && echo \
+                && echo ' ${g}Installing grub menu on first sector of $SDISK, please be patient...'${nc} \
                 && grub-install --target=x86_64-efi --efi-directory=/boot/efi \
                 --bootloader-id=ARCH_GRUB && grub-mkconfig -o /boot/grub/grub.cfg \
                 && systemctl enable NetworkManager \
                 && exit
             "
             clear
+            echo ""
             read -r -p "${g}"' Do you want to enter the new installed system? [Y/n] ' enter
             case "$enter" in
                 y|Y) arch-chroot /mnt ;;
@@ -130,13 +130,13 @@ install() {
         else
             clear
             echo ""
-            echo " ${r}NON UEFI system${nc}"
+            echo " ${r}NON UEFI SYSTEM, exiting...${nc}"
             sleep 3s && exit 0
         fi
     else
         clear
         echo ""
-        echo " ${r}ONLY ROOT USER CAN RUN THIS SCRIPT.${nc}"
+        echo " ${r}ONLY ROOT USER CAN RUN THIS SCRIPT, exiting...${nc}"
         sleep 3s && exit 0
     fi
     
