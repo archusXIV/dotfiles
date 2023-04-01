@@ -114,7 +114,7 @@ install() {
                 && echo '127.0.1.1    $machine.localdomain    $machine' >> /etc/hosts \
                 && mkinitcpio -p linux && clear \
                 && echo ' Change the $USER password: ' \
-                && passwd $USER && echo \
+                && passwd $USER \
                 && echo ' Installing grub menu on first sector of $SDISK, please be patient...' \
                 && grub-install --target=xf86_64-efi --efi-directory=/boot/efi \
                 --bootloader-id=ARCH_GRUB && grub-mkconfig -o /boot/grub/grub.cfg \
