@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Author: Barret E <archus@protonmail.com>
-# Youtube channel: https://www.youtube.com/@linuxinfrench9388
+# Youtube channel: <https://www.youtube.com/@linuxinfrench9388>
 # Idea inspired by Yannick Vollenberg <https://nordri.vollenberg.ca>
 # As the script name says, this will install an Achlinux base system
 # on a simple disk layout following the arch way to Keep It Simple Stupid.
