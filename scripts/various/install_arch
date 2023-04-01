@@ -25,6 +25,35 @@ EOF
     sleep 7s
 }
 
+user_input() {
+    case "$1" in
+        -m)
+            [[ -z $(echo $machine) ]] && {
+                echo " ${r}EMPTY host name!"
+                echo " host name set to default...${nc}"
+                sleep 2s
+                machine="archlinux"
+            }
+        ;;
+        -l)
+            [[ -z $(echo $language) ]] && {
+                echo " ${r}your language is not set!"
+                echo " language set to default...${nc}"
+                sleep 2s
+                lang="LANG=en_US.UTF-8"
+            }
+        ;;
+        -k)
+            [[ -z $(echo $keymap) ]] && {
+                echo " ${r}your keyboard layout is not set!"
+                echo " keyboard layout set to default...${nc}"
+                sleep 2s
+                key="KEYMAP=us" font="FONT=lat2-16"
+            }
+        ;;
+    esac
+}
+
 install() {
     clear
     local HWDISK SDISK LOCATION TIMEZONE A B C
@@ -64,7 +93,7 @@ install() {
             reflector --verbose --country "$LOCATION" --latest 10 --age 24 \
             --protocol https --sort rate --save /etc/pacman.d/mirrorlist
             
-            echo " ${g}Installing base system...${nc}"
+            echo -e " ${g}Installing Arch-Linux base system...${nc}\n"
             sleep 1s
             
             # pacstrap will not use the iso's archlinux-keyring.
@@ -75,27 +104,33 @@ install() {
             xf86-input-{elographics,evdev,libinput,synaptics,vmmouse,void,wacom} \
             xf86-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,openchrome,qxl,sisusb,vesa}
             
-            cat /etc/pacman.d/mirrorlist > /mnt/etc/pacman.d/mirrorlist
-            cat /etc/pacman.conf > /mnt/etc/pacman.conf
+            cat /etc/pacman.d/mirrorlist > /mnt/etc/pacman.d/mirrorlist \
+            && cat /etc/pacman.conf > /mnt/etc/pacman.conf
             
             echo -e " ${g}Generating fstab...${nc}\n"
             genfstab -U -p /mnt >> /mnt/etc/fstab \
             && sleep 2s
             
+            # if some user input are empty they will be set to defaults
             read -r -p "${g}"' Please fill the machine name: '"${nc}" machine
+            user_input -m
+            
             echo ""
             read -r -p "${g}"' What is your language: [F]rench (France), [E]nglish (US) '"${nc}" language
+            user_input -l
             case "$language" in
                 f|F) lang="LANG=fr_FR.UTF-8" ;;
                 e|E) lang="LANG=en_US.UTF-8" ;;
             esac
+            
             echo ""
             read -r -p "${g}"' What is your keyboard layout: [F]rench (fr), [E]nglish (us) '"${nc}" keymap
+            user_input -k
             case "$keymap" in
                 f|F) key="KEYMAP=fr-latin9"
-                     font="FONT=eurlatgr" ;;  
+                    font="FONT=eurlatgr" ;;  
                 e|E) key="KEYMAP=us"
-                     font="FONT=lat2-16" ;;  
+                    font="FONT=lat2-16" ;;  
             esac
             
             arch-chroot /mnt /bin/bash -c "
