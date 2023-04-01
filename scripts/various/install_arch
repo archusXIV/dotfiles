@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Idea inspired by Y Vollenberg <https://nordri.vollenberg.ca>
+# Idea inspired by Yannick Vollenberg <https://nordri.vollenberg.ca>
 
 # Colors
 nc=$'\e[0;m';
@@ -9,7 +9,6 @@ r=$'\e[0;31m';
 
 description() {
     clear
-    echo ""
     setfont sun12x22
     cat << EOF
     # French
@@ -37,7 +36,7 @@ install() {
     A="1" B="2" C="3"
     
     if [[ $(id -u) == 0 ]]; then
-        # setting faster packages downloads
+        # Setting faster packages downloads.
         sed -i 's/#ParallelDownloads/ParallelDownloads/' /etc/pacman.conf
         
         if [[ -n $(ls /sys/firmware/efi/efivars) ]]; then
@@ -49,9 +48,9 @@ install() {
             
             cfdisk $SDISK
             
-            echo " ${g}Formating and mounting partitions...${nc}"
+            echo " ${g}formatting and mounting partitions.${nc}"
             sleep 1s
-
+            
             mkfs.fat -F32 $SDISK$A && mkfs.ext4 $SDISK$B && mkfs.ext4 $SDISK$C \
             && mount $SDISK$B /mnt \
             && mkdir -p /mnt/{boot/efi,home} \
@@ -59,16 +58,16 @@ install() {
             && mount $SDISK$C /mnt/home \
             && lsblk && sleep 2s
             
-            echo " ${g}Getting fresh mirrors list for $LOCATION${nc}"
+            echo " ${g}Getting fresh mirrors list for $LOCATION...${nc}"
             sleep 1s
             
-            reflector --verbose -c "$LOCATION" --latest 10 --age 24 --protocol https \
-            --sort rate --save /etc/pacman.d/mirrorlist
+            reflector --verbose --country "$LOCATION" --latest 10 --age 24 \
+            --protocol https --sort rate --save /etc/pacman.d/mirrorlist
             
             echo " ${g}Installing base system...${nc}"
             sleep 1s
             
-            # pacstrap will not use the iso's archlinux-keyring
+            # pacstrap will not use the iso's archlinux-keyring.
             pacstrap -K /mnt base base-devel linux linux-headers linux-firmware \
             pacman-contrib grub efibootmgr os-prober gptfdisk fatresize networkmanager \
             reflector zip unzip p7zip nano wget vim mc git syslog-ng mtools usbutils \
@@ -80,48 +79,70 @@ install() {
             cat /etc/pacman.conf > /mnt/etc/pacman.conf
             
             echo " ${g}Generating fstab...${nc}"
-            genfstab -U -p /mnt >> /mnt/etc/fstab
-            sleep 2s
+            genfstab -U -p /mnt >> /mnt/etc/fstab \
+            && sleep 2s && {
             
+            echo ""
             read -r -p "${g}"' Please fill the machine name: '"${nc}" machine
+            echo ""
+            read -r -p "${g}"' What is your language: [F]rench (France), [E]nglish (US) '"${nc}" language
+            case "$language" in
+                f|F) lang="LANG=fr_FR.UTF-8" ;;
+                e|E) lang="LANG=en_US.UTF-8" ;;
+            esac
+            echo ""
+            read -r -p "${g}"' What is your keyboard layout: [F]rench (fr), [E]nglish (US) '"${nc}" keymap
+            case "$keymap" in
+                f|F) key="KEYMAP=fr-latin9"
+                     font="FONT=eurlatgr"
+                 ;;  
+                e|E) key="KEYMAP=us"
+                     font="FONT=lat2-16"
+                 ;;  
+            esac
+            }
             
             arch-chroot /mnt /bin/bash -c "
                 ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime \
                 && hwclock --systohc --utc \
                 && echo $machine > /etc/hostname \
-                && echo KEYMAP=fr-latin9 > /etc/vconsole.conf \
-                && echo FONT=eurlatgr >> /etc/vconsole.conf && clear \
-                && echo ' Choose your locales using nano' && sleep 2 \
+                && echo $key > /etc/vconsole.conf \
+                && echo $font >> /etc/vconsole.conf \
+                && echo ' Choose your locales using nano' && sleep 2s \
                 && nano /etc/locale.gen && locale-gen \
-                && echo LANG=en_US.UTF-8 > /etc/locale.conf \
+                && echo $lang > /etc/locale.conf \
                 && echo LC_COLLATE=C >> /etc/locale.conf \
-                && echo '127.0.0.1    localhost' >> /etc/hosts \
+                && echo '127.0.0.1    localhost' > /etc/hosts \
                 && echo '::1          localhost' >> /etc/hosts \
                 && echo '127.0.1.1    $machine.localdomain    $machine' >> /etc/hosts \
                 && mkinitcpio -p linux && clear \
                 && echo ' Change the $USER password: ' \
                 && passwd $USER && echo '' \
                 && echo ' Installing grub menu on first sector of $SDISK, please be patient...' \
-                && grub-install --target=x86_64-efi --efi-directory=/boot/efi \
-                --bootloader-id=GRUB && grub-mkconfig -o /boot/grub/grub.cfg \
+                && grub-install --target=xf86_64-efi --efi-directory=/boot/efi \
+                --bootloader-id=ARCH_GRUB && grub-mkconfig -o /boot/grub/grub.cfg \
                 && systemctl enable NetworkManager \
                 && exit
             "
             clear
-            read -r -p ' Do you want to enter the new installed system? [Y/n] ' enter
+            read -r -p "${g}"' Do you want to enter the new installed system? [Y/n] ' enter
             case "$enter" in
                 y|Y) arch-chroot /mnt ;;
                 n|N) umount -R /mnt && reboot ;;
             esac
-            
         else
             clear
             echo ""
-            echo -e "${r} NON UEFI MACHINE${nc}"
-            sleep 2s && exit 0
+            echo " ${r}NON UEFI system${nc}"
+            sleep 3s && exit 0
         fi
+    else
+        clear
+        echo ""
+        echo " ${r}ONLY ROOT USER CAN RUN THIS SCRIPT.${nc}"
+        sleep 3s && exit 0
     fi
-
+    
 }
 
 description
