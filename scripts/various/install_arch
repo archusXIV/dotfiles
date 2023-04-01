@@ -33,7 +33,7 @@ EOF
 user_input() {
     case "$1" in
         -m)
-            [[ -z $(echo $machine) ]] && {
+            [[ -z $machine ]] && {
                 echo " ${r}EMPTY host name!"
                 echo " host name set to default...${nc}"
                 sleep 2s
@@ -41,7 +41,7 @@ user_input() {
             }
         ;;
         -l)
-            [[ -z $(echo $language) ]] && {
+            [[ -z $language ]] && {
                 echo " ${r}your language is not set!"
                 echo " language set to default...${nc}"
                 sleep 2s
@@ -49,7 +49,7 @@ user_input() {
             }
         ;;
         -k)
-            [[ -z $(echo $keymap) ]] && {
+            [[ -z $keymap ]] && {
                 echo " ${r}your keyboard layout is not set!"
                 echo " keyboard layout set to default...${nc}"
                 sleep 2s
