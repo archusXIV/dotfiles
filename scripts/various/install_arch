@@ -58,13 +58,13 @@ install() {
             && mount $SDISK$C /mnt/home \
             && lsblk && sleep 2s
             
-            echo -e " ${g}Getting fresh mirrors list for $LOCATION...${nc}\n"
+            echo " ${g}Getting fresh mirrors list for $LOCATION...${nc}"
             sleep 1s
             
             reflector --verbose --country "$LOCATION" --latest 10 --age 24 \
             --protocol https --sort rate --save /etc/pacman.d/mirrorlist
             
-            echo -e " ${g}Installing base system...${nc}\n"
+            echo " ${g}Installing base system...${nc}"
             sleep 1s
             
             # pacstrap will not use the iso's archlinux-keyring.
@@ -112,7 +112,7 @@ install() {
                 && echo '::1          localhost' >> /etc/hosts \
                 && echo '127.0.1.1    $machine.localdomain    $machine' >> /etc/hosts \
                 && mkinitcpio -p linux && clear \
-                && echo ' ${g}Change the $USER password: '${nc} \
+                && echo ' ${g}Change the $USER password: ${nc}' \
                 && passwd $USER && echo '' \
                 && echo ' ${g}Installing grub menu on first sector of $SDISK, please be patient...'${nc} \
                 && grub-install --target=x86_64-efi --efi-directory=/boot/efi \
@@ -122,7 +122,7 @@ install() {
             "
             clear
             echo ""
-            read -r -p "${g}"' Do you want to enter the new installed system? [Y/n] '${nc} enter
+            read -r -p "${g}"' Do you want to enter the new installed system? [Y/n] '"${nc}" enter
             case "$enter" in
                 y|Y) arch-chroot /mnt ;;
                 n|N) umount -R /mnt && reboot ;;
