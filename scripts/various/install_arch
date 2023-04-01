@@ -93,12 +93,10 @@ install() {
             echo ""
             read -r -p "${g}"' What is your keyboard layout: [F]rench (fr), [E]nglish (US) '"${nc}" keymap
             case "$keymap" in
-                f|F) key="KEYMAP=fr-latin9"
-                     font="FONT=eurlatgr"
-                 ;;  
-                e|E) key="KEYMAP=us"
-                     font="FONT=lat2-16"
-                 ;;  
+                f|F) key="KEYMAP=fr-latin9" ;;
+                     font="FONT=eurlatgr" ;;  
+                e|E) key="KEYMAP=us" ;;
+                     font="FONT=lat2-16" ;;  
             esac
             }
             
@@ -112,7 +110,7 @@ install() {
                 && nano /etc/locale.gen && locale-gen \
                 && echo $lang > /etc/locale.conf \
                 && echo LC_COLLATE=C >> /etc/locale.conf \
-                && echo '127.0.0.1    localhost' > /etc/hosts \
+                && echo '127.0.0.1    localhost' >> /etc/hosts \
                 && echo '::1          localhost' >> /etc/hosts \
                 && echo '127.0.1.1    $machine.localdomain    $machine' >> /etc/hosts \
                 && mkinitcpio -p linux && clear \
