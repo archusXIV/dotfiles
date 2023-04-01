@@ -58,13 +58,13 @@ install() {
             && mount $SDISK$C /mnt/home \
             && lsblk && sleep 2s
             
-            echo " ${g}Getting fresh mirrors list for $LOCATION...${nc}"
+            echo -e " ${g}Getting fresh mirrors list for $LOCATION...${nc}\n"
             sleep 1s
             
             reflector --verbose --country "$LOCATION" --latest 10 --age 24 \
             --protocol https --sort rate --save /etc/pacman.d/mirrorlist
             
-            echo " ${g}Installing base system...${nc}"
+            echo -e " ${g}Installing base system...${nc}\n"
             sleep 1s
             
             # pacstrap will not use the iso's archlinux-keyring.
