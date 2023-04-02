@@ -227,6 +227,4 @@ install() {
 }
 
 description
-# install
-diskchoice
-
+install
