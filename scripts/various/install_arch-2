@@ -17,22 +17,31 @@ r=$'\e[0;31m';
 
 description() {
     clear
-    # setfont sun12x22
+    setfont sun12x22
     cat << EOF
 
     # French
-    ${g}Ce script va installer une Archlinux en UEFI sur le premier disque détecté,
-    cfdisk sera utilisé pour Le partitionnement qui n'est pas automatisé.${nc}
-
+    ${g}Ce script va installer une Archlinux en UEFI sur le disque de votre choix
+    si il y en a plusieurs, le partitionnement reste manuel et cfdisk sera utilisé
+    pour mettre en place la table de partitions.
+    (/home doit être sur une partition séparée)
+    Pour le moment seul UN disque peut-être utilisé.${nc}
+    
     # English
-    ${g}This script will install Archlinux in UEFI mode on the first detected disk.
-    Partitioning will be done using cfdisk and it's not automatic.
-
+    ${g}This script will install Archlinux in UEFI mode on the drive of your choice
+    if there are several, the partitioning is not automated and cfdisk will be used
+    to set up the partition table.
+    (/home must be on a separate partition)
+    For the moment only ONE disc can be used.
+    
     Partitions layout examples:${nc}
     sda1=/boot/efi sda2=/ sda3=/home
+    or
     sdb1=/boot/efi sdb2=/ sdb3=/home
+    etc...
+    
 EOF
-    sleep 7s
+    sleep 10s
 }
 
 diskchoice() {
@@ -189,7 +198,7 @@ install() {
                 && mkinitcpio -p linux && clear \
                 && echo ' ${g}Change the $USER password: ${nc}' \
                 && passwd $USER \
-                && echo ' ${g}Installing grub menu on first sector of \/dev\/$HWDISK, please be patient...${nc}' \
+                && echo ' ${g}Installing grub menu on first sector of /dev/$HWDISK, please be patient...${nc}' \
                 && grub-install --target=x86_64-efi --efi-directory=/boot/efi \
                 --bootloader-id=ARCH_GRUB && grub-mkconfig -o /boot/grub/grub.cfg \
                 && systemctl enable {NetworkManager,systemd-timesyncd} \
