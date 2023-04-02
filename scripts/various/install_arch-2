@@ -7,7 +7,7 @@
 # on a simple disk layout following the arch way to Keep It Simple Stupid.
 # Use it at your own risks....lol
 # Download the script when logged in the arch live iso:
-# curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_arch" -O
+# curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_arch-2" -O
 
 
 # Colors
@@ -28,8 +28,9 @@ description() {
     ${g}This script will install Archlinux in UEFI mode on the first detected disk.
     Partitioning will be done using cfdisk and it's not automatic.
 
-    Partitions layout:${nc}
+    Partitions layout examples:${nc}
     sda1=/boot/efi sda2=/ sda3=/home
+    sdb1=/boot/efi sdb2=/ sdb3=/home
 EOF
     sleep 7s
 }
