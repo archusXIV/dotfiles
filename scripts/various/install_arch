@@ -18,13 +18,13 @@ y=$'\e[93m';
 
 description() {
     clear
-    # setfont sun12x22
+    setfont sun12x22
     cat << EOF
 
     # French
     ${g}Ce script va installer une Archlinux en UEFI sur le disque de votre choix
     si il y en a plusieurs, le partitionnement reste manuel et cfdisk sera utilisé
-    pour mettre en place la table de partitions. ${y}(/home doit être sur une partition séparée).${nb}
+    pour mettre en place la table de partitions. ${y}(/home doit être sur une partition séparée).
     Pour le moment seul UN disque peut-être utilisé.${nc}
     
     # English
