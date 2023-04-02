@@ -43,17 +43,17 @@ diskchoice() {
         read -r disk
         case "$disk" in
             sda)
-                HWDISK=$(lsblk -dno NAME | awk 'NR==1 { print $1; exit }')
-            ;;
-            sdb)
                 HWDISK=$(lsblk -dno NAME | awk 'NR==2 { print $1; exit }')
             ;;
-            sdc)
+            sdb)
                 HWDISK=$(lsblk -dno NAME | awk 'NR==3 { print $1; exit }')
+            ;;
+            sdc)
+                HWDISK=$(lsblk -dno NAME | awk 'NR==4 { print $1; exit }')
             ;;
         esac
     else
-        HWDISK=$(lsblk -dno NAME | awk 'NR==1 { print $1; exit }')
+        HWDISK=$(lsblk -dno NAME | awk 'NR==2 { print $1; exit }')
     fi
 
 }
@@ -92,9 +92,8 @@ default_inputs() {
 
 install() {
     clear
-    local SDISK LOCATION TIMEZONE A B C
+    local LOCATION TIMEZONE A B C
     
-    SDISK="/dev/$HWDISK"
     LOCATION=$(curl --fail -s https://ipapi.co/country)
     TIMEZONE=$(curl --fail -s https://ipapi.co/timezone)
     A="1" B="2" C="3"
@@ -112,16 +111,16 @@ install() {
             sleep 2s
 
             diskchoice
-            cfdisk $SDISK
+            cfdisk /dev/$HWDISK
             
             echo -e " ${g}formating and mounting partitions.${nc}\n"
             sleep 1s
             
-            mkfs.fat -F32 $SDISK$A && mkfs.ext4 $SDISK$B && mkfs.ext4 $SDISK$C \
-            && mount $SDISK$B /mnt \
+            mkfs.fat -F32 /dev/$HWDISK$A && mkfs.ext4 /dev/$HWDISK$B && mkfs.ext4 /dev/$HWDISK$C \
+            && mount /dev/$HWDISK$B /mnt \
             && mkdir -p /mnt/{boot/efi,home} \
-            && mount $SDISK$A /mnt/boot/efi \
-            && mount $SDISK$C /mnt/home \
+            && mount /dev/$HWDISK$A /mnt/boot/efi \
+            && mount /dev/$HWDISK$C /mnt/home \
             && lsblk && sleep 2s
 
             echo " ${g}Getting fresh mirrors list for $LOCATION...${nc}"
@@ -189,7 +188,7 @@ install() {
                 && mkinitcpio -p linux && clear \
                 && echo ' ${g}Change the $USER password: ${nc}' \
                 && passwd $USER \
-                && echo ' ${g}Installing grub menu on first sector of $SDISK, please be patient...${nc}' \
+                && echo ' ${g}Installing grub menu on first sector of \/dev\/$HWDISK, please be patient...${nc}' \
                 && grub-install --target=x86_64-efi --efi-directory=/boot/efi \
                 --bootloader-id=ARCH_GRUB && grub-mkconfig -o /boot/grub/grub.cfg \
                 && systemctl enable NetworkManager \
