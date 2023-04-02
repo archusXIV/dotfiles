@@ -87,6 +87,8 @@ install() {
             timedatectl set-ntp true && timedatectl \
             && echo " ${g}Success, system clock updated.${nc}"
             sleep 2s
+            
+            cfdisk $SDISK
 
             echo -e " ${g}formating and mounting partitions.${nc}\n"
             sleep 1s
