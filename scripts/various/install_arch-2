@@ -23,15 +23,13 @@ description() {
     # French
     ${g}Ce script va installer une Archlinux en UEFI sur le disque de votre choix
     si il y en a plusieurs, le partitionnement reste manuel et cfdisk sera utilisé
-    pour mettre en place la table de partitions.
-    (/home doit être sur une partition séparée)
+    pour mettre en place la table de partitions. (/home doit être sur une partition séparée).
     Pour le moment seul UN disque peut-être utilisé.${nc}
     
     # English
     ${g}This script will install Archlinux in UEFI mode on the drive of your choice
     if there are several, the partitioning is not automated and cfdisk will be used
-    to set up the partition table.
-    (/home must be on a separate partition)
+    to set up the partition table. (/home must be on a separate partition).
     For the moment only ONE disc can be used.
     
     Partitions layout examples:${nc}
