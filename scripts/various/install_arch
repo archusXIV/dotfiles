@@ -225,7 +225,7 @@ install() {
         else
             clear
             echo ""
-            echo " ${r}NON UEFI SYSTEM, exiting...${nc}"
+            echo " ${r}NONE UEFI SYSTEM, exiting...${nc}"
             sleep 3s && exit 0
         fi
     else
