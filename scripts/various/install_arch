@@ -70,7 +70,7 @@ install() {
     clear
     local HWDISK SDISK LOCATION TIMEZONE A B C
 
-    HWDISK=$(lsblk -r | awk '/disk/{ NR==1; print $1 }')
+    HWDISK=$(lsblk -dno NAME | awk 'NR==1 { print $1; exit }')
     SDISK="/dev/$HWDISK"
     LOCATION=$(curl --fail -s https://ipapi.co/country)
     TIMEZONE=$(curl --fail -s https://ipapi.co/timezone)
