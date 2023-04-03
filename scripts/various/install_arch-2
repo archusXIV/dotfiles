@@ -90,7 +90,7 @@ _TestHome() {
         && lsblk && sleep 2s
     )
     
-    if [[ $(lsblk -no NAME | grep $HWDISK$3) ]]; then
+    if [[ $(lsblk -no NAME | grep $HWDISK$C) ]]; then
         printf '%s\n' " ${g}Formating and mounting partitions.${nc}"
         sleep 1s
          __DefaultLayout
