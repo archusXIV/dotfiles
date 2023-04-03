@@ -49,18 +49,22 @@ diskchoice() {
         # This will exclude weird things like: loop0, sr0
         lsblk -I 8
         printf '%s\n'
-        printf '%s\n' " ${g}Choose a disk for installation, eg: sda or sdb: ${nc}"
-        read -r drive
-        
+        read -r -p "${g}"' Choose a disk for installation, eg: sda or sdb: '"${nc}" drive
         case "$drive" in
             sda)
                 HWDISK=$(lsblk -dno NAME -I 8 | sed -n '1p')
+                printf '%s\n' " ${g}You selected: $HWDISK"
+                sleep 1s
             ;;
             sdb)
                 HWDISK=$(lsblk -dno NAME -I 8 | sed -n '2p')
+                printf '%s\n' " ${g}You selected: $HWDISK"
+                sleep 1s
             ;;
             sdc)
                 HWDISK=$(lsblk -dno NAME -I 8 | sed -n '3p')
+                printf '%s\n' " ${g}You selected: $HWDISK"
+                sleep 1s
             ;;
         esac
     else
