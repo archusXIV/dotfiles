@@ -46,7 +46,7 @@ EOF
 _DiskChoice() {
     __PromptChoice() (
         printf '%s\n' " ${g}You selected: $HWDISK"
-        sleep 1s
+        sleep 2s
     )
     # if there are more than one usable drive
     if [[ $(lsblk -I 8 -n | wc -l) -gt 1 ]]; then
