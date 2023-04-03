@@ -16,7 +16,7 @@ g=$'\e[1;32m';
 r=$'\e[0;31m';
 y=$'\e[93m';
 
-description() {
+_Description() {
     clear
     setfont sun12x22
     cat << EOF
@@ -43,7 +43,11 @@ EOF
     sleep 10s
 }
 
-diskchoice() {
+_DiskChoice() {
+    __PromptChoice() (
+        printf '%s\n' " ${g}You selected: $HWDISK"
+        sleep 1s
+    )
     # if there are more than one usable drive
     if [[ $(lsblk -I 8 -n | wc -l) -gt 1 ]]; then
         # This will exclude weird things like: loop0, sr0
@@ -54,29 +58,26 @@ diskchoice() {
         case "$drive" in
             sda)
                 HWDISK=$(lsblk -dno NAME -I 8 | sed -n '1p')
-                printf '%s\n' " ${g}You selected: $HWDISK"
-                sleep 1s
+                __PromptChoice
             ;;
             sdb)
                 HWDISK=$(lsblk -dno NAME -I 8 | sed -n '2p')
-                printf '%s\n' " ${g}You selected: $HWDISK"
-                sleep 1s
+                __PromptChoice
             ;;
             sdc)
                 HWDISK=$(lsblk -dno NAME -I 8 | sed -n '3p')
-                printf '%s\n' " ${g}You selected: $HWDISK"
-                sleep 1s
+                __PromptChoice
             ;;
         esac
     else
         HWDISK=$(lsblk -dno NAME -I 8 | sed -n '1p')
-        printf '%s\n' " ${g}automatic selection: $HWDISK"
-        sleep 1s
+        printf '%s\n' " ${g}automatic selection done: $HWDISK"
+        sleep 2s
     fi
 
 }
 
-default_inputs() {
+_DefaultInputs() {
     # Here we define the default settings that the user
     # should fill but doesn't, just before we enter the chroot
     # if the variables are empty...
@@ -108,7 +109,7 @@ default_inputs() {
     esac
 }
 
-install() {
+_Install() {
     clear
     local LOCATION TIMEZONE A B C
     
@@ -128,7 +129,7 @@ install() {
             && printf '%s\n' " ${g}Success, system clock updated.${nc}"
             sleep 2s
             
-            diskchoice
+            _DiskChoice
             cfdisk /dev/$HWDISK
             
             printf '%s\n' " ${g}Formating and mounting partitions.${nc}"
@@ -172,7 +173,7 @@ install() {
             
             # if some user inputs are empty they will be set to defaults
             read -r -p "${g}"' Please fill the machine name: '"${nc}" machine
-            default_inputs -m
+            _DefaultInputs -m
             
             printf '%s\n'
             read -r -p "${g}"' Choose your language: [F]rench (France), [E]nglish (US): '"${nc}" language
@@ -180,7 +181,7 @@ install() {
                 f|F) lang="LANG=fr_FR.UTF-8" ;;
                 e|E) lang="LANG=en_US.UTF-8" ;;
             esac
-            default_inputs -l
+            _DefaultInputs -l
             
             printf '%s\n'
             read -r -p "${g}"' Choose your keyboard layout: [F]rench (fr), [E]nglish (us): '"${nc}" keymap
@@ -190,7 +191,7 @@ install() {
                 e|E) key="KEYMAP=us"
                     font="FONT=lat2-16" ;;
             esac
-            default_inputs -k
+            _DefaultInputs -k
             
             arch-chroot /mnt /bin/bash -c "
                 ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime \
@@ -223,7 +224,7 @@ install() {
                 ;;
                 n|N)
                     printf '%s' " ${g}Unmounting /mnt and rebooting.${nc}"
-                    sleep 2s
+                    sleep 1s
                     umount -R /mnt && reboot
                 ;;
                 *)
@@ -245,5 +246,5 @@ install() {
     
 }
 
-description
-install
+_Description
+_Install
