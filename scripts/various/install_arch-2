@@ -45,25 +45,25 @@ EOF
 
 diskchoice() {
     # if there are more than one drive
-    if [[ $(lsblk -dno NAME | wc -l) -gt 1 ]]; then
-        lsblk
+    if [[ $(lsblk -I 8 -n | wc -l) -gt 1 ]]; then
+        lsblk -I 8
         echo ""
         echo " ${g}Choose a disk for installation, eg: sda or sdb: "
         read -r drive
-        # first line will be loop0, so first drive is on line 2
+        
         case "$drive" in
             sda)
-                HWDISK=$(lsblk -dno NAME | awk 'NR==2 { print $1; exit }')
+                HWDISK=$(lsblk -dno NAME -I 8 | sed -n '1p')
             ;;
             sdb)
-                HWDISK=$(lsblk -dno NAME | awk 'NR==3 { print $1; exit }')
+                HWDISK=$(lsblk -dno NAME -I 8 | sed -n '2p')
             ;;
             sdc)
-                HWDISK=$(lsblk -dno NAME | awk 'NR==4 { print $1; exit }')
+                HWDISK=$(lsblk -dno NAME -I 8 | sed -n '3p')
             ;;
         esac
     else
-        HWDISK=$(lsblk -dno NAME | awk 'NR==2 { print $1; exit }')
+        HWDISK=$(lsblk -dno NAME -I 8 | sed -n '1p')
     fi
 
 }
