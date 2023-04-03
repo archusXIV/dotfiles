@@ -24,19 +24,22 @@ _Description() {
     # French
     ${g}Ce script va installer une Archlinux en UEFI sur le disque de votre choix
     si il y en a plusieurs, le partitionnement reste manuel et cfdisk sera utilisé
-    pour mettre en place la table de partitions. ${y}(/home doit être sur une partition séparée).
+    pour mettre en place la table de partitions. ${y}Si /home est absent vous avez
+    la possibilité de continuer sans ou de faire machine arrière pour créer cette
+    même partition.
     Pour le moment seul UN disque peut-être utilisé.${nc}
     
     # English
     ${g}This script will install Archlinux in UEFI mode on the drive of your choice
     if there are several, the partitioning is not automated and cfdisk will be used
-    to set up the partition table. ${y}(/home must be on a separate partition).
+    to set up the partition table. ${y}If /home is missing you have the option
+    to continue without or backtrack to create this partition.
     For the moment only ONE drive can be used.
     
     ${g}Partitions layout examples:${nc}
-    sda1=/boot/efi sda2=/ sda3=/home
+    sdX1=/boot/efi sdX2=/ sdX3=/home
     or
-    sdb1=/boot/efi sdb2=/ sdb3=/home
+    sdX1=/boot/efi sdX2=/
     etc...
     
 EOF
@@ -71,7 +74,7 @@ _DiskChoice() {
         esac
     else
         HWDISK=$(lsblk -dno NAME -I 8 | sed -n '1p')
-        printf '%s\n' " ${g}automatic selection done: $HWDISK"
+        printf '%s\n' " ${g}Automatic selection done: $HWDISK"
         sleep 2s
     fi
 
@@ -102,6 +105,8 @@ _TestHome() {
                 sleep 2s
                 cfdisk /dev/$HWDISK
                  __DefaultLayout
+                printf '%s\n' " ${g}Formating and mounting partitions.${nc}"
+                sleep 1s
             ;;
             y|Y)
                 printf '%s\n' " ${g}Formating and mounting partitions.${nc}"
