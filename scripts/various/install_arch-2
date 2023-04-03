@@ -50,8 +50,8 @@ _DiskChoice() {
     )
     # if there are more than one usable drive
     if [[ $(lsblk -I 8 -n | wc -l) -gt 1 ]]; then
-        # This will exclude weird things like: loop0, sr0
         printf '%s\n'
+        # This will exclude weird things like: loop0, sr0
         lsblk -I 8
         printf '%s\n'
         read -r -p "${g}"' Choose a disk for installation, eg: sda or sdb: '"${nc}" drive
@@ -84,24 +84,21 @@ _DefaultInputs() {
     case "$1" in
         -m)
             [[ -z $machine ]] && {
-                printf '%s' " ${r}EMPTY host name!"
-                printf '%s\n' " host name set to archlinux...${nc}"
+                printf '%s\n' " ${r}hostname is EMPTY... will be set to archlinux${nc}"
                 machine="archlinux"
                 sleep 2s
             }
         ;;
         -l)
             [[ -z $language ]] && {
-                printf '%s' " ${r}your language is not set!"
-                printf '%s\n' " language set to english US...${nc}"
+                printf '%s\n' " ${r}your language is EMPTY... will be set to en_US.UTF-8${nc}"
                 lang="LANG=en_US.UTF-8"
                 sleep 2s
             }
         ;;
         -k)
             [[ -z $keymap ]] && {
-                printf '%s' " ${r}your keyboard layout is not set!"
-                printf '%s\n' " keyboard layout set to us...${nc}"
+                printf '%s\n' " ${r}your keyboard layout is EMPTY...will be set to us${nc}"
                 key="KEYMAP=us" font="FONT=lat2-16"
                 sleep 2s
             }
