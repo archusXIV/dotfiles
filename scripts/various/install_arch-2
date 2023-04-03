@@ -47,6 +47,7 @@ diskchoice() {
     # if there are more than one usable drive
     if [[ $(lsblk -I 8 -n | wc -l) -gt 1 ]]; then
         # This will exclude weird things like: loop0, sr0
+        printf '%s\n'
         lsblk -I 8
         printf '%s\n'
         read -r -p "${g}"' Choose a disk for installation, eg: sda or sdb: '"${nc}" drive
