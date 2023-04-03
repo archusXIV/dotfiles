@@ -33,7 +33,7 @@ _Description() {
     ${g}This script will install Archlinux in UEFI mode on the drive of your choice
     if there are several, the partitioning is not automated and cfdisk will be used
     to set up the partition table. ${y}If /home is missing you have the option
-    to continue without or backtrack to create this partition.
+    to continue without it or backtrack to create this partition.
     For the moment only ONE drive can be used.
     
     ${g}Partitions layout examples:${nc}
