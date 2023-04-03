@@ -44,11 +44,12 @@ EOF
 }
 
 diskchoice() {
-    # if there are more than one drive
+    # if there are more than one usable drive
     if [[ $(lsblk -I 8 -n | wc -l) -gt 1 ]]; then
+        # This will exclude weird things like: loop0, sr0
         lsblk -I 8
-        echo ""
-        echo " ${g}Choose a disk for installation, eg: sda or sdb: "
+        printf '%s\n'
+        printf '%s\n' " ${g}Choose a disk for installation, eg: sda or sdb: ${nc}"
         read -r drive
         
         case "$drive" in
@@ -64,6 +65,8 @@ diskchoice() {
         esac
     else
         HWDISK=$(lsblk -dno NAME -I 8 | sed -n '1p')
+        printf '%s\n' " ${g}automatic selection: $HWDISK"
+        sleep 1s
     fi
 
 }
@@ -75,24 +78,24 @@ default_inputs() {
     case "$1" in
         -m)
             [[ -z $machine ]] && {
-                echo " ${r}EMPTY host name!"
-                echo " host name set to default...${nc}"
+                printf '%s' " ${r}EMPTY host name!"
+                printf '%s\n' " host name set to archlinux...${nc}"
                 machine="archlinux"
                 sleep 2s
             }
         ;;
         -l)
             [[ -z $language ]] && {
-                echo " ${r}your language is not set!"
-                echo " language set to default...${nc}"
+                printf '%s' " ${r}your language is not set!"
+                printf '%s\n' " language set to english US...${nc}"
                 lang="LANG=en_US.UTF-8"
                 sleep 2s
             }
         ;;
         -k)
             [[ -z $keymap ]] && {
-                echo " ${r}your keyboard layout is not set!"
-                echo " keyboard layout set to default...${nc}"
+                printf '%s' " ${r}your keyboard layout is not set!"
+                printf '%s\n' " keyboard layout set to us...${nc}"
                 key="KEYMAP=us" font="FONT=lat2-16"
                 sleep 2s
             }
@@ -113,17 +116,17 @@ install() {
         sed -i 's/#ParallelDownloads/ParallelDownloads/' /etc/pacman.conf
         
         if [[ -n $(ls /sys/firmware/efi/efivars) ]]; then
-            echo -e " ${g}Success, UEFI system detected.${nc}\n"
+            printf '%s\n' " ${g}Success, UEFI system detected.${nc}"
             sleep 2s
             
             timedatectl set-ntp true && timedatectl \
-            && echo -e " ${g}Success, system clock updated.${nc}\n"
+            && printf '%s\n' " ${g}Success, system clock updated.${nc}"
             sleep 2s
             
             diskchoice
             cfdisk /dev/$HWDISK
             
-            echo -e " ${g}Formating and mounting partitions.${nc}\n"
+            printf '%s\n' " ${g}Formating and mounting partitions.${nc}"
             sleep 1s
             
             mkfs.fat -F32 /dev/$HWDISK$A \
@@ -135,13 +138,13 @@ install() {
             && mount /dev/$HWDISK$C /mnt/home \
             && lsblk && sleep 2s
             
-            echo " ${g}Getting fresh mirrors list for $LOCATION...${nc}"
+            printf '%s' " ${g}Getting fresh mirrors list for $LOCATION...${nc}"
             sleep 1s
             
             reflector --verbose --country "$LOCATION" --latest 10 --age 24 \
             --protocol https --sort rate --save /etc/pacman.d/mirrorlist
             
-            echo -e " ${g}Installing Arch-Linux base system...${nc}\n"
+            printf '%s\n' " ${g}Installing Arch-Linux base system...${nc}"
             sleep 1s
             
             # pacstrap will not use the iso's archlinux-keyring.
@@ -155,18 +158,18 @@ install() {
             cat /etc/pacman.d/mirrorlist > /mnt/etc/pacman.d/mirrorlist \
             && cat /etc/pacman.conf > /mnt/etc/pacman.conf
             
-            echo -e " ${g}Generating fstab...${nc}\n"
+            printf '%s\n' " ${g}Generating fstab...${nc}"
             genfstab -U -p /mnt >> /mnt/etc/fstab \
             && sleep 2s
             
-            echo -e " ${g}Entering installed system for configuration.${nc}\n"
+            printf '%s\n' " ${g}Entering installed system for configuration.${nc}"
             sleep 2s
             
             # if some user inputs are empty they will be set to defaults
             read -r -p "${g}"' Please fill the machine name: '"${nc}" machine
             default_inputs -m
             
-            echo ""
+            printf '%s\n'
             read -r -p "${g}"' Choose your language: [F]rench (France), [E]nglish (US): '"${nc}" language
             case "$language" in
                 f|F) lang="LANG=fr_FR.UTF-8" ;;
@@ -174,7 +177,7 @@ install() {
             esac
             default_inputs -l
             
-            echo ""
+            printf '%s\n'
             read -r -p "${g}"' Choose your keyboard layout: [F]rench (fr), [E]nglish (us): '"${nc}" keymap
             case "$keymap" in
                 f|F) key="KEYMAP=fr-latin9"
@@ -207,14 +210,14 @@ install() {
                 && timedatectl set-ntp true && exit
             "
             clear
-            echo ""
+            printf '%s\n'
             read -r -p "${g}"' Do you want to enter the new installed system? [Y/n] '"${nc}" enter
             case "$enter" in
                 y|Y)
                     arch-chroot /mnt
                 ;;
                 n|N)
-                    echo " ${g}Unmounting /mnt and rebooting.${nc}"
+                    printf '%s' " ${g}Unmounting /mnt and rebooting.${nc}"
                     sleep 2s
                     umount -R /mnt && reboot
                 ;;
@@ -224,14 +227,14 @@ install() {
             esac
         else
             clear
-            echo ""
-            echo " ${r}NONE UEFI SYSTEM, exiting...${nc}"
+            printf '%s\n'
+            printf '%s' " ${r}NONE UEFI SYSTEM, exiting...${nc}"
             sleep 3s && exit 0
         fi
     else
         clear
-        echo ""
-        echo " ${r}ONLY ROOT USER CAN RUN THIS SCRIPT, exiting...${nc}"
+        printf '%s\n'
+        printf '%s' " ${r}ONLY ROOT USER CAN RUN THIS SCRIPT, exiting...${nc}"
         sleep 3s && exit 0
     fi
     
