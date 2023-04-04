@@ -50,7 +50,7 @@ _Description() {
     3) sda1=/boot/efi sda2=/ sdb1=/home${nc}
     
 EOF
-    sleep 20s
+    sleep 12s
 }
 
 _FormatPrompt() {
