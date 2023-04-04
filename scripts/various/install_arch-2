@@ -168,7 +168,7 @@ _SecondDiskChoice() {
         clear
         printf '%s\n'
         # This will exclude weird things like: loop0, sr0
-        lsblk -I 8 | sed 's/${HWDISK}//'
+        lsblk -I 8
         printf '%s\n' " ${g}sdb should be a good choice.${nc}"
         read -r -p "${g}"' Choose a disk for /home, eg: 1=sda or 2=sdb etc...: '"${nc}" home
         case "$home" in
