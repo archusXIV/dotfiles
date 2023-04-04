@@ -54,6 +54,7 @@ EOF
 }
 
 _FormatPrompt() {
+    clear
     printf '%s\n' " ${g}Formating and mounting partitions.${nc}"
 }
 
@@ -86,10 +87,11 @@ _TestHome() {
         sleep 1s
         __DefaultLayout
     else
-        read -r -p "${g}"' No /home detected, do you want to continue? [N/y]: '"${nc}" nohome
+        clear
+        read -r -p "${g}"' No separated /home detected, do you want to create it? [N/y]: '"${nc}" nohome
         printf '%s\n'
          case "$nohome" in
-            n|N)
+            y|Y)
                 read -r -p "${g}"' [1] /home on same drive, [2] /home on another drive: '"${nc}" homepath
                 case "$homepath" in
                     1)
@@ -106,7 +108,7 @@ _TestHome() {
                 esac
                 
             ;;
-            y|Y)
+            n|N)
                 _FormatPrompt
                 sleep 1s
                 mkfs.fat -F32 /dev/$HWDISK$A \
@@ -165,7 +167,7 @@ _SecondDiskChoice() {
         printf '%s\n'
         # This will exclude weird things like: loop0, sr0
         lsblk -I 8
-        printf '%s\n'
+        printf '%s\n' " ${g}sdb should be a good choice.${nc}"
         read -r -p "${g}"' Choose a disk for /home, eg: 1=sda or 2=sdb etc...: '"${nc}" home
         case "$home" in
             1)
@@ -225,10 +227,12 @@ _Install() {
         # Setting faster packages downloads.
         sed -i 's/#ParallelDownloads/ParallelDownloads/' /etc/pacman.conf
         
+        printf '%s\n' " ${g}Looking for UEFI system...${nc}"
         if [[ -n $(ls /sys/firmware/efi/efivars) ]]; then
             printf '%s\n' " ${g}Success, UEFI system detected.${nc}"
             sleep 2s
             
+            printf '%s\n' " ${g}Syncronizing system clock...${nc}"
             timedatectl set-ntp true && timedatectl \
             && printf '%s\n' " ${g}Success, system clock updated.${nc}"
             sleep 2s
