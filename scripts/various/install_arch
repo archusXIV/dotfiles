@@ -7,8 +7,21 @@
 # on a simple disk layout following the arch way to Keep It Simple Stupid.
 # Use it at your own risks....lol
 # Download the script when logged in the arch live iso:
-# curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_arch" -O
-
+# curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_arch-2" -O
+#
+# French
+# Ce script va installer une Archlinux en UEFI sur le disque de votre choix
+# si il y en a plusieurs, le partitionnement reste manuel et cfdisk sera utilisé
+# pour mettre en place la table de partitions. ${y}Si /home est absent vous avez
+# la possibilité de continuer sans ou de faire machine arrière pour créer cette
+# même partition sur le même disque que le système ou sur un autre si autre il y a.
+#
+# English
+# This script will install Archlinux in UEFI mode on the drive of your choice
+# if there are several, the partitioning is not automated and cfdisk will be used
+# to set up the partition table. ${y}If /home partition is missing you can continue
+# without it or backtrack to create this partition on the same drive
+# or on another drive if it exist.
 
 # Colors
 nc=$'\e[0;m';
@@ -24,60 +37,36 @@ _Description() {
     # French
     ${g}Ce script va installer une Archlinux en UEFI sur le disque de votre choix
     si il y en a plusieurs, le partitionnement reste manuel et cfdisk sera utilisé
-    pour mettre en place la table de partitions. ${y}Si /home est absent vous avez
-    la possibilité de continuer sans ou de faire machine arrière pour créer cette
-    même partition.
-    Pour le moment seul UN disque peut-être utilisé.${nc}
+    pour mettre en place la table de partitions.${nc}
     
     # English
     ${g}This script will install Archlinux in UEFI mode on the drive of your choice
     if there are several, the partitioning is not automated and cfdisk will be used
-    to set up the partition table. ${y}If /home is missing you have the option
-    to continue without it or backtrack to create this partition.
-    For the moment only ONE drive can be used.
+    to set up the partition table.${nc}
     
-    ${g}Partitions layout examples:${nc}
-    sdX1=/boot/efi sdX2=/ sdX3=/home
-    or
-    sdX1=/boot/efi sdX2=/
-    etc...
+    Partitions layout examples:
+    ${y}1) sda1=/boot/efi sda2=/ sda3=/home
+    2) sda1=/boot/efi sda2=/
+    3) sda1=/boot/efi sda2=/ sdb1=/home${nc}
     
 EOF
-    sleep 10s
+    sleep 12s
 }
 
-_DiskChoice() {
-    __PromptChoice() (
-        printf '%s\n' " ${g}You selected: $HWDISK"
-        sleep 2s
-    )
-    # if there are more than one usable drive
-    if [[ $(lsblk -I 8 -n | wc -l) -gt 1 ]]; then
-        printf '%s\n'
-        # This will exclude weird things like: loop0, sr0
-        lsblk -I 8
-        printf '%s\n'
-        read -r -p "${g}"' Choose a disk for installation, eg: sda or sdb: '"${nc}" drive
-        case "$drive" in
-            sda)
-                HWDISK=$(lsblk -dno NAME -I 8 | sed -n '1p')
-                __PromptChoice
-            ;;
-            sdb)
-                HWDISK=$(lsblk -dno NAME -I 8 | sed -n '2p')
-                __PromptChoice
-            ;;
-            sdc)
-                HWDISK=$(lsblk -dno NAME -I 8 | sed -n '3p')
-                __PromptChoice
-            ;;
-        esac
-    else
-        HWDISK=$(lsblk -dno NAME -I 8 | sed -n '1p')
-        printf '%s\n' " ${g}Automatic selection done: $HWDISK"
-        sleep 2s
-    fi
+_FormatPrompt() {
+    clear
+    printf '%s\n' " ${g}Formating and mounting partitions.${nc}"
+}
 
+_SeparatedHomeLayout() {
+        mkfs.fat -F32 /dev/$HWDISK$A \
+        && mkfs.ext4 /dev/$HWDISK$B \
+        && mkfs.ext4 /dev/$HWDISK2$A \
+        && mount /dev/$HWDISK$B /mnt \
+        && mkdir -p /mnt/{boot/efi,home} \
+        && mount /dev/$HWDISK$A /mnt/boot/efi \
+        && mount /dev/$HWDISK2$A /mnt/home \
+        && lsblk && sleep 2s
 }
 
 _TestHome() {
@@ -94,22 +83,33 @@ _TestHome() {
     )
     
     if [[ $(lsblk -no NAME | grep $HWDISK$C) ]]; then
-        printf '%s\n' " ${g}Formating and mounting partitions.${nc}"
+        _FormatPrompt
         sleep 1s
-         __DefaultLayout
+        __DefaultLayout
     else
-        read -r -p "${g}"' No /home detected, do you want to continue? [N/y]: '"${nc}" nohome
+        clear
+        read -r -p "${g}"' No separated /home detected, do you want to create it? [N/y]: '"${nc}" nohome
+        printf '%s\n'
          case "$nohome" in
-            n|N)
-                printf '%s\n' " ${g}Please modify your partitions layout.${nc}"
-                sleep 2s
-                cfdisk /dev/$HWDISK
-                 __DefaultLayout
-                printf '%s\n' " ${g}Formating and mounting partitions.${nc}"
-                sleep 1s
-            ;;
             y|Y)
-                printf '%s\n' " ${g}Formating and mounting partitions.${nc}"
+                read -r -p "${g}"' [1] /home on same drive, [2] /home on another drive: '"${nc}" homepath
+                case "$homepath" in
+                    1)
+                        printf '%s\n' " ${g}Please modify your partitions layout.${nc}"
+                        sleep 2s
+                        cfdisk /dev/$HWDISK
+                        __DefaultLayout
+                        _FormatPrompt
+                        sleep 1s
+                    ;;
+                    2)
+                        _SecondDiskChoice
+                    ;;
+                esac
+                
+            ;;
+            n|N)
+                _FormatPrompt
                 sleep 1s
                 mkfs.fat -F32 /dev/$HWDISK$A \
                 && mkfs.ext4 /dev/$HWDISK$B \
@@ -121,6 +121,69 @@ _TestHome() {
         esac
     fi
     
+}
+
+_FirstDiskChoice() {
+    __FirstChoice() (
+        printf '%s\n' " ${g}You selected: $HWDISK"
+        sleep 2s
+    )
+    # if there are more than one usable drive
+    if [[ $(lsblk -I 8 -n | wc -l) -gt 1 ]]; then
+        printf '%s\n'
+        # This will exclude weird things like: loop0, sr0
+        lsblk -I 8
+        printf '%s\n'
+        read -r -p "${g}"' Choose a disk for installation, eg: 1=sda or 2=sdb etc...: '"${nc}" drive
+        case "$drive" in
+            1)
+                HWDISK=$(lsblk -dno NAME -I 8 | sed -n '1p')
+                __FirstChoice
+            ;;
+            2)
+                HWDISK=$(lsblk -dno NAME -I 8 | sed -n '2p')
+                __FirstChoice
+            ;;
+            3)
+                HWDISK=$(lsblk -dno NAME -I 8 | sed -n '3p')
+                __FirstChoice
+            ;;
+        esac
+    else
+        HWDISK=$(lsblk -dno NAME -I 8 | sed -n '1p')
+        printf '%s\n' " ${g}Automatic selection done: $HWDISK"
+        sleep 2s
+    fi
+
+}
+
+_SecondDiskChoice() {
+    __SecondChoice() (
+        printf '%s\n' " ${g}You selected: $HWDISK2"
+        sleep 2s
+    )
+    # if there are more than one usable drive
+    if [[ $(lsblk -I 8 -n | wc -l) -gt 1 ]]; then
+        printf '%s\n'
+        # This will exclude weird things like: loop0, sr0
+        lsblk -I 8
+        printf '%s\n' " ${g}sdb should be a good choice.${nc}"
+        read -r -p "${g}"' Choose a disk for /home, eg: 1=sda or 2=sdb etc...: '"${nc}" home
+        case "$home" in
+            1)
+                HWDISK2=$(lsblk -dno NAME -I 8 | sed -n '1p')
+                __SecondChoice
+            ;;
+            2)
+                HWDISK2=$(lsblk -dno NAME -I 8 | sed -n '2p')
+                __SecondChoice
+            ;;
+            3)
+                HWDISK2=$(lsblk -dno NAME -I 8 | sed -n '3p')
+                __SecondChoice
+            ;;
+        esac
+    fi
 }
 
 _DefaultInputs() {
@@ -164,17 +227,25 @@ _Install() {
         # Setting faster packages downloads.
         sed -i 's/#ParallelDownloads/ParallelDownloads/' /etc/pacman.conf
         
+        printf '%s\n' " ${g}Looking for UEFI system...${nc}"
         if [[ -n $(ls /sys/firmware/efi/efivars) ]]; then
             printf '%s\n' " ${g}Success, UEFI system detected.${nc}"
             sleep 2s
             
+            printf '%s\n' " ${g}Syncronizing system clock...${nc}"
             timedatectl set-ntp true && timedatectl \
             && printf '%s\n' " ${g}Success, system clock updated.${nc}"
             sleep 2s
             
-            _DiskChoice
+            _FirstDiskChoice
             cfdisk /dev/$HWDISK
+            
             _TestHome
+            [[ -n $HWDISK2 ]] && {
+                cfdisk /dev/$HWDISK2
+                _FormatPrompt
+                _SeparatedHomeLayout
+            }
             
             printf '%s' " ${g}Getting fresh mirrors list for $LOCATION...${nc}"
             sleep 1s
