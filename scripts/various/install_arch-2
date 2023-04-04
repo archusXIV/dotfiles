@@ -281,13 +281,22 @@ _Install() {
             
             # if some user inputs are empty they will be set to defaults
             read -r -p "${g}"' Please fill the machine name: '"${nc}" machine
-            _DefaultInputs -m
+            _DefaultInputs -m || printf '%s\n' " ${g}hostename set to $machine."
+            sleep 1s
             
             printf '%s\n'
             read -r -p "${g}"' Choose your language: [F]rench (France), [E]nglish (US): '"${nc}" language
             case "$language" in
-                f|F) lang="LANG=fr_FR.UTF-8" ;;
-                e|E) lang="LANG=en_US.UTF-8" ;;
+                f|F)
+                    lang="LANG=fr_FR.UTF-8"
+                    printf '%s\n' " ${g}language set to French."
+                    sleep 1s
+                ;;
+                e|E)
+                    lang="LANG=en_US.UTF-8"
+                    printf '%s\n' " ${g}language set to American English."
+                    sleep 1s
+                ;;
             esac
             _DefaultInputs -l
             
@@ -295,9 +304,15 @@ _Install() {
             read -r -p "${g}"' Choose your keyboard layout: [F]rench (fr), [E]nglish (us): '"${nc}" keymap
             case "$keymap" in
                 f|F) key="KEYMAP=fr-latin9"
-                    font="FONT=eurlatgr" ;;
+                    font="FONT=eurlatgr"
+                    printf '%s\n' " ${g}keyboard layout set to fr.${nc}"
+                    sleep 1s
+                ;;
                 e|E) key="KEYMAP=us"
-                    font="FONT=lat2-16" ;;
+                    font="FONT=lat2-16"
+                    printf '%s\n' " ${g}keyboard layout set to us.${nc}"
+                    sleep 1s
+                ;;
             esac
             _DefaultInputs -k
             
