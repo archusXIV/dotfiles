@@ -88,6 +88,7 @@ _TestHome() {
         __DefaultLayout
     else
         clear
+        printf '%s\n'
         read -r -p "${g}"' No separated /home detected, do you want to create it? [N/y]: '"${nc}" nohome
         printf '%s\n'
          case "$nohome" in
@@ -124,7 +125,7 @@ _TestHome() {
 }
 
 _FirstDiskChoice() {
-    __FirstChoice() (
+    __FirstDriveSelected() (
         printf '%s\n' " ${g}You selected: $HWDISK"
         sleep 2s
     )
@@ -138,15 +139,15 @@ _FirstDiskChoice() {
         case "$drive" in
             1)
                 HWDISK=$(lsblk -dno NAME -I 8 | sed -n '1p')
-                __FirstChoice
+                __FirstDriveSelected
             ;;
             2)
                 HWDISK=$(lsblk -dno NAME -I 8 | sed -n '2p')
-                __FirstChoice
+                __FirstDriveSelected
             ;;
             3)
                 HWDISK=$(lsblk -dno NAME -I 8 | sed -n '3p')
-                __FirstChoice
+                __FirstDriveSelected
             ;;
         esac
     else
@@ -158,29 +159,30 @@ _FirstDiskChoice() {
 }
 
 _SecondDiskChoice() {
-    __SecondChoice() (
+    __SecondDriveSelected() (
         printf '%s\n' " ${g}You selected: $HWDISK2"
         sleep 2s
     )
     # if there are more than one usable drive
     if [[ $(lsblk -I 8 -n | wc -l) -gt 1 ]]; then
+        clear
         printf '%s\n'
         # This will exclude weird things like: loop0, sr0
-        lsblk -I 8
+        lsblk -I 8 | sed 's/${HWDISK}//'
         printf '%s\n' " ${g}sdb should be a good choice.${nc}"
         read -r -p "${g}"' Choose a disk for /home, eg: 1=sda or 2=sdb etc...: '"${nc}" home
         case "$home" in
             1)
                 HWDISK2=$(lsblk -dno NAME -I 8 | sed -n '1p')
-                __SecondChoice
+                __SecondDriveSelected
             ;;
             2)
                 HWDISK2=$(lsblk -dno NAME -I 8 | sed -n '2p')
-                __SecondChoice
+                __SecondDriveSelected
             ;;
             3)
                 HWDISK2=$(lsblk -dno NAME -I 8 | sed -n '3p')
-                __SecondChoice
+                __SecondDriveSelected
             ;;
         esac
     fi
@@ -228,14 +230,17 @@ _Install() {
         sed -i 's/#ParallelDownloads/ParallelDownloads/' /etc/pacman.conf
         
         printf '%s\n' " ${g}Looking for UEFI system...${nc}"
+        sleep 1s
         if [[ -n $(ls /sys/firmware/efi/efivars) ]]; then
             printf '%s\n' " ${g}Success, UEFI system detected.${nc}"
             sleep 2s
+            clear
             
             printf '%s\n' " ${g}Syncronizing system clock...${nc}"
             timedatectl set-ntp true && timedatectl \
             && printf '%s\n' " ${g}Success, system clock updated.${nc}"
             sleep 2s
+            clear
             
             _FirstDiskChoice
             cfdisk /dev/$HWDISK
