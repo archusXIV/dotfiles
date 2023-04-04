@@ -42,12 +42,12 @@ _Description() {
     # English
     ${g}This script will install Archlinux in UEFI mode on the drive of your choice
     if there are several, the partitioning is not automated and cfdisk will be used
-    to set up the partition table.
+    to set up the partition table.${nc}
     
-    ${g}Partitions layout examples:${nc}
-    1) sda1=/boot/efi sda2=/ sda3=/home
+    Partitions layout examples:
+    ${y}1) sda1=/boot/efi sda2=/ sda3=/home
     2) sda1=/boot/efi sda2=/
-    3) sda1=/boot/efi sda2=/ sdb1=/home
+    3) sda1=/boot/efi sda2=/ sdb1=/home${nc}
     
 EOF
     sleep 20s
