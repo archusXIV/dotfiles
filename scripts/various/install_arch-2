@@ -8,7 +8,20 @@
 # Use it at your own risks....lol
 # Download the script when logged in the arch live iso:
 # curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_arch-2" -O
-
+#
+# French
+# Ce script va installer une Archlinux en UEFI sur le disque de votre choix
+# si il y en a plusieurs, le partitionnement reste manuel et cfdisk sera utilisé
+# pour mettre en place la table de partitions. ${y}Si /home est absent vous avez
+# la possibilité de continuer sans ou de faire machine arrière pour créer cette
+# même partition sur le même disque que le système ou sur un autre si autre il y a.
+#
+# English
+# This script will install Archlinux in UEFI mode on the drive of your choice
+# if there are several, the partitioning is not automated and cfdisk will be used
+# to set up the partition table. ${y}If /home partition is missing you can continue
+# without it or backtrack to create this partition on the same drive
+# or on another drive if it exist.
 
 # Colors
 nc=$'\e[0;m';
@@ -24,26 +37,20 @@ _Description() {
     # French
     ${g}Ce script va installer une Archlinux en UEFI sur le disque de votre choix
     si il y en a plusieurs, le partitionnement reste manuel et cfdisk sera utilisé
-    pour mettre en place la table de partitions. ${y}Si /home est absent vous avez
-    la possibilité de continuer sans ou de faire machine arrière pour créer cette
-    même partition.
-    Pour le moment seul UN disque peut-être utilisé.${nc}
+    pour mettre en place la table de partitions.${nc}
     
     # English
     ${g}This script will install Archlinux in UEFI mode on the drive of your choice
     if there are several, the partitioning is not automated and cfdisk will be used
-    to set up the partition table. ${y}If /home is missing you have the option
-    to continue without it or backtrack to create this partition.
-    For the moment only ONE drive can be used.
+    to set up the partition table.
     
     ${g}Partitions layout examples:${nc}
-    sdX1=/boot/efi sdX2=/ sdX3=/home
-    or
-    sdX1=/boot/efi sdX2=/
-    etc...
+    1) sda1=/boot/efi sda2=/ sda3=/home
+    2) sda1=/boot/efi sda2=/
+    3) sda1=/boot/efi sda2=/ sdb1=/home
     
 EOF
-    sleep 10s
+    sleep 20s
 }
 
 _FormatPrompt() {
