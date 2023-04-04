@@ -54,6 +54,7 @@ _SeparatedHomeLayout() {
         mkfs.fat -F32 /dev/$HWDISK$A \
         && mkfs.ext4 /dev/$HWDISK$B \
         && mkfs.ext4 /dev/$HWDISK2$A \
+        && mount /dev/$HWDISK$B /mnt \
         && mkdir -p /mnt/{boot/efi,home} \
         && mount /dev/$HWDISK$A /mnt/boot/efi \
         && mount /dev/$HWDISK2$A /mnt/home \
