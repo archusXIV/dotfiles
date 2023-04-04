@@ -50,6 +50,16 @@ _FormatPrompt() {
     printf '%s\n' " ${g}Formating and mounting partitions.${nc}"
 }
 
+_SeparatedHomeLayout() {
+        mkfs.fat -F32 /dev/$HWDISK$A \
+        && mkfs.ext4 /dev/$HWDISK$B \
+        && mkfs.ext4 /dev/$HWDISK2$A \
+        && mkdir -p /mnt/{boot/efi,home} \
+        && mount /dev/$HWDISK$A /mnt/boot/efi \
+        && mount /dev/$HWDISK2$A /mnt/home \
+        && lsblk && sleep 2s
+}
+
 _TestHome() {
     
     __DefaultLayout() (
@@ -60,16 +70,6 @@ _TestHome() {
         && mkdir -p /mnt/{boot/efi,home} \
         && mount /dev/$HWDISK$A /mnt/boot/efi \
         && mount /dev/$HWDISK$C /mnt/home \
-        && lsblk && sleep 2s
-    )
-    
-    __SeparatedHomeLayout() (
-        mkfs.fat -F32 /dev/$HWDISK$A \
-        && mkfs.ext4 /dev/$HWDISK$B \
-        && mkfs.ext4 /dev/$HWDISK2$A \
-        && mkdir -p /mnt/{boot/efi,home} \
-        && mount /dev/$HWDISK$A /mnt/boot/efi \
-        && mount /dev/$HWDISK2$A /mnt/home \
         && lsblk && sleep 2s
     )
     
@@ -232,6 +232,7 @@ _Install() {
             [[ -n $HWDISK2 ]] && {
                 cfdisk /dev/$HWDISK2
                 _FormatPrompt
+                _SeparatedHomeLayout
             }
             
             printf '%s' " ${g}Getting fresh mirrors list for $LOCATION...${nc}"
