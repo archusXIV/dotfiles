@@ -29,30 +29,6 @@ g=$'\e[1;32m';
 r=$'\e[0;31m';
 y=$'\e[93m';
 
-_Description() {
-    clear
-    setfont sun12x22
-    cat << EOF
-
-    # French
-    ${g}Ce script va installer une Archlinux en UEFI sur le disque de votre choix
-    si il y en a plusieurs, le partitionnement reste manuel et cfdisk sera utilisé
-    pour mettre en place la table de partitions.${nc}
-    
-    # English
-    ${g}This script will install Archlinux in UEFI mode on the drive of your choice
-    if there are several, the partitioning is not automated and cfdisk will be used
-    to set up the partition table.${nc}
-    
-    Partitions layout examples:
-    ${y}1) sda1=/boot/efi sda2=/ sda3=/home
-    2) sda1=/boot/efi sda2=/
-    3) sda1=/boot/efi sda2=/ sdb1=/home${nc}
-    
-EOF
-    sleep 12s
-}
-
 _FormatPrompt() {
     clear
     printf '%s\n' " ${g}Formating and mounting partitions.${nc}"
@@ -369,5 +345,30 @@ _Install() {
     
 }
 
+_Description() {
+    clear
+    setfont sun12x22
+    cat << EOF
+
+    # French
+    ${g}Ce script va installer une Archlinux en UEFI sur le disque de votre choix
+    si il y en a plusieurs, le partitionnement reste manuel et cfdisk sera utilisé
+    pour mettre en place la table de partitions.${nc}
+    
+    # English
+    ${g}This script will install Archlinux in UEFI mode on the drive of your choice
+    if there are several, the partitioning is not automated and cfdisk will be used
+    to set up the partition table.${nc}
+    
+    Partitions layout examples:
+    ${y}1) sda1=/boot/efi sda2=/ sda3=/home
+    2) sda1=/boot/efi sda2=/
+    3) sda1=/boot/efi sda2=/ sdb1=/home${nc}
+    
+EOF
+    printf '%s\n'
+    read -r -p "${g}"' Press any key to launch installation, ^C to quit.'"${nc}" inst
+    case "$inst" in *) _Install ;; esac
+}
+
 _Description
-_Install
