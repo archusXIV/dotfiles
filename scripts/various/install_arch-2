@@ -227,7 +227,7 @@ _Install() {
                 cfdisk /dev/$HWDISK2
                 _FormatPrompt
                 _SeparatedHomeLayout
-            } || exit
+            }
             
             printf '%s' " ${g}Getting fresh mirrors list for $LOCATION...${nc}"
             sleep 1s
