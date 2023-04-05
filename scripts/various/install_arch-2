@@ -69,7 +69,7 @@ _TestHome() {
         printf '%s\n'
          case "$nohome" in
             y|Y)
-                read -r -p ' [1] ${g}/home on same drive,${nc} [2] ${g}/home on another drive: ${nc}' homepath
+                read -r -p "${g}"' [1] /home on same drive, [2] /home on another drive: '"${nc}" homepath
                 case "$homepath" in
                     1)
                         printf '%s\n' " ${g}Please modify your partitions layout.${nc}"
@@ -146,8 +146,8 @@ _SecondDiskChoice() {
         # This will exclude weird things like: loop0, sr0
         lsblk -I 8
         printf '%s\n'
-        printf '%s\n' " ${g}sdb should be a good choice.${nc}"
-        read -r -p "${g}"' Choose a disk for /home, eg: 1=sda or 2=sdb etc...: '"${nc}" home
+        printf '%s\n' " ${g}Choosing a non altered disk should be a good choice.${nc}"
+        read -r -p "${g}"' Select a disk for /home, eg: 1=sda or 2=sdb etc...: '"${nc}" home
         case "$home" in
             1)
                 HWDISK2=$(lsblk -dno NAME -I 8 | sed -n '1p')
@@ -227,7 +227,7 @@ _Install() {
                 cfdisk /dev/$HWDISK2
                 _FormatPrompt
                 _SeparatedHomeLayout
-            }
+            } || exit
             
             printf '%s' " ${g}Getting fresh mirrors list for $LOCATION...${nc}"
             sleep 1s
@@ -369,7 +369,7 @@ _Description() {
     
 EOF
     printf '%s\n'
-    read -r -p "${g}"' Press any key to launch installation, ^C to quit.'"${nc}" inst
+    read -r -p "${g}"' Press enter to launch installation, ^C to quit: '"${nc}" inst
     case "$inst" in *) _Install ;; esac
 }
 
