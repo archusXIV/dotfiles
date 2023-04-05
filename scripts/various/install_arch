@@ -361,12 +361,12 @@ _Description() {
     
                      Base installation for lazy dudes made easy!
     
-    # French
+    # French (ne jamais lancer un script sans le lire auparavant)
     ${g}Ce script va installer une Archlinux en UEFI sur le disque de votre choix
     si il y en a plusieurs, le partitionnement reste manuel et cfdisk sera utilisé
     pour mettre en place la table de partitions.${nc}
     
-    # English
+    # English (never run a script without reading it first)
     ${g}This script will install Archlinux in UEFI mode on the drive of your choice
     if there are several, the partitioning is not automated and cfdisk will be used
     to set up the partition table.${nc}
@@ -379,7 +379,7 @@ _Description() {
     
 EOF
     printf '%s\n'
-    read -r -p "${g}"' Press enter to launch installation, ^C to quit: '"${nc}" inst
+    read -r -p "${g}"'    Press enter to launch installation, ^C to quit: '"${nc}" inst
     case "$inst" in *) _Install ;; esac
 }
 
