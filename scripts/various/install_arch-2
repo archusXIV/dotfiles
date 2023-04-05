@@ -379,7 +379,7 @@ _Description() {
     
 EOF
     printf '%s\n'
-    read -r -p "${g}"' Press enter to launch installation, ^C to quit: '"${nc}" inst
+    read -r -p "${g}"'    Press enter to launch installation, ^C to quit: '"${nc}" inst
     case "$inst" in *) _Install ;; esac
 }
 
