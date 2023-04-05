@@ -65,11 +65,11 @@ _TestHome() {
     else
         clear
         printf '%s\n'
-        read -r -p "${g}"' No separated /home detected, do you want to create it? [N/y]: '"${nc}" nohome
+        read -r -p "${g}"' No /home partition detected, do you want to create it? [N/y]: '"${nc}" nohome
         printf '%s\n'
          case "$nohome" in
             y|Y)
-                read -r -p "${g}"' [1] /home on same drive, [2] /home on another drive: '"${nc}" homepath
+                read -r -p ' [1] ${g}/home on same drive,${nc} [2] ${g}/home on another drive: ${nc}' homepath
                 case "$homepath" in
                     1)
                         printf '%s\n' " ${g}Please modify your partitions layout.${nc}"
@@ -145,6 +145,7 @@ _SecondDiskChoice() {
         printf '%s\n'
         # This will exclude weird things like: loop0, sr0
         lsblk -I 8
+        printf '%s\n'
         printf '%s\n' " ${g}sdb should be a good choice.${nc}"
         read -r -p "${g}"' Choose a disk for /home, eg: 1=sda or 2=sdb etc...: '"${nc}" home
         case "$home" in
@@ -360,7 +361,8 @@ _Description() {
     if there are several, the partitioning is not automated and cfdisk will be used
     to set up the partition table.${nc}
     
-    Partitions layout examples:
+    Partitions layouts examples:
+    
     ${y}1) sda1=/boot/efi sda2=/ sda3=/home
     2) sda1=/boot/efi sda2=/
     3) sda1=/boot/efi sda2=/ sdb1=/home${nc}
