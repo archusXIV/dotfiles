@@ -65,7 +65,7 @@ _TestHome() {
     else
         clear
         printf '%s\n'
-        read -r -p "${g}"' No /home partition detected, do you want to create it? [Y/n]: '"${nc}" nohome
+        read -r -p "${g}"' No /home partition detected, do you want to create it? [N/y]: '"${nc}" nohome
         printf '%s\n'
          case "$nohome" in
             y|Y)
@@ -227,7 +227,7 @@ _Install() {
                 cfdisk /dev/$HWDISK2
                 _FormatPrompt
                 _SeparatedHomeLayout
-            }
+            } || exit
             
             printf '%s' " ${g}Getting fresh mirrors list for $LOCATION...${nc}"
             sleep 1s
@@ -351,6 +351,16 @@ _Description() {
     setfont sun12x22
     cat << EOF
 
+                #                                                       
+               # #      #####   ####  #    # #      # #    # #    # #    # 
+              #   #     #    # #    # #    # #      # ##   # #    #  #  #  
+             #     #    #    # #      ###### #      # # #  # #    #   ##   
+            #########   #####  #      #    # #      # #  # # #    #   ##   
+           #         #  #   #  #    # #    # #      # #   ## #    #  #  #  
+          #           # #    #  ####  #    # ###### # #    #  ####  #    #
+    
+                     Base installation for lazy dudes made easy!
+    
     # French
     ${g}Ce script va installer une Archlinux en UEFI sur le disque de votre choix
     si il y en a plusieurs, le partitionnement reste manuel et cfdisk sera utilisé
