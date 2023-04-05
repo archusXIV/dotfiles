@@ -65,7 +65,7 @@ _TestHome() {
     else
         clear
         printf '%s\n'
-        read -r -p "${g}"' No /home partition detected, do you want to create it? [N/y]: '"${nc}" nohome
+        read -r -p "${g}"' No /home partition detected, do you want to create it? [Y/n]: '"${nc}" nohome
         printf '%s\n'
          case "$nohome" in
             y|Y)
