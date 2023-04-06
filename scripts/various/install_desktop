@@ -24,7 +24,8 @@ _xorg() {
 
 _audio() {
     pacman -Sy --needed --noconfirm alsa-utils pulseaudio \
-    pulseaudio-alsa pulsemixer pavucontrol
+    pulseaudio-alsa pulsemixer pavucontrol gst-libav \
+    gst-plugins-{bad,base,good,ugly}
 }
 
 _i3wm() {
