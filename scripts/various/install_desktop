@@ -14,7 +14,7 @@ _lightdm() {
 _xorg() {
     pacman -Sy --needed --noconfirm xorg xorg-server xorg-xinit \
     xorg-xrandr xorg-xfontsel xorg-xlsfonts xorg-xkill xorg-xinput \
-    xorg-xwininfo wmctrl xdg-user-dirs
+    xorg-xwininfo wmctrl xdg-user-dirs xterm
 }
 
 _audio() {
@@ -24,13 +24,13 @@ _audio() {
 
 _i3wm() {
     _xorg && pacman -Sy --needed --noconfirm i3-wm i3lock i3status \
-    i3blocks polybar dmenu rofi sxhkd xetrm rxvt-unicode alacritty \
+    i3blocks polybar dmenu rofi sxhkd rxvt-unicode alacritty \
     geany geany-plugins network-manager-applet ranger htop && _audio
 }
 
 _bspwm() {
     _xorg && pacman -Sy --needed --noconfirm bspwm sxhkd xdo polybar \
-    dmenu rofi xetrm rxvt-unicode alacritty geany geany-plugins \
+    dmenu rofi rxvt-unicode alacritty geany geany-plugins \
     network-manager-applet ranger htop && _audio
 }
 
