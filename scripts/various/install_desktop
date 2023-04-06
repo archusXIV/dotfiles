@@ -12,18 +12,20 @@ _lightdm() {
 }
 
 _xorg() {
-    pacman -Sy --needed --noconfirm xorg xorg-server xorg-xinit xorg-xrandr xorg-xfontsel \
-    xorg-xlsfonts xorg-xkill xorg-xinput xorg-xwininfo wmctrl xdg-user-dirs
+    pacman -Sy --needed --noconfirm xorg xorg-server xorg-xinit \
+    xorg-xrandr xorg-xfontsel xorg-xlsfonts xorg-xkill xorg-xinput \
+    xorg-xwininfo wmctrl xdg-user-dirs
 }
 
 _audio() {
-    pacman -Sy --needed --noconfirm alsa-utils pulseaudio pulseaudio-alsa \
-    pulsemixer pavucontrol
+    pacman -Sy --needed --noconfirm alsa-utils pulseaudio \
+    pulseaudio-alsa pulsemixer pavucontrol
 }
+
 _i3wm() {
-    _xorg && pacman -Sy --needed --noconfirm i3-wm i3lock i3status i3blocks \
-    polybar dmenu rofi sxhkd xetrm rxvt-unicode alacritty geany geany-plugins \
-    network-manager-applet ranger htop && _audio
+    _xorg && pacman -Sy --needed --noconfirm i3-wm i3lock i3status \
+    i3blocks polybar dmenu rofi sxhkd xetrm rxvt-unicode alacritty \
+    geany geany-plugins network-manager-applet ranger htop && _audio
 }
 
 _bspwm() {
@@ -33,37 +35,33 @@ _bspwm() {
 }
 
 _cinnamon() {
-    _xorg && pacman -Sy --needed --noconfirm \
-    cinnamon cinnamon-translations nemo-fileroller nemo-image-converter \
-    nemo-preview xed xreader gnome-terminal metacity gnome-shell \
-    network-manager-applet htop && _audio
+    _xorg && pacman -Sy --needed --noconfirm cinnamon cinnamon-translations \
+    nemo-fileroller nemo-image-converter nemo-preview xed xreader \
+    gnome-terminal metacity gnome-shell network-manager-applet htop && _audio
 }
 
 _gnome() {
-    _xorg && pacman -Sy --needed --noconfirm \
-    gnome gnome-extra network-manager-applet htop \
-    && _audio
+    _xorg && pacman -Sy --needed --noconfirm gnome gnome-extra \
+    network-manager-applet htop && _audio
 }
 
 _kde() {
     _xorg && pacman -Sy --needed --noconfirm \
-    plasma-meta kdialog packagekit-qt5 kcalc icoutils \
-    libappimage konsole dolphin kdegraphics-thumbnailers svgpart \
-    ffmpegthumbs kdenetwork-filesharing gwenview kimageformats \
-    ark kate okular kcron kdf filelight print-manager kdeconnect sshfs htop \
+    plasma-meta kdialog packagekit-qt5 kcalc icoutils libappimage \
+    konsole dolphin kdegraphics-thumbnailers svgpart ffmpegthumbs \
+    kdenetwork-filesharing gwenview kimageformats ark kate okular \
+    kcron kdf filelight print-manager kdeconnect sshfs htop \
     && _audio
 }
 
 _mate() {
-    _xorg && pacman -Sy --needed --noconfirm \
-    mate mate-extra network-manager-applet htop \
-    && _audio
+    _xorg && pacman -Sy --needed --noconfirm mate mate-extra \
+    network-manager-applet htop && _audio
 }
 
 _xfce() {
-    _xorg && pacman -Sy --needed --noconfirm \
-    xfce4 xfce4-goodies network-manager-applet htop \
-    && _audio
+    _xorg && pacman -Sy --needed --noconfirm xfce4 xfce4-goodies \
+    network-manager-applet htop && _audio
 }
 
 _InstallDesktop() {
@@ -79,7 +77,7 @@ _InstallDesktop() {
     EDITOR=vim visudo
     printf '%s\n'
     printf '%s\n' " ${g}Desktop choice here, eg: 1 or 3 etc...${nc}"
-    echo -e "${y}"'i3wm\nBspwm\nCinnamon\nGnome\nKDE Plasma\nMate\nXfce'"${nc}" | cat -n
+    echo -e "${y}"'i3wm\nBspwm\nCinnamon\nGnome\nKDE Plasma\nMate\nXfce' | cat -n"${nc}"
     read -r choice
     case ${choice} in
         1) _i3wm ;;
@@ -112,14 +110,14 @@ _Description() {
     # French (ne jamais lancer un script sans le lire auparavant)
     ${g}Ce script va installer le bureau de votre choix parmi la liste suivante:${nc}
     
-    Preconfigurés:     ${y}i3wm, Bspwm${nc}
+    Preconfigurés:     ${y}i3wm, Bspwm${nc} (coming soon)
     Brut de chez brut: ${y}Cinnamon, Gnome, KDE Plasma, Mate & Xfce${nc}
     
     # English (never run a script without reading it first)
     ${g}This script will install the desktop of your choice among the following list:${nc}
     
-    Preconfigured: ${y}i3wm, Bspwm${nc}
-    Barebone:      ${y}Cinnamon, Gnome, KDE Plasma, Mate & Xfce${nc}
+    Preconfigured: ${y}i3wm, Bspwm${nc} (coming soon)
+    Bareboned:     ${y}Cinnamon, Gnome, KDE Plasma, Mate & Xfce${nc}
     
 EOF
     printf '%s\n'
