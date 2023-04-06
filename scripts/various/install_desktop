@@ -6,9 +6,14 @@ g=$'\e[1;32m';
 r=$'\e[0;31m';
 y=$'\e[93m';
 
-_lightdm() {
-    pacman -Sy --needed --noconfirm lightdm lightdm-gtk-greeter \
-    && systemctl enable lightdm.service
+_systemd() {
+    pacman -Sy --needed --noconfirm lightdm lightdm-gtk-greeter
+    if [[ $(dmidecode -s system-product-name) = VirtualBox ]]; then
+        pacman -S --needed --noconfirm virtualbox-guest-utils
+        systemctl enable {lightdm,vboxservice}.service
+    else
+        systemctl enable lightdm.service
+    fi
 }
 
 _xorg() {
@@ -24,14 +29,14 @@ _audio() {
 
 _i3wm() {
     _xorg && pacman -Sy --needed --noconfirm i3-wm i3lock i3status \
-    i3blocks polybar dmenu rofi sxhkd rxvt-unicode alacritty \
-    geany geany-plugins network-manager-applet ranger htop && _audio
+    i3blocks polybar dmenu rofi sxhkd rxvt-unicode alacritty htop \
+    geany geany-plugins network-manager-applet ranger && _audio
 }
 
 _bspwm() {
     _xorg && pacman -Sy --needed --noconfirm bspwm sxhkd xdo polybar \
-    dmenu rofi rxvt-unicode alacritty geany geany-plugins \
-    network-manager-applet ranger htop && _audio
+    dmenu rofi rxvt-unicode alacritty geany geany-plugins ranger htop \
+    network-manager-applet && _audio
 }
 
 _cinnamon() {
@@ -80,16 +85,15 @@ _InstallDesktop() {
     echo -e "${y}"'i3wm\nBspwm\nCinnamon\nGnome\nKDE Plasma\nMate\nXfce'"${nc}" | cat -n
     read -r choice
     case ${choice} in
-        1) _i3wm ;;
-        2) _bspwm ;;
-        3) _cinnamon && _lightdm ;;
-        4) _gnome && _lightdm ;;
-        5) _kde && _lightdm ;;
-        6) _mate && _lightdm ;;
-        7) _xfce && _lightdm ;;
+        1) _i3wm && _systemd     ;;
+        2) _bspwm && _systemd    ;;
+        3) _cinnamon && _systemd ;;
+        4) _gnome && _systemd    ;;
+        5) _kde && _systemd      ;;
+        6) _mate && _systemd     ;;
+        7) _xfce && _systemd     ;;
     esac
-    # printf '%s\n' " ${g}${choice} installed, please umount /mnt and reboot: ${nc}"
-    sleep 3s
+    
 }
 
 _Description() {
