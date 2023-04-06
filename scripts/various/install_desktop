@@ -85,7 +85,7 @@ _InstallDesktop() {
     printf '%s\n' " ${g}Change $name password:${nc} "
     sleep 1s
     passwd ${name}
-    printf '%s\n' " ${g}Enable $name sudo privileges in sudoers file${nc}: "
+    printf '%s\n' " ${g}Enable $name sudo privileges in sudoers file:${nc} "
     sleep 2s
     EDITOR=vim visudo
     clear
