@@ -145,9 +145,9 @@ _SecondDiskChoice() {
         clear
         printf '%s\n'
         # This will exclude weird things like: loop0, sr0
-        lsblk -I 8 -d | cat -n
+        lsblk -I 8 -nd | cat -n
         printf '%s\n'
-        printf '%s\n' " ${y}Choosing a non altered disk should be a good choice.${nc}"
+        printf '%s\n' " ${y}Choosing a new disk should be a good choice.${nc}"
         read -r -p "${g}"' Select a disk for /home, eg: 1=sda or 2=sdb etc...: '"${nc}" home
         case "$home" in
             1)
@@ -320,18 +320,28 @@ _Install() {
             "
             clear
             printf '%s\n'
-            read -r -p "${g}"' Do you want to enter the new installed system? [Y/n] '"${nc}" enter
-            case "$enter" in
+            read -r -p "${g}"' Do you want to install a desktop now? [Y/n] '"${nc}" desk
+            case "$desk" in
                 y|Y)
-                    arch-chroot /mnt
+                    curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" -O \
+                    && chmod +x install_desktop \
+                    && ./install_desktop
                 ;;
                 n|N)
-                    printf '%s' " ${y}Unmounting /mnt and rebooting.${nc}"
-                    sleep 1s
-                    umount -R /mnt && reboot
-                ;;
-                *)
-                    arch-chroot /mnt
+                    read -r -p "${g}"' Do you want to enter the new installed system? [Y/n] '"${nc}" enter
+                    case "$enter" in
+                        y|Y)
+                            arch-chroot /mnt
+                        ;;
+                        n|N)
+                            printf '%s' " ${y}Unmounting /mnt and rebooting.${nc}"
+                            sleep 1s
+                            umount -R /mnt && reboot
+                        ;;
+                        *)
+                            arch-chroot /mnt
+                        ;;
+                    esac
                 ;;
             esac
         else
@@ -382,7 +392,7 @@ _Description() {
     
 EOF
     printf '%s\n'
-    read -r -p "${g}"' Press enter to launch installation, ^C to quit: '"${nc}" inst
+    read -r -p "${g}"'    Press enter to launch installation, ^C to quit: '"${nc}" inst
     case "$inst" in *) _Install ;; esac
 }
 
