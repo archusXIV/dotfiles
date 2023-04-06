@@ -74,7 +74,7 @@ _mate() {
 
 _xfce() {
     _xorg && pacman -Sy --needed --noconfirm xfce4 xfce4-goodies \
-    network-manager-applet htop && _audio
+    network-manager-applet htop && _audio && _systemd
 }
 
 _InstallDesktop() {
@@ -91,15 +91,14 @@ _InstallDesktop() {
     clear
     printf '%s\n'
     printf '%s\n' " ${g}Desktop choice, eg: x for Xfce...${nc}"
-    read -r -p "${g}"' [I]3-wm, [B]spwm, [C]innamon, [K]de Plasma, [M]ate, [X]fce: '"${nc}" name
-    read -r choice
+    read -r -p "${g}"' [I]3-wm, [B]spwm, [C]innamon, [K]de Plasma, [M]ate, [X]fce: '"${nc}" choice
     case ${choice} in
         i|I) _i3wm     ;;
         b|B) _bspwm    ;;
         c|C) _cinnamon ;;
         k|K) _kde      ;;
         m|M) _mate     ;;
-        x|X) _xfce && _systemd ;;
+        x|X) _xfce     ;;
     esac
     
 }
