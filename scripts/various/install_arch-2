@@ -195,6 +195,12 @@ _DefaultInputs() {
     esac
 }
 
+_CurlDesktop() {
+    curl -sL \
+    "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
+    -O
+}
+
 _Install() {
     clear
     local LOCATION TIMEZONE A B C
@@ -302,8 +308,8 @@ _Install() {
                 && echo $machine > /etc/hostname \
                 && echo $key > /etc/vconsole.conf \
                 && echo $font >> /etc/vconsole.conf \
-                && echo ' ${g}Choose your locales using nano${nc}' && sleep 2s \
-                && nano /etc/locale.gen && locale-gen \
+                && echo ' ${g}Choose your locales using vim${nc}' && sleep 2s \
+                && vim /etc/locale.gen && locale-gen \
                 && echo $lang > /etc/locale.conf \
                 && echo LC_COLLATE=C >> /etc/locale.conf \
                 && echo '127.0.0.1    localhost' >> /etc/hosts \
@@ -324,9 +330,7 @@ _Install() {
             case "$desk" in
                 y|Y)
                     arch-chroot /mnt /bin/bash -c "
-                        curl -sL \
-                        "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
-                        -O && chmod +x install_desktop && ./install_desktop
+                        _CurlDesktop && chmod +x install_desktop && ./install_desktop
                         exit
                     "
                     umount -R /mnt && reboot
@@ -336,24 +340,18 @@ _Install() {
                     case "$enter" in
                         y|Y)
                             arch-chroot /mnt /bin/bash -c "
-                            curl -sL \
-                            'https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop' \
-                            -O && chmod +x install_desktop
+                                _CurlDesktop && chmod +x install_desktop
                             "
                         ;;
                         n|N)
-                            curl -sL \
-                            "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
-                            -O && chmod +x install_desktop && mv install_desktop /mnt/root/
+                            _CurlDesktop && chmod +x install_desktop && mv install_desktop /mnt/root/
                             printf '%s' " ${y}Unmounting /mnt and rebooting.${nc}"
                             sleep 1s
                             umount -R /mnt && reboot
                         ;;
                         *)
                             arch-chroot /mnt /bin/bash -c "
-                            curl -sL \
-                            'https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop' \
-                            -O && chmod +x install_desktop
+                                _CurlDesktop && chmod +x install_desktop
                             "
                         ;;
                     esac
