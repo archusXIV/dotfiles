@@ -75,7 +75,7 @@ _InstallDesktop() {
     printf '%s\n'
     read -r -p "${g}"' Pick a new user name: '"${nc}" name
     useradd -m -G audio,video,input,wheel,sys,log,rfkill,lp,adm -s /bin/bash ${name}
-    printf '%s\n' " ${g}Change $name password${nc}: "
+    printf '%s\n' " ${g}Change $name password:${nc} "
     sleep 1s
     passwd ${name}
     printf '%s\n' " ${g}Enable $name sudo privileges in sudoers file${nc}: "
