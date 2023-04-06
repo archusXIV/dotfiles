@@ -7,35 +7,37 @@ r=$'\e[0;31m';
 y=$'\e[93m';
 
 _lightdm() {
-    pacman -Sy --needed --noconfirm lightdm lightdm-gtk-greeter
-    systemctl enable lightdm.service
+    pacman -Sy --needed --noconfirm lightdm lightdm-gtk-greeter \
+    && systemctl enable lightdm.service
 }
 
 _xorg() {
-    pacman -Sy --needed --noconfirm xorg-server xorg-xinit xorg-xrandr xorg-xfontsel \
-    xorg-xlsfonts xorg-xkill xorg-xinput xorg-xwininfo
+    pacman -Sy --needed --noconfirm xorg xorg-server xorg-xinit xorg-xrandr xorg-xfontsel \
+    xorg-xlsfonts xorg-xkill xorg-xinput xorg-xwininfo wmctrl
 }
 
 _i3wm() {
-    _xorg && pacman -Sy --needed --noconfirm i3-wm i3lock i3status i3blocks polybar \
-    dmenu rofi sxhkd
+    _xorg && pacman -Sy --needed --noconfirm i3-wm i3lock i3status i3blocks \
+    polybar dmenu rofi sxhkd xetrm rxvt-unicode alacritty geany geany-plugins \
+    network-manager-applet ranger htop
 }
 
 _bspwm() {
     _xorg && pacman -Sy --needed --noconfirm bspwm sxhkd xdo polybar \
-    dmenu rofi    
+    dmenu rofi xetrm rxvt-unicode alacritty geany geany-plugins \
+    network-manager-applet ranger htop
 }
 
 _cinnamon() {
     _xorg && pacman -Sy --needed --noconfirm \
     cinnamon cinnamon-translations nemo-fileroller nemo-image-converter \
     nemo-preview xed xreader gnome-terminal metacity gnome-shell \
-    && _lightdm
+    network-manager-applet htop
 }
 
 _gnome() {
     _xorg && pacman -Sy --needed --noconfirm \
-    gnome gnome-extra && _lightdm
+    gnome gnome-extra network-manager-applet htop
 }
 
 _kde() {
@@ -43,39 +45,42 @@ _kde() {
     plasma kdialog packagekit-qt5 kcalc icoutils \
     libappimage konsole dolphin kdegraphics-thumbnailers svgpart \
     ffmpegthumbs kdenetwork-filesharing gwenview kimageformats \
-    ark kate okular kcron kdf filelight print-manager kdeconnect sshfs \
-    && _lightdm
+    ark kate okular kcron kdf filelight print-manager kdeconnect sshfs htop
 }
 
 _mate() {
     _xorg && pacman -Sy --needed --noconfirm \
-    mate mate-extra && _lightdm
+    mate mate-extra network-manager-applet htop
 }
 
 _xfce() {
     _xorg && pacman -Sy --needed --noconfirm \
-    xfce4 xfce4-goodies && _lightdm
+    xfce4 xfce4-goodies network-manager-applet htop
 }
 
-_InstallDesktopChoice() {
+_InstallDesktop() {
 
     printf '%s\n'
-    read -r -p ' Pick a new user name: ' name
+    read -r -p "${g}"' Pick a new user name: '"${nc}" name
     useradd -m -G audio,video,input,wheel,sys,log,rfkill,lp,adm -s /bin/bash ${name}
+    printf '%s\n' ' ${g}Change $name password${nc}: '
+    sleep 1s
     passwd ${name}
+    printf '%s\n' ' ${g}Enable $name sudo privileges${nc}: '
+    sleep 1s
     EDITOR=vim visudo
     printf '%s\n'
-    printf '%s\n' ' ${g}Please enter your choice here, eg: 1 or 3 etc...${nc}'
-    echo -e 'i3wm\nbspwm\nCinnamon\nGnome\nKDE Plasma\nMate\nXfce' | cat -n
+    printf '%s\n' ' ${g}Desktop choice here, eg: 1 or 3 etc...${nc}'
+    echo -e 'i3wm\nBspwm\nCinnamon\nGnome\nKDE Plasma\nMate\nXfce' | cat -n
     read -r choice
-    case $choice in
-        1) _i3wm && reboot ;;
-        2) _bspwm && reboot ;;
-        3) _cinnamon && reboot ;;
-        4) _gnome && reboot ;;
-        5) _kde && reboot ;;
-        6) _mate && reboot ;;
-        7) _xfce && reboot ;;
+    case ${choice} in
+        1) _i3wm ;;
+        2) _bspwm ;;
+        3) _cinnamon && _lightdm ;;
+        4) _gnome && _lightdm ;;
+        5) _kde && _lightdm ;;
+        6) _mate && _lightdm ;;
+        7) _xfce && _lightdm ;;
     esac
     
 }
@@ -110,7 +115,7 @@ _Description() {
 EOF
     printf '%s\n'
     read -r -p "${g}"'    Press enter to launch desktop installation, ^C to quit: '"${nc}" inst
-    case "$inst" in *) _InstallDesktopChoice ;; esac
+    case "$inst" in *) _InstallDesktop ;; esac
 }
 
-_Description
+_Description "${@}"
