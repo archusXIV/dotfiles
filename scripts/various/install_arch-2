@@ -240,7 +240,7 @@ _Install() {
             sleep 1s
             
             # pacstrap will not use the iso's archlinux-keyring.
-            pacstrap -K /mnt base base-devel linux linux-headers linux-firmware \
+            pacstrap -K /mnt base base-devel linux linux-headers linux-firmware dmidecode \
             pacman-contrib grub efibootmgr os-prober gptfdisk fatresize networkmanager \
             reflector zip unzip p7zip nano wget vim mc git syslog-ng mtools usbutils \
             dosfstools lsb-release exfat-utils bash-completion man-db man-pages \
