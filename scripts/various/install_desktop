@@ -13,7 +13,7 @@ _lightdm() {
 
 _xorg() {
     pacman -Sy --needed --noconfirm xorg xorg-server xorg-xinit xorg-xrandr xorg-xfontsel \
-    xorg-xlsfonts xorg-xkill xorg-xinput xorg-xwininfo wmctrl
+    xorg-xlsfonts xorg-xkill xorg-xinput xorg-xwininfo wmctrl xdg-user-dirs
 }
 
 _audio() {
