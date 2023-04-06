@@ -340,7 +340,6 @@ _Install() {
                             'https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop' \
                             -O && chmod +x install_desktop
                             "
-                            umount -R /mnt && reboot
                         ;;
                         n|N)
                             curl -sL \
@@ -356,7 +355,6 @@ _Install() {
                             'https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop' \
                             -O && chmod +x install_desktop
                             "
-                            umount -R /mnt && reboot
                         ;;
                     esac
                 ;;
