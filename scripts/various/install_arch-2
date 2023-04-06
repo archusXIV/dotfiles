@@ -323,17 +323,26 @@ _Install() {
             read -r -p "${g}"' Do you want to install a desktop now? [Y/n] '"${nc}" desk
             case "$desk" in
                 y|Y)
-                    curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" -O \
-                    && chmod +x install_desktop \
-                    && ./install_desktop
+                    arch-chroot /mnt /bin/bash -c "
+                        curl -sL \
+                        "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
+                        -O && chmod +x install_desktop && ./install_desktop
+                    "
                 ;;
                 n|N)
                     read -r -p "${g}"' Do you want to enter the new installed system? [Y/n] '"${nc}" enter
                     case "$enter" in
                         y|Y)
-                            arch-chroot /mnt
+                            arch-chroot /mnt /bin/bash -c "
+                            curl -sL \
+                            'https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop' \
+                            -O && chmod +x install_desktop
+                            "
                         ;;
                         n|N)
+                            curl -sL \
+                            "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
+                            -O && chmod +x install_desktop && mv install_desktop /mnt/root/
                             printf '%s' " ${y}Unmounting /mnt and rebooting.${nc}"
                             sleep 1s
                             umount -R /mnt && reboot
