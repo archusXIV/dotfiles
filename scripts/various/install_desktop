@@ -79,7 +79,7 @@ _InstallDesktop() {
     EDITOR=vim visudo
     printf '%s\n'
     printf '%s\n' " ${g}Desktop choice here, eg: 1 or 3 etc...${nc}"
-    echo -e "${y}"'i3wm\nBspwm\nCinnamon\nGnome\nKDE Plasma\nMate\nXfce' | cat -n"${nc}"
+    echo -e "${y}"'i3wm\nBspwm\nCinnamon\nGnome\nKDE Plasma\nMate\nXfce'"${nc}" | cat -n
     read -r choice
     case ${choice} in
         1) _i3wm ;;
