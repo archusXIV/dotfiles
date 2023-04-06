@@ -74,7 +74,7 @@ _mate() {
 
 _xfce() {
     _xorg && pacman -Sy --needed --noconfirm xfce4 xfce4-goodies \
-    network-manager-applet htop && _audio && _systemd
+    network-manager-applet htop && _audio
 }
 
 _InstallDesktop() {
@@ -99,7 +99,7 @@ _InstallDesktop() {
         c|C) _cinnamon ;;
         k|K) _kde      ;;
         m|M) _mate     ;;
-        x|X) _xfce     ;;
+        x|X) _xfce && _systemd ;;
     esac
     
 }
