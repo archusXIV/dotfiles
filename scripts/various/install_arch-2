@@ -327,7 +327,9 @@ _Install() {
                         curl -sL \
                         "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
                         -O && chmod +x install_desktop && ./install_desktop
+                        exit
                     "
+                    umount -R /mnt && reboot
                 ;;
                 n|N)
                     read -r -p "${g}"' Do you want to enter the new installed system? [Y/n] '"${nc}" enter
@@ -338,6 +340,7 @@ _Install() {
                             'https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop' \
                             -O && chmod +x install_desktop
                             "
+                            umount -R /mnt && reboot
                         ;;
                         n|N)
                             curl -sL \
@@ -348,7 +351,12 @@ _Install() {
                             umount -R /mnt && reboot
                         ;;
                         *)
-                            arch-chroot /mnt
+                            arch-chroot /mnt /bin/bash -c "
+                            curl -sL \
+                            'https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop' \
+                            -O && chmod +x install_desktop
+                            "
+                            umount -R /mnt && reboot
                         ;;
                     esac
                 ;;
