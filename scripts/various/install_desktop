@@ -67,6 +67,7 @@ _DesktopChoice() {
     read -r -p ${g}' Pick a new username: '${nc} name
     useradd -m -G audio,video,input,wheel,sys,log,rfkill,lp,adm -s /bin/bash $name
     passwd $name
+    EDITOR=vim visudo
     printf '%s\n'
     printf '%s\n' ' ${g}Please enter your choice here, eg: 1 or 3 etc...${nc}'
     echo -e 'i3wm\nbspwm\nCinnamon\nGnome\nKDE Plasma\nMate\nXfce' | cat -n
