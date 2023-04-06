@@ -88,7 +88,7 @@ _InstallDesktop() {
         6) _mate && _lightdm ;;
         7) _xfce && _lightdm ;;
     esac
-    printf '%s\n' " ${g}${choice} installed, please umount /mnt and reboot: ${nc}"
+    # printf '%s\n' " ${g}${choice} installed, please umount /mnt and reboot: ${nc}"
     sleep 3s
 }
 
