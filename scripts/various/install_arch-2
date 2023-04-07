@@ -283,12 +283,14 @@ _Install() {
             printf '%s\n'
             read -r -p "${g}"' Choose your keyboard layout: [F]rench (fr), [E]nglish (us): '"${nc}" keymap
             case "$keymap" in
-                f|F) key="KEYMAP=fr-latin9"
+                f|F)
+                    key="KEYMAP=fr-latin9"
                     font="FONT=eurlatgr"
                     printf '%s\n' " ${y}keyboard layout set to fr.${nc}"
                     sleep 1s
                 ;;
-                e|E) key="KEYMAP=us"
+                e|E)
+                    key="KEYMAP=us"
                     font="FONT=lat2-16"
                     printf '%s\n' " ${y}keyboard layout set to us.${nc}"
                     sleep 1s
@@ -318,14 +320,16 @@ _Install() {
                 && systemctl enable {NetworkManager,systemd-timesyncd}.service \
                 && timedatectl set-ntp true && exit
             "
+            
             clear
             printf '%s\n'
             read -r -p "${g}"' Do you want to install a desktop now? [Y/n] '"${nc}" desk
             case "$desk" in
                 y|Y)
                     arch-chroot /mnt /bin/bash -c "
-                        curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" -O \
-                        && chmod +x install_desktop && ./install_desktop
+                        curl -sL \
+                        "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
+                        -O && chmod +x install_desktop && ./install_desktop
                         exit
                     "
                     umount -R /mnt && reboot
@@ -335,21 +339,24 @@ _Install() {
                     case "$enter" in
                         y|Y)
                             arch-chroot /mnt /bin/bash -c "
-                                curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" -O \
-                                && chmod +x install_desktop
+                                curl -sL \
+                                "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
+                                -O && chmod +x install_desktop
                             "
                         ;;
                         n|N)
-                            curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" -O \
-                            && chmod +x install_desktop && mv install_desktop /mnt/root/
+                            curl -sL \
+                            "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
+                            -O && chmod +x install_desktop && mv install_desktop /mnt/root/
                             printf '%s' " ${y}Unmounting /mnt and rebooting.${nc}"
                             sleep 1s
                             umount -R /mnt && reboot
                         ;;
                         *)
                             arch-chroot /mnt /bin/bash -c "
-                                curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" -O \
-                                && chmod +x install_desktop
+                                curl -sL \
+                                "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
+                                -O && chmod +x install_desktop
                             "
                         ;;
                     esac
@@ -407,4 +414,4 @@ EOF
     case "$inst" in *) _Install ;; esac
 }
 
-_Description
+_Description "${@}"
