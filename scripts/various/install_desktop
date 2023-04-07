@@ -17,19 +17,23 @@ r=$'\e[0;31m';
 y=$'\e[93m';
 
 _systemd() {
+    clear
     printf '%s\n' " ${g}Installing LIGHTDM.${nc}"
     sleep 1s
     pacman -S --needed --noconfirm lightdm lightdm-gtk-greeter
     if [[ $(dmidecode -s system-product-name) = VirtualBox ]]; then
         pacman -S --needed --noconfirm virtualbox-guest-utils
         systemctl enable {lightdm,vboxservice}.service
+        printf '%s\n' " ${y}Rebooting, please wait...${nc}"
     else
         systemctl enable lightdm.service
+        printf '%s\n' " ${y}Rebooting, please wait...${nc}"
     fi
 }
 
 _audio() {
-    printf '%s\n' " ${g}Installing AUDIO UTILITIES${nc}"
+    clear
+    printf '%s\n' " ${y}Installing AUDIO UTILITIES${nc}"
     sleep 1s
     pacman -S --needed --noconfirm alsa-utils pulseaudio \
     pulseaudio-alsa pulsemixer pavucontrol gst-libav \
@@ -37,7 +41,8 @@ _audio() {
 }
 
 _fonts() {
-    printf '%s\n' " ${g}Installing FONTS${nc}"
+    clear
+    printf '%s\n' " ${y}Installing FONTS${nc}"
     sleep 1s
     pacman -S --needed --noconfirm noto-fonts ttf-font-awesome \
     ttf-bitstream-vera ttf-dejavu ttf-fira-code ttf-jetbrains-mono \
@@ -45,7 +50,8 @@ _fonts() {
 }
 
 _xorg() {
-    printf '%s\n' " ${g}Installing XORG${nc}"
+    clear
+    printf '%s\n' " ${y}Installing XORG${nc}"
     sleep 1s
     pacman -Sy --needed --noconfirm xorg xorg-server xorg-xinit \
     xorg-xrandr xorg-xfontsel xorg-xlsfonts xorg-xkill xorg-xinput \
@@ -54,7 +60,7 @@ _xorg() {
 
 _i3wm() {
     _xorg \
-    && printf '%s\n' " ${g}Installing I3WM.${nc}"
+    && clear && printf '%s\n' " ${y}Installing I3WM.${nc}"
     sleep 1s
     pacman -S --needed --noconfirm i3-wm i3lock i3status \
     i3blocks polybar dmenu rofi sxhkd rxvt-unicode alacritty htop \
@@ -64,7 +70,7 @@ _i3wm() {
 
 _bspwm() {
     _xorg \
-    && printf '%s\n' " ${g}Installing BSPWM.${nc}"
+    && clear && printf '%s\n' " ${y}Installing BSPWM.${nc}"
     sleep 1s
     pacman -S --needed --noconfirm bspwm sxhkd xdo polybar \
     dmenu rofi rxvt-unicode alacritty geany geany-plugins ranger htop \
@@ -74,7 +80,7 @@ _bspwm() {
 
 _cinnamon() {
     _xorg \
-    && printf '%s\n' " ${g}Installing CINNAMON desktop.${nc}"
+    && clear && printf '%s\n' " ${y}Installing CINNAMON desktop.${nc}"
     sleep 1s
     pacman -S --needed --noconfirm cinnamon cinnamon-translations \
     nemo-fileroller nemo-image-converter nemo-preview xed xreader \
@@ -84,7 +90,7 @@ _cinnamon() {
 
 _kde() {
     _xorg \
-    && printf '%s\n' " ${g}Installing KDE PLASMA desktop.${nc}"
+    && clear && printf '%s\n' " ${y}Installing KDE PLASMA desktop.${nc}"
     sleep 1s
     pacman -S --needed --noconfirm plasma-meta kdialog packagekit-qt5 \
     kcalc icoutils libappimage konsole dolphin kdegraphics-thumbnailers \
@@ -95,7 +101,7 @@ _kde() {
 
 _mate() {
     _xorg \
-    && printf '%s\n' " ${g}Installing MATE desktop.${nc}"
+    && clear && printf '%s\n' " ${y}Installing MATE desktop.${nc}"
     sleep 1s
     pacman -S --needed --noconfirm mate mate-extra \
     network-manager-applet htop \
@@ -104,7 +110,7 @@ _mate() {
 
 _xfce() {
     _xorg \
-    && printf '%s\n' " ${g}Installing XFCE4 desktop.${nc}"
+    && clear && printf '%s\n' " ${y}Installing XFCE4 desktop.${nc}"
     sleep 1s
     pacman -S --needed --noconfirm xfce4 xfce4-goodies \
     network-manager-applet htop \
