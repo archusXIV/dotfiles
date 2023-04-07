@@ -195,11 +195,11 @@ _DefaultInputs() {
     esac
 }
 
-_CurlDesktop() {
-    curl -sL \
-    "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
-    -O
-}
+# _CurlDesktop() {
+    # curl -sL \
+    # "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
+    # -O
+# }
 
 _Install() {
     clear
@@ -330,7 +330,9 @@ _Install() {
             case "$desk" in
                 y|Y)
                     arch-chroot /mnt /bin/bash -c "
-                        _CurlDesktop && chmod +x install_desktop && ./install_desktop
+                            curl -sL \
+                            "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
+                            -O && chmod +x install_desktop && ./install_desktop
                         exit
                     "
                     umount -R /mnt && reboot
