@@ -18,7 +18,7 @@ y=$'\e[93m';
 
 _systemd() {
     clear
-    printf '%s\n' " ${g}Installing LIGHTDM.${nc}"
+    printf '%s\n' " ${y}Installing LIGHTDM.${nc}"
     sleep 1s
     pacman -S --needed --noconfirm lightdm lightdm-gtk-greeter
     if [[ $(dmidecode -s system-product-name) = VirtualBox ]]; then
