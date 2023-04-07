@@ -195,12 +195,6 @@ _DefaultInputs() {
     esac
 }
 
-# _CurlDesktop() {
-    # curl -sL \
-    # "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
-    # -O
-# }
-
 _Install() {
     clear
     local LOCATION TIMEZONE A B C
@@ -325,14 +319,13 @@ _Install() {
                 && timedatectl set-ntp true && exit
             "
             clear
+            INSTDESK=$(curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" -O)
             printf '%s\n'
             read -r -p "${g}"' Do you want to install a desktop now? [Y/n] '"${nc}" desk
             case "$desk" in
                 y|Y)
                     arch-chroot /mnt /bin/bash -c "
-                            curl -sL \
-                            "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
-                            -O && chmod +x install_desktop && ./install_desktop
+                            ${INSTDESK} && chmod +x install_desktop && ./install_desktop
                         exit
                     "
                     umount -R /mnt && reboot
@@ -342,18 +335,18 @@ _Install() {
                     case "$enter" in
                         y|Y)
                             arch-chroot /mnt /bin/bash -c "
-                                _CurlDesktop && chmod +x install_desktop
+                                ${INSTDESK} && chmod +x install_desktop
                             "
                         ;;
                         n|N)
-                            _CurlDesktop && chmod +x install_desktop && mv install_desktop /mnt/root/
+                            ${INSTDESK} && chmod +x install_desktop && mv install_desktop /mnt/root/
                             printf '%s' " ${y}Unmounting /mnt and rebooting.${nc}"
                             sleep 1s
                             umount -R /mnt && reboot
                         ;;
                         *)
                             arch-chroot /mnt /bin/bash -c "
-                                _CurlDesktop && chmod +x install_desktop
+                                ${INSTDESK} && chmod +x install_desktop
                             "
                         ;;
                     esac
