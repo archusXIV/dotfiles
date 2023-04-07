@@ -319,7 +319,6 @@ _Install() {
                 && timedatectl set-ntp true && exit
             "
             clear
-            INSTDESK=$(curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" -O)
             printf '%s\n'
             read -r -p "${g}"' Do you want to install a desktop now? [Y/n] '"${nc}" desk
             case "$desk" in
