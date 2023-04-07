@@ -244,6 +244,7 @@ _Install() {
             pacman-contrib grub efibootmgr os-prober gptfdisk fatresize networkmanager \
             reflector zip unzip p7zip nano wget vim mc git syslog-ng mtools usbutils \
             dosfstools lsb-release exfat-utils bash-completion man-db man-pages \
+            gvfs gvfs-{afc,goa,google,gphoto2,mtp,nfs,smb} \
             xf86-input-{elographics,evdev,libinput,synaptics,vmmouse,void,wacom} \
             xf86-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,openchrome,qxl,sisusb,vesa}
             
