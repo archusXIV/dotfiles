@@ -156,8 +156,8 @@ _bspwm() {
     rofi rxvt-unicode alacritty geany geany-plugins ranger htop \
     gnome-keyring polkit-gnome zsh zsh-completions zsh-syntax-highlighting \
     powerline powerline-common powerline-fonts powerline-vim python-powerline \
-    numlockx lxappearance
-    network-manager-applet && _fonts && _audio && _systemd && {
+    numlockx lxappearance network-manager-applet \
+    && _fonts && _audio && _systemd && {
         if [[ -d $SYSCONFDIR ]]; then
             mkdir --parents "$USERCONFDIR"/bspwm
             cp -f "$SYSCONFDIR"/bspwmrc "$USERCONFDIR"/bspwm/
