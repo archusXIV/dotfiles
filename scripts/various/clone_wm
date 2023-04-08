@@ -13,12 +13,16 @@ y=$'\e[93m';
 git clone https://github.com/archusXIV/wm_config.git
 cd wm_config/ || exit 1
 
+KBD=$(sed 's/KEYMAP=//;s/-.*//' /etc/vconsole.conf | sed -n '1p')
+
 _i3Config() {
     ls -la
     echo "Hello World! this is i3"
 }
 
 _bspwmConfig() {
+    
+    read -r -p "${g}"' Enter your user name: '"${nc}" usrname
     
     local SYSCONFDIR USERCONFDIR
     
@@ -36,7 +40,9 @@ _bspwmConfig() {
         echo "polybar example &" >> "$USERCONFDIR"/bspwm/bspwmrc
         cp -f "$SYSCONFDIR"/sxhkdrc "$USERCONFDIR"/sxhkd/
         killall polybar sxhkd
-        bspc wm -r
+        printf '%s\n' " ${y}Please log back in.${nc}"
+        sleep 2s
+        pkill -15 -u $USER
     else
         printf '%s\n' " ${r}You will have to configure Bspwm.${nc}"
         sleep 3s
