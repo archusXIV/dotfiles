@@ -149,7 +149,7 @@ _bspwm() {
             cp -f "$SYSCONFDIR"/bspwmrc "$USERCONFDIR"/bspwm/
             chmod +x "$USERCONFDIR"/bspwm/bspwmrc
             cp -f "$SYSCONFDIR"/sxhkdrc "$USERCONFDIR"/sxhkd/
-            chown ${usrname}:${usrname} "$USERCONFDIR"/*
+            chown ${usrname}:${usrname} "$USERCONFDIR"/{bspwm,sxhkd}/*
         else
             printf '%s\n' " ${r}You will have to configure Bspwm.${nc}"
             sleep 3s
