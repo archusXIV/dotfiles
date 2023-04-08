@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Author: Barret E <archus@protonmail.com>
+# github directory: https://github.com/archusXIV/wm_config
+# Youtube channel: <https://www.youtube.com/@linuxinfrench9388>
+
+# Colors
+nc=$'\e[0;m';
+g=$'\e[1;32m';
+r=$'\e[0;31m';
+y=$'\e[93m';
+
+git clone https://github.com/archusXIV/wm_config.git
+cd wm_config/ || exit 1
+
+_i3Config(){
+    echo "Hello World! this is i3"
+}
+
+_bspwmConfig() {
+    echo "Hello World! this is bspwm"
+}
+
+clear
+read -r -p "${g}"' Window manager config to install: [I]3wm, [B]spwm '"${nc}" wm
+case "$wm" in
+    i|I) _i3Config ;;
+    b|B) _bspwmConfig ::
+esac
+
