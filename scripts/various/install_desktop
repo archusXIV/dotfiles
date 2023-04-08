@@ -30,7 +30,7 @@ _Description() {
            #         #  #   #  #    # #    # #      # #   ## #    #  #  #  
           #           # #    #  ####  #    # ###### # #    #  ####  #    #
     
-                   Desktop installation for lazy dudes made easy!
+                     Base installation for lazy dudes made easy!
     
     # French (ne jamais lancer un script sans le lire auparavant)
     ${g}Ce script va installer le bureau de votre choix parmi la liste suivante:${nc}
@@ -135,7 +135,9 @@ _i3wm() {
     sleep 1s
     pacman -S --needed --noconfirm i3-wm i3lock i3status \
     i3blocks polybar dmenu rofi sxhkd rxvt-unicode alacritty htop \
-    geany geany-plugins network-manager-applet ranger \
+    gnome-keyring polkit-gnome zsh zsh-completions zsh-syntax-highlighting \
+    powerline powerline-common powerline-fonts powerline-vim python-powerline \
+    numlockx lxappearance geany geany-plugins network-manager-applet ranger \
     && _fonts && _audio && _systemd
     
 }
@@ -150,8 +152,11 @@ _bspwm() {
     _xorg \
     && clear && printf '%s\n' " ${y}Installing BSPWM.${nc}"
     sleep 1s
-    pacman -S --needed --noconfirm bspwm sxhkd xdo polybar \
-    dmenu rofi rxvt-unicode alacritty geany geany-plugins ranger htop \
+    pacman -S --needed --noconfirm bspwm sxhkd xdo polybar dmenu \
+    rofi rxvt-unicode alacritty geany geany-plugins ranger htop \
+    gnome-keyring polkit-gnome zsh zsh-completions zsh-syntax-highlighting \
+    powerline powerline-common powerline-fonts powerline-vim python-powerline \
+    numlockx lxappearance
     network-manager-applet && _fonts && _audio && _systemd && {
         if [[ -d $SYSCONFDIR ]]; then
             mkdir --parents "$USERCONFDIR"/bspwm
