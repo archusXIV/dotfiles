@@ -19,8 +19,29 @@ _i3Config() {
 }
 
 _bspwmConfig() {
-    ls -la
-    echo "Hello World! this is bspwm"
+    
+    local SYSCONFDIR USERCONFDIR
+    
+    SYSCONFDIR="/usr/share/doc/bspwm/examples"
+    USERCONFDIR="/home/${usrname}/.config"
+    
+    printf '%s\n' " ${y}Configuring BSPWM.${nc}"
+    sleep 1s
+    if [[ -d $SYSCONFDIR ]]; then
+        sudo rm -rf "$USERCONFDIR"
+        mkdir --parents "$USERCONFDIR"/{bspwm,sxhkd}
+        cp -f "$SYSCONFDIR"/bspwmrc "$USERCONFDIR"/bspwm/
+        chmod +x "$USERCONFDIR"/bspwm/bspwmrc
+        echo "setxkbmap $KBD" >> "$USERCONFDIR"/bspwm/bspwmrc
+        echo "polybar example &" >> "$USERCONFDIR"/bspwm/bspwmrc
+        cp -f "$SYSCONFDIR"/sxhkdrc "$USERCONFDIR"/sxhkd/
+        killall polybar sxhkd
+        bspc wm -r
+    else
+        printf '%s\n' " ${r}You will have to configure Bspwm.${nc}"
+        sleep 3s
+    fi
+    
 }
 
 clear
