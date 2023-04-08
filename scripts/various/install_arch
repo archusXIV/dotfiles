@@ -230,12 +230,14 @@ _Install() {
                 _SeparatedHomeLayout
             }
             
+            clear
             printf '%s' " ${y}Getting fresh mirrors list for $LOCATION...${nc}"
             sleep 1s
             
             reflector --verbose --country "$LOCATION" --latest 10 --age 24 \
             --protocol https --sort rate --save /etc/pacman.d/mirrorlist
             
+            clear
             printf '%s\n' " ${y}Installing Arch-Linux base system...${nc}"
             sleep 1s
             
