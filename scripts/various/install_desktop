@@ -56,6 +56,7 @@ _CreateUser() {
     clear
     printf '%s\n'
     read -r -p "${g}"' First pick a new user name: '"${nc}" usrname
+    groupadd ${usrname}
     useradd -m -G audio,video,input,wheel,sys,log,rfkill,lp,adm,${usrname} -s /bin/bash ${usrname}
     printf '%s\n' " ${g}Change $usrname password:${nc} "
     sleep 1s
