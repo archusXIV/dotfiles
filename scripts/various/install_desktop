@@ -64,12 +64,16 @@ _CreateUser() {
     sleep 2s
     EDITOR=vim visudo
     groupadd ${usrname}
+    
     printf '%s\n'
-    read -r -p "${g}"' Set keyboard layout for $usrname: [F]rench (fr), [E]nglish (us): '"${nc}" layout
+    echo "${g} Set keyboard layout for $usrname: [F]rench (fr), [E]nglish (us):${nc}"
+    read -r layout
+    
     case "$layout" in
         e|E) KBD="us" ;;
         f|F) KBD="fr" ;;
     esac
+    
     _DesktopChoice
     
 }
@@ -156,7 +160,7 @@ _bspwm() {
             echo "polybar example &" >> "$USERCONFDIR"/bspwm/bspwmrc
             chmod +x "$USERCONFDIR"/bspwm/bspwmrc
             cp -f "$SYSCONFDIR"/sxhkdrc "$USERCONFDIR"/sxhkd/
-            chown ${usrname}:${usrname} "$USERCONFDIR"/*
+            chmod -R 777 "$USERCONFDIR"
         else
             printf '%s\n' " ${r}You will have to configure Bspwm.${nc}"
             sleep 3s
