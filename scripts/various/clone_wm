@@ -13,11 +13,13 @@ y=$'\e[93m';
 git clone https://github.com/archusXIV/wm_config.git
 cd wm_config/ || exit 1
 
-_i3Config(){
+_i3Config() {
+    ls -la
     echo "Hello World! this is i3"
 }
 
 _bspwmConfig() {
+    ls -la
     echo "Hello World! this is bspwm"
 }
 
@@ -27,4 +29,3 @@ case "$wm" in
     i|I) _i3Config ;;
     b|B) _bspwmConfig ::
 esac
-
