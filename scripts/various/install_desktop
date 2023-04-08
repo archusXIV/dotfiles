@@ -64,6 +64,12 @@ _CreateUser() {
     sleep 2s
     EDITOR=vim visudo
     groupadd ${usrname}
+    printf '%s\n'
+    read -r -p "${g}"' Set keyboard layout for $usrname: [F]rench (fr), [E]nglish (us): '"${nc}" layout
+    case "$layout" in
+        e|E) KBD="us" ;;
+        f|F) KBD="fr" ;;
+    esac
     _DesktopChoice
     
 }
@@ -143,10 +149,11 @@ _bspwm() {
     pacman -S --needed --noconfirm bspwm sxhkd xdo polybar \
     dmenu rofi rxvt-unicode alacritty geany geany-plugins ranger htop \
     network-manager-applet && _fonts && _audio && _systemd && {
-    
         if [[ -d $SYSCONFDIR ]]; then
             mkdir --parents "$USERCONFDIR"/{bspwm,sxhkd}
             cp -f "$SYSCONFDIR"/bspwmrc "$USERCONFDIR"/bspwm/
+            echo "setxkbmap $KBD" >> "$USERCONFDIR"/bspwm/bspwmrc
+            echo "polybar example &" >> "$USERCONFDIR"/bspwm/bspwmrc
             chmod +x "$USERCONFDIR"/bspwm/bspwmrc
             cp -f "$SYSCONFDIR"/sxhkdrc "$USERCONFDIR"/sxhkd/
             chown ${usrname}:${usrname} "$USERCONFDIR"/*
@@ -154,12 +161,11 @@ _bspwm() {
             printf '%s\n' " ${r}You will have to configure Bspwm.${nc}"
             sleep 3s
         fi
-    
     } && curl -sL \
     "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/clone_wm" -O \
     && curl -sL "https://raw.githubusercontent.com/archusXIV/wm_config/main/README.md" -O \
     && chown ${usrname}:${usrname} clone_wm README.md \
-    && mv {clone_wm,README.md} /home/${usrname} && chmod +x /home/${usrname}/clone_wm
+    && mv {clone_wm,README_FIRST} /home/${usrname} && chmod +x /home/${usrname}/clone_wm
     
 }
 
