@@ -30,7 +30,7 @@ _Description() {
            #         #  #   #  #    # #    # #      # #   ## #    #  #  #  
           #           # #    #  ####  #    # ###### # #    #  ####  #    #
     
-                     Base installation for lazy dudes made easy!
+                   Desktop installation for lazy dudes made easy!
     
     # French (ne jamais lancer un script sans le lire auparavant)
     ${g}Ce script va installer le bureau de votre choix parmi la liste suivante:${nc}
