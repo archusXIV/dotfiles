@@ -165,7 +165,7 @@ _bspwm() {
     "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/clone_wm" -O \
     && curl -sL "https://raw.githubusercontent.com/archusXIV/wm_config/main/README.md" -O \
     && chown ${usrname}:${usrname} clone_wm README.md \
-    && mv {clone_wm,README_FIRST} /home/${usrname} && chmod +x /home/${usrname}/clone_wm
+    && mv {clone_wm,README.md} /home/${usrname} && chmod +x /home/${usrname}/clone_wm
     
 }
 
