@@ -141,8 +141,8 @@ _bspwm() {
     sleep 1s
     pacman -S --needed --noconfirm bspwm sxhkd xdo polybar \
     dmenu rofi rxvt-unicode alacritty geany geany-plugins ranger htop \
-    network-manager-applet \
-    && _fonts && _audio && _systemd && {
+    network-manager-applet && _fonts && _audio && _systemd && {
+    
         if [[ -d $SYSCONFDIR ]]; then
             mkdir --parents "$USERCONFDIR"/{bspwm,sxhkd}
             cp -f "$SYSCONFDIR"/bspwmrc "$USERCONFDIR"/bspwm/
@@ -153,6 +153,7 @@ _bspwm() {
             printf '%s\n' " ${r}You will have to configure Bspwm.${nc}"
             sleep 3s
         fi
+    
     } && curl -sL \
     "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/clone_wm" -O \
     && curl -sL "https://raw.githubusercontent.com/archusXIV/wm_config/main/README.md" -O \
