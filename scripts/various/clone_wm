@@ -19,8 +19,35 @@ cd wm_config/ || exit 1
 KBD=$(sed 's/KEYMAP=//;s/-.*//' /etc/vconsole.conf | sed -n '1p')
 
 _i3Config() {
-    ls -la
-    echo "Hello World! this is i3"
+    
+    if [[ -n $(command -v i3) ]]; then
+        if [[ -n $(command -v bspwm) ]]; then
+            printf '%s\n' " ${r}Bspwm is already installed!"
+            printf '%s\n' " If you want to use both i3 & bspwm, just edit your .xinitrc file.${nc}"
+            sleep 3s && printf '%s\n' " ${y}Configuring I3WM.${nc}"
+            && mv -f local/i3 ~/.local && mv -f local/i3blocks ~/.local \
+            && cd ~ && rm -rf wm_config \
+            && printf '%s\n' " ${y}i3wm configuration installed...${nc}" \
+            && sleep 2s && exit 0
+        fi
+        
+        mv config .config \
+        && mv local .local \
+        && chmod +x .local/bin/* \
+        && echo "setxkbmap $KBD" >> .local/bin/autostart \
+        && mv -f .local .. && mv -f .config .. \
+        && mv -f wallpapers ~/Documents/ \
+        && chmod +x .fehbg \
+        && mv -f .{bash_profile,bashrc,zshenv,zshrc,fehbg,xinitrc,Xresources} .. \
+        && echo "exec i3" >> ~/.xinitrc \
+        && cd ~ && rm -rf wm_config \
+        && printf '%s\n' " ${y}i3wm configured, rebooting...${nc}" \
+        && sleep 2s && reboot
+    else
+        printf '%s\n' " ${r}You will have to configure Bspwm.${nc}"
+        sleep 3s
+    fi
+    
 }
 
 _bspwmConfig() {
