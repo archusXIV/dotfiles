@@ -44,7 +44,7 @@ _i3Config() {
         && printf '%s\n' " ${y}i3wm configured, rebooting...${nc}" \
         && sleep 2s && reboot
     else
-        printf '%s\n' " ${r}You will have to configure Bspwm.${nc}"
+        printf '%s\n' " ${r}i3wm is not installed.${nc}"
         sleep 3s
     fi
     
@@ -69,7 +69,7 @@ _bspwmConfig() {
         && printf '%s\n' " ${y}Bspwm configured, rebooting...${nc}" \
         && sleep 2s && reboot
     else
-        printf '%s\n' " ${r}You will have to configure Bspwm.${nc}"
+        printf '%s\n' " ${r}Bspwm is not installed.${nc}"
         sleep 3s
     fi
     
