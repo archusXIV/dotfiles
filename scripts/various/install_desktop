@@ -65,6 +65,15 @@ _CreateUser() {
     EDITOR=vim visudo
     groupadd ${usrname}
     
+    printf '%s\n'
+    echo "${g} Set keyboard layout for $usrname: [F]rench (fr), [E]nglish (us):${nc}"
+    read -r layout
+    
+    case "$layout" in
+        e|E) KBD="us" ;;
+        f|F) KBD="fr" ;;
+    esac
+    
     _DesktopChoice
     
 }
@@ -115,7 +124,7 @@ _xorg() {
     sleep 1s
     pacman -Sy --needed --noconfirm xorg xorg-server xorg-xinit \
     xorg-xrandr xorg-xfontsel xorg-xlsfonts xorg-xkill xorg-xinput \
-    xorg-xwininfo wmctrl xdg-user-dirs xterm
+    xorg-xwininfo wmctrl xdg-user-dirs xterm xorg-apps xcb-util-wm
     
 }
 
@@ -124,8 +133,8 @@ _i3wm() {
     _xorg \
     && clear && printf '%s\n' " ${y}Installing I3WM.${nc}"
     sleep 1s
-    pacman -S --needed --noconfirm i3-wm i3lock i3status \
-    i3blocks polybar dmenu rofi sxhkd rxvt-unicode alacritty htop \
+    pacman -S --needed --noconfirm i3-wm i3lock i3status conky fzf dunst \
+    i3blocks polybar dmenu rofi sxhkd rxvt-unicode alacritty htop scrot \
     gnome-keyring polkit-gnome zsh zsh-completions zsh-syntax-highlighting \
     powerline powerline-common powerline-fonts powerline-vim python-powerline \
     numlockx lxappearance geany geany-plugins network-manager-applet ranger \
@@ -135,25 +144,21 @@ _i3wm() {
 
 _bspwm() {
     
-    local SYSCONFDIR USERCONFDIR KBD
+    local SYSCONFDIR USERCONFDIR
     
     SYSCONFDIR="/usr/share/doc/bspwm/examples"
     USERCONFDIR="/home/${usrname}/.config"
-    KBD=$(sed 's/KEYMAP=//;s/-.*//' /etc/vconsole.conf | sed -n '1p')
     
     _xorg \
     && clear && printf '%s\n' " ${y}Installing BSPWM.${nc}"
     sleep 1s
-    pacman -S --needed --noconfirm bspwm sxhkd xdo polybar dmenu \
-    rofi rxvt-unicode alacritty geany geany-plugins ranger htop \
+    pacman -S --needed --noconfirm bspwm sxhkd xdo polybar dmenu fzf \
+    rofi rxvt-unicode alacritty geany geany-plugins ranger htop conky scrot \
     gnome-keyring polkit-gnome zsh zsh-completions zsh-syntax-highlighting \
     powerline powerline-common powerline-fonts powerline-vim python-powerline \
-    numlockx lxappearance network-manager-applet \
+    numlockx lxappearance network-manager-applet dunst \
     && _fonts && _audio && _systemd && {
         if [[ -d $SYSCONFDIR ]]; then
-            clear
-            printf '%s\n' " ${y}Setting basic configuration for BSPWM.${nc}"
-            sleep 1s
             mkdir --parents "$USERCONFDIR"/bspwm
             cp -f "$SYSCONFDIR"/bspwmrc "$USERCONFDIR"/bspwm/
             echo "setxkbmap $KBD" >> "$USERCONFDIR"/bspwm/bspwmrc
