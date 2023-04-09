@@ -25,9 +25,9 @@ _i3Config() {
 
 _bspwmConfig() {
     
-    printf '%s\n' " ${y}Configuring BSPWM.${nc}"
-    sleep 1s
     if [[ -n $(command -v bspwm) ]]; then
+        printf '%s\n' " ${y}Configuring BSPWM.${nc}"
+        sleep 1s
         mv config .config \
         && chmod +x .config/bspwm/bspwmrc \
         && mv local .local \
