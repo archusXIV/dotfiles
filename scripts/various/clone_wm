@@ -14,7 +14,7 @@ git clone https://github.com/archusXIV/wm_config.git
 cd wm_config/ || exit 1
 
 KBD=$(sed 's/KEYMAP=//;s/-.*//' /etc/vconsole.conf | sed -n '1p')
-SYSCONFDIR="/usr/share/doc/bspwm/examples"
+$SYSCONFDIR="/usr/share/doc/bspwm/examples"
 USERCONFDIR="/home/${usrname}/.config"
 USERLOCALDIR="/home/${usrname}/.local"
 
@@ -30,15 +30,15 @@ _bspwmConfig() {
     printf '%s\n' " ${y}Configuring BSPWM.${nc}"
     sleep 1s
     if [[ -d $SYSCONFDIR ]]; then
-        sudo rm -rf "$USERCONFDIR"
-        mkdir --parents "$USERCONFDIR"
+        # sudo rm -rf "$USERCONFDIR"
+        # mkdir "$USERCONFDIR"
         mkdir --parents "$USERLOCALDIR"/{bin,share}
         
-        cp -rf config/* "$USERCONFDIR"/
+        cp -rf config/* "$USERCONFDIR"
         
         chmod +x "$USERCONFDIR"/bspwm/bspwmrc
         chmod +x local/bin/*
-        cp -rf local/bin/* "$USERLOCALDIR"/bin/
+        cp -rf local/bin/* "$USERLOCALDIR"/bin
         echo "setxkbmap $KBD" >> "$USERLOCALDIR"/bin/autostart
         
         cp -r wallpapers ~/Documents/
