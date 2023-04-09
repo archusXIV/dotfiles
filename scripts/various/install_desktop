@@ -83,15 +83,27 @@ _systemd() {
     clear
     printf '%s\n' " ${y}Installing LIGHTDM.${nc}"
     sleep 1s
-    pacman -S --needed --noconfirm lightdm lightdm-gtk-greeter
-    if [[ $(dmidecode -s system-product-name) = VirtualBox ]]; then
-        pacman -S --needed --noconfirm virtualbox-guest-utils
-        systemctl enable {lightdm,vboxservice}.service
-        printf '%s\n' " ${y}Rebooting, please wait...${nc}"
+    if [[ -d /usr/share/doc/bspwm ]]; then
+    
+        if [[ $(dmidecode -s system-product-name) = VirtualBox ]]; then
+            pacman -S --needed --noconfirm virtualbox-guest-utils
+            systemctl enable vboxservice.service
+            printf '%s\n' " ${y}Rebooting, please wait...${nc}"
+        fi
+        
     else
-        systemctl enable lightdm.service
-        printf '%s\n' " ${y}Rebooting, please wait...${nc}"
-    fi
+    
+        pacman -S --needed --noconfirm lightdm lightdm-gtk-greeter
+        
+        if [[ $(dmidecode -s system-product-name) = VirtualBox ]]; then
+            pacman -S --needed --noconfirm virtualbox-guest-utils
+            systemctl enable {lightdm,vboxservice}.service
+            printf '%s\n' " ${y}Rebooting, please wait...${nc}"
+        else
+            systemctl enable lightdm.service
+            printf '%s\n' " ${y}Rebooting, please wait...${nc}"
+        fi
+     fi
     
 }
 
@@ -134,7 +146,7 @@ _i3wm() {
     && clear && printf '%s\n' " ${y}Installing I3WM.${nc}"
     sleep 1s
     pacman -S --needed --noconfirm i3-wm i3lock i3status conky fzf dunst \
-    i3blocks polybar dmenu rofi sxhkd rxvt-unicode alacritty htop scrot \
+    i3blocks polybar dmenu rofi sxhkd rxvt-unicode alacritty htop scrot feh \
     gnome-keyring polkit-gnome zsh zsh-completions zsh-syntax-highlighting \
     powerline powerline-common powerline-fonts powerline-vim python-powerline \
     numlockx lxappearance geany geany-plugins network-manager-applet ranger \
@@ -144,11 +156,6 @@ _i3wm() {
 
 _bspwm() {
     
-    local SYSCONFDIR USERCONFDIR
-    
-    SYSCONFDIR="/usr/share/doc/bspwm/examples"
-    USERCONFDIR="/home/${usrname}/.config"
-    
     _xorg \
     && clear && printf '%s\n' " ${y}Installing BSPWM.${nc}"
     sleep 1s
@@ -156,21 +163,8 @@ _bspwm() {
     rofi rxvt-unicode alacritty geany geany-plugins ranger htop conky scrot \
     gnome-keyring polkit-gnome zsh zsh-completions zsh-syntax-highlighting \
     powerline powerline-common powerline-fonts powerline-vim python-powerline \
-    numlockx lxappearance network-manager-applet dunst \
-    && _fonts && _audio && _systemd && {
-        if [[ -d $SYSCONFDIR ]]; then
-            mkdir --parents "$USERCONFDIR"/{bspwm,sxhkd}
-            cp -f "$SYSCONFDIR"/bspwmrc "$USERCONFDIR"/bspwm/
-            echo "setxkbmap $KBD" >> "$USERCONFDIR"/bspwm/bspwmrc
-            echo "polybar example &" >> "$USERCONFDIR"/bspwm/bspwmrc
-            chmod +x "$USERCONFDIR"/bspwm/bspwmrc
-            cp -f "$SYSCONFDIR"/sxhkdrc "$USERCONFDIR"/sxhkd/
-            chown ${usrname}:${usrname} "$USERCONFDIR"
-        else
-            printf '%s\n' " ${r}You will have to configure Bspwm.${nc}"
-            sleep 3s
-        fi
-    } && curl -sL \
+    numlockx lxappearance network-manager-applet dunst feh \
+    && _fonts && _audio && && curl -sL \
     "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/clone_wm" -O \
     && curl -sL "https://raw.githubusercontent.com/archusXIV/wm_config/main/README.md" -O \
     && chown ${usrname}:${usrname} clone_wm README.md \
