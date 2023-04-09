@@ -16,7 +16,7 @@ cd wm_config/ || exit 1
 read -r -p "${g}"' Enter your user name: '"${nc}" usrname
 
 KBD=$(sed 's/KEYMAP=//;s/-.*//' /etc/vconsole.conf | sed -n '1p')
-$SYSCONFDIR="/usr/share/doc/bspwm/examples"
+SYSCONFDIR="/usr/share/doc/bspwm/examples"
 USERCONFDIR="/home/${usrname}/.config"
 USERLOCALDIR="/home/${usrname}/.local"
 
