@@ -36,11 +36,13 @@ _bspwmConfig() {
         && mv local .local \
         && chmod +x .local/bin/* \
         && echo "setxkbmap $KBD" >> .local/bin/autostart \
-        && mv -r wallpapers ~/Documents/ \
+        && mv -f .local .. && mv -f .config .. \
+        && mv -f wallpapers ~/Documents/ \
+        && chmod +x .fehbg \
         && mv -f .{bash_profile,bashrc,zshenv,zshrc,fehbg,xinitrc,Xresources} .. \
         && echo "exec bspwm" >> ~/.xinitrc \
         && cd ~ && rm -rf wm_config \
-        && printf '%s\n' " ${y}Rebooting...${nc}" \
+        && printf '%s\n' " ${y}Bspwm configured, rebooting...${nc}" \
         && sleep 2s && reboot
     else
         printf '%s\n' " ${r}You will have to configure Bspwm.${nc}"
