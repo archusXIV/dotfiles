@@ -19,7 +19,7 @@ cd wm_config/ || exit 1
 read -r -p "${g}"' Enter your user name: '"${nc}" usrname
 
 KBD=$(sed 's/KEYMAP=//;s/-.*//' /etc/vconsole.conf | sed -n '1p')
-SYSCONFDIR="/usr/share/doc/bspwm/examples"
+BSPCONFDIR="/usr/share/doc/bspwm/examples"
 
 _i3Config() {
     ls -la
@@ -30,7 +30,7 @@ _bspwmConfig() {
     
     printf '%s\n' " ${y}Configuring BSPWM.${nc}"
     sleep 1s
-    if [[ -d $SYSCONFDIR ]]; then
+    if [[ -d $BSPCONFDIR ]]; then
         mv config .config \
         && chmod +x .config/bspwm/bspwmrc \
         && mv local .local \
@@ -52,7 +52,7 @@ _bspwmConfig() {
 }
 
 clear
-read -r -p "${g}"' Window manager config to install: [I]3wm, [B]spwm '"${nc}" wm
+read -r -p "${g}"' Window manager config to install: [I]3wm, [B]spwm: '"${nc}" wm
 case "$wm" in
     i|I) _i3Config ;;
     b|B) _bspwmConfig ::
