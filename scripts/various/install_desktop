@@ -159,11 +159,13 @@ _bspwm() {
     numlockx lxappearance network-manager-applet dunst \
     && _fonts && _audio && _systemd && {
         if [[ -d $SYSCONFDIR ]]; then
-            mkdir --parents "$USERCONFDIR"/bspwm
+            mkdir --parents "$USERCONFDIR"/{bspwm,sxhkd}
             cp -f "$SYSCONFDIR"/bspwmrc "$USERCONFDIR"/bspwm/
             echo "setxkbmap $KBD" >> "$USERCONFDIR"/bspwm/bspwmrc
             echo "polybar example &" >> "$USERCONFDIR"/bspwm/bspwmrc
             chmod +x "$USERCONFDIR"/bspwm/bspwmrc
+            cp -f "$SYSCONFDIR"/sxhkdrc "$USERCONFDIR"/sxhkd/
+            chown ${usrname}:${usrname} "$USERCONFDIR"
         else
             printf '%s\n' " ${r}You will have to configure Bspwm.${nc}"
             sleep 3s
