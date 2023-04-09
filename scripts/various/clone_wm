@@ -13,6 +13,8 @@ y=$'\e[93m';
 git clone https://github.com/archusXIV/wm_config.git
 cd wm_config/ || exit 1
 
+read -r -p "${g}"' Enter your user name: '"${nc}" usrname
+
 KBD=$(sed 's/KEYMAP=//;s/-.*//' /etc/vconsole.conf | sed -n '1p')
 $SYSCONFDIR="/usr/share/doc/bspwm/examples"
 USERCONFDIR="/home/${usrname}/.config"
@@ -24,8 +26,6 @@ _i3Config() {
 }
 
 _bspwmConfig() {
-    
-    read -r -p "${g}"' Enter your user name: '"${nc}" usrname
     
     printf '%s\n' " ${y}Configuring BSPWM.${nc}"
     sleep 1s
