@@ -30,22 +30,16 @@ _bspwmConfig() {
     printf '%s\n' " ${y}Configuring BSPWM.${nc}"
     sleep 1s
     if [[ -d $SYSCONFDIR ]]; then
-        # sudo rm -rf "$USERCONFDIR"
-        # mkdir "$USERCONFDIR"
-        mkdir --parents "$USERLOCALDIR"/{bin,share}
-        
-        cp -rf config/* "$USERCONFDIR"
-        
-        chmod +x "$USERCONFDIR"/bspwm/bspwmrc
-        chmod +x local/bin/*
-        cp -rf local/bin/* "$USERLOCALDIR"/bin
-        echo "setxkbmap $KBD" >> "$USERLOCALDIR"/bin/autostart
-        
-        cp -r wallpapers ~/Documents/
-        
-        printf '%s\n' " ${y}Please log back in.${nc}"
-        sleep 2s
-        pkill -15 -u $USER
+        cp -rf * .. && cd .. \
+        && mv config "$USERCONFDIR" \
+        && chmod +x "$USERCONFDIR"/bspwm/bspwmrc \
+        && mv local "$USERLOCALDIR" \
+        && chmod +x "$USERLOCALDIR"/bin/* \
+        && echo "setxkbmap $KBD" >> "$USERLOCALDIR"/bin/autostart \
+        && cp -r wallpapers ~/Documents/ \
+        && rm -rf wm_config \
+        && printf '%s\n' " ${y}Rebooting...${nc}" \
+        && sleep 2s && reboot
     else
         printf '%s\n' " ${r}You will have to configure Bspwm.${nc}"
         sleep 3s
