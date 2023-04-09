@@ -17,7 +17,6 @@ git clone https://github.com/archusXIV/wm_config.git
 cd wm_config/ || exit 1
 
 KBD=$(sed 's/KEYMAP=//;s/-.*//' /etc/vconsole.conf | sed -n '1p')
-BSPCONFDIR="/usr/share/doc/bspwm/examples"
 
 _i3Config() {
     ls -la
@@ -28,7 +27,7 @@ _bspwmConfig() {
     
     printf '%s\n' " ${y}Configuring BSPWM.${nc}"
     sleep 1s
-    if [[ -d $BSPCONFDIR ]]; then
+    if [[ -n $(command -v bspwm) ]]; then
         mv config .config \
         && chmod +x .config/bspwm/bspwmrc \
         && mv local .local \
