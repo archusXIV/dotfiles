@@ -164,7 +164,7 @@ _bspwm() {
     gnome-keyring polkit-gnome zsh zsh-completions zsh-syntax-highlighting \
     powerline powerline-common powerline-fonts powerline-vim python-powerline \
     numlockx lxappearance network-manager-applet dunst feh \
-    && _fonts && _audio && && curl -sL \
+    && _fonts && _audio && curl -sL \
     "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/clone_wm" -O \
     && curl -sL "https://raw.githubusercontent.com/archusXIV/wm_config/main/README.md" -O \
     && chown ${usrname}:${usrname} clone_wm README.md \
