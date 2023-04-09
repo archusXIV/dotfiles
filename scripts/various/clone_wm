@@ -10,6 +10,9 @@ g=$'\e[1;32m';
 r=$'\e[0;31m';
 y=$'\e[93m';
 
+[[ -d ~/.config ]] && rm -rf  ~/.config
+[[ -d ~/.local ]] && rm -rf  ~/.local
+
 git clone https://github.com/archusXIV/wm_config.git
 cd wm_config/ || exit 1
 
@@ -17,8 +20,6 @@ read -r -p "${g}"' Enter your user name: '"${nc}" usrname
 
 KBD=$(sed 's/KEYMAP=//;s/-.*//' /etc/vconsole.conf | sed -n '1p')
 SYSCONFDIR="/usr/share/doc/bspwm/examples"
-USERCONFDIR="/home/${usrname}/.config"
-USERLOCALDIR="/home/${usrname}/.local"
 
 _i3Config() {
     ls -la
@@ -30,14 +31,14 @@ _bspwmConfig() {
     printf '%s\n' " ${y}Configuring BSPWM.${nc}"
     sleep 1s
     if [[ -d $SYSCONFDIR ]]; then
-        cp -rf * .. && cd .. \
-        && mv config "$USERCONFDIR" \
-        && chmod +x "$USERCONFDIR"/bspwm/bspwmrc \
-        && mv local "$USERLOCALDIR" \
-        && chmod +x "$USERLOCALDIR"/bin/* \
-        && echo "setxkbmap $KBD" >> "$USERLOCALDIR"/bin/autostart \
-        && cp -r wallpapers ~/Documents/ \
-        && rm -rf wm_config \
+        mv config .config \
+        && chmod +x .config/bspwm/bspwmrc \
+        && mv local .local \
+        && chmod +x .local/bin/* \
+        && echo "setxkbmap $KBD" >> .local/bin/autostart \
+        && mv -r wallpapers ~/Documents/ \
+        && mv -f .{bash_profile,bashrc,zshenv,zshrc,fehbg,xinitrc,Xresources} .. \
+        && cd ~ && rm -rf wm_config \
         && printf '%s\n' " ${y}Rebooting...${nc}" \
         && sleep 2s && reboot
     else
