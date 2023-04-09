@@ -37,7 +37,7 @@ _Description() {
     
     Preconfigurés: ${y}i3wm, Bspwm${nc} (lancement de session avec startx)
     
-    ${g}Bspwm est lancé avec la commande 'startx' et non lightdm.
+    ${g}i3wm et Bspwm sont lancés avec la commande 'startx' et non lightdm.
     Pour le premier lancement, entrez vos identifiants, puis lancez le script clone_wm:
     ./clone_wm, au redémarrage lancez startx et ouvrez geany pour lire le fichier README.md:
     alt + g puis g encore.${nc}
@@ -49,7 +49,7 @@ _Description() {
     
     Preconfigured: ${y}i3wm, Bspwm${nc} (startx launch the session)
     
-    ${g}Bspwm is launched with the 'startx' command and not lightdm. For the first launch,
+    ${g}i3wm and Bspwm are launched with the 'startx' command and not lightdm. For the first launch,
     enter your credentials, then run the clone_wm script: ./clone_wm, on restart run startx
     and launch geany to read the README.md file: alt + g then g again.${nc}
     
@@ -161,7 +161,11 @@ _i3wm() {
     gnome-keyring polkit-gnome zsh zsh-completions zsh-syntax-highlighting \
     powerline powerline-common powerline-fonts powerline-vim python-powerline \
     numlockx lxappearance geany geany-plugins network-manager-applet ranger \
-    && _fonts && _audio && _systemd
+    && _fonts && _audio && _systemd && curl -sL \
+    "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/clone_wm" -O \
+    && curl -sL "https://raw.githubusercontent.com/archusXIV/wm_config/main/README.md" -O \
+    && chown ${usrname}:${usrname} clone_wm README.md \
+    && mv {clone_wm,README.md} /home/${usrname} && chmod +x /home/${usrname}/clone_wm
     
 }
 
