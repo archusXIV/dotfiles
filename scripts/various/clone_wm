@@ -14,6 +14,9 @@ git clone https://github.com/archusXIV/wm_config.git
 cd wm_config/ || exit 1
 
 KBD=$(sed 's/KEYMAP=//;s/-.*//' /etc/vconsole.conf | sed -n '1p')
+SYSCONFDIR="/usr/share/doc/bspwm/examples"
+USERCONFDIR="/home/${usrname}/.config"
+USERLOCALDIR="/home/${usrname}/.local"
 
 _i3Config() {
     ls -la
@@ -24,22 +27,22 @@ _bspwmConfig() {
     
     read -r -p "${g}"' Enter your user name: '"${nc}" usrname
     
-    local SYSCONFDIR USERCONFDIR
-    
-    SYSCONFDIR="/usr/share/doc/bspwm/examples"
-    USERCONFDIR="/home/${usrname}/.config"
-    
     printf '%s\n' " ${y}Configuring BSPWM.${nc}"
     sleep 1s
     if [[ -d $SYSCONFDIR ]]; then
         sudo rm -rf "$USERCONFDIR"
-        mkdir --parents "$USERCONFDIR"/{bspwm,sxhkd}
-        cp -f "$SYSCONFDIR"/bspwmrc "$USERCONFDIR"/bspwm/
+        mkdir --parents "$USERCONFDIR"
+        mkdir --parents "$USERLOCALDIR"/{bin,share}
+        
+        cp -rf config/* "$USERCONFDIR"/
+        
         chmod +x "$USERCONFDIR"/bspwm/bspwmrc
-        echo "setxkbmap $KBD" >> "$USERCONFDIR"/bspwm/bspwmrc
-        echo "polybar example &" >> "$USERCONFDIR"/bspwm/bspwmrc
-        cp -f "$SYSCONFDIR"/sxhkdrc "$USERCONFDIR"/sxhkd/
-        killall polybar sxhkd
+        chmod +x local/bin/*
+        cp -rf local/bin/* "$USERLOCALDIR"/bin/
+        echo "setxkbmap $KBD" >> "$USERLOCALDIR"/bin/autostart
+        
+        cp -r wallpapers ~/Documents/
+        
         printf '%s\n' " ${y}Please log back in.${nc}"
         sleep 2s
         pkill -15 -u $USER
