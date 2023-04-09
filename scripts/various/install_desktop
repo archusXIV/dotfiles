@@ -35,13 +35,13 @@ _Description() {
     # French (ne jamais lancer un script sans le lire auparavant)
     ${g}Ce script va installer le bureau de votre choix parmi la liste suivante:${nc}
     
-    Preconfigurés:     ${y}i3wm, Bspwm${nc} (coming soon)
+    Preconfigurés:     ${y}i3wm, Bspwm${nc} (lancement de session avec startx)
     Brut de chez brut: ${y}Cinnamon, KDE Plasma, Mate & Xfce${nc}
     
     # English (never run a script without reading it first)
     ${g}This script will install the desktop of your choice among the following list:${nc}
     
-    Preconfigured: ${y}i3wm, Bspwm${nc} (coming soon)
+    Preconfigured: ${y}i3wm, Bspwm${nc} (startx launch the session)
     Bareboned:     ${y}Cinnamon, KDE Plasma, Mate & Xfce${nc}
     
 EOF
