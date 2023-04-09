@@ -25,7 +25,7 @@ _i3Config() {
             printf '%s\n' " ${r}Bspwm is already installed!"
             printf '%s\n' " If you want to use both i3 & bspwm, just edit your .xinitrc file.${nc}"
             sleep 3s && printf '%s\n' " ${y}Configuring I3WM.${nc}"
-            && mv -f local/i3 ~/.local && mv -f local/i3blocks ~/.local \
+            && mv -f config/i3 ~/.config && mv -f config/i3blocks ~/.config \
             && cd ~ && rm -rf wm_config \
             && printf '%s\n' " ${y}i3wm configuration installed...${nc}" \
             && sleep 2s && exit 0
