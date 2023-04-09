@@ -38,6 +38,7 @@ _bspwmConfig() {
         && echo "setxkbmap $KBD" >> .local/bin/autostart \
         && mv -r wallpapers ~/Documents/ \
         && mv -f .{bash_profile,bashrc,zshenv,zshrc,fehbg,xinitrc,Xresources} .. \
+        && echo "exec bspwm" >> ~/.xinitrc \
         && cd ~ && rm -rf wm_config \
         && printf '%s\n' " ${y}Rebooting...${nc}" \
         && sleep 2s && reboot
