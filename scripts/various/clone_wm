@@ -38,9 +38,14 @@ _i3Config() {
         && echo "setxkbmap $KBD" >> .local/bin/autostart \
         && {
             if [[ $KBD = LANG="fr_FR.UTF-8" ]]; then
-                echo 'export LANG="fr_FR.UTF-8"' >> .bash_profile
+                echo 'export LANG="fr_FR.UTF-8"' \
+                | tee -a .bash_profile >> .zshenv
             elif [[ $KBD = LANG="en_US.UTF-8" ]]; then
-                echo 'export LANG="en_US.UTF-8"' >> .bash_profile
+                echo 'export LANG="en_US.UTF-8"' \
+                | tee -a .bash_profile >> .zshenv
+            else
+                printf '%s\n' " ${r}Your locales are not set.${nc}"
+                sleep 2s
             fi
         } && mv -f .local .. && mv -f .config .. \
         && mv -f wallpapers ~/Documents/ \
@@ -70,9 +75,14 @@ _bspwmConfig() {
         && echo "setxkbmap $KBD" >> .local/bin/autostart \
         && {
             if [[ $KBD = LANG="fr_FR.UTF-8" ]]; then
-                echo 'export LANG="fr_FR.UTF-8"' >> .bash_profile
+                echo 'export LANG="fr_FR.UTF-8"' \
+                | tee -a .bash_profile >> .zshenv
             elif [[ $KBD = LANG="en_US.UTF-8" ]]; then
-                echo 'export LANG="en_US.UTF-8"' >> .bash_profile
+                echo 'export LANG="en_US.UTF-8"' \
+                | tee -a .bash_profile >> .zshenv
+            else
+                printf '%s\n' " ${r}Your locales are not set.${nc}"
+                sleep 2s
             fi
         } && mv -f .local .. && mv -f .config .. \
         && mv -f wallpapers ~/Documents/ \
