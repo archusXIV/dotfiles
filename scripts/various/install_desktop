@@ -159,7 +159,7 @@ _i3wm() {
     _xorg && clear
     printf '%s\n' " ${y}Installing I3WM.${nc}"
     sleep 1s
-    pacman -S --needed --noconfirm i3-wm i3lock i3status conky fzf dunst \
+    pacman -S --needed --noconfirm i3-wm i3lock i3status conky fzf dunst xdo \
     i3blocks polybar dmenu rofi sxhkd rxvt-unicode alacritty htop scrot feh \
     gnome-keyring polkit-gnome zsh zsh-completions zsh-syntax-highlighting \
     powerline powerline-common powerline-fonts powerline-vim python-powerline \
