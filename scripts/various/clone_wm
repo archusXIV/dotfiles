@@ -37,9 +37,9 @@ _i3Config() {
         && chmod +x .local/bin/* \
         && echo "setxkbmap $KBD" >> .local/bin/autostart \
         && {
-            if [[ $KBD = fr ]]: then
+            if [[ $KBD = fr ]]; then
                 echo 'export LANG="fr_FR.UTF-8"' >> .bash_profile
-            elif [[ $KBD = en ]]: then
+            elif [[ $KBD = en ]]; then
                 echo 'export LANG="en_US.UTF-8"' >> .bash_profile
             fi
         } && mv -f .local .. && mv -f .config .. \
@@ -69,9 +69,9 @@ _bspwmConfig() {
         && chmod +x .local/bin/* \
         && echo "setxkbmap $KBD" >> .local/bin/autostart \
         && {
-            if [[ $KBD = fr ]]: then
+            if [[ $KBD = fr ]]; then
                 echo 'export LANG="fr_FR.UTF-8"' >> .bash_profile
-            elif [[ $KBD = en ]]: then
+            elif [[ $KBD = en ]]; then
                 echo 'export LANG="en_US.UTF-8"' >> .bash_profile
             fi
         } && mv -f .local .. && mv -f .config .. \
