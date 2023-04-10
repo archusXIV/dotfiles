@@ -127,8 +127,8 @@ _audio() {
     printf '%s\n' " ${y}Installing AUDIO UTILITIES${nc}"
     sleep 1s
     pacman -S --needed --noconfirm alsa-utils pulseaudio \
-    pulseaudio-alsa pulsemixer pavucontrol gst-libav \
-    gst-plugins-{bad,base,good,ugly} wavpack
+    pulseaudio-alsa pulsemixer pavucontrol gst-libav wavpack \
+    gst-plugins-{bad,base,good,ugly} mpd mpc ncmpcpp
     
 }
 
@@ -156,8 +156,8 @@ _xorg() {
 
 _i3wm() {
     
-    _xorg \
-    && clear && printf '%s\n' " ${y}Installing I3WM.${nc}"
+    _xorg && clear
+    printf '%s\n' " ${y}Installing I3WM.${nc}"
     sleep 1s
     pacman -S --needed --noconfirm i3-wm i3lock i3status conky fzf dunst \
     i3blocks polybar dmenu rofi sxhkd rxvt-unicode alacritty htop scrot feh \
@@ -174,8 +174,8 @@ _i3wm() {
 
 _bspwm() {
     
-    _xorg \
-    && clear && printf '%s\n' " ${y}Installing BSPWM.${nc}"
+    _xorg && clear
+    printf '%s\n' " ${y}Installing BSPWM.${nc}"
     sleep 1s
     pacman -S --needed --noconfirm bspwm sxhkd xdo polybar dmenu fzf i3lock \
     rofi rxvt-unicode alacritty geany geany-plugins ranger htop conky scrot \
@@ -192,8 +192,8 @@ _bspwm() {
 
 _cinnamon() {
     
-    _xorg \
-    && clear && printf '%s\n' " ${y}Installing CINNAMON desktop.${nc}"
+    _xorg && clear
+    printf '%s\n' " ${y}Installing CINNAMON desktop.${nc}"
     sleep 1s
     pacman -S --needed --noconfirm cinnamon cinnamon-translations \
     nemo-fileroller nemo-image-converter nemo-preview xed xreader \
@@ -204,8 +204,8 @@ _cinnamon() {
 
 _kde() {
     
-    _xorg \
-    && clear && printf '%s\n' " ${y}Installing KDE PLASMA desktop.${nc}"
+    _xorg && clear
+    printf '%s\n' " ${y}Installing KDE PLASMA desktop.${nc}"
     sleep 1s
     pacman -S --needed --noconfirm plasma-meta kdialog packagekit-qt5 \
     kcalc icoutils libappimage konsole dolphin kdegraphics-thumbnailers \
@@ -217,8 +217,8 @@ _kde() {
 
 _mate() {
     
-    _xorg \
-    && clear && printf '%s\n' " ${y}Installing MATE desktop.${nc}"
+    _xorg && clear
+    printf '%s\n' " ${y}Installing MATE desktop.${nc}"
     sleep 1s
     pacman -S --needed --noconfirm mate mate-extra \
     network-manager-applet htop \
@@ -228,8 +228,8 @@ _mate() {
 
 _xfce() {
     
-    _xorg \
-    && clear && printf '%s\n' " ${y}Installing XFCE4 desktop.${nc}"
+    _xorg && clear
+    printf '%s\n' " ${y}Installing XFCE4 desktop.${nc}"
     sleep 1s
     pacman -S --needed --noconfirm xfce4 xfce4-goodies \
     network-manager-applet htop \
