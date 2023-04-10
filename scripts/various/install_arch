@@ -230,14 +230,12 @@ _Install() {
                 _SeparatedHomeLayout
             }
             
-            clear
             printf '%s' " ${y}Getting fresh mirrors list for $LOCATION...${nc}"
             sleep 1s
             
             reflector --verbose --country "$LOCATION" --latest 10 --age 24 \
             --protocol https --sort rate --save /etc/pacman.d/mirrorlist
             
-            clear
             printf '%s\n' " ${y}Installing Arch-Linux base system...${nc}"
             sleep 1s
             
@@ -245,8 +243,8 @@ _Install() {
             pacstrap -K /mnt base base-devel linux linux-headers linux-firmware dmidecode \
             pacman-contrib grub efibootmgr os-prober gptfdisk fatresize networkmanager \
             reflector zip unzip p7zip nano wget vim mc git syslog-ng mtools usbutils \
-            dosfstools lsb-release exfat-utils bash-completion man-db man-pages zsh \
-            gvfs gvfs-{afc,goa,google,gphoto2,mtp,nfs,smb} \
+            dosfstools lsb-release exfat-utils bash-completion man-db man-pages \
+            gvfs gvfs-{afc,goa,google,gphoto2,mtp,nfs,smb} mlocate zsh \
             xf86-input-{elographics,evdev,libinput,synaptics,vmmouse,void,wacom} \
             xf86-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,openchrome,qxl,sisusb,vesa}
             
@@ -341,12 +339,11 @@ _Install() {
                     read -r -p "${g}"' Do you want to enter the new installed system? [Y/n] '"${nc}" enter
                     case "$enter" in
                         y|Y)
-                            arch-chroot /mnt
+                            arch-chroot /mnt /bin/bash
                             cd /root
                             curl -sL \
                             "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
                             -O && chmod +x install_desktop
-                            ls
                         ;;
                         n|N)
                             curl -sL \
@@ -355,13 +352,6 @@ _Install() {
                             printf '%s' " ${y}Unmounting /mnt and rebooting.${nc}"
                             sleep 1s
                             umount -R /mnt && reboot
-                        ;;
-                        *)
-                            arch-chroot /mnt
-                            curl -sL \
-                            "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
-                            -O && chmod +x install_desktop
-                            ls
                         ;;
                     esac
                 ;;
