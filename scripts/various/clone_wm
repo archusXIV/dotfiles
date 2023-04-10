@@ -27,7 +27,7 @@ cd wm_config/ || exit 1
 LNG=$(sed -n '1p' /etc/locale.conf)
 
 printf '%s\n'
-read -r -p "${g}"' Set keyboard layout for '$usrname': [F]rench (fr), [E]nglish (us): '"${nc}" layout
+read -r -p "${g}"' Set keyboard layout for '$USER': [F]rench (fr), [E]nglish (us): '"${nc}" layout
     
 case "$layout" in
     e|E) KBD="us" ;;
