@@ -345,7 +345,7 @@ _Install() {
                             curl -sL \
                             "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
                             -O && chmod +x install_desktop
-                            
+                            ls
                         ;;
                         n|N)
                             curl -sL \
@@ -356,11 +356,11 @@ _Install() {
                             umount -R /mnt && reboot
                         ;;
                         *)
-                            arch-chroot /mnt /bin/bash -c "
-                                curl -sL \
-                                "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
-                                -O && chmod +x install_desktop
-                            "
+                            arch-chroot /mnt
+                            curl -sL \
+                            "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
+                            -O && chmod +x install_desktop
+                            ls
                         ;;
                     esac
                 ;;
