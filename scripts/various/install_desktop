@@ -128,7 +128,7 @@ _audio() {
     sleep 1s
     pacman -S --needed --noconfirm alsa-utils pulseaudio \
     pulseaudio-alsa pulsemixer pavucontrol gst-libav wavpack \
-    gst-plugins-{bad,base,good,ugly} mpd mpc ncmpcpp
+    gst-plugins-{bad,base,good,ugly} mpd mpc ncmpcpp mediainfo
     
 }
 
