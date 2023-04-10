@@ -341,11 +341,11 @@ _Install() {
                     read -r -p "${g}"' Do you want to enter the new installed system? [Y/n] '"${nc}" enter
                     case "$enter" in
                         y|Y)
-                            arch-chroot /mnt /bin/bash -c "
-                                curl -sL \
-                                "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
-                                -O && chmod +x install_desktop
-                            "
+                            arch-chroot /mnt
+                            curl -sL \
+                            "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
+                            -O && chmod +x install_desktop
+                            
                         ;;
                         n|N)
                             curl -sL \
