@@ -24,8 +24,16 @@ y=$'\e[93m';
 git clone https://github.com/archusXIV/wm_config.git
 cd wm_config/ || exit 1
 
-KBD=$(sed -n '1p' /etc/locale.conf)
+LNG=$(sed -n '1p' /etc/locale.conf)
 
+printf '%s\n'
+read -r -p "${g}"' Set keyboard layout for '$usrname': [F]rench (fr), [E]nglish (us): '"${nc}" layout
+    
+case "$layout" in
+    e|E) KBD="us" ;;
+    f|F) KBD="fr" ;;
+esac
+    
 _i3Config() {
     
     if [[ -n $(command -v i3) ]]; then
@@ -37,10 +45,10 @@ _i3Config() {
         && chmod +x .local/bin/* \
         && echo "setxkbmap $KBD" >> .local/bin/autostart \
         && {
-            if [[ $KBD = LANG="fr_FR.UTF-8" ]]; then
+            if [[ $LNG = LANG="fr_FR.UTF-8" ]]; then
                 echo 'export LANG="fr_FR.UTF-8"' \
                 | tee -a .bash_profile >> .zshenv
-            elif [[ $KBD = LANG="en_US.UTF-8" ]]; then
+            elif [[ $LNG = LANG="en_US.UTF-8" ]]; then
                 echo 'export LANG="en_US.UTF-8"' \
                 | tee -a .bash_profile >> .zshenv
             else
@@ -74,10 +82,10 @@ _bspwmConfig() {
         && chmod +x .local/bin/* \
         && echo "setxkbmap $KBD" >> .local/bin/autostart \
         && {
-            if [[ $KBD = LANG="fr_FR.UTF-8" ]]; then
+            if [[ $LNG = LANG="fr_FR.UTF-8" ]]; then
                 echo 'export LANG="fr_FR.UTF-8"' \
                 | tee -a .bash_profile >> .zshenv
-            elif [[ $KBD = LANG="en_US.UTF-8" ]]; then
+            elif [[ $LNG = LANG="en_US.UTF-8" ]]; then
                 echo 'export LANG="en_US.UTF-8"' \
                 | tee -a .bash_profile >> .zshenv
             else
