@@ -67,7 +67,14 @@ _CreateUser() {
     clear
     printf '%s\n'
     read -r -p "${g}"' First pick a new user name: '"${nc}" usrname
-    useradd -m -G audio,video,input,wheel,sys,log,rfkill,lp,adm -s /bin/bash ${usrname}
+    read -r -p "${g}"' What shell '$usrname' should use? [B]ash, [Z]sh : '"${nc}" whatshell
+    
+    case "$whatshell" in
+        b|B) shell="bash" ;;
+        z|Z) shell="zsh" ;;
+    esac
+    
+    useradd -m -G audio,video,input,wheel,sys,log,rfkill,lp,adm -s /bin/${shell} ${usrname}
     printf '%s\n' " ${g}Change $usrname password:${nc} "
     sleep 1s
     passwd ${usrname}
@@ -77,8 +84,7 @@ _CreateUser() {
     groupadd ${usrname}
     
     printf '%s\n'
-    echo "${g} Set keyboard layout for $usrname: [F]rench (fr), [E]nglish (us):${nc}"
-    read -r layout
+    read -r -p "${g}"' Set keyboard layout for '$usrname': [F]rench (fr), [E]nglish (us): '"${nc}" layout
     
     case "$layout" in
         e|E) KBD="us" ;;
