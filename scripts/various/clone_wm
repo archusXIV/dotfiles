@@ -18,98 +18,131 @@ g=$'\e[1;32m';
 r=$'\e[0;31m';
 y=$'\e[93m';
 
-[[ -d ~/.config ]] && rm -rf  ~/.config
-[[ -d ~/.local ]] && rm -rf  ~/.local
-
-git clone https://github.com/archusXIV/wm_config.git
-cd wm_config/ || exit 1
-
-LNG=$(sed -n '1p' /etc/locale.conf)
-
-printf '%s\n'
-read -r -p "${g}"' Set keyboard layout for '$USER': [F]rench (fr), [E]nglish (us): '"${nc}" layout
+_WmConfig() {
     
-case "$layout" in
-    e|E) KBD="us" ;;
-    f|F) KBD="fr" ;;
-esac
+    __ExportLang() (
+        if [[ $LNG = LANG="fr_FR.UTF-8" ]]; then
+            echo 'export LANG="fr_FR.UTF-8"' \
+            | tee -a .bash_profile >> .zshenv
+        elif [[ $LNG = LANG="en_US.UTF-8" ]]; then
+            echo 'export LANG="en_US.UTF-8"' \
+            | tee -a .bash_profile >> .zshenv
+        else
+            printf '%s\n' " ${r}Your locales are not set.${nc}"
+            sleep 2s
+        fi
+    )
     
-_i3Config() {
+    [[ -d ~/.config ]] && rm -rf  ~/.config
+    [[ -d ~/.local ]] && rm -rf  ~/.local
+
+    git clone https://github.com/archusXIV/wm_config.git
+    cd wm_config/ || exit 1
     
-    if [[ -n $(command -v i3) ]]; then
+    local LNG KBD
+    LNG=$(sed -n '1p' /etc/locale.conf)
+    
+    printf '%s\n'
+    read -r -p "${g}"' Set keyboard layout for '$USER': [F]rench (fr), [E]nglish (us): '"${nc}" layout
         
-        printf '%s\n' " ${y}Configuring I3PWM.${nc}"
-        sleep 1s
-        mv config .config \
-        && mv local .local \
-        && chmod +x .local/bin/* \
-        && echo "setxkbmap $KBD" >> .local/bin/autostart \
-        && {
-            if [[ $LNG = LANG="fr_FR.UTF-8" ]]; then
-                echo 'export LANG="fr_FR.UTF-8"' \
-                | tee -a .bash_profile >> .zshenv
-            elif [[ $LNG = LANG="en_US.UTF-8" ]]; then
-                echo 'export LANG="en_US.UTF-8"' \
-                | tee -a .bash_profile >> .zshenv
+    case "$layout" in
+        e|E) KBD="us" ;;
+        f|F) KBD="fr" ;;
+    esac
+    
+    clear
+    read -r -p "${g}"' Window manager config to install: [I]3wm, [B]spwm: '"${nc}" wm
+    case "$wm" in
+        i|I)
+            if [[ -n $(command -v i3) ]]; then
+            
+                printf '%s\n' " ${y}Configuring I3PWM.${nc}"
+                sleep 1s
+                mv config .config \
+                && mv local .local \
+                && chmod +x .local/bin/* \
+                && echo "setxkbmap $KBD" >> .local/bin/autostart \
+                && __ExportLang \
+                && mv -f .local .. && mv -f .config .. \
+                && mv -f wallpapers ~/Documents/ \
+                && chmod +x .fehbg && chmod +x ~/.config/ranger/scope.sh \
+                && mv -f .{bash_profile,bashrc,zshenv,fehbg,xinitrc,Xresources} .. \
+                && mv -f .zshrc ~/.config/zsh \
+                && echo "exec i3" >> ~/.xinitrc \
+                && cd ~ && rm -rf wm_config \
+                && printf '%s\n' " ${y}i3wm configured, rebooting...${nc}" \
+                && sleep 2s && reboot
+                
             else
-                printf '%s\n' " ${r}Your locales are not set.${nc}"
-                sleep 2s
+                
+                printf '%s\n' " ${r}i3wm is not installed.${nc}"
+                sleep 3s
+                exit 127
+                
             fi
-        } && mv -f .local .. && mv -f .config .. \
-        && mv -f wallpapers ~/Documents/ \
-        && chmod +x .fehbg && chmod +x ~/.config/ranger/scope.sh \
-        && mv -f .{bash_profile,bashrc,zshenv,zshrc,fehbg,xinitrc,Xresources} .. \
-        && echo "exec i3" >> ~/.xinitrc \
-        && cd ~ && rm -rf wm_config \
-        && printf '%s\n' " ${y}i3wm configured, rebooting...${nc}" \
-        && sleep 2s && reboot
-    else
-        printf '%s\n' " ${r}i3wm is not installed.${nc}"
-        sleep 3s
-    fi
+        ;;
+        b|B)
+            if [[ -n $(command -v bspwm) ]]; then
+            
+                printf '%s\n' " ${y}Configuring BSPWM.${nc}"
+                sleep 1s
+                mv config .config \
+                && chmod +x .config/bspwm/bspwmrc \
+                && mv local .local \
+                && chmod +x .local/bin/* \
+                && echo "setxkbmap $KBD" >> .local/bin/autostart \
+                && __ExportLang \
+                && mv -f .local .. && mv -f .config .. \
+                && mv -f wallpapers ~/Documents/ \
+                && chmod +x .fehbg && chmod +x ~/.config/ranger/scope.sh \
+                && mv -f .{bash_profile,bashrc,zshenv,fehbg,xinitrc,Xresources} .. \
+                && mv -f .zshrc ~/.config/zsh \
+                && echo "exec bspwm" >> ~/.xinitrc \
+                && cd ~ && rm -rf wm_config \
+                && printf '%s\n' " ${y}Bspwm configured, rebooting...${nc}" \
+                && sleep 2s && reboot
+                
+            else
+                
+                printf '%s\n' " ${r}Bspwm is not installed.${nc}"
+                sleep 3s
+                exit 127
+                
+            fi
+        ;;
+    esac
     
 }
 
-_bspwmConfig() {
+_Description() {
     
-    if [[ -n $(command -v bspwm) ]]; then
-        
-        printf '%s\n' " ${y}Configuring BSPWM.${nc}"
-        sleep 1s
-        mv config .config \
-        && chmod +x .config/bspwm/bspwmrc \
-        && mv local .local \
-        && chmod +x .local/bin/* \
-        && echo "setxkbmap $KBD" >> .local/bin/autostart \
-        && {
-            if [[ $LNG = LANG="fr_FR.UTF-8" ]]; then
-                echo 'export LANG="fr_FR.UTF-8"' \
-                | tee -a .bash_profile >> .zshenv
-            elif [[ $LNG = LANG="en_US.UTF-8" ]]; then
-                echo 'export LANG="en_US.UTF-8"' \
-                | tee -a .bash_profile >> .zshenv
-            else
-                printf '%s\n' " ${r}Your locales are not set.${nc}"
-                sleep 2s
-            fi
-        } && mv -f .local .. && mv -f .config .. \
-        && mv -f wallpapers ~/Documents/ \
-        && chmod +x .fehbg && chmod +x ~/.config/ranger/scope.sh \
-        && mv -f .{bash_profile,bashrc,zshenv,zshrc,fehbg,xinitrc,Xresources} .. \
-        && echo "exec bspwm" >> ~/.xinitrc \
-        && cd ~ && rm -rf wm_config \
-        && printf '%s\n' " ${y}Bspwm configured, rebooting...${nc}" \
-        && sleep 2s && reboot
-    else
-        printf '%s\n' " ${r}Bspwm is not installed.${nc}"
-        sleep 3s
-    fi
+    clear
+    setfont sun12x22
+    cat << EOF
+
+                #                                                       
+               # #      #####   ####  #    # #      # #    # #    # #    # 
+              #   #     #    # #    # #    # #      # ##   # #    #  #  #  
+             #     #    #    # #      ###### #      # # #  # #    #   ##   
+            #########   #####  #      #    # #      # #  # # #    #   ##   
+           #         #  #   #  #    # #    # #      # #   ## #    #  #  #  
+          #           # #    #  ####  #    # ###### # #    #  ####  #    #
+    
+                 i3/bspwm configurations for lazy dudes made easy!
+    
+    # French (ne jamais lancer un script sans le lire auparavant)
+    ${g}Ce script va installer la configuration de bspwm ou i3wm.
+    Au redémarrage lancez startx et veuillez lire le fichier README.md ouvert dans geany.${nc}
+    
+    # English (never run a script without reading it first)
+    ${g}This script will install bspwm or i3wm configuration.
+    On restart launch startx and please read the README.md file opened in geany.${nc}
+    
+EOF
+    printf '%s\n'
+    read -r -p "${g}"'    Press enter to launch the installation, ^C to quit: '"${nc}" config
+    case "$config" in *) _WmConfig ;; esac
     
 }
 
-clear
-read -r -p "${g}"' Window manager config to install: [I]3wm, [B]spwm: '"${nc}" wm
-case "$wm" in
-    i|I) _i3Config ;;
-    b|B) _bspwmConfig ::
-esac
+_Description
