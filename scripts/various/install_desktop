@@ -83,14 +83,6 @@ _CreateUser() {
     EDITOR=vim visudo
     groupadd ${usrname}
     
-    printf '%s\n'
-    read -r -p "${g}"' Set keyboard layout for '$usrname': [F]rench (fr), [E]nglish (us): '"${nc}" layout
-    
-    case "$layout" in
-        e|E) KBD="us" ;;
-        f|F) KBD="fr" ;;
-    esac
-    
     _DesktopChoice
     
 }
