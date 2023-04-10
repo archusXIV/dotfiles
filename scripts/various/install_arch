@@ -342,6 +342,7 @@ _Install() {
                     case "$enter" in
                         y|Y)
                             arch-chroot /mnt
+                            cd /root
                             curl -sL \
                             "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
                             -O && chmod +x install_desktop
