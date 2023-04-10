@@ -91,20 +91,22 @@ _CreateUser() {
 
 _systemd() {
     
-    clear
-    printf '%s\n' " ${y}Installing LIGHTDM.${nc}"
-    sleep 1s
     if [[ -n $(command -v bspwm) ]] \
         || [[ -n $(command -v i3) ]]; then
     
         if [[ $(dmidecode -s system-product-name) = VirtualBox ]]; then
+            clear
+            printf '%s\n' " ${y}Installing virtualbox-guest-utils.${nc}"
+            sleep 1s
             pacman -S --needed --noconfirm virtualbox-guest-utils
             systemctl enable vboxservice.service
             printf '%s\n' " ${y}Rebooting, please wait...${nc}"
         fi
         
     else
-    
+        clear
+        printf '%s\n' " ${y}Installing LIGHTDM.${nc}"
+        sleep 1s
         pacman -S --needed --noconfirm lightdm lightdm-gtk-greeter
         
         if [[ $(dmidecode -s system-product-name) = VirtualBox ]]; then
