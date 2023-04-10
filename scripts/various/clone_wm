@@ -24,7 +24,7 @@ y=$'\e[93m';
 git clone https://github.com/archusXIV/wm_config.git
 cd wm_config/ || exit 1
 
-KBD=$(sed 's/KEYMAP=//;s/-.*//' /etc/vconsole.conf | sed -n '1p')
+KBD=$(sed -n '1p' /etc/locale.conf)
 
 _i3Config() {
     
