@@ -3,6 +3,14 @@
 # Author: Barret E <archus@protonmail.com>
 # github directory: https://github.com/archusXIV/wm_config
 # Youtube channel: <https://www.youtube.com/@linuxinfrench9388>
+#
+# BE CAREFULL, this scripts will erase all the content of critical directories
+# in your $HOME folder such as ~/.config & ~/.local and replace them with
+# a simple customization to get ready to go and use an i3/bspwm desktops.
+# It also provide other critical files such as shell configs (.bashrc,.zshrc)
+# .Xresources, .Xmodmap, .xinitrc and systemd user services.
+# So it is intended to be used on a very first desktop installation.
+# USE IT AT YOUR OWN RISKS.
 
 # Colors
 nc=$'\e[0;m';
@@ -21,21 +29,20 @@ KBD=$(sed 's/KEYMAP=//;s/-.*//' /etc/vconsole.conf | sed -n '1p')
 _i3Config() {
     
     if [[ -n $(command -v i3) ]]; then
-        if [[ -n $(command -v bspwm) ]]; then
-            printf '%s\n' " ${r}Bspwm is already installed!"
-            printf '%s\n' " If you want to use both i3 & bspwm, just edit your .xinitrc file.${nc}"
-            sleep 3s && printf '%s\n' " ${y}Configuring I3WM.${nc}"
-            && mv -f config/i3 ~/.config && mv -f config/i3blocks ~/.config \
-            && cd ~ && rm -rf wm_config \
-            && printf '%s\n' " ${y}i3wm configuration installed...${nc}" \
-            && sleep 2s && exit 0
-        fi
         
+        printf '%s\n' " ${y}Configuring I3PWM.${nc}"
+        sleep 1s
         mv config .config \
         && mv local .local \
         && chmod +x .local/bin/* \
         && echo "setxkbmap $KBD" >> .local/bin/autostart \
-        && mv -f .local .. && mv -f .config .. \
+        && {
+            if [[ $KBD = fr ]]: then
+                echo 'export LANG="fr_FR.UTF-8"' >> .bash_profile
+            elif [[ $KBD = en ]]: then
+                echo 'export LANG="en_US.UTF-8"' >> .bash_profile
+            fi
+        } && mv -f .local .. && mv -f .config .. \
         && mv -f wallpapers ~/Documents/ \
         && chmod +x .fehbg && chmod +x ~/.config/ranger/scope.sh \
         && mv -f .{bash_profile,bashrc,zshenv,zshrc,fehbg,xinitrc,Xresources} .. \
@@ -53,6 +60,7 @@ _i3Config() {
 _bspwmConfig() {
     
     if [[ -n $(command -v bspwm) ]]; then
+        
         printf '%s\n' " ${y}Configuring BSPWM.${nc}"
         sleep 1s
         mv config .config \
@@ -60,9 +68,15 @@ _bspwmConfig() {
         && mv local .local \
         && chmod +x .local/bin/* \
         && echo "setxkbmap $KBD" >> .local/bin/autostart \
-        && mv -f .local .. && mv -f .config .. \
+        && {
+            if [[ $KBD = fr ]]: then
+                echo 'export LANG="fr_FR.UTF-8"' >> .bash_profile
+            elif [[ $KBD = en ]]: then
+                echo 'export LANG="en_US.UTF-8"' >> .bash_profile
+            fi
+        } && mv -f .local .. && mv -f .config .. \
         && mv -f wallpapers ~/Documents/ \
-        && chmod +x .fehbg \
+        && chmod +x .fehbg && chmod +x ~/.config/ranger/scope.sh \
         && mv -f .{bash_profile,bashrc,zshenv,zshrc,fehbg,xinitrc,Xresources} .. \
         && echo "exec bspwm" >> ~/.xinitrc \
         && cd ~ && rm -rf wm_config \
