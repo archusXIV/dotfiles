@@ -37,7 +37,7 @@ _i3Config() {
         && echo "setxkbmap $KBD" >> .local/bin/autostart \
         && mv -f .local .. && mv -f .config .. \
         && mv -f wallpapers ~/Documents/ \
-        && chmod +x .fehbg \
+        && chmod +x .fehbg && chmod +x ~/.config/ranger/scope.sh \
         && mv -f .{bash_profile,bashrc,zshenv,zshrc,fehbg,xinitrc,Xresources} .. \
         && echo "exec i3" >> ~/.xinitrc \
         && cd ~ && rm -rf wm_config \
