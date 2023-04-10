@@ -95,7 +95,7 @@ _systemd() {
     printf '%s\n' " ${y}Installing LIGHTDM.${nc}"
     sleep 1s
     if [[ -n $(command -v bspwm) ]] \
-        [[ -n $(command -v i3) ]]; then
+        || [[ -n $(command -v i3) ]]; then
     
         if [[ $(dmidecode -s system-product-name) = VirtualBox ]]; then
             pacman -S --needed --noconfirm virtualbox-guest-utils
