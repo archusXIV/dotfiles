@@ -99,8 +99,6 @@ _systemd() {
             pacman -S --needed --noconfirm virtualbox-guest-utils
             systemctl enable vboxservice.service
             printf '%s\n' " ${y}Rebooting, please wait...${nc}"
-            sleep 1s
-            reboot
         fi
         
     else
@@ -113,13 +111,9 @@ _systemd() {
             pacman -S --needed --noconfirm virtualbox-guest-utils
             systemctl enable {lightdm,vboxservice}.service
             printf '%s\n' " ${y}Rebooting, please wait...${nc}"
-            sleep 1s
-            reboot
         else
             systemctl enable lightdm.service
             printf '%s\n' " ${y}Rebooting, please wait...${nc}"
-            sleep 1s
-            reboot
         fi
      fi
     
@@ -133,8 +127,6 @@ _audio() {
     pacman -S --needed --noconfirm alsa-utils pulseaudio \
     pulseaudio-alsa pulsemixer pavucontrol gst-libav wavpack \
     gst-plugins-{bad,base,good,ugly} mpd mpc ncmpcpp mediainfo
-    
-}
 
 _fonts() {
     
@@ -196,8 +188,8 @@ _bspwm() {
 
 _cinnamon() {
     
-    _xorg && clear
-    printf '%s\n' " ${y}Installing CINNAMON desktop.${nc}"
+    _xorg \
+    && clear && printf '%s\n' " ${y}Installing CINNAMON desktop.${nc}"
     sleep 1s
     pacman -S --needed --noconfirm cinnamon cinnamon-translations \
     nemo-fileroller nemo-image-converter nemo-preview xed xreader \
@@ -208,8 +200,8 @@ _cinnamon() {
 
 _kde() {
     
-    _xorg && clear
-    printf '%s\n' " ${y}Installing KDE PLASMA desktop.${nc}"
+    _xorg \
+    && clear && printf '%s\n' " ${y}Installing KDE PLASMA desktop.${nc}"
     sleep 1s
     pacman -S --needed --noconfirm plasma-meta kdialog packagekit-qt5 \
     kcalc icoutils libappimage konsole dolphin kdegraphics-thumbnailers \
@@ -221,8 +213,8 @@ _kde() {
 
 _mate() {
     
-    _xorg && clear
-    printf '%s\n' " ${y}Installing MATE desktop.${nc}"
+    _xorg \
+    && clear && printf '%s\n' " ${y}Installing MATE desktop.${nc}"
     sleep 1s
     pacman -S --needed --noconfirm mate mate-extra \
     network-manager-applet htop \
@@ -232,8 +224,8 @@ _mate() {
 
 _xfce() {
     
-    _xorg && clear
-    printf '%s\n' " ${y}Installing XFCE4 desktop.${nc}"
+    _xorg \
+    && clear && printf '%s\n' " ${y}Installing XFCE4 desktop.${nc}"
     sleep 1s
     pacman -S --needed --noconfirm xfce4 xfce4-goodies \
     network-manager-applet htop \
