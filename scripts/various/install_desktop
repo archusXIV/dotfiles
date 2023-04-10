@@ -70,11 +70,11 @@ _CreateUser() {
     read -r -p "${g}"' What shell '$usrname' should use? [B]ash, [Z]sh : '"${nc}" whatshell
     
     case "$whatshell" in
-        b|B) shell="bash" ;;
-        z|Z) shell="zsh" ;;
+        b|B) shell="/bin/bash" ;;
+        z|Z) shell="/bin/zsh" ;;
     esac
     
-    useradd -m -G audio,video,input,wheel,sys,log,rfkill,lp,adm -s /bin/${shell} ${usrname}
+    useradd -m -G audio,video,input,wheel,sys,log,rfkill,lp,adm -s "$shell" ${usrname}
     printf '%s\n' " ${g}Change $usrname password:${nc} "
     sleep 1s
     passwd ${usrname}
