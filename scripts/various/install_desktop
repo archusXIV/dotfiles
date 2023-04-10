@@ -99,6 +99,8 @@ _systemd() {
             pacman -S --needed --noconfirm virtualbox-guest-utils
             systemctl enable vboxservice.service
             printf '%s\n' " ${y}Rebooting, please wait...${nc}"
+            sleep 1s
+            reboot
         fi
         
     else
@@ -111,9 +113,13 @@ _systemd() {
             pacman -S --needed --noconfirm virtualbox-guest-utils
             systemctl enable {lightdm,vboxservice}.service
             printf '%s\n' " ${y}Rebooting, please wait...${nc}"
+            sleep 1s
+            reboot
         else
             systemctl enable lightdm.service
             printf '%s\n' " ${y}Rebooting, please wait...${nc}"
+            sleep 1s
+            reboot
         fi
      fi
     
