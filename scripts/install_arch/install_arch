@@ -324,7 +324,7 @@ _Install() {
                 && timedatectl set-ntp true && exit
             "
             curl -sL \
-            "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
+            "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/install_arch/install_desktop" \
             -O && chmod +x install_desktop && mv install_desktop /mnt/root/
             
             clear
