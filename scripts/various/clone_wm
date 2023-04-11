@@ -42,6 +42,8 @@ _WmConfig() {
     local LNG KBD
     LNG=$(sed -n '1p' /etc/locale.conf)
     
+    clear
+    read -r -p "${g}"' Window manager config to install: [I]3wm, [B]spwm: '"${nc}" wm
     printf '%s\n'
     read -r -p "${g}"' Set keyboard layout for '$USER': [F]rench (fr), [E]nglish (us): '"${nc}" layout
         
@@ -50,8 +52,6 @@ _WmConfig() {
         f|F) KBD="fr" ;;
     esac
     
-    clear
-    read -r -p "${g}"' Window manager config to install: [I]3wm, [B]spwm: '"${nc}" wm
     case "$wm" in
         i|I)
             if [[ -n $(command -v i3) ]]; then
