@@ -317,12 +317,15 @@ _Install() {
                 && mkinitcpio -p linux && clear \
                 && echo ' ${g}Change the $USER password: ${nc}' \
                 && passwd $USER \
-                && echo ' ${g}Installing grub menu on first sector of /dev/$HWDISK, please be patient...${nc}' \
+                && echo ' ${g}Installing grub menu on /dev/$HWDISK, please be patient...${nc}' \
                 && grub-install --target=x86_64-efi --efi-directory=/boot/efi \
                 --bootloader-id=ARCH_GRUB && grub-mkconfig -o /boot/grub/grub.cfg \
                 && systemctl enable {NetworkManager,systemd-timesyncd}.service \
                 && timedatectl set-ntp true && exit
             "
+            curl -sL \
+            "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
+            -O && chmod +x install_desktop && mv install_desktop /mnt/root/
             
             clear
             printf '%s\n'
@@ -330,9 +333,7 @@ _Install() {
             case "$desk" in
                 y|Y)
                     arch-chroot /mnt /bin/bash -c "
-                        curl -sL \
-                        "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
-                        -O && chmod +x install_desktop && ./install_desktop
+                        ./install_desktop
                         exit
                     "
                     umount -R /mnt && reboot
@@ -341,16 +342,9 @@ _Install() {
                     read -r -p "${g}"' Do you want to enter the new installed system? [Y/n] '"${nc}" enter
                     case "$enter" in
                         y|Y)
-                            arch-chroot /mnt /bin/bash
-                            cd /root
-                            curl -sL \
-                            "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
-                            -O && chmod +x install_desktop
+                            arch-chroot /mnt
                         ;;
                         n|N)
-                            curl -sL \
-                            "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
-                            -O && chmod +x install_desktop && mv install_desktop /mnt/root/
                             printf '%s' " ${y}Unmounting /mnt and rebooting.${nc}"
                             sleep 1s
                             umount -R /mnt && reboot
