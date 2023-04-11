@@ -1,0 +1,150 @@
+#!/bin/bash
+
+# Author: Barret E <archus@protonmail.com>
+# github directory: https://github.com/archusXIV/wm_config
+# Youtube channel: <https://www.youtube.com/@linuxinfrench9388>
+#
+# BE CAREFULL, this scripts will erase all the content of critical directories
+# in your $HOME folder such as ~/.config & ~/.local and replace them with
+# a simple customization to get ready to go and use an i3/bspwm desktops.
+# It also provide other critical files such as shell configs (.bashrc,.zshrc)
+# .Xresources, .Xmodmap, .xinitrc and systemd user services.
+# So it is intended to be used on a very first desktop installation.
+# USE IT AT YOUR OWN RISKS.
+
+# Colors
+nc=$'\e[0;m';
+g=$'\e[1;32m';
+r=$'\e[0;31m';
+y=$'\e[93m';
+
+_WmConfig() {
+    
+    [[ -d ~/.config ]] && rm -rf  ~/.config
+    [[ -d ~/.local ]] && rm -rf  ~/.local
+    # On first run, zsh will ask for configuration but we already have one.
+    # We enter 0 to shut it's mouth and remove the new .zshrc it created.
+    [[ -f ~/.zshrc ]] && rm ~/.zshrc
+
+    git clone https://github.com/archusXIV/wm_config.git
+    cd wm_config/ || exit 1
+    
+    local LNG KBD
+    LNG=$(sed -n '1p' /etc/locale.conf)
+    
+    __ExportLang() (
+        if [[ $LNG = LANG="fr_FR.UTF-8" ]]; then
+            echo 'export LANG="fr_FR.UTF-8"' \
+            | tee -a .bash_profile >> .zshenv
+        elif [[ $LNG = LANG="en_US.UTF-8" ]]; then
+            echo 'export LANG="en_US.UTF-8"' \
+            | tee -a .bash_profile >> .zshenv
+        else
+            printf '%s\n' " ${r}Your locales are not set.${nc}"
+            sleep 2s
+        fi
+    )
+    
+    clear
+    read -r -p "${g}"' Window manager config to install: [I]3wm, [B]spwm: '"${nc}" wm
+    printf '%s\n'
+    read -r -p "${g}"' Set keyboard layout for '$USER': [F]rench (fr), [E]nglish (us): '"${nc}" layout
+        
+    case "$layout" in
+        e|E) KBD="us" ;;
+        f|F) KBD="fr" ;;
+    esac
+    
+    case "$wm" in
+        i|I)
+            if [[ -n $(command -v i3) ]]; then
+            
+                printf '%s\n' " ${y}Configuring I3PWM.${nc}"
+                sleep 1s
+                mv config .config \
+                && mv local .local \
+                && chmod +x .local/bin/* \
+                && echo "setxkbmap $KBD" >> .local/bin/autostart \
+                && __ExportLang \
+                && mv -f .local .. && mv -f .config .. \
+                && mv -f wallpapers ~/Documents/ \
+                && chmod +x .fehbg && chmod +x ~/.config/ranger/scope.sh \
+                && mv -f .{bash_profile,bashrc,zshenv,fehbg,xinitrc,Xresources} .. \
+                && echo "exec i3" >> ~/.xinitrc \
+                && cd ~ && rm -rf wm_config \
+                && printf '%s\n' " ${y}i3wm configured, rebooting...${nc}" \
+                && sleep 2s && reboot
+                
+            else
+                
+                printf '%s\n' " ${r}i3wm is not installed.${nc}"
+                sleep 3s
+                exit 127
+                
+            fi
+        ;;
+        b|B)
+            if [[ -n $(command -v bspwm) ]]; then
+            
+                printf '%s\n' " ${y}Configuring BSPWM.${nc}"
+                sleep 1s
+                mv config .config \
+                && chmod +x .config/bspwm/bspwmrc \
+                && mv local .local \
+                && chmod +x .local/bin/* \
+                && echo "setxkbmap $KBD" >> .local/bin/autostart \
+                && __ExportLang \
+                && mv -f .local .. && mv -f .config .. \
+                && mv -f wallpapers ~/Documents/ \
+                && chmod +x .fehbg && chmod +x ~/.config/ranger/scope.sh \
+                && mv -f .{bash_profile,bashrc,zshenv,fehbg,xinitrc,Xresources} .. \
+                && echo "exec bspwm" >> ~/.xinitrc \
+                && cd ~ && rm -rf wm_config \
+                && printf '%s\n' " ${y}Bspwm configured, rebooting...${nc}" \
+                && sleep 2s && reboot
+                
+            else
+                
+                printf '%s\n' " ${r}Bspwm is not installed.${nc}"
+                sleep 3s
+                exit 127
+                
+            fi
+        ;;
+    esac
+    
+}
+
+_Description() {
+    
+    clear
+    setfont sun12x22
+    cat << EOF
+                #                                                       
+               # #      #####   ####  #    # #      # #    # #    # #    # 
+              #   #     #    # #    # #    # #      # ##   # #    #  #  #  
+             #     #    #    # #      ###### #      # # #  # #    #   ##   
+            #########   #####  #      #    # #      # #  # # #    #   ##   
+           #         #  #   #  #    # #    # #      # #   ## #    #  #  #  
+          #           # #    #  ####  #    # ###### # #    #  ####  #    #
+    
+                 i3/bspwm configurations for lazy dudes made easy!
+    
+    # French (ne jamais exécuter un script sans le lire auparavant)
+    ${r}ATTENTION: lancez ce script uniquement sur un système fraichement installé!
+    ${g}Ce script va installer la configuration de bspwm ou i3wm.
+    Au redémarrage lancez startx et veuillez lire le fichier README.md ouvert dans geany.${nc}
+    
+    # English (never run a script without reading it first)
+    ${r}BE CAREFULL: run this script only on a fresh installed system!
+    ${g}This script will install bspwm or i3wm configuration.
+    On restart launch startx and please read the README.md file opened in geany.${nc}
+    
+EOF
+    printf '%s\n'
+    read -r -p "${g}"'    Press enter to launch the installation, ^C to quit: '"${nc}" config
+    case "$config" in *) _WmConfig ;; esac
+    
+}
+
+_Description
