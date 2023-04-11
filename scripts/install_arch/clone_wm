@@ -67,7 +67,13 @@ _WmConfig() {
                 && echo "setxkbmap $KBD" >> .local/bin/autostart \
                 && __ExportLang \
                 && mv -f .local .. && mv -f .config .. \
-                && mv -f wallpapers ~/Documents/ \
+                && {
+                    if [[ -d ~/Pictures ]]; then
+                        mv -f wallpapers ~/Pictures/
+                    else
+                        mv -f wallpapers ~/Images/
+                    fi
+                } \
                 && chmod +x .fehbg && chmod +x ~/.config/ranger/scope.sh \
                 && mv -f .{bash_profile,bashrc,zshenv,fehbg,xinitrc,Xresources} .. \
                 && echo "exec i3" >> ~/.xinitrc \
@@ -95,7 +101,13 @@ _WmConfig() {
                 && echo "setxkbmap $KBD" >> .local/bin/autostart \
                 && __ExportLang \
                 && mv -f .local .. && mv -f .config .. \
-                && mv -f wallpapers ~/Documents/ \
+                && {
+                    if [[ -d ~/Pictures ]]; then
+                        mv -f wallpapers ~/Pictures/
+                    else
+                        mv -f wallpapers ~/Images/
+                    fi
+                } \
                 && chmod +x .fehbg && chmod +x ~/.config/ranger/scope.sh \
                 && mv -f .{bash_profile,bashrc,zshenv,fehbg,xinitrc,Xresources} .. \
                 && echo "exec bspwm" >> ~/.xinitrc \
