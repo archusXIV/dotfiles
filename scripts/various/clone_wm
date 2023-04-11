@@ -132,10 +132,12 @@ _Description() {
                  i3/bspwm configurations for lazy dudes made easy!
     
     # French (ne jamais lancer un script sans le lire auparavant)
+    ${r}ATTENTION: lancer ce script uniquement sur un système fraichement installé!
     ${g}Ce script va installer la configuration de bspwm ou i3wm.
     Au redémarrage lancez startx et veuillez lire le fichier README.md ouvert dans geany.${nc}
     
     # English (never run a script without reading it first)
+    ${r}BE CAREFULL: run this script only on a fresh installed system!
     ${g}This script will install bspwm or i3wm configuration.
     On restart launch startx and please read the README.md file opened in geany.${nc}
     
