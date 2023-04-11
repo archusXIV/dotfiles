@@ -82,6 +82,8 @@ _audio() {
     pulseaudio-alsa pulsemixer pavucontrol gst-libav wavpack \
     gst-plugins-{bad,base,good,ugly} mpd mpc ncmpcpp mediainfo
 
+}
+
 _fonts() {
     
     clear
