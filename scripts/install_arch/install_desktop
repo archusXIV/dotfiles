@@ -7,7 +7,7 @@
 # following the arch way to Keep It Simple Stupid, meaning no customization.
 # Use it at your own risks....lol
 # Download the script when logged in the arch live iso:
-# curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" -O
+# curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/install_arch/install_desktop" -O
 # chmod +x install_desktop && ./install_desktop
 
 # Colors
