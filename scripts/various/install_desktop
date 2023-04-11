@@ -16,52 +16,6 @@ g=$'\e[1;32m';
 r=$'\e[0;31m';
 y=$'\e[93m';
 
-_Description() {
-    
-    clear
-    setfont sun12x22
-    cat << EOF
-
-                #                                                       
-               # #      #####   ####  #    # #      # #    # #    # #    # 
-              #   #     #    # #    # #    # #      # ##   # #    #  #  #  
-             #     #    #    # #      ###### #      # # #  # #    #   ##   
-            #########   #####  #      #    # #      # #  # # #    #   ##   
-           #         #  #   #  #    # #    # #      # #   ## #    #  #  #  
-          #           # #    #  ####  #    # ###### # #    #  ####  #    #
-    
-                    Desktop installation for lazy dudes made easy!
-    
-    # French (ne jamais lancer un script sans le lire auparavant)
-    ${g}Ce script va installer le bureau de votre choix parmi la liste suivante:${nc}
-    
-    Preconfigurés: ${y}i3wm, Bspwm${nc} (lancement de session avec startx)
-    
-    ${g}i3wm et Bspwm sont lancés avec la commande 'startx' et non lightdm.
-    Pour le premier lancement, entrez vos identifiants, puis lancez le script clone_wm:
-    ./clone_wm, au redémarrage lancez startx et ouvrez geany pour lire le fichier README.md:
-    alt + g puis g encore.${nc}
-    
-    Brut de chez brut: ${y}Cinnamon, KDE Plasma, Mate & Xfce${nc}
-    
-    # English (never run a script without reading it first)
-    ${g}This script will install the desktop of your choice among the following list:${nc}
-    
-    Preconfigured: ${y}i3wm, Bspwm${nc} (startx launch the session)
-    
-    ${g}i3wm and Bspwm are launched with the 'startx' command and not lightdm. For the first launch,
-    enter your credentials, then run the clone_wm script: ./clone_wm, on restart run startx
-    and launch geany to read the README.md file: alt + g then g again.${nc}
-    
-    Bareboned:     ${y}Cinnamon, KDE Plasma, Mate & Xfce${nc}
-    
-EOF
-    printf '%s\n'
-    read -r -p "${g}"'    Press enter to launch desktop installation, ^C to quit: '"${nc}" inst
-    case "$inst" in *) _CreateUser ;; esac
-    
-}
-
 _CreateUser() {
     
     clear
@@ -249,6 +203,52 @@ _DesktopChoice() {
     esac
     
     exit
+    
+}
+
+_Description() {
+    
+    clear
+    setfont sun12x22
+    cat << EOF
+
+                #                                                       
+               # #      #####   ####  #    # #      # #    # #    # #    # 
+              #   #     #    # #    # #    # #      # ##   # #    #  #  #  
+             #     #    #    # #      ###### #      # # #  # #    #   ##   
+            #########   #####  #      #    # #      # #  # # #    #   ##   
+           #         #  #   #  #    # #    # #      # #   ## #    #  #  #  
+          #           # #    #  ####  #    # ###### # #    #  ####  #    #
+    
+                    Desktop installation for lazy dudes made easy!
+    
+    # French (ne jamais lancer un script sans le lire auparavant)
+    ${g}Ce script va installer le bureau de votre choix parmi la liste suivante:${nc}
+    
+    Preconfigurés: ${y}i3wm, Bspwm${nc} (lancement de session avec startx)
+    
+    ${g}i3wm et Bspwm sont lancés avec la commande 'startx' et non lightdm.
+    Pour le premier lancement, entrez vos identifiants, puis lancez le script clone_wm:
+    ./clone_wm, au redémarrage lancez startx et ouvrez geany pour lire le fichier README.md:
+    alt + g puis g encore.${nc}
+    
+    Brut de chez brut: ${y}Cinnamon, KDE Plasma, Mate & Xfce${nc}
+    
+    # English (never run a script without reading it first)
+    ${g}This script will install the desktop of your choice among the following list:${nc}
+    
+    Preconfigured: ${y}i3wm, Bspwm${nc} (startx launch the session)
+    
+    ${g}i3wm and Bspwm are launched with the 'startx' command and not lightdm. For the first launch,
+    enter your credentials, then run the clone_wm script: ./clone_wm, on restart run startx
+    and launch geany to read the README.md file: alt + g then g again.${nc}
+    
+    Bareboned:     ${y}Cinnamon, KDE Plasma, Mate & Xfce${nc}
+    
+EOF
+    printf '%s\n'
+    read -r -p "${g}"'    Press enter to launch desktop installation, ^C to quit: '"${nc}" inst
+    case "$inst" in *) _CreateUser ;; esac
     
 }
 
