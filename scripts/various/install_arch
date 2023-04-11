@@ -333,7 +333,7 @@ _Install() {
             case "$desk" in
                 y|Y)
                     arch-chroot /mnt /bin/bash -c "
-                        ./install_desktop
+                        /root/install_desktop
                         exit
                     "
                     umount -R /mnt && reboot
