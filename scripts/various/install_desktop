@@ -72,7 +72,7 @@ _systemd() {
             printf '%s\n' " ${y}Rebooting, please wait...${nc}"
             sleep 1s
         fi
-     fi
+    fi
     
 }
 
@@ -109,6 +109,16 @@ _xorg() {
     
 }
 
+_DownloadCloneWm() {
+    
+    curl -sL \
+    "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/clone_wm" -O \
+    && curl -sL "https://raw.githubusercontent.com/archusXIV/wm_config/main/README.md" -O \
+    && chown ${usrname}:${usrname} clone_wm README.md \
+    && mv {clone_wm,README.md} /home/${usrname} && chmod +x /home/${usrname}/clone_wm
+    
+}
+
 _i3wm() {
     
     _xorg \
@@ -119,11 +129,7 @@ _i3wm() {
     polkit-gnome zsh zsh-completions zsh-syntax-highlighting powerline powerline-common \
     powerline-fonts powerline-vim python-powerline numlockx lxappearance geany geany-plugins \
     network-manager-applet ranger zathura zathura-pdf-poppler ffmpegthumbnailer bash-preexec \
-    && _fonts && _audio && _systemd && curl -sL \
-    "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/clone_wm" -O \
-    && curl -sL "https://raw.githubusercontent.com/archusXIV/wm_config/main/README.md" -O \
-    && chown ${usrname}:${usrname} clone_wm README.md \
-    && mv {clone_wm,README.md} /home/${usrname} && chmod +x /home/${usrname}/clone_wm
+    && _fonts && _audio && _systemd && _DownloadCloneWm
     
 }
 
@@ -137,11 +143,7 @@ _bspwm() {
     gnome-keyring polkit-gnome zsh zsh-completions zsh-syntax-highlighting bash-preexec \
     powerline powerline-common powerline-fonts powerline-vim python-powerline \
     numlockx lxappearance network-manager-applet dunst feh zathura zathura-pdf-poppler \
-    ffmpegthumbnailer && _fonts && _audio && _systemd && curl -sL \
-    "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/clone_wm" -O \
-    && curl -sL "https://raw.githubusercontent.com/archusXIV/wm_config/main/README.md" -O \
-    && chown ${usrname}:${usrname} clone_wm README.md \
-    && mv {clone_wm,README.md} /home/${usrname} && chmod +x /home/${usrname}/clone_wm
+    ffmpegthumbnailer && _fonts && _audio && _systemd && _DownloadCloneWm
     
 }
 
@@ -216,7 +218,6 @@ _Description() {
     clear
     setfont sun12x22
     cat << EOF
-
                 #                                                       
                # #      #####   ####  #    # #      # #    # #    # #    # 
               #   #     #    # #    # #    # #      # ##   # #    #  #  #  
@@ -231,7 +232,6 @@ _Description() {
     ${g}Ce script va installer le bureau de votre choix parmi la liste suivante:${nc}
     
     Preconfigurés: ${y}i3wm, Bspwm${nc} (lancement de session avec startx)
-    
     ${g}i3wm et Bspwm sont lancés avec la commande 'startx' et non lightdm.
     Pour le premier lancement, entrez vos identifiants, puis lancez le script clone_wm:
     ./clone_wm, au redémarrage lancez startx et veuillez lire le fichier README.md ouvert dans geany.${nc}
@@ -242,7 +242,6 @@ _Description() {
     ${g}This script will install the desktop of your choice among the following list:${nc}
     
     Preconfigured: ${y}i3wm, Bspwm${nc} (startx launch the session)
-    
     ${g}i3wm and Bspwm are launched with the 'startx' command and not lightdm. For the first launch,
     enter your credentials, then run the clone_wm script: ./clone_wm, on restart run startx
     and please read the README.md file opened in geany.${nc}
