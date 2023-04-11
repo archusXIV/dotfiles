@@ -67,7 +67,6 @@ _WmConfig() {
                 && mv -f wallpapers ~/Documents/ \
                 && chmod +x .fehbg && chmod +x ~/.config/ranger/scope.sh \
                 && mv -f .{bash_profile,bashrc,zshenv,fehbg,xinitrc,Xresources} .. \
-                && mv -f .zshrc ~/.config/zsh \
                 && echo "exec i3" >> ~/.xinitrc \
                 && cd ~ && rm -rf wm_config \
                 && printf '%s\n' " ${y}i3wm configured, rebooting...${nc}" \
@@ -96,7 +95,6 @@ _WmConfig() {
                 && mv -f wallpapers ~/Documents/ \
                 && chmod +x .fehbg && chmod +x ~/.config/ranger/scope.sh \
                 && mv -f .{bash_profile,bashrc,zshenv,fehbg,xinitrc,Xresources} .. \
-                && mv -f .zshrc ~/.config/zsh \
                 && echo "exec bspwm" >> ~/.xinitrc \
                 && cd ~ && rm -rf wm_config \
                 && printf '%s\n' " ${y}Bspwm configured, rebooting...${nc}" \
