@@ -234,8 +234,7 @@ _Description() {
     
     ${g}i3wm et Bspwm sont lancés avec la commande 'startx' et non lightdm.
     Pour le premier lancement, entrez vos identifiants, puis lancez le script clone_wm:
-    ./clone_wm, au redémarrage lancez startx et ouvrez geany pour lire le fichier README.md:
-    alt + g puis g encore.${nc}
+    ./clone_wm, au redémarrage lancez startx et veuillez lire le fichier README.md ouvert dans geany.${nc}
     
     Brut de chez brut: ${y}Cinnamon, KDE Plasma, Mate & Xfce${nc}
     
@@ -246,7 +245,7 @@ _Description() {
     
     ${g}i3wm and Bspwm are launched with the 'startx' command and not lightdm. For the first launch,
     enter your credentials, then run the clone_wm script: ./clone_wm, on restart run startx
-    and launch geany to read the README.md file: alt + g then g again.${nc}
+    and please read the README.md file opened in geany.${nc}
     
     Bareboned:     ${y}Cinnamon, KDE Plasma, Mate & Xfce${nc}
     
