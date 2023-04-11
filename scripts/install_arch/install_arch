@@ -7,7 +7,7 @@
 # on a simple disk layout following the arch way to Keep It Simple Stupid.
 # Use it at your own risks....lol
 # Download the script when logged in the arch live iso:
-# curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_arch" -O
+# curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/install_arch/install_arch" -O
 # chmod +x install_arch-2 && ./install_arch-2
 #
 # French
