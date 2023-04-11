@@ -331,10 +331,7 @@ _Install() {
             case "$desk" in
                 y|Y)
                     arch-chroot /mnt /bin/bash -c "
-                        [[ -f install_desktop ]] && rm install_desktop
-                        curl -sL \
-                        "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/install_desktop" \
-                        -O && chmod +x install_desktop && ./install_desktop
+                        ./install_desktop
                         exit
                     "
                     umount -R /mnt && reboot
