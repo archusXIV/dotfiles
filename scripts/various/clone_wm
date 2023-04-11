@@ -20,6 +20,15 @@ y=$'\e[93m';
 
 _WmConfig() {
     
+    [[ -d ~/.config ]] && rm -rf  ~/.config
+    [[ -d ~/.local ]] && rm -rf  ~/.local
+
+    git clone https://github.com/archusXIV/wm_config.git
+    cd wm_config/ || exit 1
+    
+    local LNG KBD
+    LNG=$(sed -n '1p' /etc/locale.conf)
+    
     __ExportLang() (
         if [[ $LNG = LANG="fr_FR.UTF-8" ]]; then
             echo 'export LANG="fr_FR.UTF-8"' \
@@ -32,15 +41,6 @@ _WmConfig() {
             sleep 2s
         fi
     )
-    
-    [[ -d ~/.config ]] && rm -rf  ~/.config
-    [[ -d ~/.local ]] && rm -rf  ~/.local
-
-    git clone https://github.com/archusXIV/wm_config.git
-    cd wm_config/ || exit 1
-    
-    local LNG KBD
-    LNG=$(sed -n '1p' /etc/locale.conf)
     
     clear
     read -r -p "${g}"' Window manager config to install: [I]3wm, [B]spwm: '"${nc}" wm
