@@ -32,7 +32,7 @@ _WmConfig() {
     local LNG WM KBD
     LNG=$(sed -n '1p' /etc/locale.conf)
     WM=$(awk -F'=' '/Name/{print $2}' /usr/share/xsessions/*.desktop)
-    KBD=$(sed 's/KEYMAP=//;s/-.*//' /etc/vconsole.conf)
+    KBD=$(sed 's/KEYMAP=//;s/-.*//' /etc/vconsole.conf | sed -n '1p')
     
     __ExportLang() (
         if [[ $LNG = LANG="fr_FR.UTF-8" ]]; then
