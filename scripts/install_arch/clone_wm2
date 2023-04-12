@@ -70,20 +70,21 @@ _WmConfig() {
     
     clear
     
-        if [[ $WM = i3 ]]; then
-            __CommonConf \
-            && printf '%s\n' " ${y}$WM configured, rebooting...${nc}" \
-            && sleep 2s && reboot
-        elif [[ $WM = bspwm ]]; then
-            __CommonConf \
-            && chmod +x ~/.config/bspwm/bspwmrc \
-            && printf '%s\n' " ${y}$WM configured, rebooting...${nc}" \
-            && sleep 2s && reboot
-        else
-            printf '%s\n' " ${r}$WM is not installed.${nc}"
-            sleep 3s
-            exit 127
-        fi
+    if [[ $WM = i3 ]]; then
+        __CommonConf \
+        && printf '%s\n' " ${y}$WM configured, rebooting...${nc}" \
+        && sleep 2s && reboot
+    elif [[ $WM = bspwm ]]; then
+        __CommonConf \
+        && chmod +x ~/.config/bspwm/bspwmrc \
+        && printf '%s\n' " ${y}$WM configured, rebooting...${nc}" \
+        && sleep 2s && reboot
+    else
+        printf '%s\n' " ${r}$WM is not installed.${nc}"
+        sleep 3s
+        exit 127
+    fi
+    
 }
 
 _Description() {
