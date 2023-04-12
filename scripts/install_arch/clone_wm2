@@ -67,6 +67,7 @@ _WmConfig() {
         && echo "exec $WM" >> ~/.xinitrc \
         && cd ~ && rm -rf wm_config
     )
+    
     clear
     
         if [[ $WM = i3 ]]; then
