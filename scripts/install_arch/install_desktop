@@ -106,7 +106,7 @@ _xorg() {
     sleep 1s
     pacman -Sy --needed --noconfirm xorg xorg-server xorg-xinit \
     xorg-xrandr xorg-xfontsel xorg-xlsfonts xorg-xkill xorg-xinput \
-    xorg-xwininfo wmctrl xdg-user-dirs xterm xorg-apps xcb-util-wm
+    xorg-xwininfo wmctrl xdg-user-dirs xterm xorg-apps xcb-util-wm xdg-utils
     
 }
 
