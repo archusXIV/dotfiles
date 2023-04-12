@@ -20,17 +20,19 @@ y=$'\e[93m';
 
 _WmConfig() {
     
-    [[ -d ~/.config ]] && rm -rf  ~/.config
-    [[ -d ~/.local ]] && rm -rf  ~/.local
     # On first run, zsh will ask for configuration but we already have one.
     # We enter 0 to shut it's mouth and remove the new .zshrc it created.
     [[ -f ~/.zshrc ]] && rm ~/.zshrc
+    [[ -d ~/.config ]] && rm -rf  ~/.config
+    [[ -d ~/.local ]] && rm -rf  ~/.local
 
     git clone https://github.com/archusXIV/wm_config.git
     cd wm_config/ || exit 1
     
-    local LNG KBD
+    local LNG WM KBD
     LNG=$(sed -n '1p' /etc/locale.conf)
+    WM=$(awk -F'=' '/Name/{print $2}' /usr/share/xsessions/*.desktop)
+    KBD=$(sed 's/KEYMAP=//;s/-.*//' /etc/vconsole.conf | sed -n '1p')
     
     __ExportLang() (
         if [[ $LNG = LANG="fr_FR.UTF-8" ]]; then
@@ -45,85 +47,43 @@ _WmConfig() {
         fi
     )
     
-    clear
-    read -r -p "${g}"' Window manager config to install: [I]3wm, [B]spwm: '"${nc}" wm
-    printf '%s\n'
-    read -r -p "${g}"' Set keyboard layout for '$USER': [F]rench (fr), [E]nglish (us): '"${nc}" layout
-        
-    case "$layout" in
-        e|E) KBD="us" ;;
-        f|F) KBD="fr" ;;
-    esac
+    __CommonConf() (
+        printf '%s\n' " ${y}Configuring $WM.${nc}"
+        sleep 1s
+        mv config .config && mv local .local \
+        && chmod +x .local/bin/* \
+        && echo "setxkbmap $KBD" >> .local/bin/autostart \
+        && __ExportLang \
+        && mv -f .local .. && mv -f .config .. \
+        && {
+            if [[ -d ~/Pictures ]]; then
+                mv -f wallpapers ~/Pictures/
+            else
+                mv -f wallpapers ~/Images/
+            fi
+        } \
+        && chmod +x .fehbg && chmod +x ~/.config/ranger/scope.sh \
+        && mv -f .{bash_profile,bashrc,zshenv,fehbg,xinitrc,Xresources} .. \
+        && echo "exec $WM" >> ~/.xinitrc \
+        && cd ~ && rm -rf wm_config
+    )
     
-    case "$wm" in
-        i|I)
-            if [[ -n $(command -v i3) ]]; then
-            
-                printf '%s\n' " ${y}Configuring I3PWM.${nc}"
-                sleep 1s
-                mv config .config \
-                && mv local .local \
-                && chmod +x .local/bin/* \
-                && echo "setxkbmap $KBD" >> .local/bin/autostart \
-                && __ExportLang \
-                && mv -f .local .. && mv -f .config .. \
-                && {
-                    if [[ -d ~/Pictures ]]; then
-                        mv -f wallpapers ~/Pictures/
-                    else
-                        mv -f wallpapers ~/Images/
-                    fi
-                } \
-                && chmod +x .fehbg && chmod +x ~/.config/ranger/scope.sh \
-                && mv -f .{bash_profile,bashrc,zshenv,fehbg,xinitrc,Xresources} .. \
-                && echo "exec i3" >> ~/.xinitrc \
-                && cd ~ && rm -rf wm_config \
-                && printf '%s\n' " ${y}i3wm configured, rebooting...${nc}" \
-                && sleep 2s && reboot
-                
-            else
-                
-                printf '%s\n' " ${r}i3wm is not installed.${nc}"
-                sleep 3s
-                exit 127
-                
-            fi
-        ;;
-        b|B)
-            if [[ -n $(command -v bspwm) ]]; then
-            
-                printf '%s\n' " ${y}Configuring BSPWM.${nc}"
-                sleep 1s
-                mv config .config \
-                && chmod +x .config/bspwm/bspwmrc \
-                && mv local .local \
-                && chmod +x .local/bin/* \
-                && echo "setxkbmap $KBD" >> .local/bin/autostart \
-                && __ExportLang \
-                && mv -f .local .. && mv -f .config .. \
-                && {
-                    if [[ -d ~/Pictures ]]; then
-                        mv -f wallpapers ~/Pictures/
-                    else
-                        mv -f wallpapers ~/Images/
-                    fi
-                } \
-                && chmod +x .fehbg && chmod +x ~/.config/ranger/scope.sh \
-                && mv -f .{bash_profile,bashrc,zshenv,fehbg,xinitrc,Xresources} .. \
-                && echo "exec bspwm" >> ~/.xinitrc \
-                && cd ~ && rm -rf wm_config \
-                && printf '%s\n' " ${y}Bspwm configured, rebooting...${nc}" \
-                && sleep 2s && reboot
-                
-            else
-                
-                printf '%s\n' " ${r}Bspwm is not installed.${nc}"
-                sleep 3s
-                exit 127
-                
-            fi
-        ;;
-    esac
+    clear
+    
+    if [[ $WM = i3 ]]; then
+        __CommonConf \
+        && printf '%s\n' " ${y}$WM configured, rebooting...${nc}" \
+        && sleep 2s && reboot
+    elif [[ $WM = bspwm ]]; then
+        __CommonConf \
+        && chmod +x ~/.config/bspwm/bspwmrc \
+        && printf '%s\n' " ${y}$WM configured, rebooting...${nc}" \
+        && sleep 2s && reboot
+    else
+        printf '%s\n' " ${r}$WM is not installed.${nc}"
+        sleep 3s
+        exit 127
+    fi
     
 }
 
