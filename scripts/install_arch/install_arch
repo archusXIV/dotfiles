@@ -35,28 +35,89 @@ _FormatPrompt() {
     printf '%s\n' " ${y}Formating and mounting partitions.${nc}"
 }
 
+_Prompt() {
+    local screenprompt key default opts status
+
+    default=y
+    opts=yn
+
+    [[ $1 =~ -([${opts}]) ]] \
+        && default="${BASH_REMATCH[1]}" && shift
+
+    screenprompt="$* [${default^^}/${opts/$default/}]"
+
+    if [[ -t 2 ]]; then
+        >&2 echo "$screenprompt"
+    
+        while :; do
+            read -rsn 1
+    
+            key="${REPLY:-$default}"
+            [[ $key =~ [${opts}] ]] || continue
+            break
+        done
+    else
+        key="$default"
+    fi
+
+    [[ ${key,,} = n ]] && status=1
+
+    return "${status:-0}"
+}
+
 _SeparatedHomeLayout() {
-        mkfs.fat -F32 /dev/$HWDISK$A \
-        && mkfs.ext4 /dev/$HWDISK$B \
-        && mkfs.ext4 /dev/$HWDISK2$A \
-        && mount /dev/$HWDISK$B /mnt \
-        && mkdir -p /mnt/{boot/efi,home} \
-        && mount /dev/$HWDISK$A /mnt/boot/efi \
-        && mount /dev/$HWDISK2$A /mnt/home \
-        && lsblk && sleep 2s
+    mkfs.fat -F32 /dev/$HWDISK$A
+    mkfs.ext4 /dev/$HWDISK$B
+    mkfs.ext4 /dev/$HWDISK2$A
+    mount /dev/$HWDISK$B /mnt
+    mkdir -p /mnt/{boot/efi,home}
+    mount /dev/$HWDISK$A /mnt/boot/efi
+    mount /dev/$HWDISK2$A /mnt/home
+    lsblk && sleep 2s
+}
+
+_SecondDiskChoice() {
+    __SecondDriveSelected() (
+        printf '%s\n' " ${y}You selected: $HWDISK2"
+        sleep 2s
+    )
+    # if there are more than one usable drive
+    if [[ $(lsblk -I 8 -nd | wc -l) -gt 1 ]]; then
+        clear
+        printf '%s\n'
+        # This will exclude weird things like: loop0, sr0
+        lsblk -I 8 -nd | cat -n
+        printf '%s\n'
+        printf '%s\n' " ${y}Choosing a new disk should be a good choice.${nc}"
+        read -r -p "${g}"' Select a disk for /home, eg: 1=sda or 2=sdb etc...: '"${nc}" home
+        case "$home" in
+            1)
+                HWDISK2=$(lsblk -dno NAME -I 8 | sed -n '1p')
+                __SecondDriveSelected
+            ;;
+            2)
+                HWDISK2=$(lsblk -dno NAME -I 8 | sed -n '2p')
+                __SecondDriveSelected
+            ;;
+            3)
+                HWDISK2=$(lsblk -dno NAME -I 8 | sed -n '3p')
+                __SecondDriveSelected
+            ;;
+        esac
+    fi
 }
 
 _TestHome() {
     
     __DefaultLayout() (
-        mkfs.fat -F32 /dev/$HWDISK$A \
-        && mkfs.ext4 /dev/$HWDISK$B \
-        && mkfs.ext4 /dev/$HWDISK$C \
-        && mount /dev/$HWDISK$B /mnt \
-        && mkdir -p /mnt/{boot/efi,home} \
-        && mount /dev/$HWDISK$A /mnt/boot/efi \
-        && mount /dev/$HWDISK$C /mnt/home \
-        && lsblk && sleep 2s
+        mkfs.fat -F32 /dev/$HWDISK$A
+        mkfs.ext4 /dev/$HWDISK$B
+        mkfs.ext4 /dev/$HWDISK$C
+        mount /dev/$HWDISK$B /mnt
+        mkdir -p /mnt/{boot/efi,home}
+        mount /dev/$HWDISK$A /mnt/boot/efi
+        mount /dev/$HWDISK$C /mnt/home
+        lsblk && sleep 2s
     )
     
     if [[ $(lsblk -no NAME | grep $HWDISK$C) ]]; then
@@ -66,35 +127,28 @@ _TestHome() {
     else
         clear
         printf '%s\n'
-        read -r -p "${g}"' No /home partition detected, do you want to create it? [N/y]: '"${nc}" nohome
-        printf '%s\n'
-         case "$nohome" in
-            y|Y)
-                read -r -p "${g}"' [1] /home on same drive, [2] /home on another drive: '"${nc}" homepath
-                case "$homepath" in
-                    1)
-                        printf '%s\n' " ${g}Please modify your partitions layout.${nc}"
-                        sleep 2s
-                        cfdisk /dev/$HWDISK
-                        __DefaultLayout
-                        _FormatPrompt
-                        sleep 1s
-                    ;;
-                    2)
-                        _SecondDiskChoice
-                    ;;
-                esac
-                
-            ;;
-            n|N)
+        _Prompt " ${r}No /home partition detected, do you want to create one? ${nc}" || {
+            _FormatPrompt
+            sleep 1s
+            mkfs.fat -F32 /dev/$HWDISK$A
+            mkfs.ext4 /dev/$HWDISK$B
+            mount /dev/$HWDISK$B /mnt
+            mkdir -p /mnt/boot/efi
+            mount /dev/$HWDISK$A /mnt/boot/efi
+            lsblk && sleep 2s
+        }
+        read -r -p "${g}"' [1] /home on same drive, [2] /home on separated drive: '"${nc}" homepath
+        case "$homepath" in
+            1)
+                printf '%s\n' " ${g}Please modify your partitions layout.${nc}"
+                sleep 2s
+                cfdisk /dev/$HWDISK
+                __DefaultLayout
                 _FormatPrompt
                 sleep 1s
-                mkfs.fat -F32 /dev/$HWDISK$A \
-                && mkfs.ext4 /dev/$HWDISK$B \
-                && mount /dev/$HWDISK$B /mnt \
-                && mkdir -p /mnt/boot/efi \
-                && mount /dev/$HWDISK$A /mnt/boot/efi \
-                && lsblk && sleep 2s
+            ;;
+            2)
+                _SecondDiskChoice
             ;;
         esac
     fi
@@ -133,37 +187,6 @@ _FirstDiskChoice() {
         sleep 2s
     fi
 
-}
-
-_SecondDiskChoice() {
-    __SecondDriveSelected() (
-        printf '%s\n' " ${y}You selected: $HWDISK2"
-        sleep 2s
-    )
-    # if there are more than one usable drive
-    if [[ $(lsblk -I 8 -nd | wc -l) -gt 1 ]]; then
-        clear
-        printf '%s\n'
-        # This will exclude weird things like: loop0, sr0
-        lsblk -I 8 -nd | cat -n
-        printf '%s\n'
-        printf '%s\n' " ${y}Choosing a new disk should be a good choice.${nc}"
-        read -r -p "${g}"' Select a disk for /home, eg: 1=sda or 2=sdb etc...: '"${nc}" home
-        case "$home" in
-            1)
-                HWDISK2=$(lsblk -dno NAME -I 8 | sed -n '1p')
-                __SecondDriveSelected
-            ;;
-            2)
-                HWDISK2=$(lsblk -dno NAME -I 8 | sed -n '2p')
-                __SecondDriveSelected
-            ;;
-            3)
-                HWDISK2=$(lsblk -dno NAME -I 8 | sed -n '3p')
-                __SecondDriveSelected
-            ;;
-        esac
-    fi
 }
 
 _DefaultInputs() {
@@ -215,8 +238,8 @@ _Install() {
             clear
             
             printf '%s\n' " ${y}Syncronizing system clock...${nc}"
-            timedatectl set-ntp true && timedatectl \
-            && printf '%s\n' " ${y}Success, system clock updated.${nc}"
+            timedatectl set-ntp true && timedatectl
+            printf '%s\n' " ${y}Success, system clock updated.${nc}"
             sleep 2s
             clear
             
@@ -250,14 +273,14 @@ _Install() {
             xf86-input-{elographics,evdev,libinput,synaptics,vmmouse,void,wacom} \
             xf86-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,openchrome,qxl,sisusb,vesa}
             
-            cat /etc/pacman.d/mirrorlist > /mnt/etc/pacman.d/mirrorlist \
-            && cat /etc/pacman.conf > /mnt/etc/pacman.conf
+            cat /etc/pacman.d/mirrorlist > /mnt/etc/pacman.d/mirrorlist
+            cat /etc/pacman.conf > /mnt/etc/pacman.conf
             
             clear
             printf '%s\n'
             printf '%s\n' " ${y}Generating fstab...${nc}"
-            genfstab -U -p /mnt >> /mnt/etc/fstab \
-            && sleep 2s
+            genfstab -U -p /mnt >> /mnt/etc/fstab
+            sleep 2s
             
             printf '%s\n' " ${y}Entering installed system for configuration.${nc}"
             sleep 2s
@@ -302,56 +325,48 @@ _Install() {
             _DefaultInputs -k
             
             arch-chroot /mnt /bin/bash -c "
-                ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime \
-                && hwclock --systohc --utc \
-                && echo $machine > /etc/hostname \
-                && echo $key > /etc/vconsole.conf \
-                && echo $font >> /etc/vconsole.conf \
-                && echo ' ${g}Choose your locales using vim${nc}' && sleep 2s \
-                && vim /etc/locale.gen && locale-gen \
-                && echo $lang > /etc/locale.conf \
-                && echo LC_COLLATE=C >> /etc/locale.conf \
-                && echo '127.0.0.1    localhost' >> /etc/hosts \
-                && echo '::1          localhost' >> /etc/hosts \
-                && echo '127.0.1.1    $machine.localdomain    $machine' >> /etc/hosts \
-                && mkinitcpio -p linux && clear \
-                && echo ' ${g}Change the $USER password: ${nc}' \
-                && passwd $USER \
-                && echo ' ${g}Installing grub menu on /dev/$HWDISK, please be patient...${nc}' \
-                && grub-install --target=x86_64-efi --efi-directory=/boot/efi \
-                --bootloader-id=ARCH_GRUB && grub-mkconfig -o /boot/grub/grub.cfg \
-                && systemctl enable {NetworkManager,systemd-timesyncd}.service \
-                && timedatectl set-ntp true && exit
+                ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime
+                hwclock --systohc --utc
+                echo $machine > /etc/hostname
+                echo $key > /etc/vconsole.conf
+                echo $font >> /etc/vconsole.conf
+                echo ' ${g}Choose your locales using vim${nc}' && sleep 2s
+                vim /etc/locale.gen && locale-gen
+                echo $lang > /etc/locale.conf
+                echo LC_COLLATE=C >> /etc/locale.conf
+                echo '127.0.0.1    localhost' >> /etc/hosts
+                echo '::1          localhost' >> /etc/hosts
+                echo '127.0.1.1    $machine.localdomain    $machine' >> /etc/hosts
+                mkinitcpio -p linux
+                clear
+                echo ' ${g}Change the $USER password: ${nc}'
+                passwd $USER
+                echo ' ${g}Installing grub menu on /dev/$HWDISK, please be patient...${nc}'
+                grub-install --target=x86_64-efi --efi-directory=/boot/efi \
+                --bootloader-id=ARCH_GRUB && grub-mkconfig -o /boot/grub/grub.cfg
+                systemctl enable {NetworkManager,systemd-timesyncd}.service
+                exit
             "
+            
             curl -sL \
             "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/install_arch/install_desktop" \
             -O && chmod +x install_desktop && mv install_desktop /mnt/root/
             
             clear
             printf '%s\n'
-            read -r -p "${g}"' Do you want to install a desktop now? [Y/n] '"${nc}" desk
-            case "$desk" in
-                y|Y)
-                    arch-chroot /mnt /bin/bash -c "
-                        /root/install_desktop
-                        exit
-                    "
+            _Prompt " ${g}Do you want to install a desktop now? ${nc}" || {
+                _Prompt " ${g}Do you want to enter the new installed system? ${nc}" || {
+                    printf '%s' " ${y}Unmounting /mnt and rebooting.${nc}"
+                    sleep 1s
                     umount -R /mnt && reboot
-                ;;
-                n|N)
-                    read -r -p "${g}"' Do you want to enter the new installed system? [Y/n] '"${nc}" enter
-                    case "$enter" in
-                        y|Y)
-                            arch-chroot /mnt
-                        ;;
-                        n|N)
-                            printf '%s' " ${y}Unmounting /mnt and rebooting.${nc}"
-                            sleep 1s
-                            umount -R /mnt && reboot
-                        ;;
-                    esac
-                ;;
-            esac
+                }
+                arch-chroot /mnt
+            }
+            arch-chroot /mnt /bin/bash -c "
+                /root/install_desktop
+                exit
+            "
+            umount -R /mnt && reboot
         else
             clear
             printf '%s\n'
