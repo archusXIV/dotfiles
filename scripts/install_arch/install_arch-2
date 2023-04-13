@@ -35,17 +35,6 @@ _FormatPrompt() {
     printf '%s\n' " ${y}Formating and mounting partitions.${nc}"
 }
 
-_SeparatedHomeLayout() {
-        mkfs.fat -F32 /dev/$HWDISK$A \
-        && mkfs.ext4 /dev/$HWDISK$B \
-        && mkfs.ext4 /dev/$HWDISK2$A \
-        && mount /dev/$HWDISK$B /mnt \
-        && mkdir -p /mnt/{boot/efi,home} \
-        && mount /dev/$HWDISK$A /mnt/boot/efi \
-        && mount /dev/$HWDISK2$A /mnt/home \
-        && lsblk && sleep 2s
-}
-
 _Prompt() {
     local screenprompt key default opts status
 
@@ -74,6 +63,17 @@ _Prompt() {
     [[ ${key,,} = n ]] && status=1
 
     return "${status:-0}"
+}
+
+_SeparatedHomeLayout() {
+    mkfs.fat -F32 /dev/$HWDISK$A
+    mkfs.ext4 /dev/$HWDISK$B
+    mkfs.ext4 /dev/$HWDISK2$A
+    mount /dev/$HWDISK$B /mnt
+    mkdir -p /mnt/{boot/efi,home}
+    mount /dev/$HWDISK$A /mnt/boot/efi
+    mount /dev/$HWDISK2$A /mnt/home
+    lsblk && sleep 2s
 }
 
 _SecondDiskChoice() {
@@ -110,14 +110,14 @@ _SecondDiskChoice() {
 _TestHome() {
     
     __DefaultLayout() (
-        mkfs.fat -F32 /dev/$HWDISK$A \
-        && mkfs.ext4 /dev/$HWDISK$B \
-        && mkfs.ext4 /dev/$HWDISK$C \
-        && mount /dev/$HWDISK$B /mnt \
-        && mkdir -p /mnt/{boot/efi,home} \
-        && mount /dev/$HWDISK$A /mnt/boot/efi \
-        && mount /dev/$HWDISK$C /mnt/home \
-        && lsblk && sleep 2s
+        mkfs.fat -F32 /dev/$HWDISK$A
+        mkfs.ext4 /dev/$HWDISK$B
+        mkfs.ext4 /dev/$HWDISK$C
+        mount /dev/$HWDISK$B /mnt
+        mkdir -p /mnt/{boot/efi,home}
+        mount /dev/$HWDISK$A /mnt/boot/efi
+        mount /dev/$HWDISK$C /mnt/home
+        lsblk && sleep 2s
     )
     
     if [[ $(lsblk -no NAME | grep $HWDISK$C) ]]; then
@@ -127,16 +127,15 @@ _TestHome() {
     else
         clear
         printf '%s\n'
-        # read -r -p "${g}"' No /home partition detected, do you want to create one? [N/y]: '"${nc}" nohome
         _Prompt " ${r}No /home partition detected, do you want to create one? ${nc}" || {
             _FormatPrompt
             sleep 1s
-            mkfs.fat -F32 /dev/$HWDISK$A \
-            && mkfs.ext4 /dev/$HWDISK$B \
-            && mount /dev/$HWDISK$B /mnt \
-            && mkdir -p /mnt/boot/efi \
-            && mount /dev/$HWDISK$A /mnt/boot/efi \
-            && lsblk && sleep 2s
+            mkfs.fat -F32 /dev/$HWDISK$A
+            mkfs.ext4 /dev/$HWDISK$B
+            mount /dev/$HWDISK$B /mnt
+            mkdir -p /mnt/boot/efi
+            mount /dev/$HWDISK$A /mnt/boot/efi
+            lsblk && sleep 2s
         }
         read -r -p "${g}"' [1] /home on same drive, [2] /home on separated drive: '"${nc}" homepath
         case "$homepath" in
@@ -239,8 +238,8 @@ _Install() {
             clear
             
             printf '%s\n' " ${y}Syncronizing system clock...${nc}"
-            timedatectl set-ntp true && timedatectl \
-            && printf '%s\n' " ${y}Success, system clock updated.${nc}"
+            timedatectl set-ntp true && timedatectl
+            printf '%s\n' " ${y}Success, system clock updated.${nc}"
             sleep 2s
             clear
             
@@ -275,13 +274,13 @@ _Install() {
             xf86-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,openchrome,qxl,sisusb,vesa}
             
             cat /etc/pacman.d/mirrorlist > /mnt/etc/pacman.d/mirrorlist \
-            && cat /etc/pacman.conf > /mnt/etc/pacman.conf
+            cat /etc/pacman.conf > /mnt/etc/pacman.conf
             
             clear
             printf '%s\n'
             printf '%s\n' " ${y}Generating fstab...${nc}"
-            genfstab -U -p /mnt >> /mnt/etc/fstab \
-            && sleep 2s
+            genfstab -U -p /mnt >> /mnt/etc/fstab
+            sleep 2s
             
             printf '%s\n' " ${y}Entering installed system for configuration.${nc}"
             sleep 2s
@@ -326,26 +325,28 @@ _Install() {
             _DefaultInputs -k
             
             arch-chroot /mnt /bin/bash -c "
-                ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime \
-                && hwclock --systohc --utc \
-                && echo $machine > /etc/hostname \
-                && echo $key > /etc/vconsole.conf \
-                && echo $font >> /etc/vconsole.conf \
-                && echo ' ${g}Choose your locales using vim${nc}' && sleep 2s \
-                && vim /etc/locale.gen && locale-gen \
-                && echo $lang > /etc/locale.conf \
-                && echo LC_COLLATE=C >> /etc/locale.conf \
-                && echo '127.0.0.1    localhost' >> /etc/hosts \
-                && echo '::1          localhost' >> /etc/hosts \
-                && echo '127.0.1.1    $machine.localdomain    $machine' >> /etc/hosts \
-                && mkinitcpio -p linux && clear \
-                && echo ' ${g}Change the $USER password: ${nc}' \
-                && passwd $USER \
-                && echo ' ${g}Installing grub menu on /dev/$HWDISK, please be patient...${nc}' \
-                && grub-install --target=x86_64-efi --efi-directory=/boot/efi \
-                --bootloader-id=ARCH_GRUB && grub-mkconfig -o /boot/grub/grub.cfg \
-                && systemctl enable {NetworkManager,systemd-timesyncd}.service \
-                && timedatectl set-ntp true && exit
+                ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime
+                hwclock --systohc --utc
+                echo $machine > /etc/hostname
+                echo $key > /etc/vconsole.conf
+                echo $font >> /etc/vconsole.conf
+                echo ' ${g}Choose your locales using vim${nc}' && sleep 2s
+                vim /etc/locale.gen && locale-gen
+                echo $lang > /etc/locale.conf
+                echo LC_COLLATE=C >> /etc/locale.conf
+                echo '127.0.0.1    localhost' >> /etc/hosts
+                echo '::1          localhost' >> /etc/hosts
+                echo '127.0.1.1    $machine.localdomain    $machine' >> /etc/hosts
+                mkinitcpio -p linux
+                clear
+                echo ' ${g}Change the $USER password: ${nc}'
+                passwd $USER
+                echo ' ${g}Installing grub menu on /dev/$HWDISK, please be patient...${nc}'
+                grub-install --target=x86_64-efi --efi-directory=/boot/efi \
+                --bootloader-id=ARCH_GRUB && grub-mkconfig -o /boot/grub/grub.cfg
+                systemctl enable {NetworkManager,systemd-timesyncd}.service
+                timedatectl set-ntp true
+                exit
             "
             curl -sL \
             "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/install_arch/install_desktop" \
