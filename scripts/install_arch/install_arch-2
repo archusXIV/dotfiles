@@ -76,6 +76,37 @@ _Prompt() {
     return "${status:-0}"
 }
 
+_SecondDiskChoice() {
+    __SecondDriveSelected() (
+        printf '%s\n' " ${y}You selected: $HWDISK2"
+        sleep 2s
+    )
+    # if there are more than one usable drive
+    if [[ $(lsblk -I 8 -nd | wc -l) -gt 1 ]]; then
+        clear
+        printf '%s\n'
+        # This will exclude weird things like: loop0, sr0
+        lsblk -I 8 -nd | cat -n
+        printf '%s\n'
+        printf '%s\n' " ${y}Choosing a new disk should be a good choice.${nc}"
+        read -r -p "${g}"' Select a disk for /home, eg: 1=sda or 2=sdb etc...: '"${nc}" home
+        case "$home" in
+            1)
+                HWDISK2=$(lsblk -dno NAME -I 8 | sed -n '1p')
+                __SecondDriveSelected
+            ;;
+            2)
+                HWDISK2=$(lsblk -dno NAME -I 8 | sed -n '2p')
+                __SecondDriveSelected
+            ;;
+            3)
+                HWDISK2=$(lsblk -dno NAME -I 8 | sed -n '3p')
+                __SecondDriveSelected
+            ;;
+        esac
+    fi
+}
+
 _TestHome() {
     
     __DefaultLayout() (
@@ -123,37 +154,6 @@ _TestHome() {
         && lsblk && sleep 2s
     fi
     
-}
-
-_SecondDiskChoice() {
-    __SecondDriveSelected() (
-        printf '%s\n' " ${y}You selected: $HWDISK2"
-        sleep 2s
-    )
-    # if there are more than one usable drive
-    if [[ $(lsblk -I 8 -nd | wc -l) -gt 1 ]]; then
-        clear
-        printf '%s\n'
-        # This will exclude weird things like: loop0, sr0
-        lsblk -I 8 -nd | cat -n
-        printf '%s\n'
-        printf '%s\n' " ${y}Choosing a new disk should be a good choice.${nc}"
-        read -r -p "${g}"' Select a disk for /home, eg: 1=sda or 2=sdb etc...: '"${nc}" home
-        case "$home" in
-            1)
-                HWDISK2=$(lsblk -dno NAME -I 8 | sed -n '1p')
-                __SecondDriveSelected
-            ;;
-            2)
-                HWDISK2=$(lsblk -dno NAME -I 8 | sed -n '2p')
-                __SecondDriveSelected
-            ;;
-            3)
-                HWDISK2=$(lsblk -dno NAME -I 8 | sed -n '3p')
-                __SecondDriveSelected
-            ;;
-        esac
-    fi
 }
 
 _FirstDiskChoice() {
