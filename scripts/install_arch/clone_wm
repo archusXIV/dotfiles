@@ -49,37 +49,37 @@ _WmConfig() {
     __CommonConf() (
         printf '%s\n' " ${y}Configuring $WM.${nc}"
         sleep 1s
-        mv config .config && mv local .local \
-        && chmod +x .local/bin/* \
-        && echo "setxkbmap $KBD" >> .local/bin/autostart \
-        && __ExportLang \
-        && mv -f .local .. && mv -f .config .. \
-        && {
-            if [[ -d ~/Pictures ]]; then
-                mv -f wallpapers ~/Pictures/
-            else
-                mv -f wallpapers ~/Images/
-            fi
-        } \
-        && chmod +x .fehbg && chmod +x ~/.config/ranger/scope.sh \
-        && mv -f .{bash_profile,bashrc,zshenv,fehbg,xinitrc,Xresources} .. \
-        && echo "exec $WM" >> ~/.xinitrc \
-        && cd ~ && rm -rf wm_config
+        mv config .config && mv local .local
+        chmod +x .local/bin/*
+        echo "setxkbmap $KBD" >> .local/bin/autostart
+        __ExportLang
+        mv -f .local .. && mv -f .config ..
+        
+        if [[ -d ~/Pictures ]]; then
+            mv -f wallpapers ~/Pictures/
+        else
+            mv -f wallpapers ~/Images/
+        fi
+        
+        chmod +x .fehbg && chmod +x ~/.config/ranger/scope.sh
+        mv -f .{bash_profile,bashrc,zshenv,fehbg,xinitrc,Xresources} ..
+        echo "exec $WM" >> ~/.xinitrc
+        cd ~ && rm -rf wm_config
     )
     
     clear
     
     if [[ -f /usr/share/xsessions/i3.desktop ]]; then
         WM="i3"
-        __CommonConf \
-        && printf '%s\n' " ${y}$WM configured, rebooting...${nc}" \
-        && sleep 2s && reboot
+        __CommonConf
+        printf '%s\n' " ${y}$WM configured, rebooting...${nc}"
+        sleep 2s && reboot
     elif [[ -f /usr/share/xsessions/bspwm.desktop ]]; then
         WM="bspwm"
-        __CommonConf \
-        && chmod +x ~/.config/bspwm/bspwmrc \
-        && printf '%s\n' " ${y}$WM configured, rebooting...${nc}" \
-        && sleep 2s && reboot
+        __CommonConf
+        chmod +x ~/.config/bspwm/bspwmrc
+        printf '%s\n' " ${y}$WM configured, rebooting...${nc}"
+        sleep 2s && reboot
     else
         printf '%s\n' " ${r}$WM is not installed.${nc}"
         sleep 3s
