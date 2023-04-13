@@ -53,7 +53,7 @@ _systemd() {
             sleep 1s
             pacman -S --needed --noconfirm virtualbox-guest-utils
             systemctl enable vboxservice.service
-            printf '%s\n' " ${y}All done, please exit chroot and reboot your machine...${nc}"
+            printf '%s\n' " ${y}All done, please reboot your machine...${nc}"
             sleep 1s
         fi
         
@@ -66,11 +66,11 @@ _systemd() {
         if [[ $(dmidecode -s system-product-name) = VirtualBox ]]; then
             pacman -S --needed --noconfirm virtualbox-guest-utils
             systemctl enable {lightdm,vboxservice}.service
-            printf '%s\n' " ${y}All done, please exit chroot and reboot your machine...${nc}"
+            printf '%s\n' " ${y}All done, please reboot your machine...${nc}"
             sleep 1s
         else
             systemctl enable lightdm.service
-            printf '%s\n' " ${y}All done, please exit chroot and reboot your machine...${nc}"
+            printf '%s\n' " ${y}All done, please reboot your machine...${nc}"
             sleep 1s
         fi
     fi
