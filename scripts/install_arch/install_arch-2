@@ -8,7 +8,7 @@
 # Use it at your own risks....lol
 # Download the script when logged in the arch live iso:
 # curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/install_arch/install_arch" -O
-# chmod +x install_arch-2 && ./install_arch-2
+# chmod +x install_arch && ./install_arch
 #
 # French
 # Ce script va installer une Archlinux en UEFI sur le disque de votre choix
