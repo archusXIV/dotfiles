@@ -31,7 +31,6 @@ _WmConfig() {
     
     local LNG WM KBD
     LNG=$(sed -n '1p' /etc/locale.conf)
-    WM=$(awk -F'=' '/Name/{print $2}' /usr/share/xsessions/*.desktop)
     KBD=$(sed 's/KEYMAP=//;s/-.*//' /etc/vconsole.conf | sed -n '1p')
     
     __ExportLang() (
@@ -70,11 +69,13 @@ _WmConfig() {
     
     clear
     
-    if [[ $WM = i3 ]]; then
+    if [[ -f /usr/share/xsessions/i3.desktop ]]; then
+        WM="i3"
         __CommonConf \
         && printf '%s\n' " ${y}$WM configured, rebooting...${nc}" \
         && sleep 2s && reboot
-    elif [[ $WM = bspwm ]]; then
+    elif [[ -f /usr/share/xsessions/bspwm.desktop ]]; then
+        WM="bspwm"
         __CommonConf \
         && chmod +x ~/.config/bspwm/bspwmrc \
         && printf '%s\n' " ${y}$WM configured, rebooting...${nc}" \
