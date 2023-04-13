@@ -139,19 +139,19 @@ _TestHome() {
             && lsblk && sleep 2s
         }
         read -r -p "${g}"' [1] /home on same drive, [2] /home on separated drive: '"${nc}" homepath
-            case "$homepath" in
-                1)
-                    printf '%s\n' " ${g}Please modify your partitions layout.${nc}"
-                    sleep 2s
-                    cfdisk /dev/$HWDISK
-                    __DefaultLayout
-                    _FormatPrompt
-                    sleep 1s
-                ;;
-                2)
-                    _SecondDiskChoice
-                ;;
-            esac
+        case "$homepath" in
+            1)
+                printf '%s\n' " ${g}Please modify your partitions layout.${nc}"
+                sleep 2s
+                cfdisk /dev/$HWDISK
+                __DefaultLayout
+                _FormatPrompt
+                sleep 1s
+            ;;
+            2)
+                _SecondDiskChoice
+            ;;
+        esac
     fi
     
 }
