@@ -345,9 +345,9 @@ _Install() {
                 grub-install --target=x86_64-efi --efi-directory=/boot/efi \
                 --bootloader-id=ARCH_GRUB && grub-mkconfig -o /boot/grub/grub.cfg
                 systemctl enable {NetworkManager,systemd-timesyncd}.service
-                timedatectl set-ntp true
                 exit
             "
+            
             curl -sL \
             "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/install_arch/install_desktop" \
             -O && chmod +x install_desktop && mv install_desktop /mnt/root/
