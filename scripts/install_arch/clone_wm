@@ -23,8 +23,7 @@ _WmConfig() {
     # On first run, zsh will ask for configuration but we already have one.
     # We enter 0 to shut it's mouth and remove the new .zshrc it created.
     [[ -f ~/.zshrc ]] && rm ~/.zshrc
-    [[ -d ~/.config ]] && rm -rf  ~/.config
-    [[ -d ~/.local ]] && rm -rf  ~/.local
+    [[ -d ~/.config && -d ~/.local ]] && rm -rf ~/.{config,local}
 
     git clone https://github.com/archusXIV/wm_config.git
     cd wm_config/ || exit 1
@@ -53,7 +52,7 @@ _WmConfig() {
         chmod +x .local/bin/*
         echo "setxkbmap $KBD" >> .local/bin/autostart
         __ExportLang
-        mv -f .local .. && mv -f .config ..
+        mv -f .{config,local} ..
         
         if [[ -d ~/Pictures ]]; then
             mv -f wallpapers ~/Pictures/
