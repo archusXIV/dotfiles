@@ -52,7 +52,8 @@ _WmConfig() {
         chmod +x .{fehbg,config/ranger/scope.sh,local/bin/*}
         echo "setxkbmap $KBD" >> .local/bin/autostart
         __ExportLang
-        mv -f .{config,local,bash_profile,bashrc,zshenv,fehbg,xinitrc,Xresources} ..
+        mv -f .{config,local} ..
+        mv -f .{bash_profile,bashrc,zshenv,fehbg,xinitrc,Xresources} ..
         
         if [[ -d ~/Pictures ]]; then
             mv -f wallpapers ~/Pictures/
