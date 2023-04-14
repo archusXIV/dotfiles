@@ -18,6 +18,15 @@ g=$'\e[1;32m';
 r=$'\e[0;31m';
 y=$'\e[93m';
 
+_InstallYay()'{
+    printf '%s\n' " ${y}Installing yay-bin....${nc}"
+    sleep 1s
+    git clone https://aur.archlinux.org/yay-bin
+    cd yay-bin/
+    makepkg -sir
+    cd ~ && rm -rf yay-bin
+}
+
 _WmConfig() {
     
     # On first run, zsh will ask for configuration but we already have one.
@@ -72,11 +81,13 @@ _WmConfig() {
     if [[ -f /usr/share/xsessions/i3.desktop ]]; then
         WM="i3"
         __CommonConf
+        _InstallYay
         printf '%s\n' " ${y}$WM configured, rebooting...${nc}"
         sleep 2s && reboot
     elif [[ -f /usr/share/xsessions/bspwm.desktop ]]; then
         WM="bspwm"
         __CommonConf
+        _InstallYay
         chmod +x ~/.config/bspwm/bspwmrc
         printf '%s\n' " ${y}$WM configured, rebooting...${nc}"
         sleep 2s && reboot
