@@ -49,10 +49,10 @@ _WmConfig() {
         printf '%s\n' " ${y}Configuring $WM.${nc}"
         sleep 1s
         mv config .config && mv local .local
-        chmod +x .local/bin/*
+        chmod +x .{fehbg,config/ranger/scope.sh,local/bin/*}
         echo "setxkbmap $KBD" >> .local/bin/autostart
         __ExportLang
-        mv -f .{config,local} ..
+        mv -f .{config,local,bash_profile,bashrc,zshenv,fehbg,xinitrc,Xresources} ..
         
         if [[ -d ~/Pictures ]]; then
             mv -f wallpapers ~/Pictures/
@@ -60,8 +60,6 @@ _WmConfig() {
             mv -f wallpapers ~/Images/
         fi
         
-        chmod +x .fehbg && chmod +x ~/.config/ranger/scope.sh
-        mv -f .{bash_profile,bashrc,zshenv,fehbg,xinitrc,Xresources} ..
         echo "exec $WM" >> ~/.xinitrc
         cd ~ && rm -rf wm_config
     )
