@@ -45,7 +45,7 @@ _WmConfig() {
         fi
     )
     
-    __CommonConf() (
+   __CommonConf() (
         printf '%s\n' " ${y}Configuring $WM.${nc}"
         sleep 1s
         mv config .config && mv local .local
