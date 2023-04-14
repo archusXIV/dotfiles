@@ -30,7 +30,7 @@ _CreateUser() {
     esac
     
     useradd -m -G audio,video,input,wheel,sys,log,rfkill,lp,adm -s "$shell" ${usrname}
-    printf '%s\n' " ${g}Change $usrname password:${nc} "
+    printf '%s\n' " ${g}Please set a password for $usrname.${nc}"
     sleep 1s
     passwd ${usrname}
     printf '%s\n' " ${g}Enable $usrname sudo privileges in sudoers file:${nc} "
