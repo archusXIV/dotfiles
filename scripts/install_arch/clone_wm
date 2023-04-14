@@ -18,7 +18,7 @@ g=$'\e[1;32m';
 r=$'\e[0;31m';
 y=$'\e[93m';
 
-_InstallYay()'{
+_InstallYay() {
     printf '%s\n' " ${y}Installing yay-bin....${nc}"
     sleep 1s
     git clone https://aur.archlinux.org/yay-bin
