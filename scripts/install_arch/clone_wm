@@ -24,8 +24,9 @@ _WmConfig() {
     # for configuration but we already have one.
     # We enter 0 to shut it's mouth and remove the new .zshrc it created.
     [[ -f ~/.zshrc ]] && rm ~/.zshrc
-    [[ -d ~/.config && -d ~/.local ]] && rm -rf ~/.{config,local}
-
+    [[ -d ~/.config ]] && rm -rf ~/.config
+    [[ -d ~/.local ]] && rm -rf ~/.local
+    
     git clone https://github.com/archusXIV/wm_config.git
     cd wm_config/ || exit 1
     
