@@ -6,7 +6,6 @@
 # As the script name says, this will install an Achlinux desktop
 # following the arch way to Keep It Simple Stupid, meaning no customization.
 # Use it at your own risks....lol
-# First install the base system.
 # Download the script when logged in the arch live iso:
 # curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/install_arch/install_desktop" -O
 # chmod +x install_desktop && ./install_desktop
@@ -34,7 +33,7 @@ _CreateUser() {
     printf '%s\n' " ${g}Please set a password for $usrname.${nc}"
     sleep 1s
     passwd ${usrname}
-    printf '%s\n' " ${g}Enable $usrname sudo privileges in sudoers file:${nc} "
+    printf '%s\n' " ${g}Enable $usrname sudo privileges in sudoers file.${nc}"
     sleep 2s
     EDITOR=vim visudo
     groupadd ${usrname}
@@ -108,14 +107,14 @@ _xorg() {
     sleep 1s
     pacman -Sy --needed --noconfirm xorg xorg-server xorg-xinit \
     xorg-xrandr xorg-xfontsel xorg-xlsfonts xorg-xkill xorg-xinput \
-    xorg-xwininfo wmctrl xdg-user-dirs xterm xorg-apps xcb-util-wm xdg-utils
+    xorg-xwininfo wmctrl xdg-user-dirs xterm xorg-apps xcb-util-wm
     
 }
 
 _DownloadCloneWm() {
     
     curl -sL \
-    "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/install_arch/clone_wm" -O \
+    "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/various/clone_wm" -O \
     && curl -sL "https://raw.githubusercontent.com/archusXIV/wm_config/main/README.md" -O \
     && chown ${usrname}:${usrname} clone_wm README.md \
     && mv {clone_wm,README.md} /home/${usrname} && chmod +x /home/${usrname}/clone_wm
@@ -225,15 +224,15 @@ _Description() {
     clear
     setfont sun12x22
     cat << EOF
-                #                                                       
-               # #      #####   ####  #    # #      # #    # #    # #    # 
-              #   #     #    # #    # #    # #      # ##   # #    #  #  #  
-             #     #    #    # #      ###### #      # # #  # #    #   ##   
-            #########   #####  #      #    # #      # #  # # #    #   ##   
-           #         #  #   #  #    # #    # #      # #   ## #    #  #  #  
-          #           # #    #  ####  #    # ###### # #    #  ####  #    #
     
-                    Desktop installation for lazy dudes made easy!
+    █████╗ ██████╗  ██████╗██╗  ██╗██╗     ██╗███╗   ██╗██╗   ██╗██╗  ██╗
+    ██╔══██╗██╔══██╗██╔════╝██║  ██║██║     ██║████╗  ██║██║   ██║╚██╗██╔╝
+    ███████║██████╔╝██║     ███████║██║     ██║██╔██╗ ██║██║   ██║ ╚███╔╝ 
+    ██╔══██║██╔══██╗██║     ██╔══██║██║     ██║██║╚██╗██║██║   ██║ ██╔██╗ 
+    ██║  ██║██║  ██║╚██████╗██║  ██║███████╗██║██║ ╚████║╚██████╔╝██╔╝ ██╗
+    ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝  ╚═╝
+    
+                Desktop installation for lazy dudes made easy!
     
     # French (ne jamais lancer un script sans le lire auparavant)
     ${g}Ce script va installer le bureau de votre choix parmi la liste suivante:${nc}
