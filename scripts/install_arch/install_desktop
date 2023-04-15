@@ -26,7 +26,8 @@ _CreateUser() {
     
     case "$whatshell" in
         b|B) shell="/bin/bash" ;;
-        z|Z) shell="/bin/zsh" ;;
+        z|Z) shell="/bin/zsh"  ;;
+        *)   shell="/bin/bash" ;;
     esac
     
     useradd -m -G audio,video,input,wheel,sys,log,rfkill,lp,adm -s "$shell" ${usrname}
