@@ -20,7 +20,8 @@ y=$'\e[93m';
 
 _WmConfig() {
     
-    # On first run, zsh will ask for configuration but we already have one.
+    # On first run, if zsh is the $USER's shell, it will ask us
+    # for configuration but we already have one.
     # We enter 0 to shut it's mouth and remove the new .zshrc it created.
     [[ -f ~/.zshrc ]] && rm ~/.zshrc
     [[ -d ~/.config && -d ~/.local ]] && rm -rf ~/.{config,local}
@@ -28,61 +29,52 @@ _WmConfig() {
     git clone https://github.com/archusXIV/wm_config.git
     cd wm_config/ || exit 1
     
-    local LNG WM KBD
+    local LNG KBD WM
     LNG=$(sed -n '1p' /etc/locale.conf)
     KBD=$(sed 's/KEYMAP=//;s/-.*//' /etc/vconsole.conf | sed -n '1p')
-    
-    __ExportLang() (
-        if [[ $LNG = LANG="fr_FR.UTF-8" ]]; then
-            echo 'export LANG="fr_FR.UTF-8"' \
-            | tee -a .bash_profile >> .zshenv
-        elif [[ $LNG = LANG="en_US.UTF-8" ]]; then
-            echo 'export LANG="en_US.UTF-8"' \
-            | tee -a .bash_profile >> .zshenv
-        else
-            printf '%s\n' " ${r}Your locales are not set.${nc}"
-            sleep 2s
-        fi
-    )
-    
-   __CommonConf() (
-        printf '%s\n' " ${y}Configuring $WM.${nc}"
-        sleep 1s
-        mv config .config && mv local .local
-        chmod +x .{fehbg,config/ranger/scope.sh,local/bin/*}
-        echo "setxkbmap $KBD" >> .local/bin/autostart
-        __ExportLang
-        mv -f .{config,local} ..
-        mv -f .{bash_profile,bashrc,zshenv,fehbg,xinitrc,Xresources} ..
-        
-        if [[ -d ~/Pictures ]]; then
-            mv -f wallpapers ~/Pictures/
-        else
-            mv -f wallpapers ~/Images/
-        fi
-        
-        echo "exec $WM" >> ~/.xinitrc
-        cd ~ && rm -rf wm_config
-    )
     
     clear
     
     if [[ -f /usr/share/xsessions/i3.desktop ]]; then
         WM="i3"
-        __CommonConf
-        printf '%s\n' " ${y}$WM configured, rebooting...${nc}"
-        sleep 2s && reboot
     elif [[ -f /usr/share/xsessions/bspwm.desktop ]]; then
         WM="bspwm"
-        __CommonConf
-        chmod +x ~/.config/bspwm/bspwmrc
-        printf '%s\n' " ${y}$WM configured, rebooting...${nc}"
-        sleep 2s && reboot
     else
         printf '%s\n' " ${r}$WM is not installed.${nc}"
         sleep 3s
         exit 127
     fi
+    
+    printf '%s\n' " ${y}Configuring $WM.${nc}"
+    sleep 1s
+    mv config .config && mv local .local
+    chmod +x .{fehbg,config/ranger/scope.sh,config/bspwm/bspwmrc,local/bin/*}
+    echo "setxkbmap $KBD" >> .local/bin/autostart
+    
+    if [[ $LNG = LANG="fr_FR.UTF-8" ]]; then
+        echo 'export LANG="fr_FR.UTF-8"' \
+        | tee -a .bash_profile >> .zshenv
+    elif [[ $LNG = LANG="en_US.UTF-8" ]]; then
+        echo 'export LANG="en_US.UTF-8"' \
+        | tee -a .bash_profile >> .zshenv
+    else
+        printf '%s\n' " ${r}Your locales are not set.${nc}"
+        sleep 2s
+    fi
+    
+    mv -f .{config,local} ..
+    mv -f .{bash_profile,bashrc,zshenv,fehbg,xinitrc,Xresources} ..
+    
+    if [[ -d ~/Pictures ]]; then
+        mv -f wallpapers ~/Pictures/
+    else
+        mv -f wallpapers ~/Images/
+    fi
+    
+    echo "exec $WM" >> ~/.xinitrc
+    cd ~ && rm -rf wm_config
+    printf '%s\n' " ${y}$WM configured, rebooting...${nc}"
+    sleep 2s && reboot
     
 }
 
@@ -114,7 +106,7 @@ _Description() {
     On restart launch startx and please read the README.md file opened in geany.${nc}
     
 EOF
-    printf '%s\n'
+    printf '\n'
     read -r -p "${g}"'    Press enter to launch the installation, ^C to quit: '"${nc}" config
     case "$config" in *) _WmConfig ;; esac
     
