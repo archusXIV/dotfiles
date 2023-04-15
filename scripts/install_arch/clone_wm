@@ -41,7 +41,7 @@ _WmConfig() {
     elif [[ -f /usr/share/xsessions/bspwm.desktop ]]; then
         WM="bspwm"
     else
-        printf '%s\n' " ${r}$WM is not installed.${nc}"
+        printf '%s\n' " ${r}i3/bspwm not installed.${nc}"
         sleep 3s
         exit 127
     fi
