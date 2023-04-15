@@ -347,7 +347,6 @@ _Install() {
                 systemctl enable {NetworkManager,systemd-timesyncd}.service
                 exit
             "
-            
             curl -sL \
             "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/install_arch/install_desktop" \
             -O && chmod +x install_desktop && mv install_desktop /mnt/root/
@@ -386,15 +385,15 @@ _Description() {
     clear
     setfont sun12x22
     cat << EOF
-                #                                                       
-               # #      #####   ####  #    # #      # #    # #    # #    # 
-              #   #     #    # #    # #    # #      # ##   # #    #  #  #  
-             #     #    #    # #      ###### #      # # #  # #    #   ##   
-            #########   #####  #      #    # #      # #  # # #    #   ##   
-           #         #  #   #  #    # #    # #      # #   ## #    #  #  #  
-          #           # #    #  ####  #    # ###### # #    #  ####  #    #
     
-                     Base installation for lazy dudes made easy!
+    █████╗ ██████╗  ██████╗██╗  ██╗██╗     ██╗███╗   ██╗██╗   ██╗██╗  ██╗
+    ██╔══██╗██╔══██╗██╔════╝██║  ██║██║     ██║████╗  ██║██║   ██║╚██╗██╔╝
+    ███████║██████╔╝██║     ███████║██║     ██║██╔██╗ ██║██║   ██║ ╚███╔╝ 
+    ██╔══██║██╔══██╗██║     ██╔══██║██║     ██║██║╚██╗██║██║   ██║ ██╔██╗ 
+    ██║  ██║██║  ██║╚██████╗██║  ██║███████╗██║██║ ╚████║╚██████╔╝██╔╝ ██╗
+    ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝  ╚═╝
+    
+                  Base installation for lazy dudes made easy!
     
     # French (ne jamais lancer un script sans le lire auparavant)
     ${g}Ce script va installer une Archlinux en UEFI sur le disque de votre choix
