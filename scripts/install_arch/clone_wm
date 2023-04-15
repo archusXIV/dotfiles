@@ -20,13 +20,13 @@ y=$'\e[93m';
 
 _WmConfig() {
     
-    # On first run, if zsh is the $USER's shell, it will ask us
+    # On first run, if zsh is the $USER's shell, it will ask us 
     # for configuration but we already have one.
     # We enter 0 to shut it's mouth and remove the new .zshrc it created.
     [[ -f ~/.zshrc ]] && rm ~/.zshrc
     [[ -d ~/.config ]] && rm -rf ~/.config
     [[ -d ~/.local ]] && rm -rf ~/.local
-    
+
     git clone https://github.com/archusXIV/wm_config.git
     cd wm_config/ || exit 1
     
@@ -84,15 +84,15 @@ _Description() {
     clear
     setfont sun12x22
     cat << EOF
-                #                                                       
-               # #      #####   ####  #    # #      # #    # #    # #    # 
-              #   #     #    # #    # #    # #      # ##   # #    #  #  #  
-             #     #    #    # #      ###### #      # # #  # #    #   ##   
-            #########   #####  #      #    # #      # #  # # #    #   ##   
-           #         #  #   #  #    # #    # #      # #   ## #    #  #  #  
-          #           # #    #  ####  #    # ###### # #    #  ####  #    #
     
-                 i3/bspwm configurations for lazy dudes made easy!
+    ██╗    ██╗███╗   ███╗     ██████╗ ██████╗ ███╗   ██╗███████╗██╗ ██████╗ 
+    ██║    ██║████╗ ████║    ██╔════╝██╔═══██╗████╗  ██║██╔════╝██║██╔════╝ 
+    ██║ █╗ ██║██╔████╔██║    ██║     ██║   ██║██╔██╗ ██║█████╗  ██║██║  ███╗
+    ██║███╗██║██║╚██╔╝██║    ██║     ██║   ██║██║╚██╗██║██╔══╝  ██║██║   ██║
+    ╚███╔███╔╝██║ ╚═╝ ██║    ╚██████╗╚██████╔╝██║ ╚████║██║     ██║╚██████╔╝
+    ╚══╝╚══╝ ╚═╝     ╚═╝     ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝     ╚═╝ ╚═════╝ 
+                                                                        
+                i3/bspwm configurations for lazy dudes made easy!
     
     # French (ne jamais exécuter un script sans le lire auparavant)
     ${r}ATTENTION: lancez ce script uniquement sur un système fraichement installé!
