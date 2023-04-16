@@ -114,7 +114,7 @@ _xorg() {
 _DownloadCloneWm() {
     
     curl -sL \
-    "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/install_arch/clone_wm" -O \
+    "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/install_arch/install_wm" -O \
     && curl -sL "https://raw.githubusercontent.com/archusXIV/wm_config/main/README.md" -O \
     && chown ${usrname}:${usrname} clone_wm README.md \
     && mv {clone_wm,README.md} /home/${usrname} && chmod +x /home/${usrname}/clone_wm
