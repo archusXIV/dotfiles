@@ -131,7 +131,7 @@ _i3wm() {
     geany geany-plugins gnome-keyring htop i3{-wm,blocks,lock,status} \
     lxappearance network-manager-applet numlockx polkit-gnome powerline \
     powerline-{common,fonts,vim} polybar python-powerline ranger rofi \
-    rxvt-unicode scrot sxhkd vim-plugins w3m xdo zathura zathura-pdf-poppler \
+    rxvt-unicode scrot sxhkd vim-plugins w3m xdg-utils xdo zathura zathura-pdf-poppler \
     zsh zsh-{autosuggestions,completions,syntax-highlighting} \
     && _fonts && _audio && _systemd && _DownloadCloneWm
     
@@ -147,7 +147,7 @@ _bspwm() {
     fzf geany geany-plugins gnome-keyring htop i3lock lxappearance \
     network-manager-applet numlockx polkit-gnome powerline \
     powerline-{common,fonts,vim} polybar python-powerline ranger rofi \
-    rxvt-unicode scrot sxhkd vim-plugins w3m xdo zathura zathura-pdf-poppler \
+    rxvt-unicode scrot sxhkd vim-plugins w3m xdg-utils xdo zathura zathura-pdf-poppler \
     zsh zsh-{autosuggestions,completions,syntax-highlighting} \
     && _fonts && _audio && _systemd && _DownloadCloneWm
     
