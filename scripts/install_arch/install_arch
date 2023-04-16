@@ -262,7 +262,7 @@ _Install() {
             
             clear
             printf '\n'
-            read -rn 1 -p \
+            read -r -p \
             "${g}"' Pick a kernel: [1] linux, [2] linux-lts, [3] linux-hardened, [4] linux-zen. '"${nc}" kernel
             case "$kernel" in
                 1)
