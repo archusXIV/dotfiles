@@ -262,7 +262,7 @@ _Install() {
             
             clear
             printf '\n'
-            read -r -p "${g}"' Please choose a kernel: [1] linux, [2] linux-lts, [3] linux-hardened, [4] linux-zen. ' kernel
+            read -r -p "${g}"' Please choose a kernel: [1] linux, [2] linux-lts, [3] linux-hardened, [4] linux-zen. '"${nc}" kernel
             case "$kernel" in
                 1) KERNEL="linux" ;;
                 2) KERNEL="linux-lts" ;;
@@ -276,9 +276,9 @@ _Install() {
             
             # pacstrap will not use the iso's archlinux-keyring.
             pacstrap -K /mnt \
-            base base-devel bash-completion dmidecode dosfstools efibootmgr \
-            exfat-utils fatresize git gptfdisk grub ${KERNEL} ${KERNEL}-headers \
-            firmware lsb-release man-{db,pages} mc mlocate mtools nano networkmanager \
+            base base-devel bash-completion dmidecode dosfstools efibootmgr exfat-utils \
+            fatresize git gptfdisk grub ${KERNEL} ${KERNEL}-headers linux-firmware lsb-release \
+            man-{db,pages} mc mlocate mtools nano networkmanager \
             os-prober pacman-contrib p7zip reflector syslog-ng usbutils unzip vim wget \
             xf86-input-{elographics,evdev,libinput,synaptics,vmmouse,void,wacom} \
             xf86-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,openchrome,qxl,sisusb,vesa} \
@@ -348,7 +348,7 @@ _Install() {
                 echo '127.0.0.1    localhost' >> /etc/hosts
                 echo '::1          localhost' >> /etc/hosts
                 echo '127.0.1.1    $machine.localdomain    $machine' >> /etc/hosts
-                mkinitcpio -p linux
+                mkinitcpio -p ${KERNEL}
                 clear
                 echo ' ${g}Change the $USER password: ${nc}'
                 passwd $USER
