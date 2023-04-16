@@ -261,17 +261,29 @@ _Install() {
             --protocol https --sort rate --save /etc/pacman.d/mirrorlist
             
             clear
+            printf '\n'
+            read -rn 1 -p \
+            "${g}"' Please choose a kernel: [1] linux, [2] linux-lts, [3] linux-hardened, [4] linux-zen. ' kernel
+            case "$kernel" in
+                1) KERNEL="linux" ;;
+                2) KERNEL="linux-lts" ;;
+                3) KERNEL="linux-hardened" ;;
+                4) KERNEL="linux-zen" ;;
+            esac
+            
+            clear
             printf '%s\n' " ${y}Installing Arch-Linux base system...${nc}"
             sleep 1s
             
             # pacstrap will not use the iso's archlinux-keyring.
-            pacstrap -K /mnt base base-devel linux linux-headers linux-firmware dmidecode \
-            pacman-contrib grub efibootmgr os-prober gptfdisk fatresize networkmanager \
-            reflector zip unzip p7zip nano wget vim mc git syslog-ng mtools usbutils \
-            dosfstools lsb-release exfat-utils bash-completion man-db man-pages \
-            gvfs gvfs-{afc,goa,google,gphoto2,mtp,nfs,smb} mlocate zsh \
+            pacstrap -K /mnt \
+            base base-devel bash-completion dmidecode dosfstools efibootmgr
+            exfat-utils fatresize git gptfdisk grub "$KERNEL" "$KERNEL"-headers \
+            firmware lsb-release man-{db,pages} mc mlocate mtools nano networkmanager \
+            os-prober pacman-contrib p7zip reflector syslog-ng usbutils unzip vim wget \
             xf86-input-{elographics,evdev,libinput,synaptics,vmmouse,void,wacom} \
-            xf86-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,openchrome,qxl,sisusb,vesa}
+            xf86-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,openchrome,qxl,sisusb,vesa} \
+            zip zsh
             
             cat /etc/pacman.d/mirrorlist > /mnt/etc/pacman.d/mirrorlist
             cat /etc/pacman.conf > /mnt/etc/pacman.conf
