@@ -276,8 +276,8 @@ _Install() {
             
             # pacstrap will not use the iso's archlinux-keyring.
             pacstrap -K /mnt \
-            base base-devel bash-completion dmidecode dosfstools efibootmgr
-            exfat-utils fatresize git gptfdisk grub "$KERNEL" "$KERNEL"-headers \
+            base base-devel bash-completion dmidecode dosfstools efibootmgr \
+            exfat-utils fatresize git gptfdisk grub ${KERNEL} ${KERNEL}-headers \
             firmware lsb-release man-{db,pages} mc mlocate mtools nano networkmanager \
             os-prober pacman-contrib p7zip reflector syslog-ng usbutils unzip vim wget \
             xf86-input-{elographics,evdev,libinput,synaptics,vmmouse,void,wacom} \
