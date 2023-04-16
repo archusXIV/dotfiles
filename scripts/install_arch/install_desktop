@@ -127,11 +127,12 @@ _i3wm() {
     && clear && printf '%s\n' " ${y}Installing I3WM.${nc}"
     sleep 1s
     pacman -S --needed --noconfirm \
-    alacritty bash-preexec conky dmenu dunst feh ffmpegthumbnailer fzf \
-    geany geany-plugins gnome-keyring htop i3{-wm,blocks,lock,status} \
-    lxappearance network-manager-applet numlockx polkit-gnome powerline \
-    powerline-{common,fonts,vim} polybar python-powerline ranger rofi \
-    rxvt-unicode scrot sxhkd vim-plugins w3m xdg-utils xdo zathura zathura-pdf-poppler \
+    alacritty bash-preexec conky dmenu dunst feh ffmpegthumbnailer fzf geany \
+    geany-plugins gnome-keyring gvfs gvfs-{afc,goa,google,gphoto2,mtp,nfs,smb} \
+    htop i3{-wm,blocks,lock,status} lxappearance network-manager-applet \
+    numlockx polkit-gnome powerline powerline-{common,fonts,vim} polybar \
+    python-powerline ranger rofi rxvt-unicode scrot sxhkd vim-plugins w3m \
+    xdg-utils xdo zathura zathura-pdf-poppler \
     zsh zsh-{autosuggestions,completions,syntax-highlighting} \
     && _fonts && _audio && _systemd && _DownloadCloneWm
     
@@ -143,9 +144,9 @@ _bspwm() {
     && clear && printf '%s\n' " ${y}Installing BSPWM.${nc}"
     sleep 1s
     pacman -S --needed --noconfirm \
-    alacritty bash-preexec bspwm conky dmenu dunst feh ffmpegthumbnailer \
-    fzf geany geany-plugins gnome-keyring htop i3lock lxappearance \
-    network-manager-applet numlockx polkit-gnome powerline \
+    alacritty bash-preexec bspwm conky dmenu dunst feh ffmpegthumbnailer fzf geany \
+    geany-plugins gnome-keyring gvfs gvfs-{afc,goa,google,gphoto2,mtp,nfs,smb} \
+    htop i3lock lxappearance network-manager-applet numlockx polkit-gnome powerline \
     powerline-{common,fonts,vim} polybar python-powerline ranger rofi \
     rxvt-unicode scrot sxhkd vim-plugins w3m xdg-utils xdo zathura zathura-pdf-poppler \
     zsh zsh-{autosuggestions,completions,syntax-highlighting} \
@@ -161,6 +162,7 @@ _cinnamon() {
     pacman -S --needed --noconfirm cinnamon cinnamon-translations \
     nemo-fileroller nemo-image-converter nemo-preview xed xreader \
     gnome-terminal metacity gnome-shell network-manager-applet htop \
+    gvfs gvfs-{afc,goa,google,gphoto2,mtp,nfs,smb} \
     && _fonts && _audio && _systemd
     
 }
@@ -173,7 +175,8 @@ _kde() {
     pacman -S --needed --noconfirm plasma-meta kdialog packagekit-qt5 \
     kcalc icoutils libappimage konsole dolphin kdegraphics-thumbnailers \
     svgpart ffmpegthumbs kdenetwork-filesharing gwenview kimageformats \
-    ark kate okular kcron kdf filelight print-manager kdeconnect sshfs htop \
+    gvfs gvfs-{afc,goa,google,gphoto2,mtp,nfs,smb} ark kate okular kcron \
+    kdf filelight print-manager kdeconnect sshfs htop \
     && _fonts && _audio && _systemd
     
 }
@@ -184,7 +187,7 @@ _mate() {
     && clear && printf '%s\n' " ${y}Installing MATE desktop.${nc}"
     sleep 1s
     pacman -S --needed --noconfirm mate mate-extra \
-    network-manager-applet htop \
+    network-manager-applet htop gvfs gvfs-{afc,goa,google,gphoto2,mtp,nfs,smb} \
     && _fonts && _audio && _systemd
     
 }
@@ -195,7 +198,7 @@ _xfce() {
     && clear && printf '%s\n' " ${y}Installing XFCE4 desktop.${nc}"
     sleep 1s
     pacman -S --needed --noconfirm xfce4 xfce4-goodies \
-    network-manager-applet htop \
+    network-manager-applet htop gvfs gvfs-{afc,goa,google,gphoto2,mtp,nfs,smb} \
     && _fonts && _audio && _systemd
     
 }
