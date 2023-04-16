@@ -5,6 +5,7 @@
 # Idea inspired by Yannick Vollenberg <https://nordri.vollenberg.ca>
 # As the script name says, this will install an Achlinux base system
 # on a simple disk layout following the arch way to Keep It Simple Stupid.
+# For the moment only ext4 file system is supported.
 # Use it at your own risks....lol
 # Download the script when logged in the arch live iso:
 # curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/install_arch/install_arch" -O
@@ -220,7 +221,7 @@ _DefaultInputs() {
 
 _Install() {
     clear
-    local LOCATION TIMEZONE A B C
+    local LOCATION TIMEZONE A B C KERNEL
     
     LOCATION=$(curl --fail -s https://ipapi.co/country)
     TIMEZONE=$(curl --fail -s https://ipapi.co/timezone)
@@ -321,12 +322,14 @@ _Install() {
             read -r -p "${g}"' Choose your language: [F]rench (France), [E]nglish (US): '"${nc}" language
             case "$language" in
                 f|F)
-                    lang="LANG=fr_FR.UTF-8"
+                    #lang="LANG=fr_FR.UTF-8"
+                    locales="fr_FR.UTF-8"
                     printf '%s\n' " ${y}language set to French.${nc}"
                     sleep 1s
                 ;;
                 e|E)
-                    lang="LANG=en_US.UTF-8"
+                    #lang="LANG=en_US.UTF-8"
+                    locales="en_US.UTF-8"
                     printf '%s\n' " ${y}language set to American English.${nc}"
                     sleep 1s
                 ;;
@@ -357,9 +360,7 @@ _Install() {
                 echo $machine > /etc/hostname
                 echo $key > /etc/vconsole.conf
                 echo $font >> /etc/vconsole.conf
-                echo ' ${g}Choose your locales using vim${nc}' && sleep 2s
-                vim /etc/locale.gen && locale-gen
-                echo $lang > /etc/locale.conf
+                localectl set-locale $locales && locale-gen
                 echo LC_COLLATE=C >> /etc/locale.conf
                 echo '127.0.0.1    localhost' >> /etc/hosts
                 echo '::1          localhost' >> /etc/hosts
@@ -425,12 +426,12 @@ _Description() {
     # French (ne jamais lancer un script sans le lire auparavant)
     ${g}Ce script va installer une Archlinux en UEFI sur le disque de votre choix
     si il y en a plusieurs, le partitionnement reste manuel et cfdisk sera utilisé
-    pour mettre en place la table de partitions.${nc}
+    pour mettre en place la table de partitions. Seul ext4 est supporté.${nc}
     
     # English (never run a script without reading it first)
     ${g}This script will install Archlinux in UEFI mode on the drive of your choice
     if there are several, the partitioning is not automated and cfdisk will be used
-    to set up the partition table.${nc}
+    to set up the partition table. Only ext4 file system is supported.${nc}
     
     Partitions layouts examples:
     
