@@ -262,8 +262,7 @@ _Install() {
             
             clear
             printf '\n'
-            read -rn 1 -p \
-            "${g}"' Please choose a kernel: [1] linux, [2] linux-lts, [3] linux-hardened, [4] linux-zen. ' kernel
+            read -rn 1 -p "${g}"' Please choose a kernel: [1] linux, [2] linux-lts, [3] linux-hardened, [4] linux-zen. ' kernel
             case "$kernel" in
                 1) KERNEL="linux" ;;
                 2) KERNEL="linux-lts" ;;
