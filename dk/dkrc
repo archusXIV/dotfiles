@@ -3,20 +3,13 @@
 # DK WINDOW MANAGER CONFIGURATION FILE
 
 # sxhkd shortcut: "$HOME"/.config/dk/dkrc -r
-case "$1" in
-    -r) source "$XDG_CONFIG_HOME"/dk/_WindowsRules
-        _WindowsRules
-        _colours
-        date > "$XDG_CONFIG_HOME/dk/dkrc.log"
-        dkcmd status type=full num=1 \
-        | sed -n '/^rule:/,/^$/p' >> "$XDG_CONFIG_HOME/dk/dkrc.log"
-        notify-send 'windows rules reloaded'
-        exit 0
-    ;;
-esac
+
+for id in $(wmctrl -lx | awk '{print $1}'); do
+    dkcmd win "$id" kill
+done >/dev/null
 
 # let's include windows rules function
-source "$XDG_CONFIG_HOME"/dk/_WindowsRules
+source ~/.config/dk/_WindowsRules
 
 # workspaces/monitors settings using xrandr.
 if [[ -n $(pidof nvidia-persistenced) ]]; then
@@ -29,12 +22,12 @@ else
     MONITOR3="DP-1"
 fi
 
-# initialize 10 workspaces (1-10) (default: 1/monitor)
-dkcmd set numws=10
+# initialize 9 workspaces (1-9) (default: 1/monitor)
+dkcmd set numws=9
 
 # default workspace '_' values used when allocating new workspaces
 # can be applied to all existing workspaces when passed 'apply' after ws=_
-dkcmd set ws=_ apply layout=tile master=1 stack=3 gap=2 msplit=0.52 ssplit=0.5
+dkcmd set ws=_ apply layout=tile master=1 stack=5 gap=2 msplit=0.52 ssplit=0.5
 dkcmd set ws=1 layout=grid
 dkcmd set ws=7 layout=none
 
@@ -58,13 +51,13 @@ dkcmd set static_ws=true \
     ws=4 name=4:$(_wslayout | awk '{print $4}') mon="$MONITOR2" \
     ws=5 name=5:$(_wslayout | awk '{print $5}') mon="$MONITOR2" \
     ws=6 name=6:$(_wslayout | awk '{print $6}') mon="$MONITOR2" \
-    ws=7 name=7:$(_wslayout | awk '{print $7}') mon="$MONITOR2" \
+    ws=7 name=7:$(_wslayout | awk '{print $7}') mon="$MONITOR3" \
     ws=8 name=8:$(_wslayout | awk '{print $8}') mon="$MONITOR3" \
-    ws=9 name=9:$(_wslayout | awk '{print $9}') mon="$MONITOR3" \
-    ws=10 name=10:$(_wslayout | awk '{print $10}') mon="$MONITOR3"
+    ws=9 name=9:$(_wslayout | awk '{print $9}') mon="$MONITOR3"
 
 if ! hash polybar wmctrl >/dev/null 2>&1; then
-    notify-send -t 0 -u critical 'polybar, wmctrl should be installed...'
+    notify-send -t 0 -u critical \
+    'polybar, wmctrl should be installed...'
 fi
 
 # checking external scripts
@@ -85,9 +78,9 @@ dkcmd set mouse mod=super move=button1 resize=button3
 
 function _colours {
     # let's use Xresources theme colors
-    local bkg blu red
+    local blk blu red
 
-    bkg=$(xrdb -query | awk '/background:/{print $NF}')
+    blk=$(xrdb -query | awk '/color8:/{print $NF}')
     blu=$(xrdb -query | awk '/color4:/{print $NF}')
     red=$(xrdb -query | awk '/color1:/{print $NF}')
 
@@ -95,10 +88,10 @@ function _colours {
     colour \
     focus="$blu" \
     urgent="$red" \
-    unfocus="$bkg" \
+    unfocus="$blk" \
     outer_focus="$blu" \
     outer_urgent="$red" \
-    outer_unfocus="$bkg"
+    outer_unfocus="$blk"
 }
 
 [[ -f $HOME/.Xresources ]] && _colours
@@ -114,3 +107,15 @@ action "#static_ws-ipc.hook.1" >/dev/null 2>&1
 
 date > "$XDG_CONFIG_HOME/dk/dkrc.log"
 dkcmd status type=full num=1 >> "$XDG_CONFIG_HOME/dk/dkrc.log"
+
+case "$1" in
+    -r)
+        source ~/.config/dk/_WindowsRules
+        _colours
+        date > "$XDG_CONFIG_HOME/dk/dkrc.log"
+        dkcmd status type=full num=1 \
+        | sed -n '/^rule:/,/^$/p' >> "$XDG_CONFIG_HOME/dk/dkrc.log"
+        notify-send 'windows rules reloaded'
+        exit 0
+    ;;
+esac
