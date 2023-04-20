@@ -80,37 +80,42 @@ _WmConfig() {
 }
 
 _Description() {
-    
     clear
     setfont sun12x22
     cat << EOF
-    
+
     ██╗    ██╗███╗   ███╗     ██████╗ ██████╗ ███╗   ██╗███████╗██╗ ██████╗ 
     ██║    ██║████╗ ████║    ██╔════╝██╔═══██╗████╗  ██║██╔════╝██║██╔════╝ 
     ██║ █╗ ██║██╔████╔██║    ██║     ██║   ██║██╔██╗ ██║█████╗  ██║██║  ███╗
     ██║███╗██║██║╚██╔╝██║    ██║     ██║   ██║██║╚██╗██║██╔══╝  ██║██║   ██║
     ╚███╔███╔╝██║ ╚═╝ ██║    ╚██████╗╚██████╔╝██║ ╚████║██║     ██║╚██████╔╝
     ╚══╝╚══╝ ╚═╝     ╚═╝     ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝     ╚═╝ ╚═════╝
-    
+
                 i3/bspwm configurations for lazy dudes made easy!
-    
+
     # French (ne jamais exécuter un script sans le lire auparavant)
     ${r}ATTENTION: lancez ce script uniquement sur un système fraichement installé!
-    ${y}Ce script va installer la configuration de bspwm ou i3wm selon votre précédent
-    choix dans la phase 'install_desktop'.
-    Au redémarrage lancez startx et veuillez lire le fichier README.md ouvert dans geany.${nc}
-    
+    ${y}Ce script va installer la configuration de bspwm et i3wm, ce qui signifie
+    que vous pourrez aussi installer, selon vôtre choix dans la phase 'install_desktop',
+    un deuxième gestionnaire de fenêtres.
+    Au redémarrage lancez startx si vous avez choisi bash comme shell par défaut,
+    la connection se fera automatiquement avec zsh.
+    Veuillez lire le fichier README.md ouvert dans geany.${nc}
+
     # English (never run a script without reading it first)
     ${r}BE CAREFULL: run this script only on a fresh installed system!
-    ${y}This script will install the bspwm or i3wm configuration depending
-    on your previous choice in the 'install_desktop' phase.
-    On restart launch startx and please read the README.md file opened in geany.${nc}
-    
+    ${y}This script will install the bspwm and i3wm configuration, which means
+    that you can also install, according to your choice in the 'install_desktop' phase,
+    a second window manager.
+    On restart launch startx if you have chosen bash as the default shell,
+    the connection will be made automatically with zsh.
+    Please read the README.md file opened in geany..${nc}
+
 EOF
     printf '\n'
     read -r -p "${g}"'    Press enter to launch the installation, ^C to quit: '"${nc}" config
     case "$config" in *) _WmConfig ;; esac
-    
+
 }
 
 _Description
