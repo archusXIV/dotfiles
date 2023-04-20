@@ -250,8 +250,8 @@ _Description() {
     
     Preconfigurés: ${y}i3wm, Bspwm${nc} (lancement de session avec startx)
     ${g}i3wm et Bspwm sont lancés avec la commande 'startx' et non lightdm.
-    Pour le premier lancement, entrez vos identifiants, puis lancez le script clone_wm:
-    ./clone_wm, au redémarrage lancez startx et veuillez lire le fichier README.md ouvert dans geany.${nc}
+    Pour le premier lancement, entrez vos identifiants, puis lancez le script install_wm:
+    ./install_wm, au redémarrage lancez startx et veuillez lire le fichier README.md ouvert dans geany.${nc}
     
     Brut de chez brut: ${y}Cinnamon, KDE Plasma, Mate & Xfce${nc}
     
@@ -260,10 +260,10 @@ _Description() {
     
     Preconfigured: ${y}i3wm, Bspwm${nc} (startx launch the session)
     ${g}i3wm and Bspwm are launched with the 'startx' command and not lightdm. For the first launch,
-    enter your credentials, then run the clone_wm script: ./clone_wm, on restart run startx
+    enter your credentials, then run the install_wm script: ./install_wm, on restart run startx
     and please read the README.md file opened in geany.${nc}
     
-    Bareboned:     ${y}Cinnamon, KDE Plasma, Mate & Xfce${nc}
+    Bareboned: ${y}Cinnamon, KDE Plasma, Mate & Xfce${nc}
     
 EOF
     printf '%s\n'
