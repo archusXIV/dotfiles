@@ -1,0 +1,25 @@
+This module shows the defined content string.
+
+### Basic settings
+```ini
+[module/my-text-label]
+type = custom/text
+content = Some random label
+```
+
+### Additional formatting
+```ini
+; "content" has the same properties as "format-NAME"
+content-background = #000
+content-foreground = #fff
+content-padding = 4
+
+; "click-(left|middle|right)" will be executed using "/bin/sh -c $COMMAND"
+click-left = notify-send left
+click-middle = notify-send middle
+click-right = notify-send right
+
+; "scroll-(up|down)" will be executed using "/bin/sh -c $COMMAND"
+scroll-up = notify-send scroll up
+scroll-down = notify-send scroll down
+```
