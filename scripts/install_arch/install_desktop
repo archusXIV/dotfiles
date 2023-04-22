@@ -104,7 +104,8 @@ _xorg() {
     clear
     printf '%s\n' " ${y}Installing XORG${nc}"
     sleep 1s
-    pacman -Sy --needed --noconfirm wmctrl xcb-util-wm xdg-user-dirs xorg \
+    pacman -Sy --needed --noconfirm \
+    wmctrl xcb-proto xcb-util xcb-util-{cursor,keysyms,wm} xdg-user-dirs xorg \
     xorg-{apps,server,xfontsel,xinit,xinput,xkill,xlsfonts,xrandr,xwininfo} \
     xterm  
     
