@@ -140,7 +140,7 @@ _i3wm() {
     htop i3{-wm,blocks,lock,status} lxappearance network-manager-applet \
     numlockx polkit-gnome powerline powerline-{common,fonts,vim} polybar \
     python-powerline ranger rofi rxvt-unicode scrot sxhkd vim-plugins w3m \
-    xdg-utils xdo zathura zathura-pdf-poppler \
+    xdg-utils xdo xdotool zathura zathura-pdf-poppler \
     zsh zsh-{autosuggestions,completions,syntax-highlighting} \
     && _firefox && _fonts && _audio && _systemd && _DownloadInstallWm
     
@@ -155,8 +155,8 @@ _bspwm() {
     alacritty bash-preexec bspwm conky dmenu dunst feh ffmpegthumbnailer fzf geany \
     geany-plugins gnome-keyring gvfs gvfs-{afc,goa,google,gphoto2,mtp,nfs,smb} \
     htop i3lock lxappearance network-manager-applet numlockx polkit-gnome powerline \
-    powerline-{common,fonts,vim} polybar python-powerline ranger rofi \
-    rxvt-unicode scrot sxhkd vim-plugins w3m xdg-utils xdo zathura zathura-pdf-poppler \
+    powerline-{common,fonts,vim} polybar python-powerline ranger rofi rxvt-unicode \
+    scrot sxhkd vim-plugins w3m xdg-utils xdo xdotool zathura zathura-pdf-poppler \
     zsh zsh-{autosuggestions,completions,syntax-highlighting} \
     && _firefox && _fonts && _audio && _systemd && _DownloadInstallWm
     
