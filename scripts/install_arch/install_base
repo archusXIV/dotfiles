@@ -221,7 +221,7 @@ _DefaultInputs() {
 
 _Install() {
     clear
-    local LOCATION TIMEZONE A B C KERNEL
+    local LOCATION TIMEZONE A B C KERNEL UCODE
     
     LOCATION=$(curl --fail -s https://ipapi.co/country)
     TIMEZONE=$(curl --fail -s https://ipapi.co/timezone)
