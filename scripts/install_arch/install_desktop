@@ -121,6 +121,14 @@ _DownloadInstallWm() {
     
 }
 
+_firefox() {
+    if [[ $(sed -n '1p' /etc/locale.conf) = LANG="fr_FR.UTF-8" ]]; then
+        pacman -S --needed --noconfirm firefox firefox-i18n-fr ublock-origin
+    else
+        pacman -S --needed --noconfirm firefox ublock-origin
+    fi
+}
+
 _i3wm() {
     
     _xorg \
@@ -134,7 +142,7 @@ _i3wm() {
     python-powerline ranger rofi rxvt-unicode scrot sxhkd vim-plugins w3m \
     xdg-utils xdo zathura zathura-pdf-poppler \
     zsh zsh-{autosuggestions,completions,syntax-highlighting} \
-    && _fonts && _audio && _systemd && _DownloadInstallWm
+    && _firefox && _fonts && _audio && _systemd && _DownloadInstallWm
     
 }
 
@@ -150,16 +158,8 @@ _bspwm() {
     powerline-{common,fonts,vim} polybar python-powerline ranger rofi \
     rxvt-unicode scrot sxhkd vim-plugins w3m xdg-utils xdo zathura zathura-pdf-poppler \
     zsh zsh-{autosuggestions,completions,syntax-highlighting} \
-    && _fonts && _audio && _systemd && _DownloadInstallWm
+    && _firefox && _fonts && _audio && _systemd && _DownloadInstallWm
     
-}
-
-_firefox() {
-    if [[ $(sed -n '1p' /etc/locale.conf) = LANG="fr_FR.UTF-8" ]]; then
-        pacman -S --needed --noconfirm firefox firefox-i18n-fr
-    else
-        pacman -S --needed --noconfirm firefox
-    fi
 }
 
 _cinnamon() {
