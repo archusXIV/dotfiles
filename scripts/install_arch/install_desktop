@@ -85,7 +85,7 @@ _audio() {
     pacman -S --needed --noconfirm alsa-utils alsa-firmware \
     cmus gst-libav gst-plugins-{bad,base,good,ugly} \
     mediainfo mpc mpd ncmpcpp pavucontrol pulseaudio \
-    pulseaudio-alsa pulsemixer x264 x265 wavpack
+    pulseaudio-alsa pulsemixer x264 x265 vorbis-tools wavpack
 
 }
 
