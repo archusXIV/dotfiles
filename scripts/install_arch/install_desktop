@@ -111,7 +111,7 @@ _xorg() {
     
 }
 
-_DownloadCloneWm() {
+_DownloadInstallWm() {
     
     curl -sL \
     "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/install_arch/install_wm" -O \
@@ -134,7 +134,7 @@ _i3wm() {
     python-powerline ranger rofi rxvt-unicode scrot sxhkd vim-plugins w3m \
     xdg-utils xdo zathura zathura-pdf-poppler \
     zsh zsh-{autosuggestions,completions,syntax-highlighting} \
-    && _fonts && _audio && _systemd && _DownloadCloneWm
+    && _fonts && _audio && _systemd && _DownloadInstallWm
     
 }
 
@@ -150,7 +150,7 @@ _bspwm() {
     powerline-{common,fonts,vim} polybar python-powerline ranger rofi \
     rxvt-unicode scrot sxhkd vim-plugins w3m xdg-utils xdo zathura zathura-pdf-poppler \
     zsh zsh-{autosuggestions,completions,syntax-highlighting} \
-    && _fonts && _audio && _systemd && _DownloadCloneWm
+    && _fonts && _audio && _systemd && _DownloadInstallWm
     
 }
 
