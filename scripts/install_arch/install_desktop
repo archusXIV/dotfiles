@@ -123,9 +123,9 @@ _DownloadInstallWm() {
 
 _firefox() {
     if [[ $(sed -n '1p' /etc/locale.conf) = LANG="fr_FR.UTF-8" ]]; then
-        pacman -S --needed --noconfirm firefox firefox-i18n-fr ublock-origin
+        pacman -S --needed --noconfirm firefox firefox-i18n-fr firefox-ublock-origin
     else
-        pacman -S --needed --noconfirm firefox ublock-origin
+        pacman -S --needed --noconfirm firefox firefox-ublock-origin
     fi
 }
 
