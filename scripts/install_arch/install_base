@@ -143,6 +143,7 @@ _TestHome() {
             1)
                 printf '%s\n' " ${g}Please modify your partitions layout.${nc}"
                 sleep 2s
+                umount -R /mnt
                 cfdisk /dev/$HWDISK
                 __DefaultLayout
                 _FormatPrompt
