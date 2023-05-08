@@ -14,11 +14,12 @@ color_off=$'\e[0m';
 red=$'\e[0;31m';
 green=$'\e[0;32m';
 
-declare -a dependencies=( "fzf" "pacdiff" "reflector" "vim" "updates-viewer" "yay" )
+declare -a dependencies=( "fzf" "pacdiff" "reflector" "vim" "updates-manager" "yay" )
 
 for package in "${dependencies[@]}"; do
     [[ -z $(command -v "$package") ]] && {
         echo " ${red}Missing dependency...$package"
+        notify-send "pacman-cli missing dependency...$package"
         exit 127
     }
 done
@@ -28,7 +29,7 @@ _Menu() {
     while [[ -f /etc/pacman.conf ]]; do
         clear
         echo ""
-        echo -e "                                          ${green}Installed packages: $(pacman -Q | wc -l)${color_off}\n"
+        echo -e "                                ${green}Installed packages: $(pacman -Q | wc -l) ${red}System updates ($(grep "" -c $XDG_RUNTIME_DIR/combined.list))${color_off}\n"
         echo -e "                                            ::pacman options::\n"
         echo -e "                        ::To select multiple packages in listing views, press Tab:: "
         echo -e "                       ┌───────────────────────────────────────────────────────────┐"
@@ -115,7 +116,7 @@ _InstallAur() {
                 *)     echo "" ;;
             esac
         }
-        
+
         read -rp " Only [b]uild , build & [i]nstall $PACKAGE: " build
         case "$build" in
             b)
@@ -167,9 +168,9 @@ _InstallAur() {
 
 _Aur() {
     if (( $(pacman -Qm | wc -l) < 1 )); then
-        echo -e " ${red}No AUR package installed yet.${color_off}\n"
+        echo -e " ${green}No AUR package installed yet.${color_off}\n"
         sleep 2s
-        read -rn1 -p ' Do you want to install a package from the AUR [N/y]? : ' aurinstall
+        read -rn1 -p ${red}' Install a package from the AUR [N/y]? : '${color_off} aurinstall
         case "$aurinstall" in
             N|n)
                 _Menu
@@ -179,7 +180,7 @@ _Aur() {
             ;; 
         esac
     else
-        read -rn1 -p ' What do you want to do: [L]ist installed, [I]nstall or [U]ninstall an AUR package? : ' askaur
+        read -rn1 -p ${green}' What do you want to do: [L]ist installed, [I]nstall or [U]ninstall an AUR package? : '${color_off} askaur
         case "$askaur" in
             L|l)
                 _AurPackagesList
@@ -236,9 +237,9 @@ _Purge() {
         o|O)
             local pkgs="$XDG_CACHE_HOME/orphans_list.txt"
             echo ""
-            if [[ -n $(pacman -Qdqt) ]]; then
+            if [[ -n $(pacman -Qdt) ]]; then
                 touch "$pkgs"
-                pacman -Qdqt > "$pkgs" && cat "$pkgs"
+                pacman -Qdt >> "$pkgs" && cat "$pkgs"
                 echo ""
                 echo " ${red}Would you like to purge orphan packages? [N/y]:${color_off}"
                 read -r orphan
@@ -247,7 +248,7 @@ _Purge() {
                         _menu
                     ;;
                     y|Y|yes)
-                        sudo pacman -Rdd $(pacman -Qdqt)
+                        sudo pacman -Rdd $(pacman -Qdt)
                         echo " ${green}A list of removed packages has been created"
                         echo " in $pkgs${color_off}"
                         sleep 5s
