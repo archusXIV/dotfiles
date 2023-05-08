@@ -40,6 +40,7 @@ case "$1" in
             } || youtube-dl --no-warnings --progress "$url" && clear
         done
         
+        unset IFS
         # let's remove downloaded links from the original file
         # and sending the other ones in a second temporary file...
         for line in $(grep '^https' "$TMP1"); do
@@ -61,6 +62,7 @@ case "$1" in
             echo "$url" >> "$TMP1"
         done
         
+        unset IFS
         mpv "$TMP1"
         rm "$TMP1"
     ;;
