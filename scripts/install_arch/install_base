@@ -49,10 +49,10 @@ _Prompt() {
 
     if [[ -t 2 ]]; then
         >&2 echo "$screenprompt"
-    
+
         while :; do
             read -rsn 1
-    
+
             key="${REPLY:-$default}"
             [[ $key =~ [${opts}] ]] || continue
             break
@@ -66,10 +66,25 @@ _Prompt() {
     return "${status:-0}"
 }
 
+_FileSystemType() {
+    read -r -p "${g}"' Please select a file system type: [B]trfs, [E]xt4: '"${nc}" fs
+    case "$fs" in
+        b*|B*) FS="btrfs" ;;
+        e*|E*) FS="ext4" ;;
+    esac
+}
+
 _SeparatedHomeLayout() {
     mkfs.fat -F32 /dev/$HWDISK$A
-    mkfs.ext4 /dev/$HWDISK$B
-    mkfs.ext4 /dev/$HWDISK2$A
+    
+    if [[ $FS = btrfs ]]; then
+        mkfs.$FS -L ROOT /dev/$HWDISK$B
+        mkfs.$FS -L HOME /dev/$HWDISK2$A
+    else
+        mkfs.$FS /dev/$HWDISK$B
+        mkfs.$FS /dev/$HWDISK2$A
+    fi
+    
     mount /dev/$HWDISK$B /mnt
     mkdir -p /mnt/{boot/efi,home}
     mount /dev/$HWDISK$A /mnt/boot/efi
@@ -109,18 +124,25 @@ _SecondDiskChoice() {
 }
 
 _TestHome() {
-    
+
     __DefaultLayout() (
         mkfs.fat -F32 /dev/$HWDISK$A
-        mkfs.ext4 /dev/$HWDISK$B
-        mkfs.ext4 /dev/$HWDISK$C
+        
+        if [[ $FS = btrfs ]]; then
+            mkfs.$FS -L ROOT /dev/$HWDISK$B
+            mkfs.$FS -L HOME /dev/$HWDISK$C
+        else
+            mkfs.$FS /dev/$HWDISK$B
+            mkfs.$FS /dev/$HWDISK$C
+        fi
+        
         mount /dev/$HWDISK$B /mnt
         mkdir -p /mnt/{boot/efi,home}
         mount /dev/$HWDISK$A /mnt/boot/efi
         mount /dev/$HWDISK$C /mnt/home
         lsblk && sleep 2s
     )
-    
+
     if [[ $(lsblk -no NAME | grep $HWDISK$C) ]]; then
         _FormatPrompt
         sleep 1s
@@ -132,7 +154,13 @@ _TestHome() {
             _FormatPrompt
             sleep 1s
             mkfs.fat -F32 /dev/$HWDISK$A
-            mkfs.ext4 /dev/$HWDISK$B
+            
+            if [[ $FS = btrfs ]]; then
+                mkfs.$FS -L ROOT /dev/$HWDISK$B
+            else
+                mkfs.$FS /dev/$HWDISK$B
+            fi
+            
             mount /dev/$HWDISK$B /mnt
             mkdir -p /mnt/boot/efi
             mount /dev/$HWDISK$A /mnt/boot/efi
@@ -154,7 +182,7 @@ _TestHome() {
             ;;
         esac
     fi
-    
+
 }
 
 _FirstDiskChoice() {
@@ -223,45 +251,45 @@ _DefaultInputs() {
 _Install() {
     clear
     local LOCATION TIMEZONE A B C KERNEL UCODE
-    
+
     LOCATION=$(curl --fail -s https://ipapi.co/country)
     TIMEZONE=$(curl --fail -s https://ipapi.co/timezone)
     A="1" B="2" C="3"
-    
+
     if [[ $(id -u) == 0 ]]; then
         # Setting faster packages downloads.
         sed -i 's/#ParallelDownloads/ParallelDownloads/' /etc/pacman.conf
-        
+
         printf '%s\n' " ${y}Looking for UEFI system...${nc}"
         sleep 1s
         if [[ -n $(ls /sys/firmware/efi/efivars) ]]; then
             printf '%s\n' " ${y}Success, UEFI system detected.${nc}"
             sleep 2s
             clear
-            
+
             printf '%s\n' " ${y}Syncronizing system clock...${nc}"
             timedatectl set-ntp true && timedatectl
             printf '%s\n' " ${y}Success, system clock updated.${nc}"
             sleep 2s
             clear
-            
+
             _FirstDiskChoice
             cfdisk /dev/$HWDISK
-            
+            _FileSystemType
             _TestHome
             [[ -n $HWDISK2 ]] && {
                 cfdisk /dev/$HWDISK2
                 _FormatPrompt
                 _SeparatedHomeLayout
             }
-            
+
             clear
             printf '%s\n' " ${y}Getting fresh mirrors list for $LOCATION...${nc}"
             sleep 1s
-            
+
             reflector --verbose --country "$LOCATION" --latest 10 --age 24 \
             --protocol https --sort rate --save /etc/pacman.d/mirrorlist
-            
+
             clear
             printf '\n'
             read -r -p \
@@ -288,17 +316,17 @@ _Install() {
                     sleep 2s
                 ;;
             esac
-            
+
             if [[ $(lscpu | grep AMD) ]]; then
                 UCODE="amd-ucode"
             else
                 UCODE="intel-ucode"
             fi
-            
+
             clear
             printf '%s\n' " ${y}Installing Arch-Linux base system...${nc}"
             sleep 1s
-            
+
             # pacstrap will not use the iso's archlinux-keyring.
             pacstrap -K /mnt base base-devel bash-completion dmidecode dosfstools \
             efibootmgr exfat-utils fatresize git gptfdisk grub ${KERNEL} ${KERNEL}-headers \
@@ -307,24 +335,24 @@ _Install() {
             xf86-input-{elographics,evdev,libinput,synaptics,vmmouse,void,wacom} \
             xf86-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,openchrome,qxl,sisusb,vesa} \
             zip zsh
-            
+
             cat /etc/pacman.d/mirrorlist > /mnt/etc/pacman.d/mirrorlist
             cat /etc/pacman.conf > /mnt/etc/pacman.conf
-            
+
             clear
             printf '%s\n'
             printf '%s\n' " ${y}Generating fstab...${nc}"
             genfstab -U -p /mnt >> /mnt/etc/fstab
             sleep 2s
-            
+
             printf '%s\n' " ${y}Entering installed system for configuration.${nc}"
             sleep 2s
-            
+
             # if some user inputs are empty they will be set to defaults
             read -r -p "${g}"' Please fill the machine name: '"${nc}" machine
             _DefaultInputs -m || printf '%s\n' " ${y}hostename set to $machine.${nc}"
             sleep 1s
-            
+
             printf '%s\n'
             read -r -p "${g}"' Choose your language: [F]rench (France), [E]nglish (US): '"${nc}" language
             case "$language" in
@@ -340,7 +368,7 @@ _Install() {
                 ;;
             esac
             _DefaultInputs -l
-            
+
             printf '%s\n'
             read -r -p "${g}"' Choose your keyboard layout: [F]rench (fr), [E]nglish (us): '"${nc}" keymap
             case "$keymap" in
@@ -358,7 +386,7 @@ _Install() {
                 ;;
             esac
             _DefaultInputs -k
-            
+
             arch-chroot /mnt /bin/bash -c "
                 ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime
                 hwclock --systohc --utc
@@ -374,7 +402,7 @@ _Install() {
                 echo '127.0.1.1    $machine.localdomain    $machine' >> /etc/hosts
                 mkinitcpio -p ${KERNEL}
                 clear
-                echo ' ${g}Change the $USER password: ${nc}'
+                echo ' ${g}Change $USER password: ${nc}'
                 passwd $USER
                 echo ' ${g}Installing grub menu on /dev/$HWDISK, please be patient...${nc}'
                 grub-install --target=x86_64-efi --efi-directory=/boot/efi \
@@ -385,7 +413,7 @@ _Install() {
             curl -sL \
             "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/install_arch/install_desktop" \
             -O && chmod +x install_desktop && mv install_desktop /mnt/root/
-            
+
             clear
             printf '%s\n'
             _Prompt " ${g}Do you want to install a desktop now? ${nc}" || {
@@ -413,43 +441,45 @@ _Install() {
         printf '%s' " ${r}ONLY ROOT USER CAN RUN THIS SCRIPT, exiting...${nc}"
         sleep 3s && exit 0
     fi
-    
+
 }
 
 _Description() {
     clear
     setfont sun12x22
     cat << EOF
-    
+
      █████╗ ██████╗  ██████╗██╗  ██╗██╗     ██╗███╗   ██╗██╗   ██╗██╗  ██╗
     ██╔══██╗██╔══██╗██╔════╝██║  ██║██║     ██║████╗  ██║██║   ██║╚██╗██╔╝
-    ███████║██████╔╝██║     ███████║██║     ██║██╔██╗ ██║██║   ██║ ╚███╔╝ 
-    ██╔══██║██╔══██╗██║     ██╔══██║██║     ██║██║╚██╗██║██║   ██║ ██╔██╗ 
+    ███████║██████╔╝██║     ███████║██║     ██║██╔██╗ ██║██║   ██║ ╚███╔╝
+    ██╔══██║██╔══██╗██║     ██╔══██║██║     ██║██║╚██╗██║██║   ██║ ██╔██╗
     ██║  ██║██║  ██║╚██████╗██║  ██║███████╗██║██║ ╚████║╚██████╔╝██╔╝ ██╗
     ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝  ╚═╝
-    
+
                   Base installation for lazy dudes made easy!
-    
+
     # French (ne jamais lancer un script sans le lire auparavant)
     ${g}Ce script va installer une Archlinux en UEFI sur le disque de votre choix
     si il y en a plusieurs, le partitionnement reste manuel et cfdisk sera utilisé
     pour mettre en place la table de partitions. Seul ext4 est supporté.${nc}
-    
+
     # English (never run a script without reading it first)
     ${g}This script will install Archlinux in UEFI mode on the drive of your choice
     if there are several, the partitioning is not automated and cfdisk will be used
     to set up the partition table. Only ext4 file system is supported.${nc}
-    
+
     Partitions layouts examples:
-    
+
     ${y}1) sda1=/boot/efi sda2=/ sda3=/home
     2) sda1=/boot/efi sda2=/
     3) sda1=/boot/efi sda2=/ sdb1=/home${nc}
-    
+
 EOF
     printf '%s\n'
-    read -r -p "${g}"'    Press enter to launch installation, ^C to quit: '"${nc}" inst
-    case "$inst" in *) _Install ;; esac
+    _Prompt "${g}    Proceed with installation? ${nc}" || {
+        exit
+    }
+    _Install
 }
 
 _Description "${@}"
