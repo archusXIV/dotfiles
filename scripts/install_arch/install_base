@@ -285,7 +285,7 @@ _Install() {
 
             _FirstDiskChoice
             printf '%s\n' " ${y}Do not create a SWAP device, zram-generator package will be installed.${nc}"
-            sleep 3s
+            sleep 5s
             cfdisk /dev/$HWDISK
             _FileSystemType
             _TestHome
