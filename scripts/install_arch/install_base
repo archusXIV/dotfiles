@@ -276,6 +276,8 @@ _Install() {
             clear
 
             _FirstDiskChoice
+            printf '%s\n' " ${y}Do not create a SWAP device, zram-generator package will be installed.${nc}"
+            sleep 3s
             cfdisk /dev/$HWDISK
             _FileSystemType
             _TestHome
@@ -402,6 +404,9 @@ _Install() {
                 echo '127.0.0.1    localhost' >> /etc/hosts
                 echo '::1          localhost' >> /etc/hosts
                 echo '127.0.1.1    $machine.localdomain    $machine' >> /etc/hosts
+                echo '[zram0]' > /etc/systemd/zram-generator.conf
+                echo 'zram-size = ram' >> /etc/systemd/zram-generator.conf
+                echo 'compression-algorithm = zstd' >> /etc/systemd/zram-generator.conf
                 mkinitcpio -p ${KERNEL}
                 clear
                 echo ' ${g}Change $USER password: ${nc}'
