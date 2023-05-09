@@ -67,6 +67,8 @@ _Prompt() {
 }
 
 _FileSystemType() {
+    clear
+    printf '%s\n'
     read -r -p "${g}"' Please select a file system type: [B]trfs, [E]xt4: '"${nc}" fs
     case "$fs" in
         b*|B*) FS="btrfs" ;;
@@ -328,7 +330,7 @@ _Install() {
             sleep 1s
 
             # pacstrap will not use the iso's archlinux-keyring.
-            pacstrap -K /mnt base base-devel bash-completion dmidecode dosfstools \
+            pacstrap -K /mnt base base-devel bash-completion btrfs-progs dmidecode dosfstools \
             efibootmgr exfat-utils fatresize git gptfdisk grub ${KERNEL} ${KERNEL}-headers \
             linux-firmware lsb-release man-{db,pages} mc mlocate mtools nano networkmanager \
             os-prober pacman-contrib p7zip reflector syslog-ng ${UCODE} usbutils unzip vim wget \
