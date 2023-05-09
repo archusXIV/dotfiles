@@ -71,8 +71,16 @@ _FileSystemType() {
     printf '%s\n'
     read -r -p "${g}"' Please select a file system type: [B]trfs, [E]xt4: '"${nc}" fs
     case "$fs" in
-        b*|B*) FS="btrfs" ;;
-        e*|E*) FS="ext4" ;;
+        b*|B*)
+             printf '%s\n' " ${y}btrfs selected..."
+             sleep 2s
+             FS="btrfs"
+         ;;
+        e*|E*)
+            printf '%s\n' " ${y}ext4 selected..."
+             sleep 2s
+            FS="ext4"
+        ;;
     esac
 }
 
