@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# First change colors in ~/.Xresources, then run this script
 
 xrdb_query() {
     for scope in {urxvt,"\\*"}; do
