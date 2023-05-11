@@ -1,0 +1,21 @@
+! jellybeans
+#define fg    #89CFF0
+#define bg    #151515
+#define curs  #ffffff
+
+#define blk  #393939
+#define blk2 #535551
+#define red  #ca674a
+#define red2 #ea2828
+#define grn  #96a967
+#define grn2 #87dd32
+#define ylw  #d3a94a
+#define ylw2 #f7e44d
+#define blu  #5778c1
+#define blu2 #6f9bca
+#define mag  #9c35ac
+#define mag2 #a97ca4
+#define cyn  #6eb5f3
+#define cyn2 #32dddd
+#define wht  #a9a9a9
+#define wht2 #e9e9e7
