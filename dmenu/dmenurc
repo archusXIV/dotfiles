@@ -1,25 +1,25 @@
-#
 # ~/.config/dmenu/dmenurc
 #
-# we use ~/.Xresources value here
+# Yes, command subdtitutions are possible!
+# ...if you want to follow themes.
 
 ## define the font for dmenu to be used
-DMENU_FN="$(xrdb -query | awk '/DMENU_FN:/{print $2}')"
+DMENU_FN=$(xrdb -query | awk '/DMENU_FN:/{print $NF}')
 
 ## background colour for unselected menu-items
-DMENU_NB="$(xrdb -query | awk '/background/{print $2}')"
+DMENU_NB=$(xrdb -query | awk '/background:/{print $NF}')
 
 ## textcolour for unselected menu-items
-DMENU_NF="$(xrdb -query | awk '/foreground/{print $2}')"
+DMENU_NF=$(xrdb -query | awk '/foreground:/{print $NF}')
 
 ## background colour for selected menu-items
-DMENU_SB="$(xrdb -query | awk '/color0/{print $2}')"
+DMENU_SB="$DMENU_NF"
 
 ## textcolour for selected menu-items
-DMENU_SF="$(xrdb -query | awk '/color3/{print $2}')"
+DMENU_SF="$DMENU_NB"
 
 ## command for the terminal application to be used:
-TERMINAL_CMD="xterm -e"
+TERMINAL_CMD="urxvtc -e"
 
 ## export our variables
 DMENU_OPTIONS="-fn $DMENU_FN -nb $DMENU_NB -nf $DMENU_NF -sf $DMENU_SF -sb $DMENU_SB"
