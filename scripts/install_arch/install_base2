@@ -133,7 +133,7 @@ _BtrfsCreateSubvolume() {
     printf '\n'
     df -h
     printf '\n'
-    _Prompt " ${g}Do you want to create btrfs subvolumes now? ${nc}" || {
+    _Prompt " ${g}Do you want to create btrfs subvolumes now?: ${nc}" || {
         printf '\n'
         printf 's%\n' " ${y}Running system install...${nc}"
         sleep 2
