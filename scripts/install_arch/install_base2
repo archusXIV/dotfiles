@@ -146,6 +146,7 @@ _BtrfsCreateSubvolume() {
     printf '\n'
     read -rsn 1 -p "${g}"'Press any key to edit fstab'"${nc}"
     vim /mnt/etc/fstab
+    cd
     printf '\n'
     printf 's%\n' " ${y}Running system install...${nc}"
     sleep 2
@@ -361,14 +362,6 @@ _Install() {
                 _FormatPrompt
                 _SeparatedHomeLayout
             }
-
-            clear
-            printf '\n'
-            printf '%s\n' " ${y}Generating fstab...${nc}"
-            genfstab -U -p /mnt >> /mnt/etc/fstab
-            sleep 2s
-
-            [[ $FS = btrfs ]] && _BtrfsCreateSubvolume
             
             clear
             printf '%s\n' " ${y}Getting fresh mirrors list for $LOCATION...${nc}"
@@ -426,6 +419,14 @@ _Install() {
             cat /etc/pacman.d/mirrorlist > /mnt/etc/pacman.d/mirrorlist
             cat /etc/pacman.conf > /mnt/etc/pacman.conf
 
+            clear
+            printf '\n'
+            printf '%s\n' " ${y}Generating fstab...${nc}"
+            genfstab -U -p /mnt >> /mnt/etc/fstab
+            sleep 2s
+
+            [[ $FS = btrfs ]] && _BtrfsCreateSubvolume
+            
             clear
             printf '\n'
             printf '%s\n' " ${y}Entering installed system for configuration.${nc}"
