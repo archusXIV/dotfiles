@@ -142,7 +142,7 @@ _BtrfsCreateSubvolume() {
     cd /mnt
     btrfs subvolume create @system
     btrfs subvolume create @home
-    btrfs subvolume list
+    btrfs subvolume list /
     printf '\n'
     read -rsn 1 -p "${g}"'Press any key to edit fstab'"${nc}"
     vim /mnt/etc/fstab
