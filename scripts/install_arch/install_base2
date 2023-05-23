@@ -77,11 +77,14 @@ _FileSystemType() {
              printf '%s\n' " ${y}btrfs selected..."
              sleep 2s
              FS="btrfs"
+             # grub-btrfs pulls grub so grub will be installed too.
+             GRUB="grub-btrfs"
          ;;
         e*|E*)
             printf '%s\n' " ${y}ext4 selected..."
              sleep 2s
             FS="ext4"
+            GRUB="grub"
         ;;
     esac
 }
@@ -342,7 +345,7 @@ _Install() {
 
             # pacstrap will not use the iso's archlinux-keyring.
             pacstrap -K /mnt base base-devel bash-completion btrfs-progs dmidecode dosfstools \
-            efibootmgr exfat-utils fatresize git gptfdisk grub ${KERNEL} ${KERNEL}-headers \
+            efibootmgr exfat-utils fatresize git gptfdisk ${GRUB} ${KERNEL} ${KERNEL}-headers \
             linux-firmware lsb-release man-{db,pages} mc mlocate mtools nano networkmanager \
             os-prober pacman-contrib p7zip reflector syslog-ng ${UCODE} usbutils unzip vim wget \
             xf86-input-{elographics,evdev,libinput,synaptics,vmmouse,void,wacom} \
