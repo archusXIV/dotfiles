@@ -31,6 +31,44 @@ g=$'\e[1;32m';
 r=$'\e[0;31m';
 y=$'\e[93m';
 
+_Description() {
+    clear
+    setfont sun12x22
+    cat << EOF
+
+     █████╗ ██████╗  ██████╗██╗  ██╗██╗     ██╗███╗   ██╗██╗   ██╗██╗  ██╗
+    ██╔══██╗██╔══██╗██╔════╝██║  ██║██║     ██║████╗  ██║██║   ██║╚██╗██╔╝
+    ███████║██████╔╝██║     ███████║██║     ██║██╔██╗ ██║██║   ██║ ╚███╔╝
+    ██╔══██║██╔══██╗██║     ██╔══██║██║     ██║██║╚██╗██║██║   ██║ ██╔██╗
+    ██║  ██║██║  ██║╚██████╗██║  ██║███████╗██║██║ ╚████║╚██████╔╝██╔╝ ██╗
+    ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝  ╚═╝
+
+                  Base installation for lazy dudes made easy!
+
+    # French (ne jamais lancer un script sans le lire auparavant)
+    ${g}Ce script va installer une Archlinux en UEFI sur le disque de votre choix
+    si il y en a plusieurs, le partitionnement reste manuel et cfdisk sera utilisé
+    pour mettre en place la table de partitions. Seuls btrfs & ext4 sont supportés.${nc}
+
+    # English (never run a script without reading it first)
+    ${g}This script will install Archlinux in UEFI mode on the drive of your choice
+    if there are several, the partitioning is not automated and cfdisk will be used
+    to set up the partition table. Only btrfs & ext4 file systems are supported.${nc}
+
+    Partitions layouts examples:
+
+    ${y}1) sda1=/boot/efi sda2=/ sda3=/home
+    2) sda1=/boot/efi sda2=/
+    3) sda1=/boot/efi sda2=/ sdb1=/home${nc}
+
+EOF
+    printf '\n'
+    _Prompt "${g}    Proceed with installation? ${nc}" || {
+        exit
+    }
+    _Install
+}
+
 _FormatPrompt() {
     clear
     printf '%s\n' " ${y}Formating and mounting partitions.${nc}"
@@ -68,17 +106,18 @@ _Prompt() {
 
 A=1 B=2 C=3
 
+
 _FileSystemType() {
     clear
     printf '\n'
     read -r -p "${g}"' Please select a file system type: [B]trfs, [E]xt4: '"${nc}" fs
     case "$fs" in
         b*|B*)
-             printf '%s\n' " ${y}btrfs selected..."
-             sleep 2s
-             FS="btrfs"
-             # grub-btrfs pulls grub so grub will be installed too.
-             GRUB="grub-btrfs"
+            printf '%s\n' " ${y}btrfs selected..."
+            sleep 2s
+            FS="btrfs"
+            # grub-btrfs pulls grub so grub will be installed too.
+            GRUB="grub-btrfs"
          ;;
         e*|E*)
             printf '%s\n' " ${y}ext4 selected..."
@@ -87,6 +126,30 @@ _FileSystemType() {
             GRUB="grub"
         ;;
     esac
+}
+
+_BtrfsCreateSubvolume() {
+
+    printf '\n'
+    df -h
+    printf '\n'
+    _Prompt " ${g}Do you want to create btrfs subvolumes now? ${nc}" || {
+        printf '\n'
+        printf 's%\n' " ${y}Running system install...${nc}"
+        sleep 2
+        return 0
+    }
+    cd /mnt
+    btrfs subvolume create @system
+    btrfs subvolume create @home
+    btrfs subvolume list
+    printf '\n'
+    read -rsn 1 -p "${g}"'Press any key to edit fstab'"${nc}"
+    vim /mnt/etc/fstab
+    printf '\n'
+    printf 's%\n' " ${y}Running system install...${nc}"
+    sleep 2
+
 }
 
 _SeparatedHomeLayout() {
@@ -291,14 +354,22 @@ _Install() {
             printf '%s\n' " ${y}Do not create a SWAP device, zram-generator package will be installed.${nc}"
             sleep 5s
             cfdisk /dev/"$HWDISK"
-            _FileSystemType
             _TestHome
+            _FileSystemType
             [[ -n $HWDISK2 ]] && {
                 cfdisk /dev/"$HWDISK2"
                 _FormatPrompt
                 _SeparatedHomeLayout
             }
 
+            clear
+            printf '\n'
+            printf '%s\n' " ${y}Generating fstab...${nc}"
+            genfstab -U -p /mnt >> /mnt/etc/fstab
+            sleep 2s
+
+            [[ $FS = btrfs ]] && _BtrfsCreateSubvolume
+            
             clear
             printf '%s\n' " ${y}Getting fresh mirrors list for $LOCATION...${nc}"
             sleep 1s
@@ -357,10 +428,6 @@ _Install() {
 
             clear
             printf '\n'
-            printf '%s\n' " ${y}Generating fstab...${nc}"
-            genfstab -U -p /mnt >> /mnt/etc/fstab
-            sleep 2s
-
             printf '%s\n' " ${y}Entering installed system for configuration.${nc}"
             sleep 2s
 
@@ -463,43 +530,4 @@ _Install() {
 
 }
 
-_Description() {
-    clear
-    setfont sun12x22
-    cat << EOF
-
-     █████╗ ██████╗  ██████╗██╗  ██╗██╗     ██╗███╗   ██╗██╗   ██╗██╗  ██╗
-    ██╔══██╗██╔══██╗██╔════╝██║  ██║██║     ██║████╗  ██║██║   ██║╚██╗██╔╝
-    ███████║██████╔╝██║     ███████║██║     ██║██╔██╗ ██║██║   ██║ ╚███╔╝
-    ██╔══██║██╔══██╗██║     ██╔══██║██║     ██║██║╚██╗██║██║   ██║ ██╔██╗
-    ██║  ██║██║  ██║╚██████╗██║  ██║███████╗██║██║ ╚████║╚██████╔╝██╔╝ ██╗
-    ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝  ╚═╝
-
-                  Base installation for lazy dudes made easy!
-
-    # French (ne jamais lancer un script sans le lire auparavant)
-    ${g}Ce script va installer une Archlinux en UEFI sur le disque de votre choix
-    si il y en a plusieurs, le partitionnement reste manuel et cfdisk sera utilisé
-    pour mettre en place la table de partitions. Seuls btrfs & ext4 sont supportés.${nc}
-
-    # English (never run a script without reading it first)
-    ${g}This script will install Archlinux in UEFI mode on the drive of your choice
-    if there are several, the partitioning is not automated and cfdisk will be used
-    to set up the partition table. Only btrfs & ext4 file systems are supported.${nc}
-
-    Partitions layouts examples:
-
-    ${y}1) sda1=/boot/efi sda2=/ sda3=/home
-    2) sda1=/boot/efi sda2=/
-    3) sda1=/boot/efi sda2=/ sdb1=/home${nc}
-
-EOF
-    printf '\n'
-    _Prompt "${g}    Proceed with installation? ${nc}" || {
-        exit
-    }
-    _Install
-}
-
 _Description "${@}"
-
