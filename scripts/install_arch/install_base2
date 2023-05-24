@@ -146,26 +146,39 @@ _BtrfsCreateSubvolume() {
     if [[ -n $HWDISK2 ]]; then
         btrfs subvolume create @system
         btrfs subvolume create @home
-        btrfs subvolume list /
         mount -o noatime,space_cache,compress=zstd,ssd,discard=async,subvol=@system /dev/"$HWDISK" /mnt
         mkdir -p /mnt/boot/{efi,home}
         mount /dev/"$HWDISK"$A /mnt/boot/efi
         mount -o noatime,space_cache,compress=zstd,ssd,discard=async,subvol=@home /dev/"$HWDISK2" /mnt/home
+        clear
+        printf '\n'
+        printf '%s\n' " ${y}Regenerating fstab...${nc}"
+        genfstab -U -p /mnt >> /mnt/etc/fstab
+        sleep 2s
     elif [[ -z $HWDISK2 ]] && [[ -n "$HWDISK"$C ]]; then
         btrfs subvolume create @system
         btrfs subvolume create @home
-        btrfs subvolume list /
         mount -o noatime,space_cache,compress=zstd,ssd,discard=async,subvol=@system /dev/"$HWDISK" /mnt
         mkdir -p /mnt/boot/{efi,home}
         mount /dev/"$HWDISK"$A /mnt/boot/efi
         mount -o noatime,space_cache,compress=zstd,ssd,discard=async,subvol=@home /dev/"$HWDISK" /mnt/home
+        clear
+        printf '\n'
+        printf '%s\n' " ${y}Regenerating fstab...${nc}"
+        genfstab -U -p /mnt >> /mnt/etc/fstab
+        sleep 2s
     else
         btrfs subvolume create @system
         btrfs subvolume create @home
-        btrfs subvolume list /
         mount -o noatime,space_cache,compress=zstd,ssd,discard=async,subvol=@system /dev/"$HWDISK" /mnt
+        mount -o noatime,space_cache,compress=zstd,ssd,discard=async,subvol=@home /dev/"$HWDISK" /mnt/home
         mkdir -p /mnt/boot/efi
         mount /dev/"$HWDISK"$A /mnt/boot/efi
+        clear
+        printf '\n'
+        printf '%s\n' " ${y}Regenerating fstab...${nc}"
+        genfstab -U -p /mnt >> /mnt/etc/fstab
+        sleep 2s
     fi
 
     printf '\n'
