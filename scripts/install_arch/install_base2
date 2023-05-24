@@ -31,6 +31,44 @@ g=$'\e[1;32m';
 r=$'\e[0;31m';
 y=$'\e[93m';
 
+_Description() {
+    clear
+    setfont sun12x22
+    cat << EOF
+
+     █████╗ ██████╗  ██████╗██╗  ██╗██╗     ██╗███╗   ██╗██╗   ██╗██╗  ██╗
+    ██╔══██╗██╔══██╗██╔════╝██║  ██║██║     ██║████╗  ██║██║   ██║╚██╗██╔╝
+    ███████║██████╔╝██║     ███████║██║     ██║██╔██╗ ██║██║   ██║ ╚███╔╝
+    ██╔══██║██╔══██╗██║     ██╔══██║██║     ██║██║╚██╗██║██║   ██║ ██╔██╗
+    ██║  ██║██║  ██║╚██████╗██║  ██║███████╗██║██║ ╚████║╚██████╔╝██╔╝ ██╗
+    ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝  ╚═╝
+
+                  Base installation for lazy dudes made easy!
+
+    # French (ne jamais lancer un script sans le lire auparavant)
+    ${g}Ce script va installer une Archlinux en UEFI sur le disque de votre choix
+    si il y en a plusieurs, le partitionnement reste manuel et cfdisk sera utilisé
+    pour mettre en place la table de partitions. Seuls btrfs & ext4 sont supportés.${nc}
+
+    # English (never run a script without reading it first)
+    ${g}This script will install Archlinux in UEFI mode on the drive of your choice
+    if there are several, the partitioning is not automated and cfdisk will be used
+    to set up the partition table. Only btrfs & ext4 file systems are supported.${nc}
+
+    Partitions layouts examples:
+
+    ${y}1) sda1=/boot/efi sda2=/ sda3=/home
+    2) sda1=/boot/efi sda2=/
+    3) sda1=/boot/efi sda2=/ sdb1=/home${nc}
+
+EOF
+    printf '\n'
+    _Prompt "${g}    Proceed with installation? ${nc}" || {
+        exit
+    }
+    _Install
+}
+
 _FormatPrompt() {
     clear
     printf '%s\n' " ${y}Formating and mounting partitions.${nc}"
@@ -217,7 +255,8 @@ _TestHome() {
     else
         clear
         printf '\n'
-        _Prompt " ${r}No /home partition detected, do you want to create one? ${nc}" || {
+        _Prompt " ${r}No /home partition detected, do you want to create one? ${nc}"
+        if [[ $REPLY = no ]]; then
             _FormatPrompt
             sleep 1s
             mkfs.fat -F32 /dev/"$HWDISK"$A
@@ -232,22 +271,23 @@ _TestHome() {
             mkdir -p /mnt/boot/efi
             mount /dev/"$HWDISK"$A /mnt/boot/efi
             lsblk && sleep 2s
-        }
-        read -r -p "${g}"' [1] /home on same drive, [2] /home on separated drive: '"${nc}" homepath
-        case "$homepath" in
-            1)
-                printf '%s\n' " ${g}Please modify your partitions layout.${nc}"
-                sleep 2s
-                umount -R /mnt
-                cfdisk /dev/"$HWDISK"
-                __DefaultLayout
-                _FormatPrompt
-                sleep 1s
-            ;;
-            2)
-                _SecondDiskChoice
-            ;;
-        esac
+        else
+            read -r -p "${g}"' [1] /home on same drive, [2] /home on separated drive: '"${nc}" homepath
+            case "$homepath" in
+                1)
+                    printf '%s\n' " ${g}Please modify your partitions layout.${nc}"
+                    sleep 2s
+                    umount -R /mnt
+                    cfdisk /dev/"$HWDISK"
+                    __DefaultLayout
+                    _FormatPrompt
+                    sleep 1s
+                ;;
+                2)
+                    _SecondDiskChoice
+                ;;
+            esac
+        fi
     fi
 
 }
@@ -517,44 +557,6 @@ _Install() {
         sleep 3s && exit 0
     fi
 
-}
-
-_Description() {
-    clear
-    setfont sun12x22
-    cat << EOF
-
-     █████╗ ██████╗  ██████╗██╗  ██╗██╗     ██╗███╗   ██╗██╗   ██╗██╗  ██╗
-    ██╔══██╗██╔══██╗██╔════╝██║  ██║██║     ██║████╗  ██║██║   ██║╚██╗██╔╝
-    ███████║██████╔╝██║     ███████║██║     ██║██╔██╗ ██║██║   ██║ ╚███╔╝
-    ██╔══██║██╔══██╗██║     ██╔══██║██║     ██║██║╚██╗██║██║   ██║ ██╔██╗
-    ██║  ██║██║  ██║╚██████╗██║  ██║███████╗██║██║ ╚████║╚██████╔╝██╔╝ ██╗
-    ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝  ╚═╝
-
-                  Base installation for lazy dudes made easy!
-
-    # French (ne jamais lancer un script sans le lire auparavant)
-    ${g}Ce script va installer une Archlinux en UEFI sur le disque de votre choix
-    si il y en a plusieurs, le partitionnement reste manuel et cfdisk sera utilisé
-    pour mettre en place la table de partitions. Seuls btrfs & ext4 sont supportés.${nc}
-
-    # English (never run a script without reading it first)
-    ${g}This script will install Archlinux in UEFI mode on the drive of your choice
-    if there are several, the partitioning is not automated and cfdisk will be used
-    to set up the partition table. Only btrfs & ext4 file systems are supported.${nc}
-
-    Partitions layouts examples:
-
-    ${y}1) sda1=/boot/efi sda2=/ sda3=/home
-    2) sda1=/boot/efi sda2=/
-    3) sda1=/boot/efi sda2=/ sdb1=/home${nc}
-
-EOF
-    printf '\n'
-    _Prompt "${g}    Proceed with installation? ${nc}" || {
-        exit
-    }
-    _Install
 }
 
 _Description "${@}"
