@@ -473,6 +473,7 @@ _Install() {
             sleep 2s
 
             [[ $FS = btrfs ]] && _BtrfsCreateSubvolume
+            mount -a
             
             clear
             printf '\n'
