@@ -255,41 +255,44 @@ _TestHome() {
     else
         clear
         printf '\n'
-        _Prompt " ${r}No /home partition detected, do you want to create one? ${nc}"
-        if [[ $REPLY = no ]]; then
-            _FormatPrompt
-            sleep 1s
-            mkfs.fat -F32 /dev/"$HWDISK"$A
-
-            if [[ $FS = btrfs ]]; then
-                mkfs.btrfs -L ROOT /dev/"$HWDISK"$B
-            else
-                mkfs.ext4 -L ROOT /dev/"$HWDISK"$B
-            fi
-
-            mount /dev/"$HWDISK"$B /mnt
-            mkdir -p /mnt/boot/efi
-            mount /dev/"$HWDISK"$A /mnt/boot/efi
-            lsblk && sleep 2s
-        else
-            read -r -p "${g}"' [1] /home on same drive, [2] /home on separated drive: '"${nc}" homepath
-            case "$homepath" in
-                1)
-                    printf '%s\n' " ${g}Please modify your partitions layout.${nc}"
-                    sleep 2s
-                    umount -R /mnt
-                    cfdisk /dev/"$HWDISK"
-                    __DefaultLayout
-                    _FormatPrompt
-                    sleep 1s
-                ;;
-                2)
-                    _SecondDiskChoice
-                ;;
-            esac
-        fi
+        read -rn1 -p "${r}"' No /home partition detected, do you want to create one [Y/n]? '"${nc}" home
+        case "$home" in
+            n*|N*)
+                _FormatPrompt
+                sleep 1s
+                mkfs.fat -F32 /dev/"$HWDISK"$A
+    
+                if [[ $FS = btrfs ]]; then
+                    mkfs.btrfs -L ROOT /dev/"$HWDISK"$B
+                else
+                    mkfs.ext4 -L ROOT /dev/"$HWDISK"$B
+                fi
+    
+                mount /dev/"$HWDISK"$B /mnt
+                mkdir -p /mnt/boot/efi
+                mount /dev/"$HWDISK"$A /mnt/boot/efi
+                lsblk && sleep 2s
+            ;;
+            y*|Y*)
+                read -r -p "${g}"' [1] /home on same drive, [2] /home on separated drive: '"${nc}" homepath
+                case "$homepath" in
+                    1)
+                        printf '%s\n' " ${g}Please modify your partitions layout.${nc}"
+                        sleep 2s
+                        umount -R /mnt
+                        cfdisk /dev/"$HWDISK"
+                        __DefaultLayout
+                        _FormatPrompt
+                        sleep 1s
+                    ;;
+                    2)
+                        _SecondDiskChoice
+                    ;;
+                esac
+            ;;
+        
+        esac
     fi
-
 }
 
 _FirstDiskChoice() {
