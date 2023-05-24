@@ -180,6 +180,9 @@ _BtrfsCreateSubvolume() {
 }
 
 _SeparatedHomeLayout() {
+    _FormatPrompt
+    sleep 1s
+    _FileSystemType
     mkfs.fat -F32 /dev/"$HWDISK"$A
 
     if [[ $FS = btrfs ]]; then
@@ -231,6 +234,9 @@ _SecondDiskChoice() {
 _TestHome() {
 
     __DefaultLayout() (
+        _FileSystemType
+        _FormatPrompt
+        sleep 1s
         mkfs.fat -F32 /dev/"$HWDISK"$A
 
         if [[ $FS = btrfs ]]; then
@@ -249,8 +255,6 @@ _TestHome() {
     )
 
     if [[ $(lsblk -no NAME) =~ "$HWDISK"$C ]]; then
-        _FormatPrompt
-        sleep 1s
         __DefaultLayout
     else
         clear
@@ -258,6 +262,7 @@ _TestHome() {
         read -rn1 -p "${r}"' No /home partition detected, do you want to create one [Y/n]? '"${nc}" home
         case "$home" in
             n*|N*)
+                _FileSystemType
                 _FormatPrompt
                 sleep 1s
                 mkfs.fat -F32 /dev/"$HWDISK"$A
@@ -281,6 +286,7 @@ _TestHome() {
                         sleep 2s
                         umount -R /mnt
                         cfdisk /dev/"$HWDISK"
+                        _FileSystemType
                         __DefaultLayout
                         _FormatPrompt
                         sleep 1s
