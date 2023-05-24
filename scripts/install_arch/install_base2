@@ -120,7 +120,7 @@ _FileSystemType() {
          ;;
         e*|E*)
             printf '%s\n' " ${y}ext4 selected..."
-             sleep 2s
+            sleep 2s
             FS="ext4"
             GRUB="grub"
         ;;
@@ -140,47 +140,44 @@ _BtrfsCreateSubvolume() {
     }
     lsblk -f
     umount -R /mnt
-    mount /dev/"$HWDISK"$B /mnt
-    cd /mnt
-
+    
     if [[ -n $HWDISK2 ]]; then
+        # if there is a second drive.
+        mount /dev/"$HWDISK"$B /mnt
+        cd /mnt
         btrfs subvolume create @system
         btrfs subvolume create @home
-        mount -o noatime,space_cache,compress=zstd,ssd,discard=async,subvol=@system /dev/"$HWDISK" /mnt
+        mount -o noatime,space_cache,compress=zstd,ssd,discard=async,subvol=@system /dev/"$HWDISK"$B /mnt
         mkdir -p /mnt/boot/{efi,home}
         mount /dev/"$HWDISK"$A /mnt/boot/efi
-        mount -o noatime,space_cache,compress=zstd,ssd,discard=async,subvol=@home /dev/"$HWDISK2" /mnt/home
-        clear
-        printf '\n'
-        printf '%s\n' " ${y}Regenerating fstab...${nc}"
-        genfstab -U -p /mnt >> /mnt/etc/fstab
-        sleep 2s
+        mount -o noatime,space_cache,compress=zstd,ssd,discard=async,subvol=@home /dev/"$HWDISK2"$A /mnt/home
     elif [[ -z $HWDISK2 ]] && [[ -n "$HWDISK"$C ]]; then
+        # if there is only one drive and a separed home partition.
+        mount /dev/"$HWDISK"$B /mnt
+        cd /mnt
         btrfs subvolume create @system
         btrfs subvolume create @home
-        mount -o noatime,space_cache,compress=zstd,ssd,discard=async,subvol=@system /dev/"$HWDISK" /mnt
+        mount -o noatime,space_cache,compress=zstd,ssd,discard=async,subvol=@system /dev/"$HWDISK"$B /mnt
         mkdir -p /mnt/boot/{efi,home}
         mount /dev/"$HWDISK"$A /mnt/boot/efi
-        mount -o noatime,space_cache,compress=zstd,ssd,discard=async,subvol=@home /dev/"$HWDISK" /mnt/home
-        clear
-        printf '\n'
-        printf '%s\n' " ${y}Regenerating fstab...${nc}"
-        genfstab -U -p /mnt >> /mnt/etc/fstab
-        sleep 2s
+        mount -o noatime,space_cache,compress=zstd,ssd,discard=async,subvol=@home /dev/"$HWDISK"$C /mnt/home
     else
+        # if there is only one drive but no separed home partition.
+        mount /dev/"$HWDISK"$B /mnt
+        cd /mnt
         btrfs subvolume create @system
         btrfs subvolume create @home
-        mount -o noatime,space_cache,compress=zstd,ssd,discard=async,subvol=@system /dev/"$HWDISK" /mnt
-        mount -o noatime,space_cache,compress=zstd,ssd,discard=async,subvol=@home /dev/"$HWDISK" /mnt/home
+        mount -o noatime,space_cache,compress=zstd,ssd,discard=async,subvol=@system /dev/"$HWDISK"$B /mnt
+        mount -o noatime,space_cache,compress=zstd,ssd,discard=async,subvol=@home /dev/"$HWDISK"$B /mnt
         mkdir -p /mnt/boot/efi
         mount /dev/"$HWDISK"$A /mnt/boot/efi
-        clear
-        printf '\n'
-        printf '%s\n' " ${y}Regenerating fstab...${nc}"
-        genfstab -U -p /mnt >> /mnt/etc/fstab
-        sleep 2s
     fi
 
+    clear
+    printf '\n'
+    printf '%s\n' " ${y}Regenerating fstab...${nc}"
+    genfstab -U -p /mnt > /mnt/etc/fstab
+    sleep 2s
     printf '\n'
     read -rsn 1 -p "${g}"'Press any key to check fstab'"${nc}"
     vim /mnt/etc/fstab
