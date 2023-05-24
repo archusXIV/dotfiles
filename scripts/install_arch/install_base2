@@ -183,11 +183,11 @@ _SeparatedHomeLayout() {
     mkfs.fat -F32 /dev/"$HWDISK"$A
 
     if [[ $FS = btrfs ]]; then
-        mkfs."$FS" -L ROOT_BTR /dev/"$HWDISK"$B
-        mkfs."$FS" -L HOME_BTR /dev/"$HWDISK2"$A
+        mkfs.btrfs -L ROOT_BTR /dev/"$HWDISK"$B
+        mkfs.btrfs -L HOME_BTR /dev/"$HWDISK2"$A
     else
-        mkfs."$FS" -L ROOT_EXT /dev/"$HWDISK"$B
-        mkfs."$FS" -L HOME_EXT /dev/"$HWDISK2"$A
+        mkfs.ext4 -L ROOT_EXT /dev/"$HWDISK"$B
+        mkfs.ext4 -L HOME_EXT /dev/"$HWDISK2"$A
     fi
 
     mount /dev/"$HWDISK"$B /mnt
@@ -234,11 +234,11 @@ _TestHome() {
         mkfs.fat -F32 /dev/"$HWDISK"$A
 
         if [[ $FS = btrfs ]]; then
-            mkfs."$FS" -L ROOT_BTR /dev/"$HWDISK"$B
-            mkfs."$FS" -L HOME_BTR /dev/"$HWDISK"$C
+            mkfs.btrfs -L ROOT_BTR /dev/"$HWDISK"$B
+            mkfs.btrfs -L HOME_BTR /dev/"$HWDISK"$C
         else
-            mkfs."$FS" -L ROOT_EXT /dev/"$HWDISK"$B
-            mkfs."$FS" -L HOME_EXT /dev/"$HWDISK"$C
+            mkfs.ext4 -L ROOT_EXT /dev/"$HWDISK"$B
+            mkfs.ext4 -L HOME_EXT /dev/"$HWDISK"$C
         fi
 
         mount /dev/"$HWDISK"$B /mnt
@@ -262,7 +262,7 @@ _TestHome() {
                 sleep 1s
                 mkfs.fat -F32 /dev/"$HWDISK"$A
     
-                if [[ $FS = btrfs ]]; then
+                if [[ $FS == btrfs ]]; then
                     mkfs.btrfs -L ROOT /dev/"$HWDISK"$B
                 else
                     mkfs.ext4 -L ROOT /dev/"$HWDISK"$B
