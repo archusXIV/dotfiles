@@ -180,9 +180,9 @@ _BtrfsCreateSubvolume() {
 }
 
 _SeparatedHomeLayout() {
+    _FileSystemType
     _FormatPrompt
     sleep 1s
-    _FileSystemType
     mkfs.fat -F32 /dev/"$HWDISK"$A
 
     if [[ $FS = btrfs ]]; then
@@ -286,10 +286,7 @@ _TestHome() {
                         sleep 2s
                         umount -R /mnt
                         cfdisk /dev/"$HWDISK"
-                        _FileSystemType
                         __DefaultLayout
-                        _FormatPrompt
-                        sleep 1s
                     ;;
                     2)
                         _SecondDiskChoice
