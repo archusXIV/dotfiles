@@ -139,7 +139,7 @@ _BtrfsCreateSubvolume() {
         return 0
     }
     cd /mnt
-    btrfs subvolume create @system
+    btrfs subvolume create @
     btrfs subvolume create @home
     btrfs subvolume list /mnt
     lsblk -f
