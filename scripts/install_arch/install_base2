@@ -8,8 +8,8 @@
 # For the moment only btrfs & ext4 file systems are supported.
 # Use it at your own risks....lol
 # Download the script when logged in the arch live iso:
-# curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/install_arch/install_base" -O
-# chmod +x install_base && ./install_base
+# curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/main/scripts/install_arch/install_base2" -O
+# chmod +x install_base2 && ./install_base2
 #
 # French
 # Ce script va installer une Archlinux en UEFI sur le disque de votre choix
@@ -59,7 +59,7 @@ _Description() {
 
     ${y}1) sda1=/boot/efi sda2=/ sda3=/home
     2) sda1=/boot/efi sda2=/
-    3) sda1=/boot/efi sda2=/ sdb1=/home${nc}
+    3) sda1=/boot/efi sda2=/ sdb1=/home${nc} (default)
 
 EOF
     printf '\n'
@@ -134,11 +134,11 @@ _BtrfsCreateSubvolume() {
     printf '\n'
     _Prompt " ${g}Do you want to create btrfs subvolumes now? ${nc}" || {
         printf '\n'
-        printf 's%\n' " ${y}Running system install...${nc}"
+        printf '%s\n' " ${y}Running system install...${nc}"
         sleep 2
         return 0
     }
-    cd /mnt
+    cd /mnt || exit 1
     btrfs subvolume create @
     btrfs subvolume create @home
     btrfs subvolume list /mnt
@@ -147,8 +147,8 @@ _BtrfsCreateSubvolume() {
     read -rsn 1 -p "${g}"'Press any key to edit fstab'"${nc}"
     vim /mnt/etc/fstab
     printf '\n'
-    cd
-    printf 's%\n' " ${y}Running system install...${nc}"
+    cd - || exit 1
+    printf '%s\n' " ${y}Running system install...${nc}"
     sleep 2
 
 }
@@ -237,13 +237,13 @@ _TestHome() {
                 _FormatPrompt
                 sleep 1s
                 mkfs.fat -F32 /dev/"$HWDISK"$A
-    
+
                 if [[ $FS == btrfs ]]; then
                     mkfs.btrfs -L ROOT /dev/"$HWDISK"$B
                 else
                     mkfs.ext4 -L ROOT /dev/"$HWDISK"$B
                 fi
-    
+
                 mount /dev/"$HWDISK"$B /mnt
                 mkdir -p /mnt/boot/efi
                 mount /dev/"$HWDISK"$A /mnt/boot/efi
@@ -267,7 +267,7 @@ _TestHome() {
                     ;;
                 esac
             ;;
-        
+
         esac
     fi
 }
@@ -371,7 +371,7 @@ _Install() {
                 sleep 2s
                 _SeparatedHomeLayout
             }
-            
+
             clear
             printf '%s\n' " ${y}Getting fresh mirrors list for $LOCATION...${nc}"
             sleep 1s
@@ -436,7 +436,7 @@ _Install() {
 
             [[ $FS = btrfs ]] && _BtrfsCreateSubvolume
             mount -a
-            
+
             clear
             printf '\n'
             printf '%s\n' " ${y}Entering installed system for configuration.${nc}"
