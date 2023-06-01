@@ -130,7 +130,7 @@ _FileSystemType() {
 _BtrfsCreateSubvolume() {
 
     printf '\n'
-    df -h
+    df -Th
     printf '\n'
     _Prompt " ${g}Do you want to create btrfs subvolumes now? ${nc}" || {
         printf '\n'
@@ -139,17 +139,27 @@ _BtrfsCreateSubvolume() {
         return 0
     }
     cd /mnt || exit 1
-    btrfs subvolume create @
-    btrfs subvolume create @home
-    btrfs subvolume list /mnt
-    lsblk -f
+    _Prompt -n "${g}Do you plan to use timeshift for snapshots? ${nc}" && {
+        btrfs subvolume create @
+        btrfs subvolume create @home
+        btrfs subvolume list /mnt
+    }
     printf '\n'
-    read -rsn 1 -p "${g}"'Press any key to edit fstab'"${nc}"
-    vim /mnt/etc/fstab
-    printf '\n'
-    cd - || exit 1
-    printf '%s\n' " ${y}Running system install...${nc}"
-    sleep 2
+    printf '%s\n' "${g}Please switch to tty2 for btrfs command line," \
+    " and switch back to tty1 for installation process to continue.${nc}"
+    read -rsn 1 -p "${g}"'Press [C] when done.'"${nc}" DONE
+    case "$DONE" in
+        c|C)
+            lsblk -f
+            printf '\n'
+            read -rsn 1 -p "${g}"'Press any key to edit fstab'"${nc}"
+            vim /mnt/etc/fstab
+            printf '\n'
+            cd - || exit 1
+            printf '%s\n' " ${y}Running system install...${nc}"
+            sleep 2
+        ;;
+    esac
 
 }
 
