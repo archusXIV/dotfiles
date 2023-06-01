@@ -132,6 +132,7 @@ _BtrfsCreateSubvolume() {
     printf '\n'
     df -Th
     printf '\n'
+    printf '%s\n' " ${r}Now you are supposed to know what you are doing...${nc}"
     _Prompt " ${g}Do you want to create btrfs subvolumes now? ${nc}" || {
         printf '\n'
         printf '%s\n' " ${y}Running system install...${nc}"
@@ -139,13 +140,13 @@ _BtrfsCreateSubvolume() {
         return 0
     }
     cd /mnt || exit 1
-    _Prompt -n "${g}Do you plan to use timeshift for snapshots? ${nc}" && {
+    _Prompt -n " ${g}Do you plan to use timeshift for snapshots? ${nc}" && {
         btrfs subvolume create @
         btrfs subvolume create @home
         btrfs subvolume list /mnt
     }
     printf '\n'
-    printf '%s\n' "${g}Please switch to tty2 for btrfs command line," \
+    printf '%s\n' " ${g}Please switch to tty2 for btrfs command line," \
     " and switch back to tty1 for installation process to continue.${nc}"
     read -rsn 1 -p "${g}"'Press [C] when done.'"${nc}" DONE
     case "$DONE" in
@@ -156,7 +157,7 @@ _BtrfsCreateSubvolume() {
             vim /mnt/etc/fstab
             printf '\n'
             cd - || exit 1
-            printf '%s\n' " ${y}Running system install...${nc}"
+            printf '%s\n' " ${y}Resuming system install...${nc}"
             sleep 2
         ;;
     esac
@@ -241,43 +242,38 @@ _TestHome() {
         clear
         printf '\n'
         read -rn1 -p "${r}"' No /home partition detected, do you want to create one [Y/n]? '"${nc}" home
-        case "$home" in
-            n*|N*)
+        _Prompt " ${r}"No /home partition detected, do you want to create one? "${nc}" || {
+            _FileSystemType
+            _FormatPrompt
+            sleep 1s
+            mkfs.fat -F32 /dev/"$HWDISK"$A
+
+            if [[ $FS == btrfs ]]; then
+                mkfs.btrfs -L ROOT /dev/"$HWDISK"$B
+            else
+                mkfs.ext4 -L ROOT /dev/"$HWDISK"$B
+            fi
+
+             mount /dev/"$HWDISK"$B /mnt
+             mkdir -p /mnt/boot/efi
+             mount /dev/"$HWDISK"$A /mnt/boot/efi
+             lsblk && sleep 2s
+        }
+        read -r -p "${g}"' [1] /home on same drive, [2] /home on separated drive: '"${nc}" homepath
+        case "$homepath" in
+            1)
+                printf '%s\n' " ${g}Please modify your partitions layout.${nc}"
+                sleep 2s
+                umount -R /mnt
+                cfdisk /dev/"$HWDISK"
                 _FileSystemType
                 _FormatPrompt
-                sleep 1s
-                mkfs.fat -F32 /dev/"$HWDISK"$A
-
-                if [[ $FS == btrfs ]]; then
-                    mkfs.btrfs -L ROOT /dev/"$HWDISK"$B
-                else
-                    mkfs.ext4 -L ROOT /dev/"$HWDISK"$B
-                fi
-
-                mount /dev/"$HWDISK"$B /mnt
-                mkdir -p /mnt/boot/efi
-                mount /dev/"$HWDISK"$A /mnt/boot/efi
-                lsblk && sleep 2s
+                sleep 2s
+                _DefaultLayout
             ;;
-            y*|Y*)
-                read -r -p "${g}"' [1] /home on same drive, [2] /home on separated drive: '"${nc}" homepath
-                case "$homepath" in
-                    1)
-                        printf '%s\n' " ${g}Please modify your partitions layout.${nc}"
-                        sleep 2s
-                        umount -R /mnt
-                        cfdisk /dev/"$HWDISK"
-                        _FileSystemType
-                        _FormatPrompt
-                        sleep 2s
-                        _DefaultLayout
-                    ;;
-                    2)
-                        _SecondDiskChoice
-                    ;;
-                esac
+            2)
+                _SecondDiskChoice
             ;;
-
         esac
     fi
 }
