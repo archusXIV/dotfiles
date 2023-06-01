@@ -144,6 +144,14 @@ _BtrfsCreateSubvolume() {
         btrfs subvolume create @
         btrfs subvolume create @home
         btrfs subvolume list /mnt
+        lsblk -f
+        printf '\n'
+        read -rsn 1 -p "${g}"'Press any key to edit fstab'"${nc}"
+        vim /mnt/etc/fstab
+        printf '\n'
+        cd - || exit 1
+        printf '%s\n' " ${y}Resuming system install...${nc}"
+        sleep 2
     }
     printf '\n'
     printf '%s\n' " ${g}Please switch to tty2 for btrfs command line," \
