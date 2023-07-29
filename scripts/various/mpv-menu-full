@@ -20,7 +20,7 @@
 # shellcheck disable=SC1091,SC2013,SC2015,SC2030,SC2031,SC2034,SC2044,SC2076
 # shellcheck disable=SC2086,SC2119,SC2120,SC2143,SC2153,SC2154,SC2164,SC2184,SC2207
 
-VERSION="v.1.2-8"
+VERSION="v.1.2-9"
 
 [[ ! -f ~/.config/mpm/mpmrc ]] && {
     mkdir -p ~/.config/mpm
@@ -96,6 +96,7 @@ _CheckDependencies() {
 }
 
 _ListsCount() {
+
     local UPD
     UPD=$(curl -sL "https://raw.githubusercontent.com/archusXIV/mpv-playlists-manager/main/version")
     __
@@ -103,7 +104,7 @@ _ListsCount() {
         printf '%s\n' " ${critical}${b}New version available${nb}${nc}"
         __
     fi
-
+    __
     echo " ${info}Collection:"  \
     "  $(find "$playlists_dir" -not -name "default.m3u" \
     -iname "*.m3u" -printf '.' | wc -c) playist(s)${nc}"
@@ -1265,8 +1266,7 @@ _ChooseFromPlay() {
         a|A) _LoadAudio -l ;;
         b|B) _Menu ;;
         v|V) _LoadVideo -l ;;
-        s|S)
-            __
+        s|S) __
             IFS=","; read -ra array -p "${info}"" Enter links numbers separeted by comma, eg: 3,1,5: ""${nc}"
 
             for i in "${array[@]}"; do
@@ -1471,7 +1471,7 @@ _ChooseDownloadVideo() {
                 if [[ $url =~ 'youtube.com' ]]; then
                     __
                     youtube-dl -F --no-warnings "$url" \
-                    | sed '1,5d;/^[sb]/d;/^\s*$/d;s/-//g;/^\s*$/d'
+                    | sed '1,5d;/^[sb]/d;s/-//g;/^\s*$/d'
                 else
                     youtube-dl -F --no-warnings "$url"
                 fi
