@@ -14,15 +14,27 @@ function _StaticTrue {
     # before renaming them with the second block below using wslayout function
     dkcmd set \
         ws=1 name=1 mon="$MONITOR1" \
-        ws=2 name=2 mon="$MONITOR2" \
-        ws=3 name=3 mon="$MONITOR3"
+        ws=2 name=2 mon="$MONITOR1" \
+        ws=3 name=3 mon="$MONITOR1" \
+        ws=4 name=4 mon="$MONITOR2" \
+        ws=5 name=5 mon="$MONITOR2" \
+        ws=6 name=6 mon="$MONITOR2" \
+        ws=7 name=7 mon="$MONITOR3" \
+        ws=8 name=8 mon="$MONITOR3" \
+        ws=9 name=9 mon="$MONITOR3"
 
     # The bar workspaces module will look like this:
     # 1:T 2:S 3:N etc...(name:layout)
     dkcmd set \
-        ws=1 name=1:$(_WsLayout | awk '{print $1}') mon="$MONITOR1" \
-        ws=2 name=2:$(_WsLayout | awk '{print $2}') mon="$MONITOR2" \
-        ws=3 name=3:$(_WsLayout | awk '{print $3}') mon="$MONITOR3"
+        ws=1 name=1:"$(_WsLayout | awk '{print $1}')" mon="$MONITOR1" \
+        ws=2 name=2:"$(_WsLayout | awk '{print $2}')" mon="$MONITOR1" \
+        ws=3 name=3:"$(_WsLayout | awk '{print $3}')" mon="$MONITOR1" \
+        ws=4 name=4:"$(_WsLayout | awk '{print $4}')" mon="$MONITOR2" \
+        ws=5 name=5:"$(_WsLayout | awk '{print $5}')" mon="$MONITOR2" \
+        ws=6 name=6:"$(_WsLayout | awk '{print $6}')" mon="$MONITOR2" \
+        ws=7 name=7:"$(_WsLayout | awk '{print $7}')" mon="$MONITOR3" \
+        ws=8 name=8:"$(_WsLayout | awk '{print $8}')" mon="$MONITOR3" \
+        ws=9 name=9:"$(_WsLayout | awk '{print $9}')" mon="$MONITOR3"
 
 }
 
@@ -39,7 +51,7 @@ function _ToggleTileMono {
     if [[ ! -f $last_layouts ]]; then
         _WsLayout > "$last_layouts"
         dkcmd set layout mono
-        if (( $( wmctrl -lx | awk '{print $2}' | grep -w '^1' -c) > 1 )); then
+        if (( $( wmctrl -lx | awk '{print $2}' | grep '^1' -c) > 1 )); then
             polybar-msg -p $(pgrep --full dk-bar-2) \
             action "#monocle-ipc.hook.1" >/dev/null 2>&1
         else
@@ -57,8 +69,8 @@ function _ToggleTileMono {
 }
 
 # change active workspace layout in sxhkdrc
-# alt + shift + t ; {d,f,g,m,n,r,s,t,w}
-##### dk_layouts_static -{d,f,g,m,n,r,s,t,w}
+# super + shift + t ; {d,f,g,m,n,r,s,t,w}
+#     dk_layouts_static -{d,f,g,m,n,r,s,t,w}
 
 case "$1" in
     -d) dkcmd set layout dwindle && _StaticTrue ;;
