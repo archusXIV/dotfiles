@@ -160,7 +160,7 @@ rm_rule()
 
 bspwm_cfg()
 {
-    declare -a options ("borderless_monocle" "gapless_monocle" "paddingless_monocle" \
+    declare -a options=("borderless_monocle" "gapless_monocle" "paddingless_monocle" \
                         "single_monocle" "history_aware_focus" "focus_by_distance" \
                         "focus_follows_pointer" "pointer_follows_focus" "ignore_ewmh_focus" \
                         "center_pseudo_tiled" "remove_disabled_monitors" \
