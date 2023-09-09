@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# super + z -> layout becomes tiled; all splits are balanced and vertical
+# super + x -> layout becomes tiled; all splits are balanced and horizontal
+
+bspc desktop 'focused.!user_tiled' -l tiled; \
+root=$(bspc query -N -n 'focused.!leaf') \
+    || root=$(bspc query -N -n '@/.!leaf') \
+    || exit 1; \
+while bspc node "$root"'#any.!{vertical,horizontal}.!leaf.descendant_of' -y next; do :; done; \
+bspc node "$root" -B
