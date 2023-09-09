@@ -1,13 +1,10 @@
 #!/usr/bin/env bash
 
-# User systemd services.
-# systemctl --user start mpv-ipc.service
-
-# Apply the lastest wallpaper
+# Wallpaper setter
 if [[ -n $(command -v nitrogen) ]]; then
     nitrogen --restore &
 else
-    sh -c "$XDG_CONFIG_HOME"/.fehbg
+    sh -c "$XDG_CONFIG_HOME"/.fehbg &
 fi
 
 # Sound
@@ -15,19 +12,25 @@ fi
 for id in 0 1; do
     pactl set-source-mute "$id" 1
     pactl set-source-volume "$id" 0%
+    pactl set-sink-mute "$id" 1
+    pactl set-sink-volume "$id" 0%
 done
 
 unset id
 
-pactl set-sink-mute 0 1
-pactl set-sink-volume 0 0%
-pactl set-sink-volume @DEFAULT_SINK@ 40%
+DEFAULT_SINK=$(pactl get-default-sink)
+pactl set-sink-mute "${DEFAULT_SINK}" 0
+pactl set-sink-volume "${DEFAULT_SINK}" 50%
+
 
 # Other settings
 cleanup &
-rsync -apq "$SCRIPTDIR"/* ~/Documents/scripts/ &
-rsync -apq --exclude 'VirtualBox' \
-"$XDG_CONFIG_HOME"/* ~/Documents/configs/CONFIGS/ &
+rsync -apq "$SCRIPTDIR"/* "$HOME"/Documents/scripts/ &
+rsync -apq --exclude 'VirtualBox' --exclude 'virt-manager' \
+"$XDG_CONFIG_HOME"/* "$HOME"/Documents/configs/CONFIGS/ &
+
+# Updating blocklist
+sudo hblock -H /etc/hosts_ &
 
 # Updates checking script
 sleep 10s && updates-manager --check
