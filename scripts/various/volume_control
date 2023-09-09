@@ -8,12 +8,16 @@
 # https://github.com/archusXIV/dotfiles/blob/main/polybar/active-modules-bar2.ini
 # Usage: volume_control sink --{up,down,toggle} (preset is -/+5%)
 #        volume_control source --{up,down,toggle} (preset is -/+1%)
+#        volume_control sink --set "value" (onthefly_preset)
+#        volume_control source --set "value" (onthefly_preset)
 
 [[ -z $(pidof polybar) ]] && exit 1
 
 # change default presets values to your liking.
 sink_preset=5
 source_preset=1
+# not this one.
+onthefly_preset="$3"
 
 DEFAULT_SINK=$(pactl get-default-sink)
 DEFAULT_SOURCE=$(pactl get-default-source)
@@ -22,29 +26,26 @@ DEFAULT_SOURCE=$(pactl get-default-source)
 GET_SINK_MUTE=$(pactl get-sink-mute "${DEFAULT_SINK}")
 GET_SOURCE_MUTE=$(pactl get-source-mute "${DEFAULT_SOURCE}")
 
-# finding proper bar's pid
-if [[ -n $(pidof bspwm) ]]; then
-    PID=$(pgrep --full bspwm-bar-2)
-else
-    PID=$(pgrep --full i3-bar-2)
-fi
+# finding proper pid for proper bar-2
+WDMNGR=$(awk '/Name/{print $2}' < <(wmctrl -m))
+BARPID=$(pgrep --full "$WDMNGR"-bar-2)
 
 # sending message to polybar
 _hook_sink_on() {
-    polybar-msg -p "$PID" action \
+    polybar-msg -p "$BARPID" action \
     "#volume-ipc.hook.1" >/dev/null 2>&1
 }
 
 _hook_source_on() {
-    polybar-msg -p "$PID" action \
+    polybar-msg -p "$BARPID" action \
     "#mic-ipc.hook.1" >/dev/null 2>&1
 }
 
 # if polybar is hidden by eg: mpv in fullscreen; then get a notification anyway.
 _notify_volume() {
     notify-send "Main pulseaudio volume \
-    "$(pactl get-sink-volume "${DEFAULT_SINK}" \
-    | awk '{if(NR!=2) {print $5}}')""
+    $(pactl get-sink-volume "${DEFAULT_SINK}" \
+    | awk '{if(NR!=2) {print $5}}')"
 }
 
 case "$1" in
@@ -72,13 +73,16 @@ case "$1" in
                                 polybar-msg hook volume-ipc 1 >/dev/null 2>&1
                             fi
                 ;;
-    esac
+                --set )     pactl set-sink-volume "${DEFAULT_SINK}" "${onthefly_preset}"%
+                            _hook_sink_on
+                ;;
+            esac
     ;;
     source) case "$2" in
                         # Same as above.
                 --up)   if [[ ${GET_SOURCE_MUTE} == 'Mute: yes' ]]; then
                             pactl set-source-mute "${DEFAULT_SOURCE}" toggle
-                            pactl set-source-volume "${DEFAULT_SOURCE}" 75%
+                            pactl set-source-volume "${DEFAULT_SOURCE}" 80%
                             _hook_source_on
                         else
                             pactl set-source-volume "${DEFAULT_SOURCE}" +${source_preset}%
@@ -90,7 +94,7 @@ case "$1" in
                 ;;
                 --toggle)   if [[ ${GET_SOURCE_MUTE} == 'Mute: yes' ]]; then
                                 pactl set-source-mute "${DEFAULT_SOURCE}" toggle
-                                pactl set-source-volume "${DEFAULT_SOURCE}" 75%
+                                pactl set-source-volume "${DEFAULT_SOURCE}" 80%
                                 _hook_source_on
                             else
                                 pactl set-source-mute "${DEFAULT_SOURCE}" toggle
@@ -98,6 +102,8 @@ case "$1" in
                                 polybar-msg hook mic-ipc 1 >/dev/null 2>&1
                             fi
                 ;;
+                --set )     pactl set-source-volume "${DEFAULT_SOURCE}" "${onthefly_preset}"%
+                            _hook_source_on
             esac
     ;;
 esac
