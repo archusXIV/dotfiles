@@ -1,10 +1,11 @@
 #!/bin/bash
 
-# Author: Barret E (2020-21) <archus@protonmail.con>
+# Author: Barret E (2020-23) <archus@protonmail.con>
 # https://github.com/archusXIV/dotfiles
 #
 # Yet Another Updates Manager Script for Arch Linux based systems.
 # Checks for updates, lists them in a readable file, update your polybar module.
+# timeshift is used to create a snapshot before update procedure
 
 : "${XDG_RUNTIME_DIR:-/run/user/1000}"
 
@@ -12,25 +13,32 @@ ARCH="$XDG_RUNTIME_DIR/archlinux.list"
 AUR="$XDG_RUNTIME_DIR/aur.list"
 ARCHAUR="$XDG_RUNTIME_DIR/combined.list"
 
+WM=$(wmctrl -m | awk '/Name:/{print $2}')
+BARPID=$(pgrep --full "$WM"-bar-1)
+
+declare -a DEPS=( "checkupdates" "polybar" "reflector" "yay" "wmctrl" )
+
 nocolor=$'\e[0m';
 red=$'\e[0;31m';
 green=$'\e[0;32m';
 
+_PolybarHook() {
+    polybar-msg -p "$BARPID" \
+    action "#updates-ipc.hook.0" >/dev/null 2>&1
+}
+
 _CheckUpdates() {
 
-    local updmngr pids location
-    location=$(curl --fail -s https://ipapi.co/country)
+    local country
+    country=$(curl --fail -s https://ipapi.co/country)
 
     # checking dependencies
-    for deps in checkupdates polybar yay wmctrl; do
+    for deps in "${DEPS[@]}"; do
         [[ -z $(command -v "$deps") ]] && exit 127
     done
 
     # avoids running multiple instances
-    updmngr=$(basename "$0")
-    pids="($(pidof -x "$updmngr"))"
-
-    [[ ${#pids[@]} -gt 1 ]] && exit
+    [[ $(pidof -x updates-manager | wc | awk '{print $2}') -gt 2 ]] && exit
 
     while true; do
 
@@ -38,7 +46,7 @@ _CheckUpdates() {
         sleep 0.5
 
         sudo reflector \
-        --country "$location" \
+        --country "$country" \
         --latest 10 \
         --age 24 \
         --protocol https \
@@ -53,16 +61,13 @@ _CheckUpdates() {
             yay -Qum | tee "$AUR" >> "$ARCHAUR"
 
             # purge combined.list from possible duplicates.
-
             sed -i '/^::/d;/^\s/g;/^\s*$/d' "$ARCHAUR"
             perl -i -ne 'print if ! $x{$_}++' "$ARCHAUR" >/dev/null 2>&1
         fi
 
-        wm=$(wmctrl -m | awk '/Name/{print $2}')
-        barpid=$(pgrep --full $wm-bar-1)
-
-        polybar-msg -p ${barpid} \
+        polybar-msg -p "$(pgrep --full "$WM"-bar-1)" \
         action "#updates-ipc.hook.0" >/dev/null 2>&1
+        notify-send "There is $(grep "" -c "$ARCHAUR") available updates."
 
         sleep 3588s
 
@@ -71,6 +76,7 @@ _CheckUpdates() {
 
 _YesNoPrompt() {
     # stolen from budRich
+    # with this we can't answer anything else than yes or no.
     local screenprompt key default options status
 
     default=y
@@ -101,37 +107,52 @@ _YesNoPrompt() {
     return "${status:-0}"
 }
 
+_Snapshot() {
+    # will remove the second snapshot & create a new one.
+    if [[ $(command -v timeshift) ]]; then
+        # The first snapshot in the list is the "after system installation"
+        # awk '/^1/{print $3}' will match the second snapshot.
+        if [[ -n $(sudo timeshift --list | awk '/^1/{print $3}') ]]; then
+            SNAP=$(sudo timeshift --list | awk '/^1/{print $3}')
+            sudo timeshift --delete --snapshot "$SNAP"
+            sudo timeshift --create --skip-grub --comment "Before updates"
+            sleep 2
+        else
+            sudo timeshift --create --skip-grub --comment "Before updates"
+        fi
+    else
+        echo " ${green}Timeshift is not installed...${nocolor}"
+        sleep 2
+    fi
+}
+
 MIRR="/etc/pacman.d/mirrorlist"
 BCKP="/etc/pacman.d/mirrorlist_bckp"
 
-_Reboot() {
+_Installation() {
     sudo cp -f "$MIRR" "$BCKP"
-    sudo pacman -Syyu --noconfirm
+    sudo pacman -Syu --noconfirm
     sudo grub-mkconfig -o /boot/grub/grub.cfg
+}
+
+_Reboot() {
+    _Snapshot
+    _Installation
     sudo reboot
 }
 
-WM=$(wmctrl -m | awk '/Name:/{print $2}')
-BARPID=$(pgrep --full $WM-bar-1)
-
 _NoReboot() {
-    sudo cp -f "$MIRR" "$BCKP"
-    sudo pacman -Syyu --noconfirm
-    sudo grub-mkconfig -o /boot/grub/grub.cfg
-
+    _Snapshot
+    _Installation
     # cleaning our lists from old packages updates.
     sed -i '/[[:graph:]]/d' {"$ARCH","$AUR","$ARCHAUR"}
-
-    polybar-msg -p ${BARPID} \
-    action "#updates-ipc.hook.0" >/dev/null 2>&1 \
-
+    _PolybarHook
     exit 0
 }
 
 _Poweroff() {
-    sudo cp -f "$MIRR" "$BCKP"
-    sudo pacman -Syyu --noconfirm
-    sudo grub-mkconfig -o /boot/grub/grub.cfg
+    _Snapshot
+    _Installation
     sudo poweroff
 }
 
@@ -163,7 +184,7 @@ _MakeUpdates() {
     "grub" \
     "linux" \
     "mesa" \
-    "nvidia" \
+    "nvidia-dkms" \
     "systemd" \
     "xf86-video-*" \
     "xorg"
@@ -182,6 +203,30 @@ _MakeUpdates() {
 
 }
 
+_ZnVer2() {
+
+    local VERSION
+    VERSION=$(yay -Ss linux-amd-znver2 | awk 'NR==1 {print $2}')
+
+    if grep -q -w 'linux-amd-znver2' "$AUR"; then
+
+        [[ $(grep "" -c "$ARCH") -eq 0 ]] && _Snapshot
+
+        cd "$XDG_CACHE_HOME" || exit 1
+
+        curl \
+        -L "http://nhameh.ovh/linuxkernels/x86_64/linux-amd-znver2-$VERSION-x86_64.pkg.tar.zst" -O \
+        && curl -L \
+        "http://nhameh.ovh/linuxkernels/x86_64/linux-amd-znver2-headers-$VERSION-x86_64.pkg.tar.zst" -O \
+        && sudo pacman \
+        -U linux-amd-znver2-"$VERSION"-x86_64.pkg.tar.zst linux-amd-znver2-headers-"$VERSION"-x86_64.pkg.tar.zst
+
+        sed -i '/linux-amd-znver2/d' {"$AUR","$ARCHAUR"}
+
+    fi
+
+}
+
 _List() {
 
     local TOTALUPDATES
@@ -197,11 +242,7 @@ _List() {
         done < "$ARCHAUR"
 
         echo ""
-        if ((TOTALUPDATES > 1)); then
-            echo -e " ${green}There are $TOTALUPDATES available updates.\n${nocolor}"
-        else
-            echo -e " ${green}There is $TOTALUPDATES available update.\n${nocolor}"
-        fi
+        echo -e " ${green}Available update(s): $TOTALUPDATES\n${nocolor}"
 
         _YesNoPrompt " Proceed with installation?" || {
             echo " bye..."
@@ -209,35 +250,41 @@ _List() {
             return 0
         }
 
+        # Get & install linux-amd-znver2 before yay tries to compile it
+        # _ZnVer2
+
         # first AUR packages update
         if (( $(grep "" -c "$AUR") > 0 )); then
-            yay -Sua
+            yay -Sua --nocombinedupgrade
             rm -rf "$HOME"/.ccache
             if (( $(grep "" -c "$AUR") == TOTALUPDATES )); then
                 sed -i '/[[:graph:]]/d' {"$AUR","$ARCHAUR"}
-                polybar-msg -p ${BARPID} \
-                action "#updates-ipc.hook.0" >/dev/null 2>&1
+                _PolybarHook
                 return 0
             fi
         fi
 
         # then Arch...
-        (( $(grep "" -c "$ARCH") > 0 )) && _MakeUpdates
+        if (( $(grep "" -c "$ARCH") > 0 )); then
+            _MakeUpdates
+        elif find "$XDG_CACHE_HOME" -type f -iname "*.zst"; then
+            sudo grub-mkconfig -o /boot/grub/grub.cfg
+            _YesNoPrompt " Linux-amd requires reboot, proceed so?" || {
+                sed -i '/[[:graph:]]/d' {"$ARCH","$ARCHAUR"}
+                _PolybarHook
+                echo " bye..."
+                sleep 2s
+                exit 0
+            }
+            sudo reboot
+        fi
 
     fi
 
 }
 
 case "$1" in
-    --hook)
-        polybar-msg -p ${BARPID} \
-        action "#updates-ipc.hook.0" >/dev/null 2>&1
-    ;;
-    --list)
-        _List
-    ;;
-    --check)
-        _CheckUpdates
-    ;;
+    --hook ) _PolybarHook ;;
+    --list ) _List ;;
+    --check) _CheckUpdates ;;
 esac
-
