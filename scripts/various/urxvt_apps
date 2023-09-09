@@ -13,7 +13,6 @@ case "$1" in
     -p) urxvtc -name pacman-cli -e pacman-cli ;;
     -r) urxvtc -name newsboat -e newsboat ;;
     -s) urxvtc -name vim_script -geometry 160x40 -e vim_script ;;
-    -s) urxvtc -name vim_script -geometry 160x40 -e vim_script ;;
     -t) urxvtc -name termscp -e termscp ;;
     -x) urxvtc -name ripper -e xtreamripper ;;
     -y) urxvtc -name youtube-viewer -e youtube-viewer ;;
