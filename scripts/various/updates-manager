@@ -6,6 +6,7 @@
 # Yet Another Updates Manager Script for Arch Linux based systems.
 # Checks for updates, lists them in a readable file, update your polybar module.
 # timeshift is used to create a snapshot before update procedure
+# Of course you need sudo privileges without entering a password
 
 : "${XDG_RUNTIME_DIR:-/run/user/1000}"
 
