@@ -3,45 +3,47 @@
 # Hardware utilizations and temperatures displayed in polybar.
 # I had to include mpd stuff not to create another polybar module.
 # Same thing for mpv...
+# Dependencies: polybar FontAwesome.
 
 WM_NAME=$(wmctrl -m | awk '/Name/{print $2}')
 
 _mpd() {
     # if ncmpcpp is running it will activate the same polybar module,
     # but if it's not the case...
-    [[ -z $(pidof ncmpcpp) ]] && {
+    if pactl list sink-inputs | grep -w 'mpd'; then
+        if [[ -z $(pidof ncmpcpp) ]]; then
+            polybar-msg \
+            -p "$(pgrep --full "$WM_NAME"-bar-2)" \
+            action "#mpd-ipc.hook.1" >/dev/null 2>&1
+        fi
+    else
         polybar-msg \
         -p "$(pgrep --full "$WM_NAME"-bar-2)" \
-        action "#music_player-ipc.hook.1" >/dev/null 2>&1
-    }
+        action "#mpd-ipc.hook.0" >/dev/null 2>&1
+    fi
 }
 
+# shellcheck disable=SC2015
 _mpv() {
-    
     [[ -n $(pidof mpv) ]] && {
-        
         local metadata="$XDG_RUNTIME_DIR/mpv.txt"
-        
+
         [[ ! -f "$metadata" ]] && touch "$metadata"
         echo '{ "command": ["get_property", "media-title"] }' \
         | socat - /tmp/mpvsocket | awk -F '"' '{print $4}' > "$metadata"
-        
+
         polybar-msg -p "$(pgrep --full "$WM_NAME"-bar-3)" \
         action "#mpv-ipc.hook.1"
-        
+
     } || polybar-msg -p "$(pgrep --full "$WM_NAME"-bar-3)" \
-    action "#mpv-ipc.hook.0"
-    
+         action "#mpv-ipc.hook.0"
 }
 
 _coreusage() { cut -d ' ' -f1 /proc/loadavg; }
 
 _coretemp() {
-    if [[ -n $(sensors | awk '/Tccd1/') ]]; then
-        sensors | awk '/Tccd1/{ sub("[+]",""); print $2 }'
-    else
-        sensors | awk '/Tdie/{ sub("[+]",""); print $2 }'
-    fi
+    sensors | awk '/Tccd1/{ sub("[+]",""); print $2 }' \
+    || sensors | awk '/Tdie/{ sub("[+]",""); print $2 }'
 }
 
 _nvidia() {
@@ -62,28 +64,30 @@ _fanspeed() { sensors | awk '/fan2/{print $2" ""rpm"}'; }
 _mem() { free -h | awk '/Mem:/{print $3}'; }
 
 _disksusage() {
-    if (( $(df -h | awk '/sda2/{ sub("[%]",""); print $5 }') > 65 )); then
-        echo "%{F#FF4747}"$(df -h | awk '/sda2/{print $5}')"%{F-}"
+    if (( $(df -h | awk '/sda2/{ sub("[%]",""); print $5 }') > 60 )); then
+        echo "%{F#FF4747}$(df -h | awk '/sda2/{print $5}')%{F-}"
     else
         df -h | awk '/sda2/{print $5}'
     fi
 }
 
 # colored FontAwesome icons for polybar using ~/.Xresources parameters.
-# (p)oint is just a character that creates a kind of padding function,
+# pad is just a character that creates a kind of padding function,
 # for simulated blocks or modules.
-_icons_color() { xrdb -query | awk '/color4:/{print $NF}'; }
+_icons_color() { xrdb -query | awk '/color3:/{print $NF}'; }
+tc="%{F$(xrdb -query | awk '/color4:/{print $NF}')}"
+pad="%{F$(xrdb -query | awk '/background:/{print $NF}')}_%{F-}"
 
-p="%{F"$(xrdb -query | awk '/background:/{print $NF}')"}:%{F-}"
-icon_core="%{F"$(_icons_color)"}%{F-}"
-icon_nvidia="%{F"$(_icons_color)"}%{F-}"
-icon_fan="%{F"$(_icons_color)"}%{F-}"
-icon_mem="%{F"$(_icons_color)"}%{F-}"
-icon_disk="%{F"$(_icons_color)"}%{F-}"
-icon_kernel="%{F"$(_icons_color)"}%{F-}"
+icon_core="%{F$(_icons_color)}%{F-}"
+icon_nvidia="%{F$(_icons_color)}%{F-}"
+icon_fan="%{F$(_icons_color)}%{F-}"
+icon_mem="%{F$(_icons_color)}%{F-}"
+icon_disk="%{F$(_icons_color)}%{F-}"
 
-echo "${icon_core}""${p}" "$(_coreusage)"% - "$(_coretemp)""${p}" \
-     "${icon_nvidia}""${p}" "$(_nvidia)""$p" "${icon_fan}""${p}" "$(_fanspeed)""${p}" \
-     "${icon_mem}""${p}" "$(_mem)""$p" "${icon_disk}""${p}" "$(_disksusage)"
-$(_mpd)
-$(_mpv)
+echo "${icon_core}${pad}${tc}$(_coreusage)% - $(_coretemp)${pad}\
+${icon_nvidia}${pad}${tc}$(_nvidia)${pad}\
+${icon_fan}${pad}${tc}$(_fanspeed)${pad}\
+${icon_mem}${pad}${tc}$(_mem)${pad}\
+${icon_disk}${pad}${tc}$(_disksusage)"
+eval _mpd
+eval _mpv
