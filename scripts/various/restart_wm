@@ -1,10 +1,27 @@
 #!/bin/bash
 
-if [[ -n $(pidof bspwm) ]]; then
-    killall -q bspc-layout
-    bspc wm -r
-elif [[ -n $(pidof i3) ]]; then
-    i3-msg -q restart
+WmName=$(wmctrl -m | awk '/Name:/{print $2}')
+
+WinId() { wmctrl -lx | awk '{print $1}'; }
+
+restartmsg() {
+    if [[ $WmName == bspwm ]]; then
+        bspc wm -r
+    elif [[ $WmName == i3 ]]; then
+        i3-msg -q restart
+    elif [[ $WmName == dk ]]; then
+        dkcmd restart
+    fi
+}
+
+if [[ $WmName == dk ]]; then
+    for wd in $(WinId); do
+        dkcmd win "$wd" kill
+    done
+    restartmsg
 else
-    echo "no running Bspwm or i3 instance found" && exit 1
+    for wd in $(WinId); do
+        xdo close "$wd"
+    done
+    restartmsg
 fi
