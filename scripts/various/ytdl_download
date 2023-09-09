@@ -4,7 +4,7 @@
 # first install youtube-dl yt-dlp then
 # create a symlink: ln -s /usr/bin/yt-dlp ~/.local/bin/youtube-dl
 
-: "${MPM_DIR:-$HOME/Documents/mpv-playlists-manager}"
+: "${MPM_DIR:-$XDG_DATA_HOME/mpv-playlists-manager}"
 
 file="$MPM_DIR/playlists/$1.m3u"
 count=$(grep -v -c '#EXTM3U' "$file")
@@ -19,9 +19,8 @@ for line in "${PLAYLIST[@]}"; do
         youtube-dl --merge-output-format mp4 --progress "$line"
         clear
     } || youtube-dl --no-warnings --progress "$line" && clear
-    let "count--"
+    ((count--))
 done
 
 rm "$file"
 notify-send 'Downloads completed'
-
