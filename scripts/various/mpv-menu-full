@@ -20,7 +20,7 @@
 # shellcheck disable=SC1091,SC2013,SC2015,SC2030,SC2031,SC2034,SC2044,SC2076
 # shellcheck disable=SC2086,SC2119,SC2120,SC2143,SC2153,SC2154,SC2164,SC2184,SC2207
 
-VERSION="v.1.2-9"
+VERSION="v.1.3-0"
 
 [[ ! -f ~/.config/mpm/mpmrc ]] && {
     mkdir -p ~/.config/mpm
@@ -100,7 +100,7 @@ _ListsCount() {
     local UPD
     UPD=$(curl -sL "https://raw.githubusercontent.com/archusXIV/mpv-playlists-manager/main/version")
     __
-    if [[ $UPD != $VERSION ]]; then
+    if [[ $UPD != "$VERSION" ]]; then
         printf '%s\n' " ${critical}${b}New version available${nb}${nc}"
         __
     fi
@@ -321,7 +321,7 @@ _ViewUrlInfo() {
     # They will close the block before it finishes.
 
     prompt=( "[M]aim menu" "[B]ack to audio options" "[B]ack to video options" \
-            "[D]ownload" "[P]lay" "[S]ave as" "[R]emove" "[V]iew title(s):" )
+            "[D]ownload" "[P]lay" "[S]ave as" "[R]emove list" "[V]iew title(s):" )
 
     __audio() {
         if [[ -f $AUDIO_INFO ]]; then
@@ -421,11 +421,19 @@ _ViewUrlInfo() {
                         fi
                     ;;
                     v|V)
-                        if [[ -f $tmp_dir/DefaultTitles ]]; then
+                        if [[ -f "$tmp_dir"/DefaultTitles ]]; then
                             clear
                             __
                             cat -n "$tmp_dir"/DefaultTitles
                             __
+                            unset prompt[7]
+                        elif [[ -f "$titles_dir"/default.m3u.titles ]]; then
+                            clear
+                            __
+                            cp -f "$titles_dir"/default.m3u.titles "$tmp_dir"/DefaultTitles
+                            cat -n "$tmp_dir"/DefaultTitles
+                            __
+                            unset prompt[7]
                         else
                             clear
                             __
@@ -435,6 +443,7 @@ _ViewUrlInfo() {
                             __
                             cat -n "$tmp_dir"/DefaultTitles
                             __
+                            unset prompt[7]
                         fi
                     ;;
                 esac
@@ -508,7 +517,8 @@ _CopyAudio() {
                 AudioPlaylistTitle=$(youtube-dl -J --flat-playlist "$audiourl" | jq -r .title)
                 printf '%s\n' " ${info}Getting titles & links from playlist: $AudioPlaylistTitle..." \
                 "${b} Please be patient.${nb}${nc}"
-                youtube-dl --get-title --no-warnings "$audiourl" >> "$AUDIO_TITLE"
+                youtube-dl --get-title --no-warnings "$audiourl" \
+                | tee -a "$AUDIO_TITLE" >> "$tmp_dir"/DefaultTitles
                 _GetYoutubePlaylistUrls -a
                 _RemoveCrap
             else
@@ -530,7 +540,7 @@ _CopyAudio() {
                     sed -n '$p' "$AUDIO_INFO" >> "$QUEUE"
                     echo -e " ${info}Getting audio title...${nc}\n"
                     youtube-dl --get-title --no-warnings \
-                    "$audiourl" >> "$AUDIO_TITLE"
+                    "$audiourl" | tee -a "$AUDIO_TITLE" >> "$tmp_dir"/DefaultTitles
                     _RemoveCrap
                 fi
             fi
@@ -587,7 +597,8 @@ _CopyVideo() {
                 VideoPlaylistTitle=$(youtube-dl -J --flat-playlist "$videourl" | jq -r .title)
                 printf '%s\n' " ${info}Getting titles & links from playlist: $VideoPlaylistTitle..." \
                 "${b} Please be patient.${nb}${nc}"
-                youtube-dl --get-title --no-warnings "$videourl" >> "$VIDEO_TITLE"
+                youtube-dl --get-title --no-warnings "$videourl" \
+                | tee -a "$VIDEO_TITLE" >> "$tmp_dir"/DefaultTitles
                 _GetYoutubePlaylistUrls -v
                 _RemoveCrap
             else
@@ -609,7 +620,7 @@ _CopyVideo() {
                     sed -n '$p' "$VIDEO_INFO" >> "$QUEUE"
                     echo -e " ${info}Getting video title...${nc}\n"
                     youtube-dl --get-title --no-warnings \
-                    "$videourl" >> "$VIDEO_TITLE"
+                    "$videourl" | tee -a "$VIDEO_TITLE" >> "$tmp_dir"/DefaultTitles
                     _RemoveCrap
                 fi
             fi
@@ -768,19 +779,17 @@ _ConvertAudio() {
 
     if [[ -n $default_conversion_format ]]; then
         __
-        printf '%s\n' \
-        " ${task}Default format set to $default_conversion_format.${nc}"
+        printf '%s\n' " ${task}Default format set to $default_conversion_format.${nc}"
         __
-        printf '%s\n' \
-        " ${info}Converting files in ${task}$default_conversion_format${b}...${nb}${nc}"
+        printf '%s\n' " ${info}Converting files in ${task}$default_conversion_format${b}...${nb}${nc}"
         _"$default_conversion_format"
     else
         # functions _mp3 _flac _wav & _ogg are in ~/.config/mpm/mpmrc
         __
-        printf '%s\n' " ${task}Default format disabled.${nc}"
+        printf '%s\n' " ${task}Default format disabled." \
+        " Press Enter to abort conversion.${nc}"
         __
-        read -rn1 -p \
-        "${info}"' Select an output format [1 = mp3] [2 = flac] [3 = wav] [4 = ogg]: '"${nc}" conv
+        read -rn1 -p "${info}"' Select an output format [1 = mp3] [2 = flac] [3 = wav] [4 = ogg]: '"${nc}" conv
         __
         case "$conv" in
             1)
@@ -800,7 +809,7 @@ _ConvertAudio() {
                 _ogg
             ;;
             *)
-                echo " ${critical}UNKNOWN FORMAT !!! Try again.${nc}"
+                echo " ${critical}Conversion aborted...${nc}"
                 sleep 3s
                 clear
                 _Menu
@@ -825,7 +834,7 @@ _GetLinkTitle() {
 
 # _RemoveSpecials() { sed -i 's/[[:punct:]]/_/g;s/[[:space:]]/_/g' "$1"; }
 
-_DownloadVideo() {
+_DownloadVideoList() {
     cd "$playlists_dir" || exit 1
 
     local counter
@@ -985,20 +994,20 @@ _GetCompleted() {
         sleep 15
         _Menu
     else
+        _Prompt -n \
+            " ${info}Downloads completed, KEEP playlist?: ${nc}" && {
+                echo " ${critical}Don't forget to save it as for future download.${nc}"
+                sleep 3
+                [[ -f "$QUEUE"_origin ]] && {
+                    mv -f "$QUEUE"_origin "$QUEUE"
+                    rm -f "$tmp_dir"/DefaultTitles_origin "$tmp_dir"/DefaultTitles
+                }
+                cp -f "$AUDIO_INFO"_origin "$AUDIO_INFO"
+                cp -f "$AUDIO_TITLE"_origin "$AUDIO_TITLE"
+                _Menu
+            }
         case "$1" in
             -a)
-                _Prompt -n \
-                " ${info}Audio downloads completed, KEEP playlist?: ${nc}" && {
-                    echo " ${critical}Don't forget to save it as for future download.${nc}"
-                    sleep 3
-                    [[ -f "$QUEUE"_origin ]] && {
-                        mv -f "$QUEUE"_origin "$QUEUE"
-                        rm -f "$tmp_dir"/DefaultTitles_origin "$tmp_dir"/DefaultTitles
-                    }
-                    cp -f "$AUDIO_INFO"_origin "$AUDIO_INFO"
-                    cp -f "$AUDIO_TITLE"_origin "$AUDIO_TITLE"
-                    _Menu
-                }
                 if [[ -f "$QUEUE"_origin ]]; then
                     _Remove -q
                 else
@@ -1006,18 +1015,6 @@ _GetCompleted() {
                 fi
             ;;
             -v)
-                _Prompt -n \
-                " ${info}Video downloads completed, KEEP playlist?: ${nc}" && {
-                    echo " ${critical}Don't forget to save it as for future download.${nc}"
-                    sleep 3
-                    [[ -f "$QUEUE"_origin ]] && {
-                        mv -f "$QUEUE"_origin "$QUEUE"
-                        rm -f "$tmp_dir"/DefaultTitles_origin "$tmp_dir"/DefaultTitles
-                    }
-                    cp -f "$VIDEO_INFO"_origin "$VIDEO_INFO"
-                    cp -f "$VIDEO_TITLE"_origin "$VIDEO_TITLE"
-                    _Menu
-                }
                 if [[ -f "$QUEUE"_origin ]]; then
                     _Remove -q
                 else
@@ -1546,7 +1543,7 @@ _LoadPlaylistMenu() {
             1) _ChooseDownloadAudio ;;
             2) _ChooseDownloadVideo ;;
             3) _GetAudio -l ;;
-            4) _DownloadVideo ;;
+            4) _DownloadVideoList ;;
             5) _Menu ;;
         esac
     done
@@ -1824,8 +1821,9 @@ _Remove() {
             sleep 3
         ;;
         -q) sed -i '/^https/d' "$QUEUE"
-            rm {"$QUEUE"_origin,"$tmp_dir"/1} 2>/dev/null
-            rm {"$tmp_dir"/DefaultTitles_origin,"$tmp_dir"/DefaultTitles} 2>/dev/null
+            rm -f {"$QUEUE"_origin,"$tmp_dir"/1} 2>/dev/null
+            rm -f "$tmp_dir"/{DefaultTitles_origin,DefaultTitles} 2>/dev/null
+            rm -f "$titles_dir"/default.m3u.titles >/dev/null 2>&1
             __
             echo " ${critical}Default list cleared...${nc}"
             sleep 3
@@ -1922,17 +1920,27 @@ _SaveRemove() {
     _Menu
 }
 
-_CleanTmpDir() { rm -f "$tmp_dir"/* >/dev/null 2>&1; }
+_CleanTmpDir() {
+    if (( $(_GetLinesList -q) > 0 )); then
+        cp "$tmp_dir"/DefaultTitles "$titles_dir"/default.m3u.titles
+        rm -f "$tmp_dir"/* >/dev/null 2>&1
+    elif [[ -f "$titles_dir"/default.m3u.titles ]]; then
+        rm -f {"$titles_dir"/default.m3u.titles,"$tmp_dir"/*} >/dev/null 2>&1
+    fi
+}
 
 ## avoids running multiple instances
 mpvmenu=$(basename $0)
 pids=($(pidof -x $mpvmenu))
 
-[[ ${#pids[@]} -gt 1 ]] && exit
+[[ ${#pids[@]} -gt 1 ]] && {
+    notify-send -t 0 -u critical "mpm is already running..."
+    exit
+}
 
 HELP="/usr/local/share/doc/mpm/help"
 
-_LaunchMpn() {
+_LaunchMpm() {
     _Prompt " ${info}Launch mpm_full? ${nc}" || {
         exit
     }
@@ -1940,12 +1948,12 @@ _LaunchMpn() {
 }
 
 case "$1" in
-    -c) $MPMEDITOR ~/.config/mpm/mpmrc && _LaunchMpn ;;
+    -c) $MPMEDITOR ~/.config/mpm/mpmrc && _LaunchMpm ;;
     -e) _EditPlaylist ;;
     -l) _LoadPlaylist ;;
     -p) _LoadLocal ;;
-    -v) echo "mpm $VERSION" && _LaunchMpn ;;
-    -h|--help) less "$HELP" && _LaunchMpn ;;
+    -v) echo "mpm $VERSION" && _LaunchMpm ;;
+    -h|--help) less "$HELP" && _LaunchMpm ;;
 esac
 
 _CheckDependencies "${@}"
