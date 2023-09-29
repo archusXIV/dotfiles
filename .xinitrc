@@ -23,7 +23,13 @@ systemctl --user import-environment DISPLAY
 systemctl --user start Xsession.target &
 
 # These guys are environment variables.
-[ -f "$MODMAP" ] && xmodmap "$MODMAP"
+if [ -f "$MODMAP" ], then
+    xmodmap "$MODMAP"
+else
+    xmodmap -pke > ~/.config/xfiles/Xmodmap
+    xmodmap ~/.config/xfiles/Xmodmap
+fi
+
 [ -f "$RESOURCES_FILE" ] && xrdb -load "$RESOURCES_FILE"
 
 # more stuff (personal scripts).
