@@ -4,7 +4,7 @@
 # default arch init scripts
 if [ -d /etc/X11/xinit/xinitrc.d ]; then
     for f in /etc/X11/xinit/xinitrc.d/*.sh; do
-        [ -x "$f" ] && source "$f"
+        [ -x "$f" ] && . "$f"
     done
     unset f
 fi
@@ -23,7 +23,7 @@ systemctl --user import-environment DISPLAY
 systemctl --user start Xsession.target &
 
 # These guys are environment variables.
-if [ -f "$MODMAP" ], then
+if [ -f "$MODMAP" ]; then
     xmodmap "$MODMAP"
 else
     xmodmap -pke > ~/.config/xfiles/Xmodmap
@@ -36,7 +36,6 @@ fi
 nvidia-settings -l
 xset s off -dpms
 xset r rate 350 70
-xset -r 41
 setxkbmap -option caps:swapescape
 urxvtd -q -o -f &
 numlockx on &
