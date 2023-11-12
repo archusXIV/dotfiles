@@ -1,0 +1,156 @@
+#!/bin/bash
+# ~/.config/mpm/mpmrc (version 1.3-8)
+
+########################################################
+#                                                      #
+#    ███╗   ███╗██████╗ ███╗   ███╗██████╗  ██████╗    #
+#    ████╗ ████║██╔══██╗████╗ ████║██╔══██╗██╔════╝    #
+#    ██╔████╔██║██████╔╝██╔████╔██║██████╔╝██║         #
+#    ██║╚██╔╝██║██╔═══╝ ██║╚██╔╝██║██╔══██╗██║         #
+#    ██║ ╚═╝ ██║██║     ██║ ╚═╝ ██║██║  ██║╚██████╗    #
+#    ╚═╝     ╚═╝╚═╝     ╚═╝     ╚═╝╚═╝  ╚═╝ ╚═════╝    #
+#                                                      #
+####### MPV-PLAYLISTS-MANAGER CONFIGURATION FILE #######
+######### THE PLACE FOR YOUR PERSONAL SETTINGS #########
+#~~~~~ change the values, not the variables names ~~~~~#
+
+# shellcheck disable=SC2034,SC2016,SC2154
+: "${XDG_DATA_HOME:-$HOME/.local/share}"
+
+# change the main mpm window size. (the actual size is 1260x738)
+function _ResizeWindow { wmctrl -r :ACTIVE: -e 5,-1,-1,1260,738; } 2>/dev/null
+
+# edit your own theme in "$XDG_CONFIG_HOME"/mpm/themerc.
+# apply your prefered colorscheme...
+# AVAILABLE THEMES: default, chocolat-pistache,
+# gruvbox, gotham, TokyoNight, solarized, zenburn
+THEME="solarized"
+
+## default editor
+MPMEDITOR=${VISUAL:-vim}
+
+## default file manager (can be any terminal file manager)
+## used in option 5) Load local dir/files
+FILEMANAGER="ranger"
+
+####### THESE ARE BY DEFAULT DIRECTORIES USED BY MPM. #######
+# The main directory can be renamed but must be present for mpm to work.
+# main_dir="$HOME/Documents/mpv-playlists-manager"
+main_dir="$XDG_DATA_HOME/mpv-playlists-manager"
+
+# The default playlist & all the created ones are stored here.
+playlists_dir="$main_dir/playlists"
+
+# Be carefull with this one because if you choose to use the conversion action,
+# ALL .webm files in that directory will be converted.
+audios_dir="$HOME/Documents/Music/mpm_audios"
+videos_dir="$HOME/Documents/Videos/mpm_videos"
+titles_dir="$main_dir/titles"
+tmp_dir="$main_dir/tmp"
+
+# some links may still be present in playlist files...
+# if value is 'no' you will be prompted.
+keep_none_empty_playlist="yes"
+
+####### DEFAULT TASKS ANSWERS #######
+# from download tasks (option 4) we are prompted or not to choose formats.
+# (will appear in main menu)
+direct_download="no"
+
+# audio files (.webm) conversion.
+# (will appear in main menu)
+automatic_audio_conversion="no"
+
+# default audio conversion format {mp3,flac,wav,ogg},
+# mp3 & ogg in 320k, flac & wav are lossless.
+# if value is empty you will be prompted.
+# (will appear in main menu)
+default_conversion_format="mp3"
+
+# this takes place only after downloading/playing from a collection playlist.
+# (will appear in main menu)
+quit_after_task="no"
+
+##### FFMPEG SPECIFICS (audio conversion) #####
+# !!! You can change ffmpeg audio codec command line settings !!!
+function _mp3 {
+    find . -iname "*.webm" -exec \
+    bash -c 'FILE="$1"; \
+        ffmpeg -i "${FILE}" \
+        -acodec libmp3lame -ar 48000 -ab 320k \
+        -y "${FILE%.webm}.mp3";' _ '{}' \; 2>"$FFOP"
+    find . -iname "*.webm" -exec rm {} \;
+}
+
+function _flac {
+    find . -iname "*.webm" -exec \
+    bash -c 'FILE="$1"; \
+        ffmpeg -i "${FILE}" \
+        -af aformat=s32:48000 \
+        -y "${FILE%.webm}.flac";' _ '{}' \; 2>"$FFOP"
+    find . -iname "*.webm" -exec rm {} \;
+}
+
+function _wav {
+    find . -iname "*.webm" -exec \
+    bash -c 'FILE="$1"; \
+        ffmpeg -i "${FILE}" \
+        -acodec pcm_s32le -ar 48000 \
+        -y "${FILE%.webm}.wav";' _ '{}' \; 2>"$FFOP"
+    find . -iname "*.webm" -exec rm {} \;
+}
+
+function _ogg {
+    find . -iname "*.webm" -exec \
+    bash -c 'FILE="$1"; \
+        ffmpeg -i "${FILE}" \
+        -acodec libvorbis -ar 48000 -ab 320k \
+        -y "${FILE%.webm}.ogg";' _ '{}' \; 2>"$FFOP"
+    find . -iname "*.webm" -exec rm {} \;
+}
+
+######## MPV SPECIFICS ########
+# mpv audio online playing command line
+function _MpvAudioOptions {
+    # change mpv audio settings here if needed but do not remove $M3UFILE
+    mpv \
+    --input-ipc-server='/tmp/mpvsocket' \
+    --no-config \
+    --term-playing-msg="${info}"'Title: ${media-title}'"${nc}" \
+    --ytdl-format='bestaudio/best' "$M3UFILE"
+}
+
+# mpm video online playing command line
+function _MpvVideoOptions {
+    # same as above.
+    mpv \
+    --input-ipc-server='/tmp/mpvsocket' \
+    --cache \
+    --no-config \
+    --term-playing-msg="${info}"'Title: ${media-title}'"${nc}" \
+    --ytdl-format='299+251/298+251/137+251/136+251/best' "$M3UFILE"
+}
+
+######## yt-dlp presets (youtube-dl) ########
+# change the yt-dlp downloader presets ONLY for youtube video downloads
+# (not tested elsewhere)
+# take a look at 'man yt-dlp'
+# !!! do not change the name of the array (ytdlPreset_<*>) !!!
+# downloader name
+ytdlPreset_DN=( --downloader m3u8:ffmpeg )
+# downloader arguments
+ytdlPreset_DA=( --downloader-args '-n' )
+# merge format
+ytdlPreset_MF=( --merge-output-format mp4 )
+# downloader warnings
+ytdlPreset_DW=( --no-warnings )
+# downloader progress
+ytdlPreset_DP=( --progress )
+# downloader filename sanitization
+# (this avoid the creation of subdirectories because of filenames containing '/').
+ytdlPreset_FS=( --compat-options filename-sanitization )
+# downloader without multiple format codes
+ytdlPreset_NC=( "${ytdlPreset_DW[@]}" "${ytdlPreset_DP[@]}" )
+# combined presets
+ytdlPreset_X=( "${ytdlPreset_DN[@]}" "${ytdlPreset_DA[@]}" \
+"${ytdlPreset_MF[@]}" "${ytdlPreset_DW[@]}" "${ytdlPreset_DP[@]}" )
