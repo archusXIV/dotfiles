@@ -33,8 +33,7 @@ THEMERC="$XDG_CONFIG_HOME/mpm/themerc"
 
 # shellcheck source=/dev/null
 ## summon our personal settings
-source "$MPMRC"
-source "$THEMERC"
+source "$MPMRC"; source "$THEMERC"
 
 trap "_CleanTmpDir; exit" SIGTERM EXIT
 
@@ -813,10 +812,9 @@ _mpmIpc() {
 _IfPartsExist() {
 
     __IfPartsExistInfo() (
-        partsDirs=( "$audios_dir" "$videos_dir" )
         clear
         echo -e " Incomplete files in audio/video directories:\n${nc}"
-        find "${partsDirs[@]}" -name "*.part" 2>/dev/null \
+        find {"$audios_dir","$videos_dir"} -name "*.part" 2>/dev/null \
         | sort -d | sed 's,.*/,,' | cat -n
         __
         echo " ${info}Try again now or later, choose an option.${nc}"
@@ -848,7 +846,7 @@ _IfPartsExist() {
 _DownloadCompleted() {
     cd "$playlists_dir" || exit 1
 
-    if [[ -n $(find "$audios_dir" "$videos_dir" -name "*.part") ]]; then
+    if [[ -n $(find {"$audios_dir","$videos_dir"} -name "*.part") ]]; then
         _IfPartsExist -l
     else
         FILES=( "$list" "$list"_origin "$titles_dir"/"$list".titles \
@@ -859,8 +857,7 @@ _DownloadCompleted() {
                 unset {FILES[0],FILES[2]}
                 rm -f "${FILES[@]}" 2>/dev/null
             else
-                echo " ${critical}keep_none_empty_playlist is set to 'no'.${nc}"
-                echo -e " ${info}Please confirm.${nc}\n"
+                echo -e " ${critical}keep_none_empty_playlist is set to 'no'.${nc}\n"
                 _Prompt \
                 " ${info}Downloads completed but $list is not empty, do you want to KEEP it?: ${nc}" || {
                     rm -f "${FILES[@]}" 2>/dev/null
@@ -926,7 +923,7 @@ _ConvertAudio() {
     [[ -d "$audios_dir"/"${list%.*}" ]] \
     && cd "$audios_dir"/"${list%.*}" \
     || cd "$audios_dir"
-
+    
     if [[ -n $default_conversion_format ]]; then
         __
         printf '%s\n' " ${task}Default format set to $default_conversion_format.${nc}"
@@ -1030,6 +1027,7 @@ _DirectVideoDownload() {
 
     done
 
+    _DownloadCompleted
 }
 
 _DownloadVideoList() {
@@ -1173,7 +1171,7 @@ _GetCompleted() {
 
     cd "$main_dir" || exit 1
 
-    if [[ -n $(find "$audios_dir" "$videos_dir" -name "*.part") ]]; then
+    if [[ -n $(find {"$audios_dir","$videos_dir"} -name "*.part") ]]; then
         _IfPartsExist -t
     else
         _Prompt -n " ${info}Downloads completed, KEEP playlist?: ${nc}" && {
@@ -1402,10 +1400,11 @@ _LoadAudio() {
     __AdviceAudio() (
         clear
         __; rm -f "$tmp_dir"/download 2>/dev/null
-        echo "${critical}Tip: You may want to put this in your mpv.conf:"
-        printf '%s\n' "term-playing-msg='Tiltle: \${media-title}'"
-        echo -e "Otherwise press I in mpv for more infos.${nc}\n"
-        printf '%s\n' " ${info}Playing ${M3UFILE##*/}${nc}"
+        printf '%s\n' " ${critical}Tip: You may want to put this in your mpv.conf:" \
+        " term-playing-msg='Tiltle: \${media-title}'"
+        echo -e " Otherwise press I in mpv for more infos.${nc}\n"
+        file="${M3UFILE##*/}" file="${file%%.*}"
+        printf '%s\n' " ${info}Playing: ${file}${nc}"
     )
 
     # change mpv settings in ~/.config/mpm/mpmrc
@@ -1467,10 +1466,11 @@ _LoadVideo() {
 
     clear
     __
-    echo "${critical}Tip: You may want to put this in your mpv.conf:"
-    printf '%s\n' "term-playing-msg='Tiltle: \${media-title}'"
-    echo -e "Otherwise press I in mpv for more infos.${nc}\n"
-    printf '%s\n' " ${info}Playing ${M3UFILE##*/}${nc}"
+    printf '%s\n' " ${critical}Tip: You may want to put this in your mpv.conf:" \
+    " ${info}term-playing-msg='Tiltle: \${media-title}'"
+    echo -e " ${critical}Otherwise press I in mpv for more infos.${nc}\n"
+    file="${M3UFILE##*/}" file="${file%%.*}"
+    printf '%s\n' " ${info}Playing: ${file}${nc}"
 
     # change mpv settings in ~/.config/mpm/mpmrc
     _MpvVideoOptions
@@ -1478,9 +1478,9 @@ _LoadVideo() {
     if [[ -f "$VIDEO_URLS" ]]; then
         clear
         __
-        echo " ${critical}Did you launched video(s) from the default list?"
-        echo " or from option 4) Load a playlist?"
-        echo " If so, type ${b}${task}Y${nb} ${critical}to preserve temporary video list${nc}"
+        printf '%s\n' " ${critical}Did you launched video(s) from the default list?" \
+        " or from option 4) Load a playlist?" \
+        " If so, type ${b}${task}Y${nb} ${critical}to preserve temporary video list${nc}"
         __
 
         declare -a TMP=( "$VIDEO_URLS" "$VIDEO_TITLES" "$FFOP" "$YTOP" "$CHOOSE1" )
@@ -1614,7 +1614,6 @@ _GetSelected() {
 }
 
 _ChooseDownloadAudio() {
-
     cd "$playlists_dir" || exit 1
     clear
     _TitlesListCompare
@@ -1638,7 +1637,7 @@ _ChooseDownloadAudio() {
         printf '%s\n' " ${info}$chooseAudioCounter file(s) left to downloads.${nc}" \
         " Downloading: $(_GetLinkTitle -s)${nc}"
     )
-
+    
     mapfile -t SELECTEDAUDIO < <(grep '^https' "$CHOOSE1")
 
     for url in "${SELECTEDAUDIO[@]}"; do
@@ -1689,11 +1688,14 @@ _ChooseDownloadAudio() {
     done
 
     _UpdateSelected
+
     # if we don't unset IFS other functions will be messed up!
     unset IFS
 
     clear
+
     echo -e " ${info}Done${nc}\n"
+
     clear
 
     cd "$audios_dir"/"${list%.*}" || exit 1
@@ -1760,7 +1762,6 @@ _ChooseDirectVideoDownload() {
 
         sed -i '1d' "$SELECTEDTITLES"
         ((chooseVideoCounter--))
-        clear
 
     done
 
@@ -1779,8 +1780,7 @@ _ChooseDownloadVideo() {
     cp -f "$list" "$list"_origin
     mkdir -p "$videos_dir"/"${list%.*}"
 
-    IFS=","
-    read -ra array \
+    IFS=","; read -ra array \
     -p " ${info}Enter links numbers separeted by comma, eg: 3,1,5: ${nc}"
 
     clear
@@ -1793,7 +1793,7 @@ _ChooseDownloadVideo() {
         __
         printf '%s\n' " ${info}Tip: direct download will always pick the best format," \
         " on Youtube webm may be the best one but we'll merge files in mp4." \
-        " Choose [S]pecific codes or [D]irect download?:\n${nc}"
+        " Choose [S]pecific codes or [D]irect download?: ${nc}"
         read -rsn 1 choice
     fi
 
@@ -1805,7 +1805,7 @@ _ChooseDownloadVideo() {
             mapfile -t CHOSENCODES < <(grep '^https' "$CHOOSE1")
 
             cd "$videos_dir"/"${list%.*}" || exit 1
-
+            
             for url in "${CHOSENCODES[@]}"; do
 
                 if [[ $url =~ 'youtube.com' ]]; then
@@ -1842,7 +1842,6 @@ _ChooseDownloadVideo() {
                 fi
 
                 sed -i '1d' "$SELECTEDTITLES"
-                # sed -i '2d' "$CHOOSE1"
                 ((chooseVideoCounter--))
                 clear
 
@@ -2180,7 +2179,7 @@ _Save() {
             else
                 echo -e " ${critical}No links in the list${nc}"
                 sleep 2
-                _CopyAudio
+                return
             fi
         ;;
         -q)
@@ -2202,7 +2201,7 @@ _Save() {
             else
                 echo -e " ${critical}No links in the list${nc}"
                 sleep 2
-                _CopyVideo
+                return
             fi
         ;;
     esac
