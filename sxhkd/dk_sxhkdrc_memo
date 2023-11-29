@@ -5,7 +5,111 @@ ctrl + alt + {c,r,q}
 alt + Caps_Lock
 
 # Invoke the session managemnt menu.
-ctrl + alt + Delete
+ctrl + alt + Delete######################################################################
+# THIS FILE IS THE DK WINDOWS, DESKTOP, MONITORS & LAYOUTS SHORTCUTS #
+######################################################################
+# Reload, restart, quit dk.
+ctrl + alt + {c,r,q}
+    { \
+    /home/archangel/.config/dk/dkrc -r, \
+    dkcmd restart, \
+    prompt "Do you really want to quit dk ?" "Xexit" \
+    }
+
+##################### WINDOWS MANAGEMENT ##################
+
+# close/close all/kill focused window.
+super + {_,alt + ,ctrl + }q
+    {\
+    dkcmd win kill, \
+    closethemall, \
+    xkill -id "$(xdo id $1)" \
+    }
+
+# focus window/workspace previous/next
+super + {_,alt + }{Left,Right}
+    dkcmd {win focus,ws} {prev,next}
+
+# focus next, 2,3 whatever windows from the focused one.
+super + shift + {KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,KP_Home,KP_Up,KP_Prior}
+    dkcmd win focus +{1-9}
+
+# swap tiled window in/out of master, cycle tiled windows in place
+super + {space,Tab}
+    dkcmd win {swap,cycle}
+
+######################## MONITORS ########################
+
+# focus monitor next/previous
+super + {_,ctrl +}{BackSpace}
+    dkcmd mon {next,prev}
+
+# focus/send/send & follow to monitor number
+super + {_,alt,ctrl} + {Home,Prior,Next}
+    dkcmd mon {view,send,follow} {$MONITOR1,$MONITOR2,$MONITOR3}
+
+######################## DESKTOPS ########################
+
+# focus/send/send & follow to workspace number
+super + {_,alt + ,ctrl + }{KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,KP_Home,KP_Up,KP_Prior}
+    dkcmd ws {view,send,follow} {1-9}
+
+# focus the last desktop/monitor
+super + {_,shift + }less
+    dkcmd {ws,mon} last
+
+# send/follow all windows of the current ws to ws n°
+super + shift + s ; {_,alt + }{KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,KP_Home,KP_Up,KP_Prior}
+    dk_sendthemall -{s,f} {1-9}
+
+#################### LAYOUTS/STATES/ ####################
+
+# change active workspace layout
+super + {_,shift + }t ; {d,f,g,n,r,s,t,w}
+    {dk_layouts_dynamic,dk_layouts_static} -{d,f,g,n,r,s,t,w}
+
+# reset or alternate between monocle and the last layout.
+super + {_,shift +}m
+    {\
+    dk_layouts_dynamic -m, \
+    dk_layouts_static -m \
+    }
+
+# toggle floating or sticky
+super + alt + {s,space}
+    dkcmd win {float,stick}
+
+# toggle fullscreen/fake fullscreen (enable manipulating fullscreen window)
+ctrl + {_,shift +} F11
+    dkcmd win {fakefull,full}
+
+###################### MOVE/RESIZE ######################
+
+# center a floating window in the viewport
+super + c
+    dkcmd win resize x=center y=center
+
+# move the active window up/down the stack
+super + ctrl + {KP_Add,KP_Subtract}
+    dkcmd win mvstack {up,down}
+
+# resize/move (floating) window using custom script
+alt + {_,ctrl + }{Left,Up,Down,Right}
+    dk_winresize --{resize,move} {Left,Up,Down,Right}
+
+# change number of windows in master or first stack
+super + {_,shift + }{KP_Add,KP_Subtract}
+    dkcmd set {master,stack} {+1,-1}
+
+# change gap width
+alt + {KP_Add,KP_Subtract}
+    dkcmd set gap {+2,-2}
+
+# change border widths
+#alt + ctrl + {_,shift + }{KP_Add,KP_Subtract}
+#	dkcmd set border {width,outer_width} {+1,-1}
+
+# vim:ft=sxhkdrc
 
 # dmenu/rofi
 Menu ; {d,r}
