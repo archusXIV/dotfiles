@@ -5,41 +5,36 @@
 # to see all rules: dkcmd status type=full num=1 | sed -n '/^rule:/,/^$/p'
 
 _WindowsRules() {
-    
-    local CLASSES FLOATINGAPPS
+    # remove all previous rules.
+    dkcmd rule remove '*'
 
-    CLASSES=""
-    
-    # list of floating applications instances/classes
-    FLOATINGAPPS="$HOME/.config/dk/FloatingApps"
+    local FLOAT
+
+    # list of floating applications classes.
+    FLOAT="$HOME/.config/dk/FloatingApps"
 
     while read -r line; do
-        { [[ $CLASSES ]] && CLASSES+="|$line"; } \
-        || CLASSES="$line"
-    done < "$FLOATINGAPPS"
+        dkcmd rule class="^$line$" \
+        focus=true float=true
+    done < "$FLOAT"
 
-    dkcmd rule class="^($CLASSES)$" float=true
-    
-    # for window class
-    dkcmd rule class="^obs$" ws=3 focus=true
-    dkcmd rule class="^(feh|Mumble)$" ws=4 focus=true
-    dkcmd rule class="^(Geany|lite-xl)$" ws=5 focus=true
-    dkcmd rule class="^(mpv|VirtualBox)$" ws=6 focus=true
-    dkcmd rule class="^Sol$" ws=7 focus=true
-    dkcmd rule class="^Five-or-more$" ws=7 w=616 h=691 focus=true
-    dkcmd rule class="^firefox$" ws=8 focus=true
-    dkcmd rule class="^(file-roller|filezilla|pcmanfm)$" ws=9 focus=true
-    dkcmd rule class="^(SimpleScreenRecorder|Zathura)$" ws=10 focus=true
+    # add windows classes/instances in those lists
+    dkcmd rule class="^URxvt$" instance="^(cmus|ncmpcpp|pulsemixer|ripper)$" ws=1 focus=true
+    dkcmd rule class="^(feh|Zathura)$"                                       ws=2 focus=true 
+    dkcmd rule class="^URxvt$" instance="^(ranger|sudoranger|youtube)$"      ws=3 focus=true
+    dkcmd rule class="^(code-oss|Geany|lite-xl)$"                            ws=4 focus=true
+    dkcmd rule class="^(virt-manager|VirtualBox)$"                           ws=5 focus=true
+    dkcmd rule class="^mpv$" instance="^gl$"                                 ws=5 focus=true
+    dkcmd rule class="^URxvt$" instance="^(htop|jnettop|newsboat)$"          ws=6 focus=true
+    dkcmd rule class="^(Chromium|firefox)$"                                  ws=7 focus=true
+    dkcmd rule class="^(file-roller|filezilla|Pcmanfm)$"                     ws=8 focus=true
+    dkcmd rule class="^(obs|SimpleScreenRecorder)$"                          ws=9 focus=true
 
-    # for URxvt instances
-    dkcmd rule class="^URxvt$" instance="^(ncmpcpp|cmus|pulsemixer|ripper)$" ws=1 focus=true
-    dkcmd rule class="^URxvt$" instance="^(htop|jnettop|newsboat|mutt)$" ws=2 focus=true
-    dkcmd rule class="^URxvt$" instance="^ranger$" ws=3 focus=true
-    dkcmd rule class="^URxvt$" instance="^youtube$" ws=6 focus=true
-    dkcmd rule class="^URxvt$" instance="^mpm$" ws=8 focus=true
-
-    # no desktop rules
-    dkcmd rule instance="^(Browser|pacman-cli|floaterm|bashterm)$" float=true
+    # Other rules ================================================ attributs ======================================#
+    dkcmd rule class="^Five-or-more$"                             focus=true float=true w=434 h=488
+    dkcmd rule instance="^(aur-cli|Browser|pacman-cli|floaterm)$" focus=true float=true
+    dkcmd rule class="^URxvt$" instance="^mpm$"                   focus=true float=true w=1260 h=738
+    dkcmd rule class="^URxvt$" instance="^bashterm$"              focus=true float=true w=1260 h=738
+    dkcmd rule class="^URxvt$" instance="^liteterm$"         ws=4 focus=true float=true x=2274 y=577 w=1555 h=465
     dkcmd rule apply '*'
-    
 }
