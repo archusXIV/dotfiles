@@ -1,7 +1,7 @@
+# vim:ft=sxhkdrc
 ##############################################################
 # THIS FILE IS USED WITH BSPWM, I3 & DK FOR COMMON SHORTCUTS #
 ##############################################################
-[reload the hotkeys daemon]
 # reload sxhkd configuration files.
 alt + Escape
     pkill -USR1 -x sxhkd; \
@@ -11,13 +11,15 @@ alt + Escape
 ctrl + alt + Delete
     rofi_run -l
 
-[dmenu/rofi]
-Menu ; {d,r}
-    {dmenu_chooser,rofi_chooser}
+# dmenu/rofi
+Menu ; {d,l,r}
+    {\
+    dmenu_chooser, \
+    lite-xl_kbshorts, \
+    rofi_chooser \
+    }
 
-[scratchpad custom script]
-# we let these lines here because we use
-# sxhkd within bspwm, i3wm & dkwm too.
+# scratchpad custom script
 alt + shift + {h,u,r}
     {\
     scratchpad -h, \
@@ -25,61 +27,63 @@ alt + shift + {h,u,r}
     scratchpad -r \
     }
 
-[applications bindings]
+# applications bindings
 # terminal emulators
-alt + {_,shift + }Return
+alt + {_,shift +,ctrl + }Return
     {\
     xterm, \
-    urxvtc -name bashterm -geometry 124x36 -e bash \
+    urxvtc -name bashterm -geometry 124x30 -e bash, \
+    alacritty \
     }
 
 alt + x ; {r,s}
-    urxvtc -name ranger -e {ranger,sudo ranger /etc}
+    {\
+    urxvtc -name ranger -e ranger, \
+    urxvtc -name sudoranger -e sudo ranger /etc \
+    }
 
-# URxvt applications
-alt + u ; {a,c,d,e,h,j,m,n,p,r,s,v,x,y}
-    urxvt_apps -{a,c,d,e,h,j,m,n,p,r,s,v,x,y}
+# URxvt applications (urxvt_apps script)
+alt + u ; {a,b,c,d,e,h,j,m,n,p,r,s,t,x,y}
+    urxvt_apps -{a,b,c,d,e,h,j,m,n,p,r,s,t,x,y}
 
 # gui applications
-alt + g ; {e,f,g,v,w}
+alt + g ; {c,e,f,g,o,p,v,w}
     {\
+    chromium, \
     $EDITOR, \
     $FILEMNGR, \
     geany, \
+    code-oss, \
+    pavucontrol, \
     $VIRTMNGR, \
     $BROWSER \
     }
 
-# audio-video applications
-alt + v ; {g,p,q}
-    {\
-    qv4l2, \
-    pavucontrol, \
-    qvidcap \
-    }
+# open sxhkdrc_<wm> in vim (s stands for main config)
+super + k ; {b,d,i,s}
+    vim_sxhkdrc -{b,d,i,s}
 
 # script to launch rofi-record, obs/ssr.
-alt + shift + v ; {a,o,v,k}
+super + shift + v ; {a,o,v,k}
     record_options -{a,o,v,k}
 
-[polycontrol]
+# polycontrol
 # toggle/restart polybar(s)
 ctrl + {_,shift + }{KP_End,KP_Down,KP_Next,KP_Left}
     polybar_control -{t,r}{1,2,3,a}
 
-[webcam_rectangle]
 # controls the webcam rectangle position on the screen.
-alt + shift + {Left,Down,Up,Right}
-    webcam_rectangle {1435 0,0 715,0 0,1435 715}
+#alt + shift + {Left,Down,Up,Right}
+#    webcam_rectangle {1435 0,0 715,0 0,1435 715}
 
-[volume/mic]
+# volume/mic
 {_,alt + }XF86Audio{Lower,Raise}Volume
-    {volume_control sink,volume_control source} --{down,up}
+    volume_control {sink,source} --{down,up}
 
 {_,alt + }XF86AudioMute
-    {volume_control sink --toggle,volume_control source --toggle}
+    volume_control {sink,source} --toggle
 
-[player control]
+# player control
 # XF86Audio{Prev,Stop,Play,Next}
 alt + {F9,F10,F11,F12}
     mediacontrol --{prev,stop,toggle,next}
