@@ -13,7 +13,7 @@ _WindowRules() {
     done < "$XDG_CONFIG_HOME"/bspwm/FloatingApps
 
     # [class:instance]="desktop number"
-    declare -A WINRULES=(
+    declare -A WINDESK=(
         [URxvt:cmus]="1" [URxvt:ncmpcpp]="1"
         [URxvt:ripper]="1" [URxvt:youtube]="1"
         [feh]="2" [Zathura]="2"
@@ -26,8 +26,8 @@ _WindowRules() {
         [obs]="9" [SimpleScreenRecorder]="9"
     )
     
-    for w in "${!WINRULES[@]}"; do
-        _Rules "$w" desktop=^"${WINRULES[${w}]}" follow=on
+    for w in "${!WINDESK[@]}"; do
+        _Rules "$w" desktop=^"${WINDESK[${w}]}" follow=on
     done
     
     # Specials =========================== attributs =================#
