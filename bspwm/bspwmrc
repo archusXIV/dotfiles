@@ -99,6 +99,7 @@ _GetColors() {
 
 }
 
+# this function acts in a separated file (_WindowRules)
 _Rules() { bspc rule --add "$@"; }
 
 case "$1" in
