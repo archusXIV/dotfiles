@@ -3,51 +3,34 @@
 ### APPS RULES & ASSIGNMENTS ###
 
 _WindowRules() {
-    # If refreshing bspwmrc, remove all previous rules
+    # If reloading this file, remove all previous rules (added on the fly)
     # to prevent doubling up.
-    bspc rule -r "*"
-    
+    bspc rule --remove "*"
+
     # add windows class names to this file if you want them to float.
-    local FloatingApps="$XDG_CONFIG_HOME/bspwm/FloatingApps"
-    
     while read -r line; do
         _Rules "$line" state=floating focus=on center=on
-    done < "$FloatingApps"
+    done < "$XDG_CONFIG_HOME"/bspwm/FloatingApps
 
-    # Monitor 1
-    _Rules firefox              desktop=^1 follow=on
-    _Rules URxvt:mpm            desktop=^1 follow=on
-    _Rules Pcmanfm              desktop=^2 follow=on
-    _Rules File-roller          desktop=^2 follow=on
-    _Rules Filezilla            desktop=^2 follow=on
-    _Rules obs                  desktop=^3 follow=on
-    _Rules SimpleScreenRecorder desktop=^3 follow=on
-    _Rules feh                  desktop=^4 follow=on state=fullscreen
-    _Rules VirtualBox           desktop=^4 follow=on
-    _Rules Nitrogen             desktop=^4 follow=on
-    _Rules Zathura              desktop=^4 follow=on
-    _Rules qv4l2                desktop=^4 follow=on
-    _Rules Mumble               desktop=^4 follow=on
-
-    # Monitor 2
-    _Rules Geany                desktop=^5 follow=on
-    _Rules lite-xl              desktop=^5 follow=on
-    _Rules mpv                  desktop=^6 follow=on
-    _Rules URxvt:youtube        desktop=^6 follow=on
-    _Rules qvidcap              desktop=^6 follow=on
-    _Rules Five-or-more         desktop=^7 follow=on rectangle=434x488+2662+281
-    _Rules Sol                  desktop=^7 follow=on
-
-    # Monitor 3
-    _Rules URxvt:ncmpcpp        desktop=^8 follow=on
-    _Rules URxvt:cmus           desktop=^8 follow=on
-    _Rules URxvt:ripper         desktop=^8 follow=on
-    _Rules URxvt:htop           desktop=^9 follow=on
-    _Rules URxvt:jnettop        desktop=^9 follow=on
-    _Rules URxvt:newsboat       desktop=^9 follow=on
-    _Rules URxvt:mutt           desktop=^9 follow=on
-    _Rules URxvt:packagelist    desktop=^10 follow=on
-    _Rules URxvt:ranger         desktop=^10 follow=on
-    _Rules XTerm                desktop=^10 follow=on
+    # [class:instance]="desktop number"
+    declare -A WINRULES=(
+        [URxvt:cmus]="1" [URxvt:ncmpcpp]="1"
+        [URxvt:ripper]="1" [URxvt:youtube]="1"
+        [feh]="2" [Zathura]="2"
+        [URxvt:ranger]="3" [URxvt:sudoranger]="3"
+        [code-oss]="4" [Geany]="4" [lite-xl]="4"
+        [VirtualBox]="5" [mpv:gl]="5"
+        [URxvt:htop]="6" [URxvt:jnettop]="6"
+        [Chromium]="7" [firefox]="7"
+        [file-roller]="8" [filezilla]="8" [Pcmanfm]="8"
+        [obs]="9" [SimpleScreenRecorder]="9"
+    )
+    
+    for w in "${!WINRULES[@]}"; do
+        _Rules "$w" desktop=^"${WINRULES[${w}]}" follow=on
+    done
+    
+    # Specials =========================== attributs =================#
+    _Rules URxvt:liteterm       desktop=^4 follow=on state=floating rectangle=1553x462+2274+575
+    _Rules Five-or-more         state=floating rectangle=434x488+2662+281
 }
-
