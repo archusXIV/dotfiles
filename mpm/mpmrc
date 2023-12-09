@@ -117,7 +117,7 @@ function _MpvAudioOptions {
     --input-ipc-server='/tmp/mpvsocket' \
     --no-config \
     --term-playing-msg="${info}"'Title: ${media-title}'"${nc}" \
-    --ytdl-format='bestaudio/best' "$M3UFILE"
+    --ytdl-format='bestaudio/best' "$1"
 }
 
 # mpm video online playing command line
@@ -128,7 +128,7 @@ function _MpvVideoOptions {
     --cache \
     --no-config \
     --term-playing-msg="${info}"'Title: ${media-title}'"${nc}" \
-    --ytdl-format='299+251/298+251/137+251/136+251/best' "$M3UFILE"
+    --ytdl-format='299+251/298+251/137+251/136+251/best' "$1"
 }
 
 ######## yt-dlp presets (youtube-dl) ########
