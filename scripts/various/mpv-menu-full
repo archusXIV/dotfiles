@@ -20,6 +20,7 @@
 # shellcheck disable=SC1091,SC2013,SC2015,SC2030,SC2031,SC2034,SC2044,SC2076,SC2048
 # shellcheck disable=SC2086,SC2119,SC2120,SC2143,SC2153,SC2154,SC2164,SC2184,SC2207,SC2317
 # shellcheck source=/dev/null
+trap "_CleanTmpDir; exit" SIGTERM EXIT
 
 VERSION="v.1.4-1"
 
@@ -34,8 +35,6 @@ THEMERC="$MPMRCDIR/themerc"
 }
 ## summon our personal settings
 source "$MPMRC"; source "$THEMERC"
-
-trap "_CleanTmpDir; exit" SIGTERM EXIT
 
 ## prompts blinking
 b=$'\e[5m';     # blinking
@@ -83,19 +82,21 @@ _CheckDependencies() {
         sleep 3
     }
 
+    # $main_dir must be established in mpmrc
     [[ -z $main_dir ]] && {
         printf '%s\n' " Variable main_dir in mpmrc is not defined...exiting!!!"
         sleep 4 && exit 1
     }
-
-    dirs=( "$audios_dir" "$playlists_dir" "$titles_dir" "$tmp_dir" "$videos_dir" )
     
     if [[ ! -d $main_dir ]]; then
-        mkdir --parents "${dirs[@]}"
+        mkdir --parents \
+        {"$audios_dir","$playlists_dir","$titles_dir","$tmp_dir","$videos_dir"}
     else
-        for d in "${dirs[@]}"; do
-            mkdir --parents "$d"
-        done
+        [[ ! -d $audios_dir ]] && mkdir --parents "$audios_dir"
+        [[ ! -d $playlists_dir ]] && mkdir --parents "$playlists_dir"
+        [[ ! -d $titles_dir ]] && mkdir --parents "$titles_dir"
+        [[ ! -d $tmp_dir ]] && mkdir --parents "$tmp_dir"
+        [[ ! -d $videos_dir ]] && mkdir --parents "$videos_dir"
     fi
 
     [[ ! -f $QUEUE ]] && echo "#EXTM3U" > "$QUEUE"
@@ -111,10 +112,10 @@ _CheckDependencies() {
 
 }
 
-AUDIO_URLS="$tmp_dir/AudioUrls.m3u"
-AUDIO_TITLES="$tmp_dir/AudioTitles"
-VIDEO_URLS="$tmp_dir/VideoUrls.m3u"
-VIDEO_TITLES="$tmp_dir/VideoTitles"
+AUDIO_URLS="$tmp_dir/temporaryAudioUrls.m3u"
+AUDIO_TITLES="$tmp_dir/temporaryAudioTitles"
+VIDEO_URLS="$tmp_dir/temporaryVideoUrls.m3u"
+VIDEO_TITLES="$tmp_dir/temporaryVideoTitles"
 
 _ListsCount() {
 
@@ -257,10 +258,6 @@ _LittleStars() {
     
 }
 
-#!/bin/bash
-## This is a part of main script: mpm.
-
-# shellcheck disable=SC2154
 _Menu() {
     # First copy url then select option 1 or 2,
     # the link will be saved in an m3u file.
@@ -478,17 +475,20 @@ _ViewUrlInfo() {
     # but here it won't work because of the case statment right parenthese...
     # They will close the block before it finishes.
 
+    local Default_Titles stars
+
     viewUrlInfoPrompt=( "[M]aim menu" "[B]ack to audio options" \
                         "[B]ack to video options" "[D]ownload" \
                         "[P]lay" "[S]ave as" "[R]emove list: " )
 
     # let's play...
     stars=$(printf "%-54s" "*")
+    
     __audio() {
         if [[ -f $AUDIO_URLS ]]; then
             clear
             __
-            echo " ${info}order |  audio playlist link(s) & titles.${nc}"
+            echo " ${info}ORDER |  AUDIO PLAYLIST LINKS & TITLES.${nc}"
             echo -e " ${info}${stars// /*}${nc}\n"
             awk '$0 ~ /^https/{print $0}' "$AUDIO_URLS" \
             | cat -n && {
@@ -518,7 +518,7 @@ _ViewUrlInfo() {
         if [[ -f $VIDEO_URLS ]]; then
             clear
             __
-            echo " ${info}order |  video playlist link(s) & titles.${nc}"
+            echo " ${info}ORDER |  VIDEO PLAYLIST LINKS & TITLES.${nc}"
             echo -e " ${info}${stars// /*}${nc}\n"
             awk '$0 ~ /^https/{print $0}' "$VIDEO_URLS" \
             | cat -n && {
@@ -547,17 +547,29 @@ _ViewUrlInfo() {
     __queue() {
         if (($(_GetLinesList -q) > 0)); then
             [[ -f $tmp_dir/1 ]] && rm "$tmp_dir"/1
+            
+            if [[ -f $DEFAULTM3UTITLES ]]; then
+                Default_Titles="$DEFAULTM3UTITLES"
+            elif [[ -f  $DEFAULTITLES ]]; then
+                Default_Titles="$DEFAULTITLES"
+            fi
+            
+            if (( $(grep "" -c "$Default_Titles") != $(_GetLinesList -q) )); then
+                printf '%s\n' " ${critical}Default list as been modified," \
+                " ${task}${b}Updating Default list titles...${nb}${nc}"
+                _GetMediaTitle -q > "$Default_Titles"
+            fi
             clear
             __
-            echo " ${info}order |  default playlist link(s) & titles.${nc}"
+            echo " ${info}ORDER |  DEFAULT PLAYLIST LINKS & TITLES.${nc}"
             echo -e " ${info}${stars// /*}${nc}\n"
             awk '$0 ~ /^https/{print $0}' "$QUEUE" \
             | cat -n && {
             __
-            cat -n "$DEFAULTITLES" 2>/dev/null || \
-            cat -n "$DEFAULTM3UTITLES"
+            cat -n "$Default_Titles"
             __
             }
+            
             while [[ -f $QUEUE ]]; do
                 unset {viewUrlInfoPrompt[1],viewUrlInfoPrompt[2],viewUrlInfoPrompt[7]}
                 echo "${info}" "${viewUrlInfoPrompt[*]}" "${nc}"
@@ -585,7 +597,7 @@ _ViewUrlInfo() {
                     r|R) _Remove -q ;;
                     s|S)
                         if [[ -f $DEFAULTM3UTITLES \
-                        || -f  $DEFAULTITLES ]]; then
+                            || -f  $DEFAULTITLES ]]; then
                             _Save -q
                         else
                             echo " ${task}${b}Updating playlist titles...${nb}${nc}"
@@ -626,6 +638,18 @@ _RemoveCrap() {
         perl -i -ne 'print if ! $a{$_}++' "$file"
     done 2>/dev/null
 
+}
+
+_CleanTmpDir() {
+    if [[ $(_GetLinesList -q) -gt 0 ]]; then
+
+        [[ -f $DEFAULTITLES ]] && \
+        cp "$DEFAULTITLES" "$DEFAULTM3UTITLES"
+        
+    elif [[ -f $DEFAULTM3UTITLES ]]; then
+        rm -f "$DEFAULTM3UTITLES"
+    fi
+    rm -f {"$tmp_dir"/*,"$playlists_dir"/{1_Back_to_menu,*_tmp}} 2>/dev/null
 }
 
 _DeleteUrl() {
@@ -838,9 +862,10 @@ _CopyVideo() {
 }
 
 # these are temporary files used in _Choose{Download{Audio,Video},FromPlay}
-CHOOSE1="$playlists_dir/temporary_selection.m3u"
-CHOOSE2="$playlists_dir/temporary_selection2.m3u"
+CHOOSE1="$playlists_dir/temporarySelection.m3u"
+CHOOSE2="$playlists_dir/temporarySelection2.m3u"
 
+# polybar module showing total number of collection playlists
 _mpmIpc() {
 	polybar-msg \
 	-p $(pgrep --full "$(wmctrl -m | awk '/Name:/{print $2}')"-bar-3) \
@@ -1188,7 +1213,8 @@ _EditPlaylist() {
                     else
                         clear
                         exit 0
-                    fi ;;
+                    fi
+                ;;
             esac
         done
     done
@@ -1467,15 +1493,14 @@ _LoadAudio() {
         printf '%s\n' " ${info}Playing: ${file}${nc}"
     )
 
-    # change mpv settings in ~/.config/mpm/mpmrc
     case "$1" in
         -a)
             if [[ -f $AUDIO_URLS ]]; then
                 M3UFILE="$AUDIO_URLS"
                 __AdviceAudio
-                _MpvAudioOptions
+                _MpvAudioOptions "$M3UFILE"
                 _Prompt " ${info}Temporary audio list still exist, KEEP it?: ${nc}" || {
-                    rm {"$AUDIO_URLS","$AUDIO_TITLES"}
+                    rm {"$M3UFILE","$AUDIO_TITLES"}
                 }
                 _Menu
             else
@@ -1487,7 +1512,7 @@ _LoadAudio() {
             M3UFILE="$CHOOSE1"
             __AdviceAudio
             _MpvAudioOptions
-            rm "$CHOOSE1"
+            rm "$M3UFILE"
             [[ $quit_after_task = yes ]] && exit || _Menu
         ;;
         -l)
@@ -1532,15 +1557,10 @@ _LoadVideo() {
     file="${M3UFILE##*/}" file="${file%%.*}"
     printf '%s\n' " ${info}Playing: ${file}${nc}"
     
-    # change mpv settings in ~/.config/mpm/mpmrc
-    _MpvVideoOptions
+    _MpvVideoOptions "$M3UFILE"
 
     if [[ -f "$VIDEO_URLS" ]]; then
         clear
-        __
-        echo " ${critical}Did you launched video(s) from the default list?"
-        echo " or from option 4) Load a playlist?"
-        echo " If so, type ${b}${task}Y${nb} ${critical}to preserve temporary video list${nc}"
         __
 
         declare -a TMP=( "$VIDEO_URLS" "$VIDEO_TITLES" "$FFOP" "$YTOP" "$CHOOSE1" )
@@ -1888,6 +1908,7 @@ _ChooseDownloadVideo() {
     esac
 
     _UpdateSelected
+    # the Internal Field Separator is modified in _GetRange function
     # if we don't unset IFS other functions will be messed up!
     unset IFS
     clear
@@ -2354,18 +2375,6 @@ _SaveRemove() {
         v|V) _Save -v ;;
     esac
     _Menu
-}
-
-_CleanTmpDir() {
-    if [[ $(_GetLinesList -q) -gt 0 ]]; then
-
-        [[ -f $DEFAULTITLES ]] && \
-        cp "$DEFAULTITLES" "$DEFAULTM3UTITLES"
-        
-    elif [[ -f $DEFAULTM3UTITLES ]]; then
-        rm -f "$DEFAULTM3UTITLES"
-    fi
-    rm -f {"$tmp_dir"/*,"$playlists_dir"/1_Back_to_menu} 2>/dev/null
 }
 
 ## avoids running multiple instances
