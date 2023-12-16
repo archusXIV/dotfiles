@@ -3,7 +3,7 @@
 ##    Author: Barret E (2021-23) <archus@protonmail.com>
 ##    https://github.com/archusXIV/mpv-playlists-manager/blob/main/mpm
 ##    Dependencies: ffmpeg, jq, mpv, youtube-dl.
-##    Optionals: ranger, w3m, wmctrl
+##    Optionals: parallel, ueberzug, ranger, w3m, wmctrl
 ##
 ##    Youtube-dl is for now kind of unmaintained so install and make a symlink with
 ##    https://github.com/yt-dlp/yt-dlp/releases
@@ -23,7 +23,7 @@
 # shellcheck source=/dev/null
 trap "_CleanTmpDir; exit" SIGTERM EXIT
 
-VERSION="v.1.4-1"
+VERSION="v.1.4-2"
 
 : "${XDG_CONFIG_HOME:-$HOME/.config}"
 MPMRCDIR="$XDG_CONFIG_HOME/mpm"
@@ -52,10 +52,10 @@ __() { printf '\n'; }
 ## but let's ensure temporary files are removed before we exit out.
 _CheckDependencies() {
     ## Checking dependencies: softwares, directories and files.
-    declare -a deps=( "ffmpeg" "jq" "mpv" "youtube-dl" "yt-dlp" \
-                    "ueberzug" "wmctrl" "w3m" )
+    declare -a DEPS=( "ffmpeg" "jq" "mpv" "youtube-dl" "yt-dlp" \
+                    "parallel" "ueberzug" "wmctrl" "w3m" )
 
-    for dep in "${deps[@]:0:5}"; do
+    for dep in "${DEPS[@]:0:5}"; do
         [[ -z $(command -v "$dep") ]] && {
             printf '%s\n' " $dep isn 't installed,...exiting!"
             notify-send -t 0 -u critical "$dep isn 't installed,...exiting!"
@@ -63,13 +63,13 @@ _CheckDependencies() {
         }
     done
 
-    for optional in "${deps[@]:5:8}"; do
+    for optional in "${DEPS[@]:5:9}"; do
         [[ -z $(command -v "$optional") ]] && {
             printf '%s\n' " For better experience consider installing $optional."
-            sleep 3
+            sleep 4
         }
     done
-
+    
     # MPMEDITOR & FILEMANAGER must be defined in ~/.config/mpm/mpmrc
     [[ -z $MPMEDITOR ]] && {
         printf '%s\n' " The config EDITOR is not set...exiting!"
@@ -78,15 +78,14 @@ _CheckDependencies() {
     }
 
     command -v "$FILEMANAGER" >/dev/null || {
-        printf '%s\n' " Consider installing a terminal file manager."
-        notify-send -t 0 -u critical "Consider installing a terminal file manager"
+        printf '%s\n' " No terminal file manager found."
+        notify-send -t 0 -u critical "No terminal file manager found."
         sleep 3
     }
 
-    # $main_dir must be established in mpmrc
     [[ -z $main_dir ]] && {
         printf '%s\n' " Variable main_dir in mpmrc is not defined...exiting!!!"
-        sleep 4 && exit 1
+        exit 1
     }
     
     if [[ ! -d $main_dir ]]; then
@@ -102,7 +101,7 @@ _CheckDependencies() {
 
     [[ ! -f $QUEUE ]] && echo "#EXTM3U" > "$QUEUE"
 
-    # needed to warn the user when the default list isn' t empty on startup.
+    # needed to warn the user when the default list isn' t empty.
     (($(_GetLinesList -q) >= 1)) && {
         touch "$tmp_dir"/1
         cp -f "$DEFAULTM3UTITLES" "$DEFAULTITLES"
@@ -122,9 +121,9 @@ _ListsCount() {
 
     local UPD
     UPD=$(curl -sL "https://raw.githubusercontent.com/archusXIV/mpv-playlists-manager/main/version")
-    [[ $UPD != "$VERSION" ]] && {
-        printf '%s\n' " ${critical}${b}version $UPD available${nb}${nc}"
-    }
+    
+    [[ $UPD != "$VERSION" ]] && \
+    printf '%s\n' " ${critical}${b}version $UPD available${nb}${nc}"
     __
     echo -e " ${info}Collection:" \
     " $(find "$playlists_dir" -not -name "default.m3u" \
@@ -372,7 +371,7 @@ _GetAudioDownload() {
 _GetAudio() {
 
     cd "$audios_dir" || exit 1
-    local M3UFILE TITLES
+    local AUDIO_DIR M3UFILE TITLES
 
     case "$1" in
         -a)
@@ -381,13 +380,14 @@ _GetAudio() {
                 sleep 2
                 return
             }
+            AUDIO_DIR="$audios_dir"
             M3UFILE="$AUDIO_URLS"
             TITLES="$AUDIO_TITLES"
         ;;
         -l)
             M3UFILE="$playlists_dir"/"$list"
             TITLES="$titles_dir"/"$list".titles
-            mkdir --parents "$audios_dir"/"${list%.*}"
+            AUDIO_DIR="$audios_dir"/"${list%.*}"
         ;;
         -q)
             if [[ ! -f $DEFAULTITLES && \
@@ -402,6 +402,7 @@ _GetAudio() {
                 _GetMediaTitle -q > "$DEFAULTITLES"
                 clear
             fi
+            AUDIO_DIR="$audios_dir"
             M3UFILE="$QUEUE"
             TITLES="$DEFAULTITLES"
         ;;
@@ -430,7 +431,10 @@ _GetAudio() {
 
     )
 
-    [[ -d "$audios_dir"/"${list%.*}" ]] && cd "$audios_dir"/"${list%.*}"
+    [[ ! -d $AUDIO_DIR ]] && {
+        mkdir --parents "$AUDIO_DIR"
+        cd "$AUDIO_DIR"
+    } || cd "$AUDIO_DIR"
 
     _GetAudioDownload
 
@@ -440,7 +444,7 @@ _GetAudio() {
 
         echo " ${critical}ADVISORY: if you choose conversion, all downloaded files (.webm)"
         echo -e " will be converted in the chosen format.${nc}\n"
-        find . -iname "*.webm" | sort -d | sed 's,.*/,,'
+        find . -iname "*.webm" | sed 's,.*/,,' | sort | cat -n
 
         if [[ $automatic_audio_conversion = yes ]]; then
             __
@@ -452,7 +456,7 @@ _GetAudio() {
             && _ConvertAudio && _DownloadCompleted
         else
             __
-            _Prompt " ${info}Do you wish to convert them?: ${nc}" || {
+            _Prompt " ${info}Proceed with conversion?: ${nc}" || {
                 [[ $M3UFILE = "$AUDIO_URLS" ]] || [[ $M3UFILE = "$QUEUE" ]] \
                 && _GetCompleted -a
                 [[ $M3UFILE = "$playlists_dir"/"$list" ]] && _DownloadCompleted
@@ -476,7 +480,7 @@ _ViewUrlInfo() {
     # but here it won't work because of the case statment right parenthese...
     # They will close the block before it finishes.
 
-    local Default_Titles stars
+    local defaultTitles stars
 
     viewUrlInfoPrompt=( "[M]aim menu" "[B]ack to audio options" \
                         "[B]ack to video options" "[D]ownload" \
@@ -550,16 +554,16 @@ _ViewUrlInfo() {
             [[ -f $tmp_dir/1 ]] && rm "$tmp_dir"/1
             
             if [[ -f $DEFAULTM3UTITLES ]]; then
-                Default_Titles="$DEFAULTM3UTITLES"
-            elif [[ -f  $DEFAULTITLES ]]; then
-                Default_Titles="$DEFAULTITLES"
+                defaultTitles="$DEFAULTM3UTITLES"
+            else
+                defaultTitles="$DEFAULTITLES"
             fi
             
-            if (( $(grep "" -c "$Default_Titles") != $(_GetLinesList -q) )); then
+            (( $(grep "" -c "$defaultTitles") != $(_GetLinesList -q) )) && {
                 printf '%s\n' " ${critical}Default list as been modified," \
                 " ${task}${b}Updating Default list titles...${nb}${nc}"
-                _GetMediaTitle -q > "$Default_Titles"
-            fi
+                _GetMediaTitle -q > "$defaultTitles"
+            }
             clear
             __
             echo " ${info}ORDER |  DEFAULT PLAYLIST LINKS & TITLES.${nc}"
@@ -567,7 +571,7 @@ _ViewUrlInfo() {
             awk '$0 ~ /^https/{print $0}' "$QUEUE" \
             | cat -n && {
             __
-            cat -n "$Default_Titles"
+            cat -n "$defaultTitles"
             __
             }
             
@@ -576,9 +580,6 @@ _ViewUrlInfo() {
                 echo "${info}" "${viewUrlInfoPrompt[*]}" "${nc}"
                 read -rsn 1 opt
                 case "$opt" in
-                    m|M)
-                        _Menu
-                    ;;
                     d|D)
                         __
                         read -rsn 1 -p "${info}"' Download [A]udio, [V]ideo:'"${nc}" get
@@ -586,6 +587,9 @@ _ViewUrlInfo() {
                             a|A) __; _GetAudio -q ;;
                             v|V) __; _GetVideo -q ;;
                         esac
+                    ;;
+                    m|M)
+                        _Menu
                     ;;
                     p|P)
                         __
@@ -601,7 +605,7 @@ _ViewUrlInfo() {
                             || -f  $DEFAULTITLES ]]; then
                             _Save -q
                         else
-                            echo " ${task}${b}Updating playlist titles...${nb}${nc}"
+                            echo " ${task}${b}Updating Default list titles...${nb}${nc}"
                             _GetMediaTitle -q \
                             | tee -a "$DEFAULTITLES" \
                             | cat -n >/dev/null 2>&1
@@ -643,12 +647,9 @@ _RemoveCrap() {
 
 _CleanTmpDir() {
     if [[ $(_GetLinesList -q) -gt 0 ]]; then
-
-        [[ -f $DEFAULTITLES ]] && \
         cp "$DEFAULTITLES" "$DEFAULTM3UTITLES"
-        
-    elif [[ -f $DEFAULTM3UTITLES ]]; then
-        rm -f "$DEFAULTM3UTITLES"
+    else
+        rm -f "$DEFAULTM3UTITLES" 2>/dev/null
     fi
     rm -f {"$tmp_dir"/*,"$playlists_dir"/{1_Back_to_menu,*_tmp}} 2>/dev/null
 }
@@ -926,6 +927,7 @@ _DownloadCompleted() {
                 _Prompt \
                 " ${info}Downloads completed but $list is not empty, do you want to KEEP it?: ${nc}" || {
                     rm -f "${FILES[@]}" 2>/dev/null
+                    _mpmIpc
                     printf '%s\n' " ${critical}$list removed...${nc}"
                     sleep 3
                 }
@@ -941,7 +943,9 @@ _DownloadCompleted() {
             printf '%s\n' " ${info}Downloads completed, ${critical}$list is empty... $list removed.${nc}"
             sleep 3
             rm -f "${FILES[@]}" 2>/dev/null
+            _mpmIpc
         fi
+        rm -rf "$HOME"/.parallel 2>/dev/null
         [[ $quit_after_task = yes ]] && exit || _Menu
     fi
 }
@@ -989,7 +993,9 @@ _ConvertAudio() {
         printf '%s\n' " ${task}Default format set to $default_conversion_format.${nc}"
         __
         printf '%s\n' " ${info}Converting files in ${task}$default_conversion_format${b}...${nb}${nc}"
-        _"$default_conversion_format"
+        command -v parallel >/dev/null && \
+        _"$default_conversion_format" -p || \
+        _"$default_conversion_format" -n
     else
         # functions _mp3 _flac _wav & _ogg are in ~/.config/mpm/mpmrc
         __
@@ -1003,22 +1009,26 @@ _ConvertAudio() {
             1)
                 __
                 printf '%s\n' " ${info}Converting files in ${task}mp3${b}...${nb}${nc}"
-                _mp3
+                command -v parallel >/dev/null && \
+                _mp3 -p || _mp3 -n
             ;;
             2)
                 __
                 printf '%s\n' " ${info}Converting files in ${task}flac${b}...${nb}${nc}"
-                _flac
+                command -v parallel >/dev/null && \
+                _flac -p || _flac -n
             ;;
             3)
                 __
                 printf '%s\n' " ${info}Converting files in ${task}wav${b}...${nb}${nc}"
-                _wav
+                command -v parallel >/dev/null && \
+                _wav -p || _wav -n
             ;;
             4)
                 __
                 printf '%s\n' " ${info}Converting files in ${task}ogg${b}...${nb}${nc}"
-                _ogg
+                command -v parallel >/dev/null && \
+                _ogg -p || _ogg -n
             ;;
             *)
                 __
@@ -1046,18 +1056,20 @@ _GetLinkTitle() {
     case "$1" in
         -a) sed -n '1p' "$AUDIO_TITLES" ;;
         -l) sed -n '1p' "$titles_dir"/"$list".titles ;;
-        -q) sed -n '1p' "$DEFAULTITLES" ;;
+        -q) sed -n '1p' "$DEFAULTITLES" || \
+            sed -n '1p' "$DEFAULTM3UTITLES" ;;
         -s) sed -n '1p' "$SELECTEDTITLES" ;;
         -v) sed -n '1p' "$VIDEO_TITLES" ;;
     esac
 }
 
 _GetRange() {
+    
     grep -v '#EXTM3U' "$list" > "$list"_tmp
-    msg=$(printf '%s\n' "Enter choices separeted by commas or dashes for ranges," \
+    RP=$(printf '%s\n' "Enter numbers separeted by commas or dashes for a range" \
     " for example: ${task}1-4,6 8-11 or 1-4,6-8,10 or 2,3,5,6,1 : ${nc}")
     __
-    IFS=", "; read -ra array -p " ${info}${msg}${nc}"
+    IFS=", "; read -ra array -p " ${info}""$RP""${nc}"
     
     for range in "${array[@]}"; do
         IFS="-"; read -r start end <<< "$range"
@@ -1069,9 +1081,11 @@ _GetRange() {
             sed -n "${i}p" "$titles_dir"/"$list.titles" \
             >> "$SELECTEDTITLES"
         done
+
     done
 
     rm "$list"_tmp
+
 }
 
 _DirectVideoDownload() {
@@ -1198,7 +1212,7 @@ _EditPlaylist() {
         __
         PS3=""$'\n'"${info}Choose a playlist to edit:${nc} "
 
-        select playlist in $(find . -not -name "default.m3u" -name "*.m3u" \
+        select playlist in $(find . -name "*.m3u" \
             -o -name "*.m3u_origin" | sort -d | sed 's,.*/,,'); do
             __
             $MPMEDITOR "$playlist"
@@ -1214,8 +1228,7 @@ _EditPlaylist() {
                     else
                         clear
                         exit 0
-                    fi
-                ;;
+                    fi ;;
             esac
         done
     done
@@ -1224,7 +1237,7 @@ _EditPlaylist() {
 _EditMpmConf() {
 
     $MPMEDITOR "$MPMRC"
-    printf '%s\n' " ${info}mpm config saved! New changes active.${nc}"
+    printf '%s\n' " ${info}mpm config saved! New changes actives.${nc}"
     source "$MPMRC"
     _Theme "$THEME"
     sleep 3
@@ -1270,6 +1283,7 @@ _GetCompleted() {
                 mv -f "$f"_origin "$f"
             done 2>/dev/null
 
+            rm -rf "$HOME"/.parallel 2>/dev/null
             _Menu
 
         }
@@ -1486,7 +1500,7 @@ _LoadAudio() {
 
     __AdviceAudio() (
         clear
-        __; rm -f "$tmp_dir"/download 2>/dev/null
+        __
         printf '%s\n' " ${critical}Tip: You may want to put this in your mpv.conf:" \
         " ${info}term-playing-msg='Tiltle: \${media-title}'"
         echo -e " ${critical}Otherwise press I in mpv for more infos.${nc}\n"
@@ -1494,6 +1508,7 @@ _LoadAudio() {
         printf '%s\n' " ${info}Playing: ${file}${nc}"
     )
 
+    # change mpv settings in ~/.config/mpm/mpmrc
     case "$1" in
         -a)
             if [[ -f $AUDIO_URLS ]]; then
@@ -1512,20 +1527,20 @@ _LoadAudio() {
         -c)
             M3UFILE="$CHOOSE1"
             __AdviceAudio
-            _MpvAudioOptions
+            _MpvAudioOptions "$M3UFILE"
             rm "$M3UFILE"
             [[ $quit_after_task = yes ]] && exit || _Menu
         ;;
         -l)
             M3UFILE="$list"
             __AdviceAudio
-            _MpvAudioOptions
+            _MpvAudioOptions "$M3UFILE"
             [[ $quit_after_task = yes ]] && exit || _Menu
         ;;
         -q)
             M3UFILE="$QUEUE"
             __AdviceAudio
-            _MpvAudioOptions
+            _MpvAudioOptions "$M3UFILE"
             _Menu
         ;;
     esac
@@ -1558,6 +1573,7 @@ _LoadVideo() {
     file="${M3UFILE##*/}" file="${file%%.*}"
     printf '%s\n' " ${info}Playing: ${file}${nc}"
     
+    # change mpv settings in ~/.config/mpm/mpmrc
     _MpvVideoOptions "$M3UFILE"
 
     if [[ -f "$VIDEO_URLS" ]]; then
@@ -1671,7 +1687,6 @@ _UpdateSelected() {
     _GetMediaTitle -l > "$titles_dir"/"$list".titles
     rm "$SELECTEDTITLES"
     clear
-
 }
 
 _ChooseDownloadAudio() {
@@ -1680,7 +1695,6 @@ _ChooseDownloadAudio() {
     cd "$playlists_dir" || exit 1
     clear
     _TitlesListCompare
-
     _GetRange
 
     clear
@@ -1756,7 +1770,7 @@ _ChooseDownloadAudio() {
     if [[ -n $(find "$audios_dir"/"${list%.*}" -iname "*.webm") ]]; then
         echo " ${critical}ADVISORY: if you choose conversion, all downloaded webm"
         echo -e " files will be converted in the chosen format.${nc}\n"
-        find "$audios_dir"/"${list%.*}" -iname "*.webm" | sed 's,.*/,,' | cat -n
+        find "$audios_dir"/"${list%.*}" -iname "*.webm" | sed 's,.*/,,' | sort | cat -n
 
         if [[ $automatic_audio_conversion = yes ]]; then
             __
@@ -1780,7 +1794,6 @@ _ChooseDownloadAudio() {
 _ChooseDirectVideoDownload() {
 
     local counter
-    
     clear
     cd "$playlists_dir" || exit 1
     _TitlesListCompare
@@ -1852,8 +1865,10 @@ _ChooseDownloadVideo() {
         b|B) clear; return ;;
         d|D) _ChooseDirectVideoDownload ;;
         s|S)
+            _TitlesListCompare
             _GetRange
             clear
+            
             cp -f "$list" "$list"_origin
             mkdir --parents "$videos_dir"/"${list%.*}" \
             && cd "$videos_dir"/"${list%.*}"
@@ -1870,7 +1885,6 @@ _ChooseDownloadVideo() {
                 else
                     youtube-dl -F "${ytdlPreset_DW[@]}" "$url"
                 fi
-
                 __
                 printf '%s\n' " ${info}Choose a format code for: $(_GetLinkTitle -s)" \
                 " eg: 137+251 for merging, hls-1080p, 22 for single:${nc}"
@@ -1884,17 +1898,14 @@ _ChooseDownloadVideo() {
                     # downloader presets described in ~/.config/mpm/mpmrc
                     youtube-dl "${ytdlPreset_FS[@]}" \
                     --format "$code" "${ytdlPreset_X[@]}" "$line"
-                    # clear
                 elif [[ $line =~ 'youtube.com' ]]; then
                     youtube-dl \
                     --output "$(_GetLinkTitle -s).%(ext)s" \
                     --format "$code" "${ytdlPreset_X[@]}" "$line"
-                    # clear
                 else
                     youtube-dl \
                     --output "$(_GetLinkTitle -s).%(ext)s" \
                     --format "$code" "${ytdlPreset_NC[@]}" "$line"
-                    # clear
                 fi
 
                 sed -i '1d' "$SELECTEDTITLES"
@@ -1909,8 +1920,6 @@ _ChooseDownloadVideo() {
     esac
 
     _UpdateSelected
-    # the Internal Field Separator is modified in _GetRange function
-    # if we don't unset IFS other functions will be messed up!
     unset IFS
     clear
     _DownloadCompleted
@@ -2025,10 +2034,11 @@ _LoadPlaylist() {
 }
 
 _ReplaceSpaces() {
-
+    # the select loop will not parse correctly
+    # if we don't replace spaces with underscores
     case "$1" in
         -l)
-            find {"$AUDIOS","$VIDEOS"} -maxdepth 1 \
+            find "$AUDIOS" "$VIDEOS" -maxdepth 1 \
             -type d -name "* *" -exec \
             bash -c '
                 for f in "$@"; do
@@ -2038,7 +2048,7 @@ _ReplaceSpaces() {
             ' dummy {} +
         ;;
         -s)
-            find {"$playlists_dir","$titles_dir"} -maxdepth 1 \
+            find "$playlists_dir" "$titles_dir" -maxdepth 1 \
             -type f -name "* *" -exec \
             bash -c '
                 for f in "$@"; do
@@ -2172,7 +2182,7 @@ _SaveCheck() {
 
     local listTotal
     listTotal=$(find . -not -name "default.m3u" -name "*.m3u" \
-    -o -name "*.m3u_origin" | sort -d | sed 's,.*/,,' | wc -l)    
+    -o -name "*.m3u_origin" | wc -l)
     __
     PS3=""$'\n'" ${info}Available playlists (type ${task}$((listTotal + 1)) ${info}to create a new one):${nc} "
     select list in $(find . -not -name "default.m3u" -name "*.m3u" \
@@ -2268,6 +2278,7 @@ _Remove() {
     case "$1" in
         -a) rm -f $AUDIO_{URLS,TITLES} \
             {"$AUDIO_URLS"_origin,"$AUDIO_TITLES"_origin}
+            rm -rf "$HOME"/.parallel 2>/dev/null
             __
             echo " ${critical}Audio list removed...${nc}"
             sleep 3
@@ -2276,6 +2287,7 @@ _Remove() {
             rm -f {"$QUEUE"_origin,"$tmp_dir"/1} 2>/dev/null
             rm -f {"$DEFAULTITLES"_origin,"$DEFAULTITLES"} 2>/dev/null
             rm -f "$DEFAULTM3UTITLES" 2>/dev/null
+            rm -rf "$HOME"/.parallel 2>/dev/null
             __
             echo " ${critical}Default list cleared...${nc}"
             sleep 3
@@ -2308,7 +2320,7 @@ _SaveRemove() {
             echo "${info}" "${saveRemovePrompts[@]}" "${nc}"
             __
         fi
-
+    
     elif [[ -f $AUDIO_URLS ]]; then
 
         if (( $(_GetLinesList -q) < 1 )); then
@@ -2319,7 +2331,7 @@ _SaveRemove() {
             echo "${info}" "${saveRemovePrompts[*]}" "${nc}"
             __
         fi
-
+    
     elif [[ -f $VIDEO_URLS ]]; then
 
         if (( $(_GetLinesList -q) < 1 )); then
@@ -2330,9 +2342,9 @@ _SaveRemove() {
             echo "${info}" "${saveRemovePrompts[*]}" "${nc}"
             __
         fi
-
+    
     elif (( $(_GetLinesList -q) < 1 )); then
-        echo -e " ${critical}Nothing to save, maybe remove a playlist?${nc}\n"
+        echo -e " ${critical}Nothing to save, maybe remove something?${nc}\n"
         unset {saveRemovePrompts[1],saveRemovePrompts[2],saveRemovePrompts[3]}
         echo "${info}" "${saveRemovePrompts[*]}" "${nc}"
         __
