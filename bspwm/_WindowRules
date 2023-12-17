@@ -1,6 +1,6 @@
 #!/bin/bash
 
-### APPS RULES & ASSIGNMENTS ###
+################# APPS RULES & DESKTOPS ASSIGNMENTS #################
 
 _WindowRules() {
     # If reloading this file, remove all previous rules (added on the fly)
@@ -12,25 +12,26 @@ _WindowRules() {
         _Rules "$line" state=floating focus=on center=on
     done < "$XDG_CONFIG_HOME"/bspwm/FloatingApps
 
+    term="URxvt"
     # [class:instance]="desktop number"
-    declare -A WINDESK=(
-        [URxvt:cmus]="1" [URxvt:ncmpcpp]="1"
-        [URxvt:ripper]="1" [URxvt:youtube]="1"
+    declare -A apps=(
+        [$term:cmus]="1" [$term:ncmpcpp]="1"
+        [$term:ripper]="1" [$term:youtube]="1"
         [feh]="2" [Zathura]="2"
-        [URxvt:ranger]="3" [URxvt:sudoranger]="3"
+        [$term:ranger]="3" [$term:sudoranger]="3"
         [code-oss]="4" [Geany]="4" [lite-xl]="4"
         [VirtualBox]="5" [mpv:gl]="5"
-        [URxvt:htop]="6" [URxvt:jnettop]="6"
+        [$term:htop]="6" [$term:jnettop]="6"
         [Chromium]="7" [firefox]="7"
         [file-roller]="8" [filezilla]="8" [Pcmanfm]="8"
         [obs]="9" [SimpleScreenRecorder]="9"
     )
-    
-    for w in "${!WINDESK[@]}"; do
-        _Rules "$w" desktop=^"${WINDESK[${w}]}" follow=on
+
+    for class in "${!apps[@]}"; do
+        _Rules "$class" desktop=^"${apps[${class}]}" follow=on
     done
-    
-    # Specials =========================== attributs =================#
-    _Rules URxvt:liteterm       desktop=^4 follow=on state=floating rectangle=1553x462+2274+575
-    _Rules Five-or-more         state=floating rectangle=434x488+2662+281
+
+    # Specials ============= attributs =======================#
+    _Rules URxvt:liteterm desktop=^4 follow=on state=floating rectangle=1553x462+2274+575
+    _Rules Five-or-more   state=floating rectangle=434x488+2662+281
 }
