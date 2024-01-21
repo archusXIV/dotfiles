@@ -1,5 +1,5 @@
 #!/bin/bash
-# ~/.config/mpm/themerc (version 1.4-4)
+# ~/.config/mpm/themerc (version 1.4-9)
 
 ######################################################################
 #                                                                    #
@@ -15,12 +15,14 @@
 
 # shellcheck disable=SC2034,SC2016,SC2154
 
-########### PROMPTS & MESSAGES COLORS ###########
+################# PROMPTS & MESSAGES COLORS #################
 ### https://misc.flogisoft.com/bash/tip_colors_and_formatting
 ### Console_colors (default) will always use your current ~/.Xresources colors,
 ### or custom rgb/hex colors so you can set your own theme.
 ### nc=normal text, critical=warnings, info=normal prompt, mtitle=menus title,
 ### task=infos like: direct download, audio conversion type etc...
+### customColors is called from lib/_LittleStars function.
+
 _Theme() {
 
     case "$1" in
@@ -31,8 +33,17 @@ _Theme() {
             mtitle=$'\e[33m';
             task=$'\e[37m';
         ;;
-        chocolat-pistache)
+        blacksea)
             # Using HEX colors for array 'customColors'
+            nc=$'\e[38;2;118;114;232m';      #7672E8 "0x76 0x72 0xe8"
+            critical=$'\e[38;2;160;109;78m'; #A06D4E "0xa0 0x6d 0x4e"
+            info=$'\e[38;2;105;176;191m';    #69B0BF "0x69 0xb0 0xbf"
+            mtitle=$'\e[38;2;129;124;92m';   #817C5C "0x81 0x7c 0x5c"
+            task=$'\e[38;2;248;248;240m';    #f8f8f0 "0xf8 0xf8 0xf0"
+            customColors=( "0x76 0x72 0xe8" "0xa0 0x6d 0x4e" "0x69 0xb0 0xbf" \
+            "0x81 0x7c 0x5c" "0xf8 0xf8 0xf0" )
+        ;;
+        chocolat-pistache)
             nc=$'\e[38;2;140;117;94m';      #8C755E "0x8c 0x75 0x5e"
             critical=$'\e[38;2;215;95;65m'; #D75F41 "0xd7 0x5f 0x41"
             info=$'\e[38;2;146;196;113m';   #92C471 "0x92 0xc4 0x71"
@@ -40,6 +51,15 @@ _Theme() {
             task=$'\e[38;2;249;230;176m';   #F9E6B0 "0xf9 0xe6 0xb0"
             customColors=( "0x8c 0x75 0x5e" "0xd7 0x5f 0x41" "0x92 0xc4 0x71" \
             "0xf2 0xcb 0x57" "0xf9 0xe6 0xb0" )
+        ;;
+        dracula)
+            nc=$'\e[38;2;189;147;249m';     #BD93F9 "0xbd 0x93 0xf9"
+            critical=$'\e[38;2;255;85;85m'; #FF5555 "0xff 0x55 0x55"
+            info=$'\e[38;2;80;250;123m';    #50FA7B "0x50 0xfa 0x7b"
+            mtitle=$'\e[38;2;241;250;140m'; #F1FA8C "0xf1 0xfa 0x8c"
+            task=$'\e[38;2;191;191;191m';   #BFBFBF "0xbf 0xbf 0xbf"
+            customColors=( "0xbd 0x93 0xf9" "0xff 0x55 0x55" "0x50 0xfa 0x7b" \
+            "0xf1 0xfa 0x8c" "0xbf 0xbf 0xbf" )
         ;;
         gotham)
             nc=$'\e[38;2;136;139;165m';     #888BA5 "0x88 0x8b 0xa5"
@@ -61,6 +81,17 @@ _Theme() {
                         #   normal text  critical      info          mtitle       task
             customColors=( "69;133;136" "204;36;29" "104;157;106" "215;153;33" "235;219;178" )
         ;;
+        monokai)
+           # Using RGB colors for array 'customColors'
+            nc=$'\e[38;2;161;239;228m';      #A1EFE4 "0xa1 0xef 0xe4"
+            critical=$'\e[38;2;249;38;114m'; #F92672 "0xf9 0x26 0x72"
+            info=$'\e[38;2;166;226;46m';     #A6E22E "0xa6 0xe2 0x2e"
+            mtitle=$'\e[38;2;244;191;171m';  #F4BF75 "0xf4 0xbf 0x75"
+            task=$'\e[38;2;248;248;242m';    #F8F8F2 "0xf8 0xf8 0xf2"
+            # enter the last three numbers of your custom sequence.
+                         #   normal text   critical      info          mtitle       task
+            customColors=( "161;239;228" "249;38;114" "166;226;46" "244;191;171" "248;248;242" )
+        ;;
         TokyoNight)
             nc=$'\e[38;2;169;177;214m';       #A9B1D6 "0xa9 0xb1 0xd6"
             critical=$'\e[38;2;247;118;142m'; #F7768E "0xf7 0x76 0x8e"
@@ -79,6 +110,15 @@ _Theme() {
             customColors=( "0x83 0x94 0x96" "0xdc 0x32 0x2f" "0x85 0x99 0x00" \
             "0xb5 0x89 0x00" "0x2a 0xa1 0x98" )
         ;;
+        vacuous)
+            nc=$'\e[38;2;116;145;161m';     #7491A1 "0x74 0x91 0xa1"
+            critical=$'\e[38;2;209;69;72m'; #D14548 "0xd1 0x45 0x48"
+            info=$'\e[38;2;167;183;154m';   #A7B79A "0xa7 0xb7 0x9a"
+            mtitle=$'\e[38;2;249;187;128m'; #F9BB80 "0xf9 0xbb 0x80"
+            task=$'\e[38;2;15;130;157m';    #0F829D "0x0f 0x82 0x9d"
+            customColors=( "0x74 0x91 0xa1" "0xd1 0x45 0x48" "0xa7 0xb7 0x9a" \
+            "0xf9 0xbb 0x80" "0x0f 0x82 0x9d" )
+        ;;
         zenburn)
             nc=$'\e[38;2;220;220;204m';     #DCDCCC "0xdc 0xdc 0xcc"
             critical=$'\e[38;2;198;92;92m'; #C65C5C "0xc6 0x5c 0x5c"
@@ -89,5 +129,4 @@ _Theme() {
             "0xf0 0xdf 0xaf" "0x4f 0x7a 0xa7" )
         ;;
     esac
-
 }
