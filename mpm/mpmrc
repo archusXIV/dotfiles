@@ -1,6 +1,7 @@
 #!/bin/bash
 # ~/.config/mpm/mpmrc (version 1.4-9)
 
+# see https://github.com/archusXIV/mpv-playlists-manager
 ########################################################
 #                                                      #
 #    ███╗   ███╗██████╗ ███╗   ███╗██████╗  ██████╗    #
