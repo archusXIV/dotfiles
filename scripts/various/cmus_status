@@ -9,16 +9,15 @@ artist=""
 title=""
 file=""
 status="stopped"
+hours=$(printf "%02d" $((duration / 3600)))
+minutes=$(printf "%02d" $((duration / 60 - 60)))
+seconds=$(printf "%02d" $((duration % 60)))
 
 # dollar sign isn't necessary in arithmetic test. (( ${duration} >= 3600 ))
 if (( duration >= 3600 )); then
-    hours=$(printf "%02d" $((duration / 3600)))
-    minutes=$(printf "%02d" $((duration / 60 - 60)))
-    seconds=$(printf "%02d" $((duration % 60)))
     total_time=" |  ${hours}:${minutes}:${seconds}"
 elif (( duration < 3600 )); then
     minutes=$(printf "%02d" $((duration / 60)))
-    seconds=$(printf "%02d" $((duration % 60)))
     total_time=" |  ${minutes}:${seconds}"
 fi
 
@@ -40,7 +39,7 @@ if [[ ${status} = 'stopped' ]]; then
 else
 
     [[ ${status} = 'paused' ]] \
-        && msg="%{F$(xrdb -query | awk '/color1:/{print $NF}')}${msg}"
+        && msg="%{F$(xrdb -query | awk '/color1:/{print $NF}')}$msg"
 
     [[ -n ${artist} ]] \
         && msg="${msg} ${artist}"
@@ -62,4 +61,4 @@ echo "${msg}" > "${output}"
 sleep 0.2
 
 polybar-msg -p "$barpid" \
-action "#music_player-ipc.hook.2"
+action "#cmus-ipc.hook.1" >/dev/null 2>&1
