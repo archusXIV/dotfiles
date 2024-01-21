@@ -11,12 +11,11 @@ _WindowsRules() {
     local FLOAT
 
     # list of floating applications classes.
-    FLOAT="$HOME/.config/dk/FloatingApps"
 
     while read -r line; do
         dkcmd rule class="^$line$" \
         focus=true float=true
-    done < "$FLOAT"
+    done < "$HOME"/.config/dk/FloatingApps
 
     # add windows classes/instances in those lists
     dkcmd rule class="^URxvt$" instance="^(cmus|ncmpcpp|pulsemixer|ripper)$" ws=1 focus=true
