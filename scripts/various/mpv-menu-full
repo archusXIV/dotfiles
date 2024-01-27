@@ -18,30 +18,34 @@
 ##    It is recommanded to disable mpv cache for better results on direct streaming,
 ##    or find a better cache parameter.
 
-# shellcheck disable=SC1091,SC2013,SC2015,SC2030,SC2031,SC2034,SC2044,SC2076,SC2048
+# shellcheck disable=SC1083,SC1091,SC2013,SC2015,SC2030,SC2031,SC2034,SC2044,SC2076,SC2048
 # shellcheck disable=SC2086,SC2119,SC2120,SC2143,SC2153,SC2154,SC2164,SC2184,SC2207,SC2317
 # shellcheck source=/dev/null
+
 trap "_CleanTmpDir; exit" SIGTERM EXIT
 
-VERSION="v.1.4-7"
+VERSION="v.1.5-1"
 
 : "${XDG_CONFIG_HOME:-$HOME/.config}"
-MPMRC_DIR="$XDG_CONFIG_HOME/mpm"
-MPMRC="$MPMRC_DIR/mpmrc"
-THEMERC="$MPMRC_DIR/themerc"
+CONF_DIR="$XDG_CONFIG_HOME/mpm"
+MPMRC="$CONF_DIR/mpmrc"
+THEMERC="$CONF_DIR/themerc"
 
-[[ ! -d $MPMRC_DIR ]] && {
-    mkdir -p "$MPMRC_DIR"
-    cp /usr/local/share/doc/mpm/{mpmrc,themerc} "$MPMRC_DIR"
+[[ ! -d $CONF_DIR ]] && {
+    mkdir -p "$CONF_DIR"
+    cp /usr/local/share/doc/mpm/{mpmrc,themerc} "$CONF_DIR"
 }
 ## summon our personal settings
 source "$MPMRC"; source "$THEMERC"
+
+[[ -n $playlists_dir ]] && \
+cp -f "$SCRIPTDIR"/mpv-playlists-manager/mpm_yt-videos.m3u "$playlists_dir"
 
 ## prompts blinking
 b=$'\e[5m';     # blinking
 nb=$'\e[25m';   # stop blinking
 
-supportedsites="https://github.com/ytdl-org/youtube-dl/blob/master/docs/supportedsites.md"
+supportedSites="https://github.com/ytdl-org/youtube-dl/blob/master/docs/supportedsites.md"
 QUEUE="$playlists_dir/default.m3u"
 
 # !!!!!!!!!!!!!!!! creates a blank line !!!!!!!!!!!!!!!!!!!
@@ -53,7 +57,7 @@ __() { printf '\n'; }
 _CheckDependencies() {
     ## Checking dependencies: softwares, directories and files.
     declare -a DEPS=( "ffmpeg" "jq" "mpv" "youtube-dl" "yt-dlp" \
-                    "parallel" "ueberzug" "wmctrl" "w3m" )
+                    "fzf" "parallel" "ueberzug" "wmctrl" "w3m" )
 
     for dep in "${DEPS[@]:0:5}"; do
         [[ -z $(command -v "$dep") ]] && {
@@ -63,7 +67,7 @@ _CheckDependencies() {
         }
     done
 
-    for optional in "${DEPS[@]:5:9}"; do
+    for optional in "${DEPS[@]:5:10}"; do
         [[ -z $(command -v "$optional") ]] && {
             printf '%s\n' " For better experience consider installing $optional."
             sleep 4
@@ -105,6 +109,7 @@ _CheckDependencies() {
     (($(_GetLinesList -q) >= 1)) && {
         touch "$tmp_dir"/1
         cp -f "$DEFAULTM3UTITLES" "$DEFAULTITLES"
+        rm "$DEFAULTM3UTITLES"
     }
 
     _Theme "$THEME"
@@ -116,31 +121,6 @@ AUDIO_URLS="$tmp_dir/temporaryAudioUrls.m3u"
 AUDIO_TITLES="$tmp_dir/temporaryAudioTitles"
 VIDEO_URLS="$tmp_dir/temporaryVideoUrls.m3u"
 VIDEO_TITLES="$tmp_dir/temporaryVideoTitles"
-
-_ListsCount() {
-
-    __col() {
-        echo "${info}$(find "$playlists_dir" -not -name "default.m3u" \
-        -iname "*.m3u" -printf '.' | wc -c)${nc}"
-    }
-    
-    __def() {
-        if [[ -f $tmp_dir/1 ]]; then
-            echo "${task}${b}$(_GetLinesList -q)${nb}${nc}"
-        elif [[ $(_GetLinesList -q) -gt 0 ]]; then
-            echo "${info}$(_GetLinesList -q)${nc}"
-        fi
-    }
-    
-    __aud() { [[ -s $AUDIO_URLS ]] && echo "${info}$(_GetLinesList -a)${nc}"; }
-    
-    __vid() { [[ -s $VIDEO_URLS ]] && echo "${info}$(_GetLinesList -v)${nc}"; }
-    
-    echo -e "                  ┌─────────────────────────────────────────────────────────────────────────────────────┐"
-    echo -e "                           Collection: $(__col) * Default list: $(__def) * Audio list: $(__aud) * Video list: $(__vid)"
-    echo -e "                  └─────────────────────────────────────────────────────────────────────────────────────┘"
-
-}
 
 # stolen from budRich
 _Prompt() {
@@ -190,7 +170,7 @@ _SaveOnExit() {
             "██░└┐░░░░░░░░░░░░░░░░░┌┘░██" \
             "██░░└┐░░░░░░░░░░░░░░░┌┘░░██" \
             "██░░┌┘▄▄▄▄▄░░░░░▄▄▄▄▄└┐░░██" \
-            "██▌░│██████▌░░░▐██████│░▐██" \
+            "██▌░│███ ██▌░░░▐██ ███│░▐██" \
             "██▌░│██████▌░░░▐██████│░▐██" \
             "███░│▐███▀▀░░▄░░▀▀███▌│░███" \
             "██▀─┘░░░░░░░▐█▌░░░░░░░└─▀██" \
@@ -248,7 +228,7 @@ _LittleStars() {
             if [[ $i = 0x* ]]; then
                 printf '\e[38;2;%d;%d;%dm%s' ${i} '*******'
             else
-                echo -en "\e[38;2;${i}m*******\e[0m"
+                echo -en "\e[38;5;${i}m*******\e[0m"
             fi
         done
     fi
@@ -263,6 +243,49 @@ _CheckUpdate() {
     [[ $UPD != "$VERSION" ]] && {
         printf '%s\n' " ${critical}${b}$UPD available${nb}${nc}"
     }
+
+}
+
+_ListsCount() {
+
+    __col() (
+        if [[ -z $(find "$playlists_dir" -not -name "default.m3u" -name "*.m3u") ]]; then
+           echo "0"
+        else
+            echo "${info}$(find "$playlists_dir" -not -name "default.m3u" \
+            -iname "*.m3u" -printf '.' | wc -c)${nc}"
+        fi
+    )
+    
+    __def() (
+        if [[ -f $tmp_dir/1 ]]; then
+            echo "${critical}${b}$(_GetLinesList -q)${nb}${nc}"
+        elif [[ $(_GetLinesList -q) -gt 0 ]]; then
+            echo "${info}$(_GetLinesList -q)${nc}"
+        else
+            echo "0"
+        fi
+    )
+    
+    __aud() (
+        if [[ -s $AUDIO_URLS ]]; then
+            echo "${info}$(_GetLinesList -a)${nc}"
+        else
+            echo "0"
+        fi
+    )
+    
+    __vid() (
+        if [[ -s $VIDEO_URLS ]]; then
+            echo "${info}$(_GetLinesList -v)${nc}"
+        else
+            echo "0"
+        fi
+    )
+    
+    echo -e "                  ┌─────────────────────────────────────────────────────────────────────────────────────┐"
+    echo -e "                           Collection: $(__col) * Default list: $(__def) * Audio list: $(__aud) * Video list: $(__vid)"
+    echo -e "                  └─────────────────────────────────────────────────────────────────────────────────────┘"
 
 }
 
@@ -286,9 +309,9 @@ _Menu() {
         [[ $direct_download = no ]] && echo -e "                  │  2) Create/Add audio playlist   7) Clear all tmp lists     │  direct download:  ${task}$direct_download${nc}  │"
         [[ $automatic_audio_conversion = yes ]] && echo -e "                  │  3) Save as/Delete a playlist   8) Edit a playlist         │  conversion auto: ${task}$automatic_audio_conversion${nc}  │"
         [[ $automatic_audio_conversion = no ]] && echo -e "                  │  3) Save as/Delete a playlist   8) Edit a playlist         │  conversion auto:  ${task}$automatic_audio_conversion${nc}  │"
-        if [[ -z $default_conversion_format ]]; then echo -e "                  │  4) Play/Download a playlist    9) Edit mpm config (mpmrc) │  audio format:  ${task}unset${nc}  │"; \
-        elif [[ $default_conversion_format != flac ]]; then echo -e "                  │  4) Play/Download a playlist    ${info}9)${nc} Edit mpm config (mpmrc) │  audio format:    ${task}$default_conversion_format${nc}  │"; \
-        elif [[ $default_conversion_format = flac ]]; then echo -e "                  │  4) Play/Download a playlist    ${info}9)${nc} Edit mpm config (mpmrc) │  audio format:   ${task}$default_conversion_format${nc}  │"; fi
+        if [[ -z $default_conversion_format ]]; then echo -e "                  │  4) Play/Download a playlist    ${mtitle}9)${nc} Edit mpm config (mpmrc) │  audio format:  ${task}unset${nc}  │"; \
+        elif [[ $default_conversion_format != flac ]]; then echo -e "                  │  4) Play/Download a playlist    ${mtitle}9)${nc} Edit mpm config (mpmrc) │  audio format:    ${task}$default_conversion_format${nc}  │"; \
+        elif [[ $default_conversion_format = flac ]]; then echo -e "                  │  4) Play/Download a playlist    ${mtitle}9)${nc} Edit mpm config (mpmrc) │  audio format:   ${task}$default_conversion_format${nc}  │"; fi
         [[ $quit_after_task = yes ]] && echo -e "                  │  5) Load local folder/files     X) Exit                    │  quit after task: ${task}$quit_after_task${nc}  │"
         [[ $quit_after_task = no ]] && echo -e "                  │  5) Load local folder/files     X) Exit                    │  quit after task:  ${task}$quit_after_task${nc}  │"
         echo -e "                  └─────────────────────────────────────────────────────────────────────────────────────┘"
@@ -345,16 +368,19 @@ _ConvertAudio() {
 
     if [[ -n $default_conversion_format ]]; then
         __
-        printf '%s\n' " ${task}Default format set to $default_conversion_format.${nc}"
+        printf '%s\n' \
+        " ${task}Default format set to $default_conversion_format.${nc}"
         __
-        printf '%s\n' " ${info}Converting files in ${task}$default_conversion_format${b}...${nb}${nc}"
+        printf '%s\n' \
+        " ${info}Converting files in ${task}$default_conversion_format${b}...${nb}${nc}"
         __
         if [[ -n $(command -v parallel) && $use_parallel = yes ]]; then
             printf '%s\n' "${task}"' Parallel conversion enabled.'"${nc}"
-            _"$default_conversion_format" -p
+            parallel --delay 2.5 -j+0 \
+            ffmpeg -y -i {} -qscale:a 0 {.}."$default_conversion_format" ::: ./*.webm 2>"$FFOP"
         else
             printf '%s\n' "${task}"' Parallel conversion disabled.'"${nc}"
-            _"$default_conversion_format" -n
+            _"$default_conversion_format"
         fi
     else
         # functions _mp3 _flac _wav & _ogg are in ~/.config/mpm/mpmrc
@@ -372,25 +398,34 @@ _ConvertAudio() {
         -p "${info}"' Select an output format [1=mp3] [2=flac] [3=wav] [4=ogg]: '"${nc}"
         
         case "$REPLY" in
-            [1-4])  
+            [1-4])
                 __
-                printf '%s\n' " ${info}Converting files in ${task}${formats[${REPLY}]}${b}...${nb}${nc}"
+                printf '%s\n' \
+                " ${info}Converting files in ${task}${formats[${REPLY}]}${b}...${nb}${nc}"
                 __
                 if [[ -n $(command -v parallel) && $use_parallel = yes ]]; then
                     printf '%s\n' "${task}"' Parallel conversion enabled.'"${nc}"
-                    _"${formats[${REPLY}]}" -p
+                    parallel --delay 2.5 -j+0 \
+                    ffmpeg -y -i {} -qscale:a 0 {.}."${formats[${REPLY}]}" ::: ./*.webm 2>"$FFOP"
                 else
                     printf '%s\n' "${task}"' Parallel conversion disabled.'"${nc}"
-                    _"${formats[${REPLY}]}" -n
+                    _"${formats[${REPLY}]}"
                 fi
             ;;
-            *)  __; printf '%s\n' " ${critical}Wrong format or conversion aborted...${nc}"
+            *)
+                echo ""
+                printf '%s\n' " ${critical}Wrong format $REPLY..." \
+                " or conversion aborted...${nc}"
+                mv ./*.webm ..
+                __
                 sleep 3
-                clear
+                return
             ;;
         esac
         
     fi
+
+    find . -iname "*.webm" -exec rm {} \;
 
     if [[ -z $(find "$audios_dir" -maxdepth 2 -name "*.webm" ) ]]; then
         __
@@ -407,20 +442,27 @@ _GetAudioDownloadMessages() {
 
     [[ $M3UFILE = "$AUDIO_URLS" ]] && {
         printf '%s\n' " ${info}$(_GetLinesList -a) audio file(s) left to download." \
-        " Downloading:  $(_GetLinkTitle -a)${nc}"
+        " Downloading:  $(_GetLinkTitle -a)" \
+        " ${task}Searching for webm format...${nc}"
     }
 
     [[ $M3UFILE = "$playlists_dir"/"$list" ]] && {
         printf '%s\n' " ${info}$(_GetLinesList -l) audio file(s) left to download." \
-        " Downloading:  $(_GetLinkTitle -l)${nc}"
+        " Downloading:  $(_GetLinkTitle -l)" \
+        " ${task}Searching for webm format...${nc}"
     }
 
     [[ $M3UFILE = "$QUEUE" ]] && {
         printf '%s\n' " ${info}$(_GetLinesList -q) audio file(s) left to download." \
-        " Downloading:  $(_GetLinkTitle -q)${nc}"
+        " Downloading:  $(_GetLinkTitle -q)" \
+        " ${task}Searching for webm format...${nc}"
     }
 
 }
+
+# these are temporary files used in _Choose{Download{Audio,Video},FromPlay}
+CHOOSE1="$tmp_dir/temporarySelection.m3u"
+CHOOSE2="$tmp_dir/temporarySelection2.m3u"
 
 _IfWebmFiles() {
     if [[ -n $(find "$audios_dir" -maxdepth 2 -iname "*.webm") ]]; then
@@ -438,9 +480,9 @@ _IfWebmFiles() {
             [[ $M3UFILE = "$playlists_dir"/"$list" ]] || [[ $M3UFILE = "$CHOOSE1" ]] \
             && _ConvertAudio && _DownloadCompleted
         else
-            printf '%s\n' " ${task}Automatic audio conversion disabled.${nc}"
             __
             _Prompt " ${info}Proceed with conversion?: ${nc}" || {
+                mv ./*.webm ..
                 [[ $M3UFILE = "$AUDIO_URLS" ]] || [[ $M3UFILE = "$QUEUE" ]] \
                 && _GetCompleted -a
                 [[ $M3UFILE = "$playlists_dir"/"$list" ]] || [[ $M3UFILE = "$CHOOSE1" ]] \
@@ -460,8 +502,9 @@ _IfWebmFiles() {
     fi
 }
 
-_YtdlGetTitle() { youtube-dl --skip-download --get-title "${ytdlPreset_DW[@]}" "$1"; }
-
+_YtdlGetTitle() {
+    youtube-dl --skip-download --get-title "${ytdlPreset_DW[@]}" "$1"
+}
 
 _GetAudioDownload() {
     
@@ -506,6 +549,21 @@ _GetAudioDownload() {
         clear
 
     done
+}
+
+_GetMediaTitle() {
+
+    case "$1" in
+        -a) LIST="$AUDIO_URLS" ;;
+        -l) LIST="$playlists_dir"/"$list" ;;
+        -q) LIST="$QUEUE" ;;
+        -v) LIST="$VIDEO_URLS" ;;
+    esac
+    
+    while read -r line; do
+        _YtdlGetTitle "$line" 2>/dev/null
+    done < <(grep '^https' "$LIST")
+
 }
 
 _GetAudio() {
@@ -570,7 +628,7 @@ _ViewUrlInfo() {
     # but here it won't work because of the case statment right parenthese...
     # They will close the block before it finishes.
 
-    local defaultTitles stars
+    local stars
 
     viewUrlInfoPrompt=( "[M]aim menu" "[B]ack to audio options" \
                         "[B]ack to video options" "[D]ownload" \
@@ -580,23 +638,23 @@ _ViewUrlInfo() {
     stars=$(printf "%-54s" "*")
     
     __audio() {
-        if [[ -f $AUDIO_URLS ]]; then
+        if [[ -s $AUDIO_URLS ]]; then
             clear
             __
             echo " ${info}ORDER |  AUDIO PLAYLIST LINKS & TITLES.${nc}"
             echo -e " ${info}${stars// /*}${nc}\n"
             awk '$0 ~ /^https/{print $0}' "$AUDIO_URLS" \
-            | cat -n && {
+            | nl && {
                 __
-                cat -n "$AUDIO_TITLES"
+                nl "$AUDIO_TITLES"
             __
             }
             unset {viewUrlInfoPrompt[2],viewUrlInfoPrompt[7]}
             __
             echo "${info}" "${viewUrlInfoPrompt[*]}" "${nc}"
-            read -rsn 1 opt
-            case "$opt" in
-                b|B) __; _CopyAudio ;;
+            read -rsn 1 audioOptions
+            case "$audioOptions" in
+                b|B) __; _CopyUrl -a ;;
                 m|M) _Menu ;;
                 d|D) _GetAudio -a ;;
                 p|P) _LoadAudioVideo -a ;;
@@ -610,23 +668,23 @@ _ViewUrlInfo() {
     }
 
     __video() {
-        if [[ -f $VIDEO_URLS ]]; then
+        if [[ -s $VIDEO_URLS ]]; then
             clear
             __
             echo " ${info}ORDER |  VIDEO PLAYLIST LINKS & TITLES.${nc}"
             echo -e " ${info}${stars// /*}${nc}\n"
             awk '$0 ~ /^https/{print $0}' "$VIDEO_URLS" \
-            | cat -n && {
+            | nl && {
                 __
-                cat -n "$VIDEO_TITLES"
+                nl "$VIDEO_TITLES"
             __
             }
             unset {viewUrlInfoPrompt[1],viewUrlInfoPrompt[7]}
             __
             echo "${info}" "${viewUrlInfoPrompt[*]}" "${nc}"
-            read -rsn 1 opt
-            case "$opt" in
-                b|B) __; _CopyVideo ;;
+            read -rsn 1 videoOptions
+            case "$videoOptions" in
+                b|B) __; _CopyUrl -v ;;
                 m|M) _Menu ;;
                 d|D) _GetVideo -v ;;
                 p|P) _LoadAudioVideo -v ;;
@@ -643,33 +701,27 @@ _ViewUrlInfo() {
         if (($(_GetLinesList -q) > 0)); then
             [[ -f $tmp_dir/1 ]] && rm "$tmp_dir"/1
             
-            if [[ -f $DEFAULTM3UTITLES ]]; then
-                defaultTitles="$DEFAULTM3UTITLES"
-            else
-                defaultTitles="$DEFAULTITLES"
-            fi
-            
-            (( $(grep "" -c "$defaultTitles") != $(_GetLinesList -q) )) && {
+            [[ $(grep "" -c "$DEFAULTITLES") -ne $(_GetLinesList -q) ]] && {
                 printf '%s\n' " ${critical}Default list as been modified," \
                 " ${task}${b}Updating Default list titles...${nb}${nc}"
-                _GetMediaTitle -q > "$defaultTitles"
+                _GetMediaTitle -q > "$DEFAULTITLES"
             }
             clear
             __
             echo " ${info}ORDER |  DEFAULT PLAYLIST LINKS & TITLES.${nc}"
             echo -e " ${info}${stars// /*}${nc}\n"
             awk '$0 ~ /^https/{print $0}' "$QUEUE" \
-            | cat -n && {
-            __
-            cat -n "$defaultTitles"
-            __
+            | nl && {
+                __
+                nl "$DEFAULTITLES"
+                __
             }
             
             while [[ -f $QUEUE ]]; do
                 unset {viewUrlInfoPrompt[1],viewUrlInfoPrompt[2],viewUrlInfoPrompt[7]}
                 echo "${info}" "${viewUrlInfoPrompt[*]}" "${nc}"
-                read -rsn 1 opt
-                case "$opt" in
+                read -rsn 1 queueOptions
+                case "$queueOptions" in
                     d|D)
                         __
                         read -rsn 1 -p "${info}"' Download [A]udio, [V]ideo:'"${nc}" get
@@ -695,7 +747,7 @@ _ViewUrlInfo() {
                             || -f  $DEFAULTITLES ]]; then
                             _Save -q
                         else
-                            echo " ${task}${b}Updating Default list titles...${nb}${nc}"
+                            printf '%s\n' " ${task}${b}Updating Default list titles...${nb}${nc}"
                             _GetMediaTitle -q \
                             | tee -a "$DEFAULTITLES" \
                             | cat -n >/dev/null 2>&1
@@ -736,13 +788,11 @@ _RemoveCrap() {
 }
 
 _CleanTmpDir() {
-    if [[ $(_GetLinesList -q) -gt 0 ]]; then
-        cp "$DEFAULTITLES" "$DEFAULTM3UTITLES" 2>/dev/null
-    else
-        rm -f "$DEFAULTM3UTITLES" 2>/dev/null
-    fi
+    [[ -s "$DEFAULTITLES" ]] && \
+        cp -f "$DEFAULTITLES" "$DEFAULTM3UTITLES"
+    
     rm -f \
-    {"$CHOOSE1","$tmp_dir"/*,"$playlists_dir"/{1_Back_to_menu,*_tmp}} 2>/dev/null
+    {"$tmp_dir"/*,"$playlists_dir"/{1_Back_to_menu,*_tmp}} 2>/dev/null
 }
 
 _DeleteUrl() {
@@ -770,9 +820,175 @@ _DeleteUrl() {
 
 }
 
+YTSEARCH="$tmp_dir/youtubeSearch"
+
+_SearchYoutubeWithFzf() {
+
+    ! command -v fzf >/dev/null && {
+        __
+        printf '%s\n' " ${critical}fzf package is not installed...${nc}"
+        sleep 2
+        return
+    }
+
+    local sanitizedRequest sanitizedResult grabLink grabPlaylist IDS id selection \
+    mediaLinkIDS mediaPrefix playlistLinkIDS playlistPrefix
+
+    if [[ -z $* ]]; then
+        __
+        printf '%s\n' " ${critical}Tip: To copy links in the fzf menu press ${task}Enter" \
+        " ${critical}on the desired ${Type} titles (can be a playlist)," \
+        " note that multi selection is not implemented" \
+        " so ${task}press Enter ${critical}on each title and then press ${task}Escape ${critical}to confirm.${nc}"
+        __
+        read -rp " ${info}Search for youtube ${Type} (no quotes): ${nc}" request
+    else
+        request="$*"
+    fi
+
+    [[ -z $request ]] && return
+
+    sanitizedRequest=$(
+        sed -e '
+        s/+/%2B/g;s/#/%23/g;s/&/%26/g;s/\s/+/g
+        ' <<< "$request"
+    )
+
+    sanitizedResult=$(
+        curl \
+        -s "https://www.youtube.com/results?search_query=${sanitizedRequest}" | \
+        sed 's/\\.//g'
+    )
+
+    if ! grep -q "$sanitizedRequest" <<< "$sanitizedResult"; then
+        echo "unable to fetch Youtube."
+        sleep 2s
+        return
+    fi
+
+    grabLink='"videoRenderer":{"videoId":"\K.{11}".+?"text":".+?[^\\](?=")'
+    grabPlaylist='"playlistRenderer":{"playlistId":"\K.{34}?","title":{"simpleText":".+?[^\"](?=")'
+
+    __getResults() (
+        grep -oP "$1" <<< "$sanitizedResult" | \
+        awk -F\" -v p="$2" '{ print $1 "\t" p " " $NF}'
+    )
+
+    mediaLinkIDS=$(__getResults "$grabLink" "[${Type}]")
+    playlistLinkIDS=$(__getResults "$grabPlaylist" "[Playlist]")
+
+    [[ -n $playlistLinkIDS ]] && IDS="$playlistLinkIDS\n"
+    [[ -n $mediaLinkIDS ]] && IDS="$IDS$mediaLinkIDS"
+
+    mediaPrefix="https://www.youtube.com/watch?v="
+    playlistPrefix="https://www.youtube.com/playlist?list="
+
+    if [[ $Type = Audio ]]; then
+        URLS="$AUDIO_URLS"
+        TITLES="$AUDIO_TITLES"
+        Type=Audio
+    else
+        URLS="$VIDEO_URLS"
+        TITLES="$VIDEO_TITLES"
+        Type=Video
+    fi
+
+    while :; do
+        selection=$(echo -e "$IDS" | cut -d'	' -f2 \
+        | fzf \
+        --prompt='Filter: ' \
+        --header "${info}${b}"'Press Enter to copy, Escape to exit search: '"${nb}${nc}")
+
+        # grep a fixed string that is a word and matches only one line in selection.
+        id=$(echo -e "$IDS" | grep -Fwm1 "$selection" | cut -d'	' -f1)
+
+        if [[ -z $selection ]]; then
+            return
+        else
+            notify-send "copied: $(echo -e "$selection" | sed "s/\[.*\]\s//")"
+        fi
+
+        case "$id" in
+            # 11 digits id = media
+            ???????????)
+                echo "$mediaPrefix$id" | tee -a "$URLS" >> "$QUEUE"
+                echo -e "$selection" | sed "s/\[.*\]\s//" \
+                | tee -a "$TITLES" >> "$DEFAULTITLES"
+                _RemoveCrap
+            ;;
+            # 34 digits id = playlist
+            ??????????????????????????????????)
+                echo "$playlistPrefix$id" >> "$YTSEARCH""${Type}"Playlists
+            ;;
+            *)
+                return
+            ;;
+        esac
+    done
+}
+
+_SearchYoutubeWithYtfzf() {
+    __
+    printf '%s\n' " ${critical}Tip: To select mutiple links in the ytfzf menu press ${task}Tab" \
+    " ${critical}on the desired ${Type} titles, ${task}Ctrl P${critical} to view next page...etc" \
+    " then ${task}Enter ${critical}to confirm and go back in $menuTitleType OPTIONS menu.${nc}"
+    __
+    read -rp " ${info}Search for youtube ${Type}: ${nc}" request
+
+    if [[ -n $request ]]; then
+        # ytfzf_options are defined in mpmrc
+        ytfzf -tL "${ytfzfOptions_X[@]}" "$request$*" >> "$URLS"
+
+        clear
+        [[ ! -s $URLS ]] && return
+
+        while read -r line; do
+
+            if [[ $line =~ 'playlist?list=' ]]; then
+                echo "$line" >> "$YTSEARCH""${Type}"Playlists
+            else
+                echo "$line" >> "$QUEUE"
+                __
+                printf '%s\n' " ${info}Getting $line title...${nc}"
+                _YtdlGetTitle "$line" | tee -a "$TITLES" >> "$DEFAULTITLES"
+                sleep 1
+                clear
+            fi
+
+        done < "$URLS"
+
+        _RemoveCrap
+
+    else
+        return
+    fi
+}
+
+_SearchYoutube() {
+    __
+    command -v ytfzf >/dev/null && {
+        read -rsn1 -p " ${info}Search ${Type} with regular [f]zf or [y]tfzf script?: ${nc}" searchTool
+        
+        case "$searchTool" in
+            f|F)
+                _SearchYoutubeWithFzf
+            ;;
+            y|Y)
+                _SearchYoutubeWithYtfzf
+            ;;
+            *)
+                __; printf '%s\n' " ${critical}Wrong option $searchTool...${nc}"
+                sleep 3
+                clear
+            ;;
+        esac
+    } || _SearchYoutubeWithFzf
+
+}
+
 _CopyUrl() {
 
-    local Type copyUrl PlaylistTitle TITLES URLS MEDIA arg
+    local Type TITLES URLS menuTitleType arg copyUrl copyUrlPlaylisTitles
 
     [[ -f $tmp_dir/1 ]] && rm "$tmp_dir"/1
 
@@ -781,41 +997,41 @@ _CopyUrl() {
             Type=Audio
             TITLES="$AUDIO_TITLES"
             URLS="$AUDIO_URLS"
-            MEDIA=AUDIO
+            menuTitleType=AUDIO
             arg="-a"
         ;;
         -v)
             Type=Video
             TITLES="$VIDEO_TITLES"
             URLS="$VIDEO_URLS"
-            MEDIA=VIDEO
+            menuTitleType=VIDEO
             arg="-v"
         ;;
     esac
 
     while (( $(grep "" -c "$QUEUE") > 0 )); do
     
-        __CopyLinks() {
+        __CopyLinks() (
+
             __
             echo -e " Paste an url to fill the ${info}${Type}${nc} playlist:\n"
             read -r copyUrl
 
             if [[ $copyUrl =~ 'playlist?list=' ]]; then
-
                 __
-                PlaylistTitle=$(\
+                copyUrlPlaylisTitles=$(\
                 youtube-dl "${ytdlPreset_DW[@]}" -J \
                 --flat-playlist "$copyUrl" \
                 | jq -r .title \
                 )
 
-                printf '%s\n' " ${info}Getting titles & links from playlist: $PlaylistTitle..." \
+                printf '%s\n' " ${info}Getting titles & links from playlist: $copyUrlPlaylisTitles..." \
                 "${b} Please be patient.${nb}${nc}"
+                
                 _YtdlGetTitle "$copyUrl" \
                 | tee -a "$TITLES" >> "$DEFAULTITLES"
                 _GetYoutubePlaylistUrls $arg
                 _RemoveCrap
-
             else
 
                 echo "$copyUrl" >> "$URLS"
@@ -826,66 +1042,76 @@ _CopyUrl() {
                 youtube-dl -F "${ytdlPreset_DW[@]}" "$copyUrl" > "$YTOP"
 
                 if [[ $? -eq 1 ]]; then
-
                     __
                     echo -e " ${critical}${b}No format code found!${nb}\n$copyUrl will be removed."
-                    echo " ${info}Please visit: $supportedsites${nc}"
+                    echo " ${info}Please visit: $supportedSites${nc}"
                     sed -i '$d' "$URLS"
                     _RemoveCrap
                     sleep 7
                     [[ $(_GetLinesList $arg) -eq 0 ]] && return
-
                 else
-
                     echo "$copyUrl" >> "$QUEUE"
-                    echo -e " ${info}Getting audio title...${nc}\n"
+                    echo -e " ${info}Getting ${Type} title...${nc}\n"
                     _YtdlGetTitle "$copyUrl" \
                     | tee -a "$TITLES" >> "$DEFAULTITLES"
                     _RemoveCrap
-
                 fi
 
             fi
-        }
-
-        while :; do
+        )
+        
+        while true; do
             _ResizeWindow
             clear
+            
+            [[ -s $YTSEARCH${Type}Playlists ]] \
+            && __ && _GetYoutubePlaylistUrls -s
             __
             [[ -s $URLS ]] && \
             echo -e " ${info}${Type} list:   $(_GetLinesList $arg) url(s)${nc}"
             __
-            echo -e "                                                    ${mtitle}::${MEDIA} OPTIONS::${nc}"
-            echo -e "                              ┌─────────────────────────────────────────────────────────────┐"
-            echo -e "                              │     1) Add $Type links            4) Play current list      │"
-            echo -e "                              │     2) Download current list      5) View current list      │"
-            echo -e "                              │     3) Save playlist as           6) Back to main menu      │"
-            echo -e "                              └─────────────────────────────────────────────────────────────┘"
-            echo -e "                                                     ${info}${b}Select an item${nb}${nc}"
+            echo -e "                                                  ${mtitle}::${menuTitleType} OPTIONS::${nc}"
+            echo -e "                               ┌──────────────────────────────────────────────────────┐"
+            echo -e "                               │   1) Add ${Type} links         5) Play current list    │"
+            command -v fzf >/dev/null || echo -e "                               │   2) ${critical}Search Youtube ${Type}${nc}    6) View current list    │" \
+            && echo -e "                               │   2) Search Youtube ${Type}    6) View current list    │"
+            echo -e "                               │   3) Download current list   7) Back to main menu    │"
+            echo -e "                               │   4) Save current list as                            │"
+            echo -e "                               └──────────────────────────────────────────────────────┘"
+            echo -e "                                                   ${info}${b}Select an item${nb}${nc}"
             __
             read -rsn 1 copyUrlsOptions
             case "$copyUrlsOptions" in
                 1)  __CopyLinks
                     __ ;;
                 2)
+                    if [[ $use_fzf = yes ]]; then
+                        clear
+                        _SearchYoutube
+                    else
+                        __
+                        printf '%s\n' \
+                            " ${critical}fzf is set to NO in your mpmrc file..." \
+                            " no way to search on youtube!${nc}"
+                        sleep 5
+                    fi
+                ;;
+                3)
                     [[ $arg = '-a' ]] && _GetAudio -a || _GetVideo -v
                     __ ;;
-                3)  _Save $arg
+                4)  _Save $arg
                     __ ;;
-                4)  _LoadAudioVideo $arg
+                5)  _LoadAudioVideo $arg
                     __ ;;
-                5)  _ViewUrlInfo $arg
+                6)  _ViewUrlInfo $arg
                     __ ;;
-                6)  _Menu
+                7)  _Menu
                     __ ;;
             esac
         done
     done
-}
 
-# these are temporary files used in _Choose{Download{Audio,Video},FromPlay}
-CHOOSE1="$playlists_dir/temporarySelection.m3u"
-CHOOSE2="$playlists_dir/temporarySelection2.m3u"
+}
 
 # polybar module showing total number of collection playlists
 _mpmIpc() {
@@ -899,7 +1125,7 @@ _RenameTmpFiles() {
     tmpFiles=( "$QUEUE" "$AUDIO_URLS" "$AUDIO_TITLES" \
                 "$VIDEO_URLS" "$VIDEO_TITLES" "$DEFAULTITLES" )
 
-    for f in "${tempFiles[@]}"; do
+    for f in "${tmpFiles[@]}"; do
         [[ ! -f $f ]] && continue
         mv -f "$f"_origin "$f"
     done 2>/dev/null
@@ -942,10 +1168,9 @@ _DownloadCompleted() {
         _IfPartsExist -l
     else
         FILES=( "$list" "$list"_origin "$titles_dir"/"$list".titles \
-        "$titles_dir"/"$list".titles_origin "$CHOOSE1" "$CHOOSE2" )
+                "$titles_dir"/"$list".titles_origin "$CHOOSE1" "$CHOOSE2" )
 
         __KeepItOrNot() (
-            
             if [[ $keep_none_empty_playlist = yes ]]; then
                 unset {FILES[0],FILES[2]}
                 rm -f "${FILES[@]}" 2>/dev/null
@@ -961,7 +1186,6 @@ _DownloadCompleted() {
                 unset {FILES[0],FILES[2]}
                 rm -f "${FILES[@]}" 2>/dev/null
             fi
-        
         )
 
         # _GetLinesList only counts lines starting with 'https'
@@ -976,23 +1200,6 @@ _DownloadCompleted() {
         rm -rf "$HOME"/.parallel 2>/dev/null
         [[ $quit_after_task = yes ]] && exit || _Menu
     fi
-}
-
-_GetMediaTitle() {
-
-    case "$1" in
-        -a) LIST="$AUDIO_URLS" ;;
-        -l) LIST="$playlists_dir"/"$list" ;;
-        -q) LIST="$QUEUE" ;;
-        -v) LIST="$VIDEO_URLS" ;;
-    esac
-
-    mapfile -t MEDIATITLES < <(grep '^https' "$LIST")
-
-    for line in "${MEDIATITLES[@]}"; do
-        _YtdlGetTitle "$line" 2>/dev/null
-    done
-
 }
 
 _GetLinesList() {
@@ -1167,14 +1374,15 @@ _EditPlaylist() {
         __
         PS3=""$'\n'"${info}Choose a playlist to edit:${nc} "
 
-        select list in $(find . -name "*.m3u" \
+        select list in $(find . -not -name "default.m3u" -name "*.m3u" \
             -o -name "*.m3u_origin" | sort -d | sed 's,.*/,,'); do
             __
             $MPMEDITOR "$list"
             echo -e " ${info}$list saved${nc}\n"
-            (( $(grep "" -c "$titles_dir/$list.titles") \
-            != $(_GetLinesList -l) )) && _TitlesListCompare -e
-            
+
+            [[ $(grep "" -c "$titles_dir/$list.titles") \
+                -ne $(_GetLinesList -l) ]] && _TitlesListCompare
+
             read -rsn 1 \
             -p "${info}"' [C]ontinue editing, [B]ack to menu or [Q]uit.'"${nc}" edit
             case "$edit" in
@@ -1213,10 +1421,47 @@ _EditMpmConf() {
 }
 
 _GetYoutubePlaylistUrls() {
-    __
+
+    local URLS_INFO getYoutubePlaylistUrls
     case "$1" in
         -a)
             URLS_INFO="$AUDIO_URLS"
+        ;;
+        -s)
+            if [[ $Type = Audio ]]; then
+                getYoutubePlaylistUrls="$YTSEARCH"AudioPlaylists
+                URLS_INFO="$AUDIO_URLS"
+            else
+                getYoutubePlaylistUrls="$YTSEARCH"VideoPlaylists
+                URLS_INFO="$VIDEO_URLS"
+            fi
+
+            getYoutubePlaylistTitle=$(\
+                youtube-dl "${ytdlPreset_DW[@]}" -J \
+                --flat-playlist "$(cat "$getYoutubePlaylistUrls")" \
+                | jq -r .title \
+            )
+            
+            printf '%s\n' \
+            " ${info}Please be patient while extracting urls/titles from:" \
+            " $getYoutubePlaylistTitle playlist...${nc}"
+            
+            mapfile -t < <(grep '^https' "$getYoutubePlaylistUrls")
+            # there might be several playlists urls selected in _SearchYoutube function
+            for url in "${MAPFILE[@]}"; do
+                youtube-dl "${ytdlPreset_DW[@]}" -j "$url" \
+                | jq '(.webpage_url)' | sed 's/"//g' \
+                | tee -a "$QUEUE" >> "$URLS_INFO"
+                sed -i '/playlist/d' {"$QUEUE","$URLS_INFO"}
+            done
+            
+            _YtdlGetTitle "$(cat "$getYoutubePlaylistUrls")" \
+            | tee -a "$TITLES" >> "$DEFAULTITLES"
+            _RemoveCrap
+
+            rm "$getYoutubePlaylistUrls"; sleep 1s
+
+            clear && return
         ;;
         -v)
             URLS_INFO="$VIDEO_URLS"
@@ -1407,11 +1652,11 @@ _GetVideo() {
     __DownloadMessages() (
         [[ $TITLES = "$DEFAULTITLES" ]] && {
             printf '%s\n' " ${info}$(_GetLinesList -q) video file(s) left to download." \
-            " Downloading:  $(_GetLinkTitle -q)${nc}"
+            " Downloading:  $(sed -n '1p' "$TITLES")${nc}"
         }
         [[ $TITLES = "$VIDEO_TITLES" ]] && {
             printf '%s\n' " ${info}$(_GetLinesList -v) video file(s) left to download." \
-            " Downloading:  $(_GetLinkTitle -v)${nc}"
+            " Downloading:  $(sed -n '1p' "$TITLES")${nc}"
         }
     )
 
@@ -1430,7 +1675,7 @@ _AdviceAudioVideo() (
     printf '%s\n' " ${critical}Tip: You may want to put this in your mpv.conf:" \
     " ${info}term-playing-msg='Tiltle: \${media-title}'"
     echo -e " ${critical}Otherwise press I in mpv for more infos.${nc}\n"
-    file="${M3UFILE##*/}" file="${file%%.*}"
+    file="${m3uFile##*/}" file="${file%%.*}"
     printf '%s\n' " ${info}Playing: ${file}${nc}"
     __
 )
@@ -1474,14 +1719,14 @@ _LoadAudioVideoTmp() {
 _LoadAudioVideo() {
 
     # change mpv settings in ~/.config/mpm/mpmrc
-    local M3UFILE
+    local m3uFile
 
     case "$1" in
         -a)
             if [[ -s $AUDIO_URLS ]]; then
-                M3UFILE="$AUDIO_URLS"
+                m3uFile="$AUDIO_URLS"
                 _AdviceAudioVideo
-                _MpvAudioOptions "$M3UFILE"
+                _MpvAudioOptions "$m3uFile"
                 _LoadAudioVideoTmp -a
             else
                 echo " ${critical}No links in the list${nc}"
@@ -1489,42 +1734,42 @@ _LoadAudioVideo() {
             fi
         ;;
         -ca)
-            M3UFILE="$CHOOSE1"
+            m3uFile="$CHOOSE1"
             _AdviceAudioVideo
-            _MpvAudioOptions "$M3UFILE"
+            _MpvAudioOptions "$m3uFile"
             _LoadAudioVideoTmp -c
         ;;
         -cv)
-            M3UFILE="$CHOOSE1"
+            m3uFile="$CHOOSE1"
             _AdviceAudioVideo
-            _MpvVideoOptions "$M3UFILE"
+            _MpvVideoOptions "$m3uFile"
             _LoadAudioVideoTmp -c
         ;;
         -la)
-            M3UFILE="$list"
+            m3uFile="$list"
             _AdviceAudioVideo
-            _MpvAudioOptions "$M3UFILE"
+            _MpvAudioOptions "$m3uFile"
         ;;
         -lv)
-            M3UFILE="$list"
+            m3uFile="$list"
             _AdviceAudioVideo
-            _MpvVideoOptions "$M3UFILE"
+            _MpvVideoOptions "$m3uFile"
         ;;
         -qa)
-            M3UFILE="$QUEUE"
+            m3uFile="$QUEUE"
             _AdviceAudioVideo
-            _MpvAudioOptions "$M3UFILE"
+            _MpvAudioOptions "$m3uFile"
         ;;
         -qv)
-            M3UFILE="$QUEUE"
+            m3uFile="$QUEUE"
             _AdviceAudioVideo
-            _MpvVideoOptions "$M3UFILE"
+            _MpvVideoOptions "$m3uFile"
         ;;
         -v)
             if [[ -s $VIDEO_URLS ]]; then
-                M3UFILE="$VIDEO_URLS"
+                m3uFile="$VIDEO_URLS"
                 _AdviceAudioVideo
-                _MpvVideoOptions "$M3UFILE"
+                _MpvVideoOptions "$m3uFile"
                 _LoadAudioVideoTmp -v
             else
                 echo " ${critical}No links in the list${nc}"
@@ -1874,7 +2119,7 @@ _LoadPlaylistMenu() {
 _LoadPlaylist() {
     cd "$playlists_dir" || exit 1
 
-    [[ -z $(find . -type f -not -name "default.m3u" -name "*.m3u") ]] && {
+    [[ -z $(find . -type f -name "*.m3u") ]] && {
         clear; __
         printf '%s\n' " ${critical}No playlist found!${nc}" \
         " ${task}First make a temporary list using options 1 or 2," \
@@ -1887,7 +2132,7 @@ _LoadPlaylist() {
         [[ -f "$dotM3uFile"_origin ]] \
         && mv "$dotM3uFile"_origin "$dotM3uFile"
     done
-     
+
     clear
     touch 1_Back_to_menu
     __
@@ -1902,7 +2147,7 @@ _LoadPlaylist() {
             echo " ${critical}No links found in $list (empty or does not contains #EXTM3U header)."
             echo " You can edit and fix it in option 8) Edit a playlist.${nc}"
             sleep 8
-            break
+            return
         }
 
         rm 1_Back_to_menu
@@ -1924,7 +2169,7 @@ _LoadPlaylist() {
                 __
                 case "$loadPlaylistOptions" in
                     1) clear; _LoadPlaylistMenu ;;
-                    2) return ;;
+                    2) break ;;
                     *)
                         __
                         printf '%s\n' " ${critical}Wrong option...${nc}"
@@ -1943,6 +2188,7 @@ _LoadPlaylist() {
 
     done
 }
+
 
 _ReplaceSpaces() {
     # the select loop will not parse correctly
@@ -2094,11 +2340,26 @@ _SaveCheck() {
     local listTotal
     listTotal=$(find . -not -name "default.m3u" -name "*.m3u" \
     -o -name "*.m3u_origin" | wc -l)
+
+    __listAlreadyExists() (
+        __
+        read -rp "${info}"' Enter the new playlist name (do not use extension): '"${nc}" list
+        list="$list.m3u"
+        [[ -f $list ]] && {
+            __
+            _Prompt -n " ${critical}$list ALREADY exists! Overwrite it?: ${nc}" && {
+                _SaveList
+            }
+            _Menu
+        }
+        _SaveList
+    )
+
     __
     PS3=""$'\n'" ${info}Available playlists (type ${task}$((listTotal + 1)) ${info}to create a new one):${nc} "
     select list in $(find . -not -name "default.m3u" -name "*.m3u" \
         -o -name "*.m3u_origin" | sort -d | sed 's,.*/,,'); do
-
+        
         [[ $REPLY != $((listTotal + 1)) ]] && {
 
             if [[ $(find . -name "${list}") ]]; then
@@ -2107,36 +2368,38 @@ _SaveCheck() {
                     _SaveList && break
                 }
                 __
-                read -rp "${info}"' Save playlist as (do not use extension): '"${nc}" list
-                list="$list.m3u"
-                [[ -f $list ]] && {
-                    __
-                    _Prompt -n " ${critical}$list ALREADY exists! Overwrite it?: ${nc}" && {
-                        _SaveList && break
-                    }
-                    break
-                }
-                _SaveList && break
+                read -rp " ${info}[S]ave playlist as a new one or [A]dd links to $list?: ${nc}" saveOrAddLinks
+                case "$saveOrAddLinks" in
+                    a|A)
+                        cat "$CURRENT_LIST" >> "$list"
+                        cat "$CURRENT_TITLES" >> "$titles_dir/$list.titles"
+                        perl -i -ne 'print if ! $a{$_}++' {"$list","$titles_dir/$list.titles"}
+                        __
+                        printf '%s\n' " ${info}Link(s) added to $list.${nc}"
+                        rm {"$CURRENT_LIST","$CURRENT_TITLES"}
+                        sleep 2
+                        break
+                    ;;
+                    s|S)
+                        __listAlreadyExists && break
+                    ;;
+                    *)
+                        printf '%s\n' " ${critical}Wrong option, try again later...${nc}"
+                        sleep 4
+                        break
+                    ;;
+                esac
+                
             else
                 __
-                printf '%s\n' " ${critical}Wrong entry $REPLY, try again...${nc}"
+                printf '%s\n' " ${critical}Wrong entry $REPLY, try again later...${nc}"
                 sleep 4
                 break
             fi
 
         }
 
-        __
-        read -rp "${info}"' Save the new playlist as (do not use extension): '"${nc}" list
-        list="$list.m3u"
-        [[ -f $list ]] && {
-            __
-            _Prompt -n " ${critical}$list ALREADY exists! Overwrite it?: ${nc}" && {
-                _SaveList && break
-            }
-            break
-        }
-        _SaveList && break
+        __listAlreadyExists && break
 
     done
 }
