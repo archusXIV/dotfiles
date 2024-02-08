@@ -2,7 +2,7 @@
 
 ##    Author: Barret E (2021-24) <archus@protonmail.com>
 ##    This file is the standalone version of mpv-playlists-manager.
-##    https://github.com/archusXIV/mpv-playlists-manager/blob/main/mpm
+##    https://github.com/archusXIV/mpv-playlists-manager/blob/main
 ##    Dependencies: ffmpeg, jq, mpv, yt-dlp.
 ##    Optionals: fzf, parallel, ueberzug, ranger, w3m, wmctrl, ytfzf.
 ##
