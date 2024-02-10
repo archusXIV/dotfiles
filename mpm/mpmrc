@@ -1,7 +1,6 @@
 #!/bin/bash
-# ~/.config/mpm/mpmrc (version 1.4-9)
+# ~/.config/mpm/mpmrc (version 1.5-4)
 
-# see https://github.com/archusXIV/mpv-playlists-manager
 ########################################################
 #                                                      #
 #    ███╗   ███╗██████╗ ███╗   ███╗██████╗  ██████╗    #
@@ -19,7 +18,8 @@
 : "${XDG_DATA_HOME:-$HOME/.local/share}"
 
 # change the main mpm window size. (the actual size is 1260x738)
-function _ResizeWindow { wmctrl -r :ACTIVE: -e 5,-1,-1,1260,738; } 2>/dev/null
+width=1260
+height=738
 
 # edit your own theme in "$XDG_CONFIG_HOME"/mpm/themerc.
 # apply your prefered colorscheme...
@@ -58,16 +58,6 @@ keep_none_empty_playlist="yes"
 # (will appear in main menu)
 direct_download="yes"
 
-# audio files (.webm) conversion.
-# (will appear in main menu)
-automatic_audio_conversion="no"
-
-# default audio conversion format {mp3,flac,wav,ogg},
-# mp3 & ogg in 320k, flac & wav are lossless.
-# if value is empty you will be prompted.
-# (will appear in main menu)
-default_conversion_format=""
-
 # this takes place only after downloading/playing from a collection playlist.
 # (will appear in main menu)
 quit_after_task="no"
@@ -82,12 +72,16 @@ quit_after_task="no"
 use_fzf="yes"
 
 # add/change your ytfzf preferences here
-ytfzfOptions_YT=( --force-youtube )
-ytfzfOptions_PG=( --pages=3 )
+# use odysee instead of youtube
+ytfzfOptions_SC=( --scrape=youtube )
+# force youtube search
+# ytfzfOptions_YT=( --force-youtube )
+ytfzfOptions_PG=( --pages=5 )
 ytfzfOptions_VD=( --video-duration=long )
 ytfzfOptions_SB=( --sort-by=relevance )
 ytfzfOptions_TY=( --type=all )
-ytfzfOptions_X=( "${ytfzfOptions_YT[@]}" "${ytfzfOptions_PG[@]}" \
+# add your options in this array
+ytfzfOptions_X=( "${ytfzfOptions_SC[@]}" "${ytfzfOptions_PG[@]}" \
 "${ytfzfOptions_VD[@]}" "${ytfzfOptions_SB[@]}" "${ytfzfOptions_TY[@]}" )
 
 ##### FFMPEG SPECIFICS (audio conversion) #####
@@ -95,71 +89,48 @@ ytfzfOptions_X=( "${ytfzfOptions_YT[@]}" "${ytfzfOptions_PG[@]}" \
 # if the parallel package is installed then it will be used to launch
 # multiple conversions at once, the quality equivalent as the original,
 # else files will be converted one by one.
-use_parallel="no"
+use_parallel="yes"
+
+# audio files (.webm) conversion.
+# (will appear in main menu)
+automatic_audio_conversion="no"
+
+# default audio conversion format {mp3,flac,wav,ogg},
+# mp3 & ogg in 320k, flac & wav are lossless.
+# if value is empty you will be prompted.
+# (will appear in main menu)
+default_conversion_format="flac"
 
 function _mp3 {
-    case "$1" in
-        -n)
-            find . -iname "*.webm" -exec \
-            bash -c 'FILE="$1"; \
-                ffmpeg -i "${FILE}" \
-                -acodec libmp3lame -ar 48000 -ab 320k \
-                -y "${FILE%.webm}.mp3";' _ '{}' \; 2>"$FFOP"
-        ;;
-        -p) # parallel will launch ffmpeg instances with a little delay
-            # so we don't clutter our cpu.
-            parallel --delay 2.5 -j+0 \
-            ffmpeg -y -i {} -qscale:a 0 {.}.mp3 ::: ./*.webm 2>"$FFOP"
-        ;;
-    esac
+    find . -iname "*.webm" -exec \
+    bash -c 'FILE="$1"; \
+        ffmpeg -i "${FILE}" \
+        -acodec libmp3lame -ar 48000 -ab 320k \
+        -y "${FILE%.webm}.mp3";' _ '{}' \; 2>"$FFOP"
 }
 
 function _flac {
-    case "$1" in
-        -n)
-            find . -iname "*.webm" -exec \
-            bash -c 'FILE="$1"; \
-                ffmpeg -i "${FILE}" \
-                -af aformat=s32:48000 \
-                -y "${FILE%.webm}.flac";' _ '{}' \; 2>"$FFOP"
-        ;;
-        -p)
-            parallel --delay 2.5 -j+0 \
-            ffmpeg -y -i {} -qscale:a 0 {.}.flac ::: ./*.webm 2>"$FFOP"
-        ;;
-    esac
+    find . -iname "*.webm" -exec \
+    bash -c 'FILE="$1"; \
+        ffmpeg -i "${FILE}" \
+        -af aformat=s32:48000 \
+        -y "${FILE%.webm}.flac";' _ '{}' \; 2>"$FFOP"
 }
 
 function _wav {
-    case "$1" in
-        -n)
-            find . -iname "*.webm" -exec \
-            bash -c 'FILE="$1"; \
-                ffmpeg -i "${FILE}" \
-                -acodec pcm_s32le -ar 48000 \
-                -y "${FILE%.webm}.wav";' _ '{}' \; 2>"$FFOP"
-        ;;
-        -p)
-            parallel --delay 2.5 -j+0 \
-            ffmpeg -y -i {} -qscale:a 0 {.}.wav ::: ./*.webm 2>"$FFOP"
-        ;;
-    esac
+    find . -iname "*.webm" -exec \
+    bash -c 'FILE="$1"; \
+        ffmpeg -i "${FILE}" \
+        -acodec pcm_s32le -ar 48000 \
+        -y "${FILE%.webm}.wav";' _ '{}' \; 2>"$FFOP"
 }
 
 function _ogg {
-    case "$1" in
-        -n)
-            find . -iname "*.webm" -exec \
-            bash -c 'FILE="$1"; \
-                ffmpeg -i "${FILE}" \
-                -acodec libvorbis -ar 48000 -ab 320k \
-                -y "${FILE%.webm}.ogg";' _ '{}' \; 2>"$FFOP"
-        ;;
-        -p)
-            parallel --delay 2.5 -j+0 \
-            ffmpeg -y -i {} -qscale:a 0 {.}.ogg ::: ./*.webm 2>"$FFOP"
-        ;;
-    esac
+    find . -iname "*.webm" -exec \
+    bash -c 'FILE="$1"; \
+        ffmpeg -i "${FILE}" \
+        -acodec libvorbis -ar 48000 -ab 320k \
+        -y "${FILE%.webm}.ogg";' _ '{}' \; 2>"$FFOP"
 }
 
 ######## MPV SPECIFICS ########
@@ -169,6 +140,7 @@ function _MpvAudioOptions {
     mpv \
     --input-ipc-server='/tmp/mpvsocket' \
     --no-config \
+    --no-resume-playback \
     --term-playing-msg="${info}"'Title: ${media-title}'"${nc}" \
     --ytdl-format='bestaudio/best' "$1"
 }
@@ -178,9 +150,12 @@ function _MpvVideoOptions {
     # same as above.
     mpv \
     --input-ipc-server='/tmp/mpvsocket' \
-    --demuxer-max-bytes=20480KiB \
-    --demuxer-max-back-bytes=20480KiB \
+    --cache=yes \
+    --demuxer-max-bytes=500MiB \
+    --demuxer-readahead-secs=30 \
+    --demuxer-max-back-bytes=100MiB \
     --no-config \
+    --no-resume-playback \
     --term-playing-msg="${info}"'Title: ${media-title}'"${nc}" \
     --ytdl-format='299+251/298+251/137+251/136+251/best' "$1"
 }
@@ -190,21 +165,15 @@ function _MpvVideoOptions {
 # (not tested elsewhere)
 # take a look at 'man yt-dlp'
 # !!! do not change the name of the array (ytdlPreset_<*>) !!!
-# downloader protocol:name
+ytdlPreset_BR=( --break-on-existing )
 ytdlPreset_DN=( --downloader m3u8:ffmpeg )
-# downloader arguments
 ytdlPreset_DA=( --downloader-args '-n' )
-# merge format
 ytdlPreset_MF=( --merge-output-format mp4 )
-# downloader warnings
 ytdlPreset_DW=( --no-warnings )
-# downloader progress
 ytdlPreset_DP=( --progress )
-# downloader filename sanitization
-# (this avoid the creation of subdirectories because of filenames containing '/').
 ytdlPreset_FS=( --compat-options filename-sanitization )
 # downloader without multiple format codes
-ytdlPreset_NC=( "${ytdlPreset_DW[@]}" "${ytdlPreset_DP[@]}" )
+ytdlPreset_NC=( "${ytdlPreset_BR[@]}" "${ytdlPreset_DW[@]}" "${ytdlPreset_DP[@]}" )
 # combined presets
 ytdlPreset_X=( "${ytdlPreset_DN[@]}" "${ytdlPreset_DA[@]}" \
 "${ytdlPreset_MF[@]}" "${ytdlPreset_DW[@]}" "${ytdlPreset_DP[@]}" )
