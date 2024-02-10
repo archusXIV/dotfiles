@@ -1,7 +1,6 @@
 #!/bin/bash
-# ~/.config/mpm/themerc (version 1.4-9)
+# ~/.config/mpm/themerc (version 1.5-4)
 
-# see https://github.com/archusXIV/mpv-playlists-manager
 ######################################################################
 #                                                                    #
 #    ████████╗██╗  ██╗███████╗███╗   ███╗███████╗██████╗  ██████╗    #
@@ -83,14 +82,14 @@ _Theme() {
             customColors=( "69;133;136" "204;36;29" "104;157;106" "215;153;33" "235;219;178" )
         ;;
         monokai)
-           # Using RGB colors for array 'customColors'
+            # Using RGB colors for array 'customColors'
             nc=$'\e[38;2;161;239;228m';      #A1EFE4 "0xa1 0xef 0xe4"
             critical=$'\e[38;2;249;38;114m'; #F92672 "0xf9 0x26 0x72"
             info=$'\e[38;2;166;226;46m';     #A6E22E "0xa6 0xe2 0x2e"
             mtitle=$'\e[38;2;244;191;171m';  #F4BF75 "0xf4 0xbf 0x75"
             task=$'\e[38;2;248;248;242m';    #F8F8F2 "0xf8 0xf8 0xf2"
             # enter the last three numbers of your custom sequence.
-                         #   normal text   critical      info          mtitle       task
+                        #   normal text   critical      info          mtitle       task
             customColors=( "161;239;228" "249;38;114" "166;226;46" "244;191;171" "248;248;242" )
         ;;
         TokyoNight)
@@ -130,4 +129,5 @@ _Theme() {
             "0xf0 0xdf 0xaf" "0x4f 0x7a 0xa7" )
         ;;
     esac
+    
 }
