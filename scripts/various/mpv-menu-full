@@ -27,7 +27,7 @@
 ## but let's ensure temporary files are removed before we exit out.
 trap _CleanTmpDir SIGTERM EXIT
 
-VERSION="v.1.5-3"
+VERSION="v.1.5-4"
 
 : "${XDG_CONFIG_HOME:-$HOME/.config}"
 CONF_DIR="$XDG_CONFIG_HOME/mpm"
@@ -251,7 +251,7 @@ _ListsCount() {
 
     __col() (
         if [[ -z $(find "$playlists_dir" -not -name "default.m3u" -name "*.m3u") ]]; then
-           echo "0"
+            echo "0"
         else
             echo "${info}$(find "$playlists_dir" -not -name "default.m3u" \
             -iname "*.m3u" -printf '.' | wc -c)${nc}"
@@ -284,8 +284,9 @@ _ListsCount() {
         fi
     )
     
+    sep="${task}*${nc}"
     echo -e "                  ┌─────────────────────────────────────────────────────────────────────────────────────┐"
-    echo -e "                           Collection: $(__col) * Default list: $(__def) * Audio list: $(__aud) * Video list: $(__vid)"
+    echo -e "                           Collection: $(__col) ${sep} Default list: $(__def) ${sep} Audio list: $(__aud) ${sep} Video list: $(__vid)"
     echo -e "                  └─────────────────────────────────────────────────────────────────────────────────────┘"
 
 }
@@ -633,37 +634,38 @@ _GetAudio() {
 }
 
 _ViewUrlInfo() {
-    # Normaly in Bash nested functions use parentheses instead of curly braces,
-    # but here it won't work because of the case statment right parenthese...
-    # They will close the block before it finishes.
 
     local stars
 
-    viewUrlInfoPrompt=( "[M]aim menu" "[B]ack to audio options" \
-                        "[B]ack to video options" "[D]ownload" \
-                        "[P]lay" "[S]ave as" "[R]emove list: " )
+    viewUrlInfoPrompt=( "[M]aim menu," "[A]dd more links," "[D]ownload," \
+                        "[P]lay," "[S]ave as," "[R]emove links/list: " )
 
     # let's play...
     stars=$(printf "%-54s" "*")
     
+    __audioVideoCommon() (
+        clear
+        __
+        echo " ${info}ORDER |  $menuTitleType PLAYLIST LINKS & TITLES.${nc}"
+        echo -e " ${info}${stars// /*}${nc}\n"
+        awk '$0 ~ /^https/{print $0}' "$menuTitleType_$URLS" \
+        | nl && {
+            __
+            nl "$menuTitleType_$TITLES"
+        __
+        }
+        echo "${info}" "${viewUrlInfoPrompt[@]}" "${nc}"
+    )
+
+    # Normaly in Bash nested functions use parentheses instead of curly braces,
+    # but here it won't work because of the case statment right parenthese...
+    # They will close the block before it finishes.
     __audio() {
         if [[ -s $AUDIO_URLS ]]; then
-            clear
-            __
-            echo " ${info}ORDER |  AUDIO PLAYLIST LINKS & TITLES.${nc}"
-            echo -e " ${info}${stars// /*}${nc}\n"
-            awk '$0 ~ /^https/{print $0}' "$AUDIO_URLS" \
-            | nl && {
-                __
-                nl "$AUDIO_TITLES"
-            __
-            }
-            unset {viewUrlInfoPrompt[2],viewUrlInfoPrompt[7]}
-            __
-            echo "${info}" "${viewUrlInfoPrompt[*]}" "${nc}"
+            __audioVideoCommon
             read -rsn 1 audioOptions
             case "$audioOptions" in
-                b|B) __; _CopyUrl -a ;;
+                a|A) __; _CopyUrl -a ;;
                 m|M) _Menu ;;
                 d|D) _GetAudio -a ;;
                 p|P) _LoadAudioVideo -a ;;
@@ -678,22 +680,10 @@ _ViewUrlInfo() {
 
     __video() {
         if [[ -s $VIDEO_URLS ]]; then
-            clear
-            __
-            echo " ${info}ORDER |  VIDEO PLAYLIST LINKS & TITLES.${nc}"
-            echo -e " ${info}${stars// /*}${nc}\n"
-            awk '$0 ~ /^https/{print $0}' "$VIDEO_URLS" \
-            | nl && {
-                __
-                nl "$VIDEO_TITLES"
-            __
-            }
-            unset {viewUrlInfoPrompt[1],viewUrlInfoPrompt[7]}
-            __
-            echo "${info}" "${viewUrlInfoPrompt[*]}" "${nc}"
+            __audioVideoCommon
             read -rsn 1 videoOptions
             case "$videoOptions" in
-                b|B) __; _CopyUrl -v ;;
+                a|A) __; _CopyUrl -v ;;
                 m|M) _Menu ;;
                 d|D) _GetVideo -v ;;
                 p|P) _LoadAudioVideo -v ;;
@@ -727,7 +717,7 @@ _ViewUrlInfo() {
             }
             
             while [[ -f $QUEUE ]]; do
-                unset {viewUrlInfoPrompt[1],viewUrlInfoPrompt[2],viewUrlInfoPrompt[7]}
+                unset 'viewUrlInfoPrompt[1]'
                 echo "${info}" "${viewUrlInfoPrompt[*]}" "${nc}"
                 read -rsn 1 queueOptions
                 case "$queueOptions" in
@@ -993,8 +983,8 @@ _SearchOnline() {
 
 _CopyUrl() {
 
-    local Type TITLES URLS menuTitleType arg copyUrl copyUrlPlaylisTitles
-
+    local Type TITLES URLS menuTitleType arg copyUrl
+    
     [[ -f $tmp_dir/1 ]] && rm "$tmp_dir"/1
 
     case "$1" in
@@ -1034,6 +1024,7 @@ _CopyUrl() {
                 _GetYoutubePlaylistUrls $arg
                 _RemoveCrap
             else
+
                 echo "$copyUrl" >> "$URLS"
                 __
                 echo -e " ${info}Testing url...${nc}"
@@ -1056,6 +1047,7 @@ _CopyUrl() {
                     | tee -a "$TITLES" >> "$DEFAULTITLES"
                     _RemoveCrap
                 fi
+
             fi
         )
         
@@ -1067,7 +1059,7 @@ _CopyUrl() {
             && __ && _GetYoutubePlaylistUrls -s
             __
             [[ -s $URLS ]] && \
-            echo -e " ${info}${Type} list:   $(_GetLinesList $arg) url(s)${nc}"
+            echo -e " ${info}${Type} list: $(_GetLinesList $arg) url(s)${nc}"
             __
             echo -e "                                                  ${mtitle}::${menuTitleType} OPTIONS::${nc}"
             echo -e "                               ┌──────────────────────────────────────────────────────┐"
@@ -1116,7 +1108,7 @@ _CopyUrl() {
 
 }
 
-# polybar module showing total number of collection playlists
+# triggers a polybar module showing total number of collection playlists
 _mpmIpc() {
 	polybar-msg \
 	-p $(pgrep --full "$(wmctrl -m | awk '/Name:/{print $2}')"-bar-3) \
@@ -1238,7 +1230,7 @@ _GetRange() {
     IFS=", "; read -ra array -p " ${info}""$RP""${nc}"
     
     for range in "${array[@]}"; do
-        IFS="-"; read -r start end <<< "$range"
+        IFS="- "; read -r start end <<< "$range"
         [[ -z $start ]] && continue
         [[ -z $end ]] && end="$start"
         
@@ -2475,32 +2467,95 @@ _Save() {
 
 _Remove() {
 
+    cd "$tmp_dir" || exit 1
+
+    __removeTmpLinks() (
+        clear
+        __
+        cat -n "$tmpTitles"
+        RP=$(printf '%s\n' "Enter numbers separeted by commas or a dash for a range" \
+        " for example: ${task}1-4,6 8-11 or 1-4,6-8,10 or 2,3,5,6,1 : ${nc}")
+        __
+        IFS=", "; read -ra array -p " ${info}""$RP""${nc}"
+
+        for range in "${array[@]}"; do
+            IFS="- "; read -r start end <<< "$range"
+            [[ -z $start ]] && continue
+            [[ -z $end ]] && end="$start"
+            for ((i=start;i <= end;i++)); do
+                sed -n "${i}p" "$tmpList" >> "$tmpList"_tmp
+                sed -n "${i}p" "$tmpTitles" >> "$tmpTitles"_tmp
+            done
+        done
+
+        grep -v "$(grep '^https' "$tmpList"_tmp)" "$tmpList" >> "$tmpList"_tmp2
+        mv -f "$tmpList"_tmp2 "$tmpList"
+        grep -v "$(grep '^[[:print:]]' "$tmpTitles"_tmp)" "$tmpTitles" >> "$tmpTitles"_tmp2
+        mv -f "$tmpTitles"_tmp2 "$tmpTitles"
+        rm {"$tmpList"_tmp,"$tmpTitles"_tmp}
+        printf '%s\n' " ${critical}Selected links removed...${nc}"
+        unset IFS
+        sleep 3
+
+    )
+
     case "$1" in
-        -a) rm -f $AUDIO_{URLS,TITLES} \
-            {"$AUDIO_URLS"_origin,"$AUDIO_TITLES"_origin}
-            rm -rf "$HOME"/.parallel 2>/dev/null
+        -a)
+            tmpList="$AUDIO_URLS"
+            tmpTitles="$AUDIO_TITLES"
             __
-            echo " ${critical}Audio list removed...${nc}"
-            sleep 3
+            read -rsn 1 -p " ${info}Remove [L]inks or the [W]hole list?: ${nc}"
+            if [[ $REPLY =~ l|L ]]; then
+                __removeTmpLinks
+                _ViewUrlInfo -a
+            else
+                rm -f $AUDIO_{URLS,TITLES} \
+                {"$AUDIO_URLS"_origin,"$AUDIO_TITLES"_origin}
+                rm -rf "$HOME"/.parallel 2>/dev/null
+                __
+                echo " ${critical}Audio list removed...${nc}"
+            fi
         ;;
-        -q) sed -i '/^[[:alpha:]]/d' "$QUEUE"
-            rm -f {"$QUEUE"_origin,"$tmp_dir"/1} 2>/dev/null
-            rm -f {"$DEFAULTITLES"_origin,"$DEFAULTITLES"} 2>/dev/null
-            rm -f "$DEFAULTM3UTITLES" 2>/dev/null
-            rm -rf "$HOME"/.parallel 2>/dev/null
+        -q)
+            tmpList="$QUEUE"
+            tmpTitles="$DEFAULTITLES"
             __
-            echo " ${critical}Default list cleared...${nc}"
-            sleep 3
+            read -rsn 1 -p " ${info}Remove [L]inks or the [W]hole list?: ${nc}"
+            if [[ $REPLY =~ l|L ]]; then
+                sed -i '1d' "$tmpList"
+                __removeTmpLinks
+                sed -i '1s/^/#EXTM3U\n/' "$tmpList"
+                _ViewUrlInfo -q
+            else
+                sed -i '/^[[:alpha:]]/d' "$QUEUE"
+                rm -f {"$QUEUE"_origin,"$tmp_dir"/1} 2>/dev/null
+                rm -f {"$DEFAULTITLES"_origin,"$DEFAULTITLES"} 2>/dev/null
+                rm -f "$DEFAULTM3UTITLES" 2>/dev/null
+                rm -rf "$HOME"/.parallel 2>/dev/null
+                __
+                echo " ${critical}Default list cleared...${nc}"
+            fi
         ;;
-        -v) rm -f $VIDEO_{URLS,TITLES} \
-            {"$VIDEO_URLS"_origin,"$VIDEO_TITLES"_origin}
+        -v)
+            tmpList="$VIDEO_URLS"
+            tmpTitles="$VIDEO_TITLES"
             __
-            echo " ${critical}Video list removed...${nc}"
-            sleep 3
+            read -rsn 1 -p " ${info}Remove [L]inks or the [W]hole list?: ${nc}"
+            if [[ $REPLY =~ l|L ]]; then
+                __removeTmpLinks
+                _ViewUrlInfo -v
+            else
+                rm -f $VIDEO_{URLS,TITLES} \
+                {"$VIDEO_URLS"_origin,"$VIDEO_TITLES"_origin}
+                __
+                echo " ${critical}Video list removed...${nc}"
+            fi
         ;;
     esac
 
+    sleep 3
     _Menu
+
 }
 
 _SaveRemove() {
