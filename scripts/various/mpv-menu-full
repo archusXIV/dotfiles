@@ -29,7 +29,7 @@
 ## but let's ensure temporary files are removed before we exit out.
 trap _CleanTmpDir SIGTERM EXIT
 
-VERSION="v.1.5-4"
+VERSION="v.1.6-0"
 
 : "${XDG_CONFIG_HOME:-$HOME/.config}"
 CONF_DIR="$XDG_CONFIG_HOME/mpm"
@@ -307,7 +307,8 @@ _Menu() {
         _ResizeWindow
         clear
         __
-        echo -e "                                           ${mtitle}::MPV-PLAYLISTS-MANAGER $VERSION::" "$(_CheckUpdate)"
+        [[ $check_updates = yes ]] && echo -e "                                           ${mtitle}::MPV-PLAYLISTS-MANAGER $VERSION::" "$(_CheckUpdate)" \
+        || echo -e "                                           ${mtitle}::MPV-PLAYLISTS-MANAGER $VERSION::"
         echo -e "                                          $(_LittleStars)"
         echo -e "                                        ${info}current theme: $THEME. ${critical}For usage type U${nc}"
         _ListsCount
@@ -372,6 +373,42 @@ FFOP="$tmp_dir/ffmpeg_output"
 DEFAULTITLES="$tmp_dir/DefaultTitles"
 DEFAULTM3UTITLES="$titles_dir/default.m3u.titles"
 
+_ConvertAudio_flac() {
+    mapfile -t webmFiles < <(find "$audios_dir" -maxdepth 2 -iname "*.webm")
+    for i in "${webmFiles[@]}"; do
+        ffmpeg -i "${i}" \
+        "${ffmpegFlacCodecOptions[@]}" \
+        -y "${i%.webm}.flac" 2>"$FFOP"
+    done
+}
+
+_ConvertAudio_mp3() {
+    mapfile -t webmFiles < <(find "$audios_dir" -maxdepth 2 -iname "*.webm")
+    for i in "${webmFiles[@]}"; do
+        ffmpeg -i "${i}" \
+        "${ffmpegMp3CodecOptions[@]}" \
+        -y "${i%.webm}.mp3" 2>"$FFOP"
+    done
+}
+
+_ConvertAudio_ogg() {
+    mapfile -t webmFiles < <(find "$audios_dir" -maxdepth 2 -iname "*.webm")
+    for i in "${webmFiles[@]}"; do
+        ffmpeg -i "${i}" \
+        "${ffmpegOggCodecOptions[@]}" \
+        -y "${i%.webm}.ogg" 2>"$FFOP"
+    done
+}
+
+_ConvertAudio_wav() {
+    mapfile -t webmFiles < <(find "$audios_dir" -maxdepth 2 -iname "*.webm")
+    for i in "${webmFiles[@]}"; do
+        ffmpeg -i "${i}" \
+        "${ffmpegWavCodecOptions[@]}" \
+        -y "${i%.webm}.wav" 2>"$FFOP"
+    done
+}
+
 _ConvertAudio() {
 
     [[ -d "$audios_dir"/"${list%.*}" ]] \
@@ -381,54 +418,56 @@ _ConvertAudio() {
     if [[ -n $default_conversion_format ]]; then
         __
         printf '%s\n' \
-        " ${task}Default format set to $default_conversion_format.${nc}"
+        " ${info}Conversion format set to $default_conversion_format."
         __
         printf '%s\n' \
-        " ${info}Converting files in ${task}$default_conversion_format${b}...${nb}${nc}"
+        " Converting files in ${task}${b}$default_conversion_format...${nb}"
         __
         if [[ -n $(command -v parallel) && $use_parallel = yes ]]; then
-            printf '%s\n' "${task}"' Parallel conversion enabled.'"${nc}"
+            printf '%s\n' " Parallel conversion enabled."
             parallel --delay 2.5 -j+0 \
             ffmpeg -y -i {} -qscale:a 0 {.}."$default_conversion_format" ::: ./*.webm 2>"$FFOP"
         else
-            printf '%s\n' "${task}"' Parallel conversion disabled.'"${nc}"
-            _"$default_conversion_format"
+            printf '%s\n' " Parallel conversion disabled.${nc}"
+            _ConvertAudio_"$default_conversion_format"
         fi
     else
-        # functions _mp3 _flac _wav & _ogg are in ~/.config/mpm/mpmrc
         __
-        printf '%s\n' " ${task}Default format isn't set." \
-        " Press Enter to abort conversion.${nc}"
+        printf '%s\n' " ${critical}Conversion format isn't set..." \
+        " ${info}Press Enter to abort conversion.${nc}"
         declare -A formats=(
-            [1]="mp3"
-            [2]="flac"
-            [3]="wav"
-            [4]="ogg"
+            [1]="flac"
+            [2]="mp3"
+            [3]="ogg"
+            [4]="wav"
         )
         __
         read -rn1 \
-        -p "${info}"' Select an output format [1=mp3] [2=flac] [3=wav] [4=ogg]: '"${nc}"
+        -p " ${info}Select an output format [1=flac] [2=mp3] [3=ogg] [4=wav]: ${nc}"
         
         case "$REPLY" in
             [1-4])
                 __
                 printf '%s\n' \
-                " ${info}Converting files in ${task}${formats[${REPLY}]}${b}...${nb}${nc}"
+                " ${info}Converting files in ${task}${b}${formats[${REPLY}]}...${nb}"
                 __
                 if [[ -n $(command -v parallel) && $use_parallel = yes ]]; then
-                    printf '%s\n' "${task}"' Parallel conversion enabled.'"${nc}"
+                    printf '%s\n' " Parallel conversion enabled."
                     parallel --delay 2.5 -j+0 \
                     ffmpeg -y -i {} -qscale:a 0 {.}."${formats[${REPLY}]}" ::: ./*.webm 2>"$FFOP"
                 else
-                    printf '%s\n' "${task}"' Parallel conversion disabled.'"${nc}"
-                    _"${formats[${REPLY}]}"
+                    printf '%s\n' " Parallel conversion disabled.${nc}"
+                    _ConvertAudio_"${formats[${REPLY}]}"
                 fi
             ;;
             *)
-                echo ""
-                printf '%s\n' " ${critical}Wrong format $REPLY..." \
-                " or conversion aborted...${nc}"
-                mv ./*.webm ..
+                __
+                find "$audios_dir" -maxdepth 2 -name "*.webm" >/dev/null && {
+                    mv ./*.webm "$MUSIC_DIR"
+                    printf '%s\n' " ${critical}Conversion aborted," \
+                    " All .webm files have been moved in $MUSIC_DIR.${nc}"
+                    sleep 3
+                } || printf '%s\n' " ${critical}Wrong format $REPLY...${nc}"
                 __
                 sleep 3
                 return
@@ -437,17 +476,9 @@ _ConvertAudio() {
         
     fi
 
-    find . -iname "*.webm" -exec rm {} \;
-
-    if [[ -z $(find "$audios_dir" -maxdepth 2 -name "*.webm" ) ]]; then
-        __
-        printf '%s\n' " ${info}Conversion done.${nc}"
-        sleep 2
-        clear
-    else
-        echo ""
-    fi
-
+    find . -iname "*.webm" -exec rm {} \; && \
+    __ && printf '%s\n' " ${info}Conversion done.${nc}" \
+    && sleep 2
 }
 
 _GetAudioDownloadMessages() {
@@ -494,7 +525,9 @@ _IfWebmFiles() {
         else
             __
             _Prompt " ${info}Proceed with conversion?: ${nc}" || {
-                mv ./*.webm ..
+                mv ./*.webm "$MUSIC_DIR"
+                printf '%s\n' " ${critical}All .webm files have been moved in $MUSIC_DIR.${nc}"
+                sleep 3
                 [[ $M3UFILE = "$AUDIO_URLS" ]] || [[ $M3UFILE = "$QUEUE" ]] \
                 && _GetCompleted -a
                 [[ $M3UFILE = "$playlists_dir"/"$list" ]] || [[ $M3UFILE = "$CHOOSE1" ]] \
@@ -780,9 +813,14 @@ _RemoveCrap() {
             "$VIDEO_URLS" "$VIDEO_TITLES" \
             "$QUEUE" "$DEFAULTITLES" )
 
+    # sed will complain about the two //, so we escape them.
+    a="https:\/\/youtube.com"
+    b="https:\/\/www.youtube.com"
+
     for file in "${LISTS[@]}"; do
         # removing unwanted parts of links, blank lines & duplicates
         sed -i 's/&list.*//;/^\s*$/d' "$file"
+        sed -i "s/${a}/${b}/g" "$file"
         perl -i -ne 'print if ! $a{$_}++' "$file"
     done 2>/dev/null
 
@@ -866,7 +904,7 @@ _SearchYoutubeWithFzf() {
     )
 
     if ! grep -q "$sanitizedRequest" <<< "$sanitizedResult"; then
-        echo "unable to fetch Youtube."
+        echo "unable to reach youtube.com"
         sleep 2s
         return
     fi
@@ -892,7 +930,7 @@ _SearchYoutubeWithFzf() {
         selection=$(echo -e "$IDS" | cut -d'	' -f2 \
         | fzf \
         --prompt='Filter: ' \
-        --header "${info}${b}"'Press Enter to copy, Escape to exit search: '"${nb}${nc}")
+        --header "${info}${b}"'Press Enter to copy, Escape to confirm & exit search: '"${nb}${nc}")
 
         # grep a fixed string that is a word and matches only one line in selection.
         id=$(echo -e "$IDS" | grep -Fwm1 "$selection" | cut -d'	' -f1)
@@ -1328,20 +1366,33 @@ _EditPlaylist() {
         clear
         cd "$playlists_dir" || exit 1
         __
-        PS3=""$'\n'"${info}Choose a playlist to edit:${nc} "
+        PS3=""$'\n'" ${info}Choose a playlist to edit: ${nc}"
 
         select list in $(find . -not -name "default.m3u" -name "*.m3u" \
             -o -name "*.m3u_origin" | sort -d | sed 's,.*/,,'); do
             __
-            $MPMEDITOR "$list"
-            echo -e " ${info}$list saved${nc}\n"
-
-            [[ $(grep "" -c "$titles_dir/$list.titles") \
+            read -rsn 1 -p \
+            "${info}"' [E]dit urls manually, [R]emove titles.'"${nc}" edit
+            if [[ $edit =~ e|E ]]; then
+                $MPMEDITOR "$list"
+                echo -e " ${info}$list saved${nc}\n"
+                [[ $(grep "" -c "$titles_dir/$list.titles") \
                 -ne $(_GetLinesList -l) ]] && _TitlesListCompare
-
+            elif [[ $edit =~ r|R ]]; then
+                clear
+                _TitlesListCompare -l
+                _GetRange
+                unset IFS
+                _UpdateSelected -e
+            else
+                __
+                printf '%s\n' " ${critical}Wrong option $edit...${nc}"
+                sleep 3
+            fi
+            __
             read -rsn 1 \
-            -p "${info}"' [C]ontinue editing, [B]ack to menu or [Q]uit.'"${nc}" edit
-            case "$edit" in
+            -p "${info}"' [C]ontinue editing, [B]ack to menu or [Q]uit.'"${nc}" again
+            case "$again" in
                 c|C)
                     break
                 ;;
@@ -1358,6 +1409,10 @@ _EditPlaylist() {
                         clear
                         exit 0
                     fi
+                ;;
+                *)
+                    printf '%s\n' " ${critical}Wrong option $again...${nc}"
+                    sleep 3
                 ;;
             esac
         done
@@ -1698,12 +1753,12 @@ _LoadAudioVideo() {
             _LoadAudioVideoTmp -c
         ;;
         -la)
-            m3uFile="$list"
+            m3uFile="$playlists_dir/$list"
             _AdviceAudioVideo
             _MpvAudioOptions "$m3uFile"
         ;;
         -lv)
-            m3uFile="$list"
+            m3uFile="$playlists_dir/$list"
             _AdviceAudioVideo
             _MpvVideoOptions "$m3uFile"
         ;;
@@ -1845,15 +1900,27 @@ _UpdateSelected() {
     mv -f "$CHOOSE2" "$list"
     rm "$CHOOSE1"
     cd "$titles_dir" || exit 1
-    __
-    echo -e " ${task}${b}Refreshing titles...please wait.${nb}${nc}\n"
-    grep -v "$(grep '^[[:print:]]' "$SELECTEDTITLES"_orgin)" \
-    "$titles_dir"/"$list".titles >> "$SELECTEDTITLES"
-    perl -i -ne 'print if ! $a{$_}++' "$SELECTEDTITLES"
 
-    mv -f "$SELECTEDTITLES" "$titles_dir"/"$list".titles
-    # _GetMediaTitle -l > "$titles_dir"/"$list".titles
-    rm "$SELECTEDTITLES"_orgin
+    case "$1" in
+        -e)
+            grep -v "$(grep '^[[:print:]]' "$SELECTEDTITLES")" \
+            "$titles_dir"/"$list".titles >> "$SELECTEDTITLES"_tmp
+            perl -i -ne 'print if ! $a{$_}++' "$SELECTEDTITLES"_tmp
+            mv -f "$SELECTEDTITLES"_tmp "$titles_dir"/"$list".titles
+            rm "$SELECTEDTITLES"
+            __
+            printf '%s\n' " ${info}Changes applied in $list.${nc}"
+            sleep 3
+        ;;
+        -u)
+            grep -v "$(grep '^[[:print:]]' "$SELECTEDTITLES"_orgin)" \
+            "$titles_dir"/"$list".titles >> "$SELECTEDTITLES"
+            perl -i -ne 'print if ! $a{$_}++' "$SELECTEDTITLES"
+            mv -f "$SELECTEDTITLES" "$titles_dir"/"$list".titles
+            rm "$SELECTEDTITLES"_orgin
+        ;;
+    esac
+    
     clear
 }
 
@@ -1881,14 +1948,17 @@ _ChooseDownloadAudio() {
     )
     
     for url in "${SELECTEDAUDIO[@]}"; do
+
         if [[ $direct_download = yes ]] && \
             [[ $(youtube-dl -F "${ytdlPreset_DW[@]}" "$url" \
             | grep '^251') ]]; then
+
             printf '%s\n' " ${task}Direct download enabled.${nc}"
             __
             __ChooseDownloadAudioMessage
             youtube-dl --output "$(_GetLinkTitle -s).%(ext)s" \
             --format 251 "${ytdlPreset_NC[@]}" "$url"
+
         elif [[ $direct_download = no ]] && [[ $url =~ 'youtube.com' ]]; then
             __
             printf '%s\n' " ${task}Direct download disabled.${nc}"
@@ -1904,7 +1974,9 @@ _ChooseDownloadAudio() {
             
             youtube-dl --output "$(_GetLinkTitle -s).%(ext)s" \
             --format "$code" "${ytdlPreset_NC[@]}" "$url"
+
         else
+
             youtube-dl -F "${ytdlPreset_DW[@]}" "$url"
             printf '%s\n' " ${info}Choose a format code for: $(_GetLinkTitle -s)${nc}"
             read -r code
@@ -1914,6 +1986,7 @@ _ChooseDownloadAudio() {
             sleep 0.5
             youtube-dl --output "$(_GetLinkTitle -s).%(ext)s" \
             --format "$code" "${ytdlPreset_NC[@]}" "$url"
+
         fi
 
         sed -i '1d' "$SELECTEDTITLES"
@@ -1922,7 +1995,7 @@ _ChooseDownloadAudio() {
 
     done
 
-    _UpdateSelected
+    _UpdateSelected -u
     # if we don't unset IFS other functions will be messed up!
     unset IFS
     clear
@@ -1978,12 +2051,16 @@ _ChooseDirectVideoDownload() {
         clear
     done
 
-    unset line
+    unset IFS
     echo " ${info}All done${nc}"
     sleep 2
 
 }
 
+#!/bin/bash
+## This is a part of main script: mpm.
+
+# shellcheck disable=SC2013,SC2076,SC2034,SC2154,SC2164
 _ChooseDownloadVideo() {
 
     local counter
@@ -2061,12 +2138,13 @@ _ChooseDownloadVideo() {
         ;;
     esac
 
-    _UpdateSelected
+    _UpdateSelected -u
     unset IFS
     clear
     _DownloadCompleted
 
 }
+
 
 _LoadPlaylistMenu() {
 
@@ -2388,6 +2466,10 @@ _SaveCheck() {
                 case "$saveOrAddLinks" in
                     a|A)
                         cat "$CURRENT_LIST" >> "$list"
+                        # sed will complain about the two //, so we escape them.
+                        a="https:\/\/youtube.com"
+                        b="https:\/\/www.youtube.com"
+                        sed -i "s/${a}/${b}/g" "$list"
                         cat "$CURRENT_TITLES" >> "$titles_dir/$list.titles"
                         perl -i -ne 'print if ! $a{$_}++' {"$list","$titles_dir/$list.titles"}
                         __
@@ -2506,7 +2588,7 @@ _Remove() {
             tmpList="$AUDIO_URLS"
             tmpTitles="$AUDIO_TITLES"
             __
-            read -rsn 1 -p " ${info}Remove [L]inks or the [W]hole list?: ${nc}"
+            read -rsn 1 -p " ${info}Remove [L]inks or the [W]hole audio list?: ${nc}"
             if [[ $REPLY =~ l|L ]]; then
                 __removeTmpLinks
                 _ViewUrlInfo -a
@@ -2522,7 +2604,7 @@ _Remove() {
             tmpList="$QUEUE"
             tmpTitles="$DEFAULTITLES"
             __
-            read -rsn 1 -p " ${info}Remove [L]inks or the [W]hole list?: ${nc}"
+            read -rsn 1 -p " ${info}Remove [L]inks or the [W]hole default list?: ${nc}"
             if [[ $REPLY =~ l|L ]]; then
                 sed -i '1d' "$tmpList"
                 __removeTmpLinks
@@ -2530,9 +2612,8 @@ _Remove() {
                 _ViewUrlInfo -q
             else
                 sed -i '/^[[:alpha:]]/d' "$QUEUE"
-                rm -f {"$QUEUE"_origin,"$tmp_dir"/1} 2>/dev/null
-                rm -f {"$DEFAULTITLES"_origin,"$DEFAULTITLES"} 2>/dev/null
-                rm -f "$DEFAULTM3UTITLES" 2>/dev/null
+                rm -f \
+                {"$QUEUE"_origin,"$tmp_dir"/1,"$DEFAULTITLES"{,_origin},"$DEFAULTM3UTITLES"} 2>/dev/null
                 rm -rf "$HOME"/.parallel 2>/dev/null
                 __
                 echo " ${critical}Default list cleared...${nc}"
@@ -2542,7 +2623,7 @@ _Remove() {
             tmpList="$VIDEO_URLS"
             tmpTitles="$VIDEO_TITLES"
             __
-            read -rsn 1 -p " ${info}Remove [L]inks or the [W]hole list?: ${nc}"
+            read -rsn 1 -p " ${info}Remove [L]inks or the [W]hole video list?: ${nc}"
             if [[ $REPLY =~ l|L ]]; then
                 __removeTmpLinks
                 _ViewUrlInfo -v
