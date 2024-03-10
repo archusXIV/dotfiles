@@ -256,7 +256,7 @@ _List() {
 
         # first AUR packages update
         if (( $(grep "" -c "$AUR") > 0 )); then
-            yay -Sua --nocombinedupgrade
+            yay -Sua
             rm -rf "$HOME"/.ccache
             if (( $(grep "" -c "$AUR") == TOTALUPDATES )); then
                 sed -i '/[[:graph:]]/d' {"$AUR","$ARCHAUR"}
