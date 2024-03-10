@@ -101,7 +101,7 @@ _Purge() {
             echo ""
             if [[ -n $(pacman -Qdt) ]]; then
                 touch "$pkgs"
-                pacman -Qdt >> "$pkgs" && cat "$pkgs"
+                pacman -Qdt > "$pkgs" && cat "$pkgs"
                 echo ""
                 echo " ${red}Would you like to purge orphan packages? [N/y]:${color_off}"
                 read -r orphan
