@@ -19,13 +19,13 @@
 	"myDeclareArray": {
   		"prefix": "myd",
   		"body": [
-    	"declare -a ${1:array}=(",
-    	"    ${2:\"index1\"}",
-    	"    ${3:\"index2\"}",
-    	"    ${4:\"index3\"}",
-    	"    ${5:\"index4\"}",
-    	")"
-  	],
+    		"declare -a ${1:array}=(",
+    		"    ${2:\"index1\"}",
+    		"    ${3:\"index2\"}",
+    		"    ${4:\"index3\"}",
+    		"    ${5:\"index4\"}",
+    		")"
+  		],
   		"description": "myDeclareArray"
 	},
 	"myDeclareLoop": {
@@ -101,7 +101,7 @@
 	"myPrintf": {
   		"prefix": "mypr",
   		"body": [
-  		  "printf '%s\\n' \"${1:string}\""
+  			"printf '%s\\n' \"${1:string}\""
   		],
   		"description": "myPrintf"
 	},
