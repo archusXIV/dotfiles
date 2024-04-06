@@ -68,7 +68,6 @@ _Main() {
         [pointer_follows_focus]="true"
         [presel_feedback]="true"
         [single_monocle]="false"
-        
     )
 
     for key in "${!bool[@]}"; do
