@@ -16,9 +16,14 @@ _Main() {
 
     # bspc desktop ^2 -l monocle
 
-    # External scripts & settings
-    pgrep -x polybar >/dev/null || launch_polybar &
-    pgrep -x sxhkd >/dev/null || sxhkd_start &
+    # checking external commands/scripts
+    pgrep -x polybar >/dev/null || {
+        _Check launch_polybar && launch_polybar &
+    }
+    pgrep -x sxhkd >/dev/null || {
+        _Check sxhkd_start && sxhkd_start &
+    }
+
     _Check bspwm_backnforth && bspwm_backnforth
     _Check bspwm_external_rules && \
         bspc config external_rules_command \
@@ -30,27 +35,19 @@ _Main() {
     }
 
     ######### BSPC CONFIG CALLS #########
+    # see man bspc and search for SETTINGS
     declare -a settings=(
-        "automatic_scheme spiral" \
-        "border_width 2" \
-        "borderless_monocle false" \
-        "click_to_focus button1" \
-        "center_pseudo_tiled true" \
-        "focus_follows_pointer true" \
-        "gapless_monocle false" \
-        "ignore_ewmh_focus true" \
-        "initial_polarity second_child" \
-        "pointer_modifier mod4" \
-        "pointer_follows_monitor true" \
-        "pointer_follows_focus true" \
-        "pointer_action1 move" \
-        "pointer_action2 resize_side" \
-        "pointer_action3 resize_corner" \
-        "presel_feedback true" \
-        "single_monocle false" \
-        "split_ratio 0.30" \
-        "top_padding 37" \
-        "top_monocle_padding 0" \
+        "automatic_scheme spiral"
+        "border_width 1"
+        "click_to_focus button1"
+        "initial_polarity second_child"
+        "pointer_modifier mod4"
+        "pointer_action1 move"
+        "pointer_action2 resize_side"
+        "pointer_action3 resize_corner"
+        "split_ratio 0.40"
+        "top_padding 35"
+        "top_monocle_padding 0"
         "window_gap 5"
     )
 
@@ -61,6 +58,23 @@ _Main() {
         bspc config "$@"
     done
 
+    declare -A bool=(
+        [borderless_monocle]="false"
+        [center_pseudo_tiled]="true"
+        [focus_follows_pointer]="false"
+        [gapless_monocle]="false"
+        [ignore_ewmh_focus]="true"
+        [pointer_follows_monitor]="true"
+        [pointer_follows_focus]="true"
+        [presel_feedback]="true"
+        [single_monocle]="false"
+        
+    )
+
+    for key in "${!bool[@]}"; do
+        bspc config "$key" "${bool[${key}]}"
+    done
+    
     local SP=4 MP=3
     for side in bottom left right; do
         bspc config ${side}_padding "$SP"
@@ -99,7 +113,6 @@ _GetColors() {
 
 }
 
-# this function acts in a separated file (_WindowRules)
 _Rules() { bspc rule --add "$@"; }
 
 case "$1" in
@@ -109,6 +122,7 @@ case "$1" in
         notify-send 'window rules reloaded'
         exit 0
     ;;
+    *) notify-send "wrong option $1, try ctrl+alt+c"
 esac
 
-_Main "${@}" > "$HOME"/.cache/bspwm.log
+_Main "${@}" > "$XDG_CONFIG_HOME"/bspwm/bspwm.log
