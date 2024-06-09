@@ -8,8 +8,6 @@ _WindowsRules() {
     # remove all previous rules.
     dkcmd rule remove '*'
 
-    local FLOAT
-
     # list of floating applications classes.
 
     while read -r line; do
