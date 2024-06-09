@@ -3,17 +3,20 @@
 # Author: Barret E (2021) <archus@protonmail.com>
 # https://github.com/archusXIV/dotfiles
 # Dependencies: fzf, pacdiff, reflector, vim, updates-manager.
-# https://github.com/archusXIV/dotfiles/blob/main/scripts/various/updates-manager
+# https://github.com/archusXIV/dotfiles/blob/main/scripts/various/updates-viewer
 #
 # This script shows a menu to let you choose over severals pacman tools and options.
 # In order to install or remove packages it uses fzf utility on the fancy side.
 # We can also find and purge orphan packages, refresh our mirrorlist, purge the cache,
 # edit pacman.conf/makepkg.conf and of course update the system.
+# shellcheck disable=SC2016
 
 color_off=$'\e[0m';
 red=$'\e[0;31m';
 green=$'\e[0;32m';
 
+# updates-manager: https://github.com/archusXIV/dotfiles/blob/main/scripts/various/updates-manager
+# !!! DEPENDENCY timeshift
 declare -a dependencies=( "fzf" "pacdiff" "reflector" "vim" "updates-manager" )
 
 for package in "${dependencies[@]}"; do
@@ -53,12 +56,6 @@ _Menu() {
             8) sudo vim /etc/pacman.conf ;;
             9) sudo vim /etc/makepkg.conf ;;
             x|X) clear && exit ;;
-            *) echo -e " ${red} Wrong option!"
-               echo " ${green}Wait and try again...${color_off}"
-               echo ""
-               sleep 3s
-               clear
-            ;;
         esac
     done
 }
@@ -106,11 +103,11 @@ _Purge() {
                 echo " ${red}Would you like to purge orphan packages? [N/y]:${color_off}"
                 read -r orphan
                 case "$orphan" in
-                    N|n|no )
+                    N[oO]|N|no )
                         _menu
                     ;;
                     y|Y|yes)
-                        sudo pacman -Rdd $(pacman -Qdtq)
+                        sudo pacman -Rdd "$(pacman -Qdtq)"
                         echo " ${green}A list of removed packages has been created"
                         echo " in $pkgs${color_off}"
                         sleep 5s
@@ -182,4 +179,3 @@ _Reflector() {
 }
 
 _Menu "${@}"
-
