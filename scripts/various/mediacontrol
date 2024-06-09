@@ -1,79 +1,75 @@
 #!/bin/bash
-
-<<ABOUT
- From Budrich, a nice swedish guy. https://github.com/budlabs
- This script parses the output of the command:
- pactl list sink-inputs, and echoes the name of the active player.
- If the player is "Corked" it is active but not
- playing any sound (probably paused)
-ABOUT
+#
+# ABOUT
+#    This script parses the output of the command:
+#    pactl list sink-inputs, and echoes the name of the active player.
+#    If the player is "Corked" it is active but not
+#    playing any sound (probably paused)
 
 _whoisplaying() {
 
-  declare -A players
+    declare -A players
 
-  eval "$(pactl list sink-inputs | awk '
-    $1=="Corked:" {currentCork=$2}
-    $1=="application.process.binary"{
-      # only echo players in the list below.
-      if($NF~/mpv|cmus|mpd/)
-        print "players[" $NF "]=" currentCork
-    }
-  ')"
+    eval "$(pactl list sink-inputs | awk '
+        $1=="Corked:" {currentCork=$2}
+        $1=="application.process.binary"{
+          # only echo players/servers in the list below.
+          if($NF~/mpv|cmus|mpd/)
+            print "players[" $NF "]=" currentCork
+        }
+    ')"
 
-  # target player priority list:
-  # 1. mpv if it is running
-  # 2. cmus if it is running
-  # 3. mpd if it is running
+    # target player priority list if it's running:
+    # 1. mpv
+    # 2. cmus
+    # 3. mpd
 
-  for k in "${!players[@]}"; do
-    # if the player isn't corked, it is emitting sound
-    # and is set as target (1).
-    [[ ${players[$k]} = no ]] && target=$k
-  done
+    for key in "${!players[@]}"; do
+        # if the player isn't corked, it is emitting sound
+        # and is set as target (1).
+        [[ ${players[$key]} = no ]] && target=$key
+    done
 
-  if [[ -z $target ]]; then
-    if [[ -n $(pidof mpv) ]]; then
-        target=mpv
-    elif [[ -n $(pidof cmus) ]]; then
-        target=cmus
-    elif [[ -n $(pidof mpd) ]]; then
-        target=mpd
-    else
-        target=NA
+    if [[ -z $target ]]; then
+        if [[ -n $(pidof mpv) ]]; then
+            target=mpv
+        elif [[ -n $(pidof cmus) ]]; then
+            target=cmus
+        elif [[ -n $(pidof mpd) ]]; then
+            target=mpd
+        else
+            notify-send 'no running player found.'
+        fi
     fi
-  fi
 
-  echo "$target"
+    echo "$target"
 }
 
-<<SUGGESTION
- Now you can define keybindings in your window manager config,
- down below we use 'mpvc' a command line interface for mpv.
- eg: XF86Audio{Play,Pause} mediacontrol --toggle
-SUGGESTION
+# SUGGESTION
+#     Now you can define keybindings in your window manager config,
+#     eg: XF86Audio{Play,Pause} mediacontrol --toggle
 
 player=$(_whoisplaying)
 
 case "$1" in
-  --toggle )
-    [[ $player = mpv  ]] && mpvc toggle
-    [[ $player = cmus ]] && cmus-remote --pause
-    [[ $player = mpd  ]] && mpc toggle
-  ;;
-  --next )
-    [[ $player = mpv  ]] && mpvc next
-    [[ $player = cmus ]] && cmus-remote --next
-    [[ $player = mpd  ]] && mpc next
-  ;;
-  --prev )
-    [[ $player = mpv  ]] && mpvc prev
-    [[ $player = cmus ]] && cmus-remote --prev
-    [[ $player = mpd  ]] && mpc prev
-  ;;
-  --stop )
-    [[ $player = mpv  ]] && mpvc stop
-    [[ $player = cmus ]] && cmus-remote --stop
-    [[ $player = mpd  ]] && mpc stop
-  ;;
+    --toggle )
+        [[ $player = mpv  ]] && echo cycle pause | socat - /tmp/mpvsocket
+        [[ $player = cmus ]] && cmus-remote --pause
+        [[ $player = mpd  ]] && mpc_control toggle
+    ;;
+    --next )
+        [[ $player = mpv  ]] && echo playlist_next | socat - /tmp/mpvsocket
+        [[ $player = cmus ]] && cmus-remote --next
+        [[ $player = mpd  ]] && mpc_control next
+    ;;
+    --prev )
+        [[ $player = mpv  ]] && echo playlist_prev | socat - /tmp/mpvsocket
+        [[ $player = cmus ]] && cmus-remote --prev
+        [[ $player = mpd  ]] && mpc_control prev
+    ;;
+    --stop )
+        [[ $player = mpv  ]] && echo stop | socat - /tmp/mpvsocket
+        [[ $player = cmus ]] && cmus-remote --stop
+        [[ $player = mpd  ]] && mpc_control stop
+    ;;
 esac
