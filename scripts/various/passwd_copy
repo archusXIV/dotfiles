@@ -7,20 +7,26 @@
 list="$HOME/Documents/.admin/pass/pass.txt"
 
 _copy() {
-    cat $list | grep $selected | awk '{print $2" "$3}' | xclip -sel clip
+    cat "$list" \
+    | grep "$selected" \
+    | awk '{print $2" "$3}' \
+    | xclip -sel clip
 }
 
-selected=$(awk '{print $1}' $list | rofi \
-                            -normal-window \
-                            -dmenu \
-                            -columns 2 \
-                            -width 30 \
-                            -hide-scrollbar \
-                            -line-padding 2 \
-                            -padding 20 \
-                            -lines 10 \
-                            -p "Choose an account ")
-[[ -z $selected ]] && exit
+selected=$(
+    awk '{print $1}' $list | rofi \
+    -normal-window \
+    -dmenu \
+    -columns 2 \
+    -width 30 \
+    -hide-scrollbar \
+    -line-padding 2 \
+    -padding 20 \
+    -lines 10 \
+    -p "Choose an account "
+)
+
+[[ -z $selected ]] && exit 0
 
 _copy "$selected"
 
