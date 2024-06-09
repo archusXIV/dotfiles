@@ -9,17 +9,21 @@ ctrl + alt + {c,r,q}
     prompt "Do you really want to quit dk ?" "Xexit" \
     }
 
+#######################################################################
+##########################  WINDOWS MANAGEMENT  #######################
+#######################################################################
 # close/close all/kill focused window.
 super + {_,alt + ,ctrl + }q
     {\
     dkcmd win kill, \
-    closethemall, \
+    closethemall --all, \
     xkill -id "$(xdo id $1)" \
     }
 
-#######################################################################
-##########################  WINDOWS MANAGEMENT  #######################
-#######################################################################
+# close all windows except the focused one
+alt + q
+    closethemall --unfocused
+
 # focus window/workspace previous/next
 super + {_,alt + }{Left,Right}
     dkcmd {win focus,ws} {prev,next}
