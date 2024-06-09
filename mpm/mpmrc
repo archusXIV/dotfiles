@@ -1,12 +1,12 @@
 #!/bin/bash
-# ~/.config/mpm/mpmrc (version 1.5-4)
+# ~/.config/mpm/mpmrc (version 1.9-3)
 
 ########################################################
 #                                                      #
-#    ███╗   ███╗██████╗ ███╗   ███╗██████╗  ██████╗    #
+#    ███╗   ███╗██████╗ ███╗   ███╗██████╗  ██████╗    #
 #    ████╗ ████║██╔══██╗████╗ ████║██╔══██╗██╔════╝    #
 #    ██╔████╔██║██████╔╝██╔████╔██║██████╔╝██║         #
-#    ██║╚██╔╝██║██╔═══╝ ██║╚██╔╝██║██╔══██╗██║         #
+#    ██║╚██╔╝██║██╔═══╝ ██║╚██╔╝██║██╔══██╗██║         #
 #    ██║ ╚═╝ ██║██║     ██║ ╚═╝ ██║██║  ██║╚██████╗    #
 #    ╚═╝     ╚═╝╚═╝     ╚═╝     ╚═╝╚═╝  ╚═╝ ╚═════╝    #
 #                                                      #
@@ -14,19 +14,24 @@
 ######### THE PLACE FOR YOUR PERSONAL SETTINGS #########
 #~~~~~ change the values, not the variables names ~~~~~#
 
-# shellcheck disable=SC2034,SC2016,SC2154,SC1083
+# shellcheck disable=SC2034,SC2016,SC2154
 : "${XDG_DATA_HOME:-$HOME/.local/share}"
 
-# change the main mpm window size. (the actual size is 1260x738)
+# checking for mpm updates yes/no
+check_updates="no"
+
+# change the main mpm window size.
+# (the default size is 1260x738 pixels)
 width=1260
 height=738
 
 # edit your own theme in "$XDG_CONFIG_HOME"/mpm/themerc.
 # apply your prefered colorscheme...
-# AVAILABLE THEMES: default, dracula, blacksea, chocolat-pistache,
-# gruvbox, gotham, monokai, TokyoNight, solarized, vacuous, zenburn
+# AVAILABLE THEMES: default, dracula, blacksea, chocolat-pistache, gruvbox, gotham,
+# jellybeans, monokai, nord, TokyoNight, solarized, vacuous, zenburn, zorange
 THEME="default"
 
+####################### SYSTEM TOOLS ######################
 ## default editor
 MPMEDITOR=${VISUAL:-vim}
 
@@ -34,146 +39,194 @@ MPMEDITOR=${VISUAL:-vim}
 ## used in option 5) Load local dir/files
 FILEMANAGER="ranger"
 
-####### THESE ARE BY DEFAULT DIRECTORIES USED BY MPM. #######
+# the clipboard command to use to paste links in option 1)
+# xorg users
+clipboardCmd=( xclip -out )
+# wayland users
+# clipboardCmd=( wl-paste --no-newline )
+
+##################### MPM DIRECTORIES #####################
+# define your multimedia directories according to your locales.
+MUSIC_DIR="$HOME/Documents/Music"
+VIDEO_DIR="$HOME/Documents/Videos"
+
 # The main directory can be renamed but must be present for mpm to work.
-# main_dir="$HOME/Documents/mpv-playlists-manager"
-main_dir="$XDG_DATA_HOME/mpv-playlists-manager"
+main_dir="$XDG_DATA_HOME/mpm"
 
 # The default playlist & all the created ones are stored here.
 playlists_dir="$main_dir/playlists"
 
 # Be carefull with this one because if you choose to use the conversion action,
 # ALL .webm files in that directory will be converted.
-audios_dir="$HOME/Documents/Music/mpm_audios"
-videos_dir="$HOME/Documents/Videos/mpm_videos"
+audios_dir="$MUSIC_DIR/mpm_audios"
+videos_dir="$VIDEO_DIR/mpm_videos"
 titles_dir="$main_dir/titles"
 tmp_dir="$main_dir/tmp"
 
+################ DEFAULT TASKS ANSWERS ###############
 # some links may still be present in playlist files...
 # if value is 'no' you will be prompted.
 keep_none_empty_playlist="yes"
 
-####### DEFAULT TASKS ANSWERS #######
-# from download tasks (option 4) we are prompted or not to choose formats.
+###############  GNU PARALLEL OPTIONS ###############
+# Of course the parallel package has to be installed.
+use_parallel="yes"
+
+# use_parallel must be also set to 'yes',
+# if you want to use parallel_downloads,
+# or if use_parallel="no" and use_parallel_downloads="yes",
+# we will use 'xargs' as multiple yt-dlp instances launcher.
+use_parallel_downloads="yes"
+# parallel_animation="progress"
+parallel_animation="spinners"
+
+# the total of cpu threads allocated for audio convertions,
+# (when use_parallel="yes", default is 4 if not set.
+# parallel_threads=""
+parallel_threads="$(nproc)"
+
+# from download tasks (option 4),
+# we are prompted or not to choose formats.
 # (will appear in main menu)
 direct_download="yes"
 
-# this takes place only after downloading/playing from a collection playlist.
+# this takes place only after downloading from a collection playlist.
 # (will appear in main menu)
-quit_after_task="no"
+quit_after_task="yes"
 
-########### USING FZF FUNCTIONALITY ###########
+############## USING FZF FUNCTIONALITY ##############
 # Two methods are offered here:
-# If the fzf package is installed it will be used
-# to search and copy audio/video urls from youtube.
-# In addition you can also use the ytfzf script
-# if it is in your PATH.
+# 1) If the fzf package is installed it will be used
+#    to search and copy audio/video urls from youtube.
+# 2) In addition you can also use the ytfzf script
+#    if it is in your $PATH.
 # <https://github.com/pystardust/ytfzf>
+# yes/no (must be set)
+# (will appear in main menu)
 use_fzf="yes"
 
-# add/change your ytfzf preferences here
-# use odysee instead of youtube
-ytfzfOptions_SC=( --scrape=youtube )
-# force youtube search
-# ytfzfOptions_YT=( --force-youtube )
+# preview local files details while queuing them in option 5)
+# preview tools have to be installed
+fzf_preview="mediainfo"
+# fzf_preview="exiftool"
+fzf_preview_size="40%"
+# right, left, up and down
+fzf_preview_layout="down"
+
+## add/change your ytfzf preferences here
+ytfzfOptions_KC=( --keep-cache )
 ytfzfOptions_PG=( --pages=5 )
 ytfzfOptions_VD=( --video-duration=long )
 ytfzfOptions_SB=( --sort-by=relevance )
 ytfzfOptions_TY=( --type=all )
+# ytfzfOptions_TV=( --thumb-viewer=mpv )
 # add your options in this array
-ytfzfOptions_X=( "${ytfzfOptions_SC[@]}" "${ytfzfOptions_PG[@]}" \
-"${ytfzfOptions_VD[@]}" "${ytfzfOptions_SB[@]}" "${ytfzfOptions_TY[@]}" )
+ytfzfOptions_X=(
+    "${ytfzfOptions_KC[@]}"
+    "${ytfzfOptions_PG[@]}"
+    "${ytfzfOptions_VD[@]}"
+    "${ytfzfOptions_SB[@]}"
+    "${ytfzfOptions_TY[@]}"
+)
 
-##### FFMPEG SPECIFICS (audio conversion) #####
+################# FFMPEG SPECIFICS (audio conversion) #################
 # !!! You can change ffmpeg audio codec command line settings !!!
 # if the parallel package is installed then it will be used to launch
 # multiple conversions at once, the quality equivalent as the original,
 # else files will be converted one by one.
-use_parallel="yes"
+parallel_conversion="yes"
 
 # audio files (.webm) conversion.
 # (will appear in main menu)
-automatic_audio_conversion="no"
+# yes/no
+automatic_audio_conversion="yes"
 
-# default audio conversion format {mp3,flac,wav,ogg},
-# mp3 & ogg in 320k, flac & wav are lossless.
+# default audio conversion format {aac,mp3,flac,wav,ogg},
+# aac, mp3 & ogg in 320k, flac & wav are lossless.
 # if value is empty you will be prompted.
 # (will appear in main menu)
 default_conversion_format="flac"
 
-function _mp3 {
-    find . -iname "*.webm" -exec \
-    bash -c 'FILE="$1"; \
-        ffmpeg -i "${FILE}" \
-        -acodec libmp3lame -ar 48000 -ab 320k \
-        -y "${FILE%.webm}.mp3";' _ '{}' \; 2>"$FFOP"
-}
+# if use_parallel="no" then ffmpeg uses those settings instead.
+ffmpegAacCodecOptions=( -acodec aac -ar 48000 -ab 320k )
+ffmpegFlacCodecOptions=( -af aformat=s32:48000 )
+ffmpegMp3CodecOptions=( -acodec libmp3lame -ar 48000 -ab 320k )
+ffmpegOggCodecOptions=( -acodec libvorbis -ar 48000 -ab 320k )
+ffmpegWavCodecOptions=( -acodec pcm_s32le -ar 48000 )
 
-function _flac {
-    find . -iname "*.webm" -exec \
-    bash -c 'FILE="$1"; \
-        ffmpeg -i "${FILE}" \
-        -af aformat=s32:48000 \
-        -y "${FILE%.webm}.flac";' _ '{}' \; 2>"$FFOP"
-}
+############################ MPV SPECIFICS ############################
+# can be yes (mpvc tui) no (stop mpv by typing Q),
+# or empty (mpv infos in the terminal).
+# (will appear in main menu)
+use_mpvc="yes"
 
-function _wav {
-    find . -iname "*.webm" -exec \
-    bash -c 'FILE="$1"; \
-        ffmpeg -i "${FILE}" \
-        -acodec pcm_s32le -ar 48000 \
-        -y "${FILE%.webm}.wav";' _ '{}' \; 2>"$FFOP"
-}
+# change your mpv terminal user interface here.
+mpvc_tui="ncmpvc"
+#mpvc_tui=""
 
-function _ogg {
-    find . -iname "*.webm" -exec \
-    bash -c 'FILE="$1"; \
-        ffmpeg -i "${FILE}" \
-        -acodec libvorbis -ar 48000 -ab 320k \
-        -y "${FILE%.webm}.ogg";' _ '{}' \; 2>"$FFOP"
-}
+# mpv audio/video online playing command line
+mpvGenOptions_CA=( --cache=yes )
+# needed for mpvc_tui (socat will get information from the server)
+mpvGenOptions_SK=( --input-ipc-server='/tmp/mpvsocket' )
+mpvGenOptions_ID=( --idle )
+mpvGenOptions_CF=( --no-config )
+mpvGenOptions_RP=( --no-resume-playback )
+mpvGenOptions_MS=( --term-playing-msg='[Title]: ${media-title}' )
 
-######## MPV SPECIFICS ########
-# mpv audio online playing command line
-function _MpvAudioOptions {
-    # change mpv audio settings here if needed but do not remove "$1"
-    mpv \
-    --input-ipc-server='/tmp/mpvsocket' \
-    --no-config \
-    --no-resume-playback \
-    --term-playing-msg="${info}"'Title: ${media-title}'"${nc}" \
-    --ytdl-format='bestaudio/best' "$1"
-}
+# add/remove mpv options in this array
+mpvGenOptions_X=(
+    "${mpvGenOptions_CA[@]}"
+    "${mpvGenOptions_SK[@]}"
+    "${mpvGenOptions_ID[@]}"
+    "${mpvGenOptions_CF[@]}"
+    "${mpvGenOptions_RP[@]}"
+    "${mpvGenOptions_MS[@]}"
+)
 
-# mpm video online playing command line
-function _MpvVideoOptions {
-    # same as above.
-    mpv \
-    --input-ipc-server='/tmp/mpvsocket' \
-    --cache=yes \
-    --demuxer-max-bytes=500MiB \
-    --demuxer-readahead-secs=30 \
-    --demuxer-max-back-bytes=100MiB \
-    --no-config \
-    --no-resume-playback \
-    --term-playing-msg="${info}"'Title: ${media-title}'"${nc}" \
-    --ytdl-format='299+251/298+251/137+251/136+251/best' "$1"
-}
+# audio/video rendering formats
+mpvAudioFormatOptions=( --ytdl-format='bestaudio/best' )
+# mpvVideoFormatOptions=( --ytdl-format='299+251/298+251/137+251/136+251/best' )
+# should run smoothly
+mpvVideoFormatOptions=( --ytdl-format='bestvideo+bestaudio/best' )
 
-######## yt-dlp presets (youtube-dl) ########
+mpvVideoOptions_DM=( --demuxer-max-bytes=1024MiB )
+mpvVideoOptions_DR=( --demuxer-readahead-secs=60 )
+mpvVideoOptions_DB=( --demuxer-max-back-bytes=256MiB )
+mpvVideoOptions_FS=( --fullscreen=yes )
+
+mpvVideoOptions_X=(
+    "${mpvVideoOptions_FS[@]}"
+    "${mpvVideoOptions_DM[@]}"
+    "${mpvVideoOptions_DR[@]}"
+    "${mpvVideoOptions_DB[@]}"
+)
+
+##################### YT-DLP PRESETS (youtube-dl) #####################
 # change the yt-dlp downloader presets ONLY for youtube video downloads
 # (not tested elsewhere)
 # take a look at 'man yt-dlp'
 # !!! do not change the name of the array (ytdlPreset_<*>) !!!
 ytdlPreset_BR=( --break-on-existing )
-ytdlPreset_DN=( --downloader m3u8:ffmpeg )
-ytdlPreset_DA=( --downloader-args '-n' )
+ytdlPreset_DN=( --downloader m3u8:native )
 ytdlPreset_MF=( --merge-output-format mp4 )
-ytdlPreset_DW=( --no-warnings )
+ytdlPreset_DW=( --no-warnings --ignore-errors )
 ytdlPreset_DP=( --progress )
 ytdlPreset_FS=( --compat-options filename-sanitization )
-# downloader without multiple format codes
-ytdlPreset_NC=( "${ytdlPreset_BR[@]}" "${ytdlPreset_DW[@]}" "${ytdlPreset_DP[@]}" )
-# combined presets
-ytdlPreset_X=( "${ytdlPreset_DN[@]}" "${ytdlPreset_DA[@]}" \
-"${ytdlPreset_MF[@]}" "${ytdlPreset_DW[@]}" "${ytdlPreset_DP[@]}" )
+
+# downloader without multiple format codes and non-youtube platforms
+ytdlPreset_NC=(
+    "${ytdlPreset_BR[@]}"
+    "${ytdlPreset_DW[@]}"
+    "${ytdlPreset_DP[@]}"
+    "${ytdlPreset_FS[@]}"
+)
+
+# combined presets for youtube (possibly multiple format codes)
+ytdlPreset_X=(
+    "${ytdlPreset_MF[@]}"
+    "${ytdlPreset_DN[@]}"
+    "${ytdlPreset_FS[@]}"
+    "${ytdlPreset_BR[@]}"
+    "${ytdlPreset_DW[@]}"
+    "${ytdlPreset_DP[@]}"
+)
