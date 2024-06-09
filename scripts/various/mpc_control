@@ -1,0 +1,30 @@
+#!/bin/bash
+
+current=$(mpc --format %position% current)
+last=$(mpc playlist | wc -l)
+first=$((last / last))
+
+case "$1" in
+    next)
+        if [[ $current = "$last" ]]; then
+            mpc play "$first"
+        else
+            ((current++))
+            mpc play "$current"
+        fi
+    ;;
+    prev)
+        if [[ $current = "$first" ]]; then
+            mpc play "$last"
+        else
+            ((current--))
+            mpc play "$current"
+        fi
+    ;;
+    toggle)
+        mpc toggle
+    ;;
+    stop)
+        mpc stop
+    ;;
+esac
