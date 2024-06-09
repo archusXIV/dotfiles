@@ -44,6 +44,7 @@ export VISUAL="vim"
 
 # Configs & files.
 export BSPWM_SOCKET="$XDG_RUNTIME_DIR"/bspwm_0_0-socket
+export DKRC="$XDG_CONFIG_HOME"/dk/dkrc
 export GTK_RC_FILES="$XDG_CONFIG_HOME"/gtk-1.0/gtkrc
 export GTK2_RC_FILES="$XDG_CONFIG_HOME"/gtk-2.0/gtkrc
 export INPUTRC="$XDG_CONFIG_HOME"/readline/inputrc
