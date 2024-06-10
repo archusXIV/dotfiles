@@ -2,10 +2,9 @@
 # THIS FILE IS THE DK WINDOWS, DESKTOP, MONITORS & LAYOUTS SHORTCUTS #
 ######################################################################
 # Reload, restart, quit dk.
-ctrl + alt + {c,r,q}
+ctrl + alt + {r,q}
     { \
     $DKRC -r, \
-    dkcmd restart, \
     prompt "Do you really want to quit dk ?" "Xexit" \
     }
 
@@ -13,7 +12,7 @@ ctrl + alt + {c,r,q}
 ##########################  WINDOWS MANAGEMENT  #######################
 #######################################################################
 # close/close all/kill focused window.
-super + {_,alt + ,ctrl + }q
+super + {_,shift,ctrl} + End
     {\
     dkcmd win kill, \
     closethemall --all, \
@@ -21,7 +20,7 @@ super + {_,alt + ,ctrl + }q
     }
 
 # close all windows except the focused one
-alt + q
+alt + End
     closethemall --unfocused
 
 # focus window/workspace previous/next
@@ -57,8 +56,8 @@ super + shift + s ; {_,alt + }{KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,
     dk_sendthemall -{s,f} {1-9}
 
 # change active workspace layout (false changes the actual mode, static/dynamic)
-super + l ; {d,f,g,n,r,s,t,w}
-    dk_change_layouts {dwindle,false,grid,none,rtile,spiral,tile,tstack}
+super + l ; {d,f,g,m,n,r,s,t,w}
+    dk_change_layouts {dwindle,false,grid,mono,none,rtile,spiral,tile,tstack}
 
 # toggle between monocle and the last layout.
 super + m
