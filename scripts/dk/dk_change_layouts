@@ -1,147 +1,138 @@
 #!/bin/bash
 
-# Change the focused desktop's layout and update polybar workspace name
-_WsLayout() {
-    awk '
-        /^workspaces:/ {sub(/^workspaces: /, ""); gsub(/(*)?[0-9]*:\w*:/, ""); print; exit}
-        ' <(dkcmd status type=full num=1) \
-            | sed 's/dwindle/D/g;s/grid/G/g;s/mono/M/g;s/none/N/g;
-            s/rtile/R/g;s/spiral/S/g;s/tile/T/g;s/tstack/W/g'
+# Author: Barret E <archus@protonmail.com>
+# This script change workspaces layouts and toggles monocle/previous layout.
+# A polybar module is triggered and let us know if we are in static/dynamic mode,
+# of course workspaces indicators are renamed as we change layouts (1:G,2:R,3:T etc...)
+# Uppercase letters meaning:
+# D=dwindle,G=grid,M=mono,N=none,R=rtile,S=spiral,T=tile,W=tstack
+
+pls="$XDG_CACHE_HOME/previous_layouts"
+pls_tmp="$XDG_CACHE_HOME/previous_layouts_tmp"
+
+_ApplyLayouts() {
+    n=1
+    while read -r line; do
+        dkcmd set ws="$n" name="$line"
+        ((n++))
+    done < "$pls"
+    rm "$pls"
 }
 
-_DynamicTrue() {
-    # we have to clean the startup workspaces name definition
-    # before renaming them with the second block below using _WsLayout function
-    # Note that we don't attribute monitors in this mode.
-    dkcmd set \
-        ws=1 name=1 \
-        ws=2 name=2 \
-        ws=3 name=3 \
-        ws=4 name=4 \
-        ws=5 name=5 \
-        ws=6 name=6 \
-        ws=7 name=7 \
-        ws=8 name=8 \
-        ws=9 name=9
-
-    # The bar workspaces module will look like this:
-    # 1:T 2:S 3:N etc...(name:layout)
-    # D="dwindle" G="grid" M="mono" N="none" R="rtile" S="spiral" T="tile" W="tstack"
-    dkcmd set \
-        ws=1 name=1:"$(_WsLayout | awk '{print $1}')" \
-        ws=2 name=2:"$(_WsLayout | awk '{print $2}')" \
-        ws=3 name=3:"$(_WsLayout | awk '{print $3}')" \
-        ws=4 name=4:"$(_WsLayout | awk '{print $4}')" \
-        ws=5 name=5:"$(_WsLayout | awk '{print $5}')" \
-        ws=6 name=6:"$(_WsLayout | awk '{print $6}')" \
-        ws=7 name=7:"$(_WsLayout | awk '{print $7}')" \
-        ws=8 name=8:"$(_WsLayout | awk '{print $8}')" \
-        ws=9 name=9:"$(_WsLayout | awk '{print $9}')"
-
+_DefineWorkspaces() {
+    case "$1" in
+        --dynamic)
+            dkcmd set \
+                ws=1 name=1 ws=2 name=2 ws=3 name=3 \
+                ws=4 name=4 ws=5 name=5 ws=6 name=6 \
+                ws=7 name=7 ws=8 name=8 ws=9 name=9
+            _ApplyLayouts
+            ;;
+        --static)
+            mon1='DVI-D-0'
+            mon2='HDMI-0'
+            mon3='DP-0'
+            dkcmd set \
+                ws=1 name='1:G' mon=$mon1 ws=2 name='2:R' mon=$mon1 ws=3 name='3:R' mon=$mon1 \
+                ws=4 name='4:R' mon=$mon2 ws=5 name='5:R' mon=$mon2 ws=6 name='6:R' mon=$mon2 \
+                ws=7 name='7:M' mon=$mon3 ws=8 name='8:R' mon=$mon3 ws=9 name='9:R' mon=$mon3
+            _ApplyLayouts
+            ;;
+    esac
 }
 
-_StaticTrue() {
-    # same as above
-    dkcmd set \
-        ws=1 name=1 mon="$MONITOR1" \
-        ws=2 name=2 mon="$MONITOR1" \
-        ws=3 name=3 mon="$MONITOR1" \
-        ws=4 name=4 mon="$MONITOR2" \
-        ws=5 name=5 mon="$MONITOR2" \
-        ws=6 name=6 mon="$MONITOR2" \
-        ws=7 name=7 mon="$MONITOR3" \
-        ws=8 name=8 mon="$MONITOR3" \
-        ws=9 name=9 mon="$MONITOR3"
+_NewLayouts() {
+    wmctrl -d > "$pls"
+    while read -r line; do
+        if [[ $line =~ '*' ]]; then
+            echo "$line" | sed "s/[A-Z]/${LAYOUT}/g" >> "$pls_tmp"
+        else
+            echo "$line" >> "$pls_tmp"
+        fi
+    done < "$pls"
+        
+    awk '{print $NF}' "$pls_tmp" > "$pls"
+    rm "$pls_tmp"
+}
 
-    # The bar workspaces module will look like this:
-    # 1:T 2:S 3:N etc...(name:layout)
-    dkcmd set \
-        ws=1 name=1:"$(_WsLayout | awk '{print $1}')" mon="$MONITOR1" \
-        ws=2 name=2:"$(_WsLayout | awk '{print $2}')" mon="$MONITOR1" \
-        ws=3 name=3:"$(_WsLayout | awk '{print $3}')" mon="$MONITOR1" \
-        ws=4 name=4:"$(_WsLayout | awk '{print $4}')" mon="$MONITOR2" \
-        ws=5 name=5:"$(_WsLayout | awk '{print $5}')" mon="$MONITOR2" \
-        ws=6 name=6:"$(_WsLayout | awk '{print $6}')" mon="$MONITOR2" \
-        ws=7 name=7:"$(_WsLayout | awk '{print $7}')" mon="$MONITOR3" \
-        ws=8 name=8:"$(_WsLayout | awk '{print $8}')" mon="$MONITOR3" \
-        ws=9 name=9:"$(_WsLayout | awk '{print $9}')" mon="$MONITOR3"
+static_false=$(dkcmd status type=full num=1 | grep 'static_ws":false')
+static_true=$(dkcmd status type=full num=1 | grep 'static_ws":true')
 
+_UpdateLayouts() {
+    if [[ $static_false ]]; then
+        _NewLayouts
+        _DefineWorkspaces --dynamic
+    elif [[ $static_true ]]; then
+        _NewLayouts
+        _DefineWorkspaces --static
+    fi
+}
+
+# a mode indicator in polybar
+_BarStatic() {
+    case "$1" in
+        --true)
+            polybar-msg -p $(pgrep --full dk-bar-3) \
+            action "#static_ws-ipc.hook.0" >/dev/null 2>&1
+        ;;
+        --false)
+            polybar-msg -p $(pgrep --full dk-bar-3) \
+            action "#static_ws-ipc.hook.1" >/dev/null 2>&1
+        ;;
+    esac
+}
+
+_ChangeMode() {
+    if [[ $static_false ]]; then
+    
+        dkcmd set static_ws=true
+        _BarStatic --true
+        notify-send 'dk static mode'
+        
+    elif [[ $static_true ]]; then
+    
+        dkcmd set static_ws=false
+        _BarStatic --false
+        notify-send 'dk dynamic mode'
+        
+    fi
 }
 
 _SetLayout() { dkcmd set layout "$1"; }
 
-_BarStaticTrue() {
-    polybar-msg -p $(pgrep --full dk-bar-3) \
-    action "#static_ws-ipc.hook.0" >/dev/null 2>&1
-}
-
-_BarStaticFalse() {
-    polybar-msg -p \
-    $(pgrep --full dk-bar-3) \
-    action "#static_ws-ipc.hook.1" >/dev/null 2>&1
-}
-
-_GetMode() { $(dkcmd status type=full num=1 | awk -F: '/static_ws/{print $2}'); }
-
-_TestMode() {
-    if [[ _GetMode -eq 0 ]]; then
-        _DynamicTrue
-    else
-        _StaticTrue
-    fi
-}
-
-_ChangeMode() {
-    if [[ _GetMode -eq 0 ]]; then
-        dkcmd set static_ws=false
-        _DynamicTrue
-        _BarStaticFalse
-        notify-send 'dk dynamic mode'
-    else
-        dkcmd set static_ws=true
-        _StaticTrue
-        _BarStaticTrue
-        notify-send 'dk static mode'
-    fi
-}
-
+fdl="$XDG_CACHE_HOME/focused_desktop_layout"
 _ToggleMono() {
-
-    local focused_desktop_layout previous_layout
-    previous_layout="$XDG_CACHE_HOME/previous_layouts"
-    focused_desktop_layout="$XDG_CACHE_HOME/focused_layout"
-
-    wmctrl -d | awk '{print $NF}' | \
-    sed '
-    s/D/dwindle/g;s/G/grid/g;s/M/mono/g;s/N/none/g;
-    s/R/rtile/g;s/S/spiral/g;s/T/tile/g;s/W/tstack/g;s/[0-9]://g
-    ' > "$previous_layout"
-
-    if [[ ! -f $focused_desktop_layout ]]; then
+    if [[ ! -f $fdl ]]; then
         
-        wmctrl -d | awk -F: '/*/{print $NF}' | \
-        sed '
-        s/D/dwindle/g;s/G/grid/g;s/M/mono/g;s/N/none/g;
-        s/R/rtile/g;s/S/spiral/g;s/T/tile/g;s/W/tstack/g
-        ' > "$focused_desktop_layout"
+        dkcmd status type=layout num=1 \
+        | jq '.[]' | sed 's/"//g' > "$fdl"
         
-        dkcmd set layout mono
+        _SetLayout mono
+        LAYOUT="M"
+        _UpdateLayouts
         
     else
         dkcmd win focus last 2>/dev/null
-        dkcmd set layout "$(cat "$focused_desktop_layout")"
-        rm "$focused_desktop_layout"
+        _SetLayout "$(cat "$fdl")"
+        LAYOUT=$(
+            sed '
+                s/dwindle/D/g;s/grid/G/g;s/mono/M/g;s/none/N/g;
+                s/rtile/R/g;s/spiral/S/g;s/tile/T/g;s/tstack/W/g
+            ' < "$fdl"
+        )
+        _UpdateLayouts
+        rm "$fdl"
     fi
 }
 
 case "$1" in
-    dwindle) _SetLayout dwindle && _TestMode ;;
+    dwindle) LAYOUT="D"; _SetLayout dwindle && _UpdateLayouts ;;
     false) _ChangeMode ;;
-    grid) _SetLayout grid && _TestMode ;;
-    toggle) _ToggleMono && _TestMode ;;
-    none) _SetLayout none && _TestMode ;;
-    rtile) _SetLayout rtile && _TestMode ;;
-    spiral) _SetLayout spiral && _TestMode ;;
-    tile) _SetLayout tile && _TestMode ;;
-    tstack) _SetLayout tstack && _TestMode ;;
+    grid) LAYOUT="G"; _SetLayout grid && _UpdateLayouts ;;
+    toggle) _ToggleMono && _UpdateLayouts ;;
+    none) LAYOUT="N"; _SetLayout none && _UpdateLayouts ;;
+    rtile) LAYOUT="R"; _SetLayout rtile && _UpdateLayouts ;;
+    spiral) LAYOUT="S"; _SetLayout spiral && _UpdateLayouts ;;
+    tile) LAYOUT="T"; _SetLayout tile && _UpdateLayouts ;;
+    tstack) LAYOUT="W"; _SetLayout tstack && _UpdateLayouts ;;
 esac
