@@ -1,122 +1,88 @@
 #!/bin/bash
 
-# shellcheck source=/dev/null
-# DK WINDOW MANAGER CONFIGURATION FILE
+# determine where to place the log file
+logfile="$HOME/.config/dk/dkrc.log"
+: > "$logfile"
 
-_main() {
-    # close all existing windows first
-    for id in $(wmctrl -lx | cut -d ' ' -f 1); do
-        dkcmd win "$id" kill
-    done >/dev/null
+# shellcheck disable=SC1091
+# let's include our windows rules
+. "$HOME"/.config/dk/_WindowsRules
 
-    # initialize 9 workspaces (1-9) (default: 1/monitor)
-    dkcmd set numws=9
+{ # compound command to redirect all output
 
-    # default workspace '_' values used when allocating new workspaces
-    # can be applied to all existing workspaces when passed 'apply' after ws=_
-    # D=dwindle G=grid M=mono N=none R=rtile S=spiral T=tile W=tstack
-    dkcmd set ws=_ apply layout=rtile master=1 stack=4 \
-    pad {l,r,t,b}=5 gap=6 msplit=0.70 ssplit=0.5
-    dkcmd set ws=1 layout=grid
+	# workspace settings
+	# ------------------------
 
-    # getting the workspaces names/layouts and adding distinction uppercase letters
-    _wslayout
+	# initialize 9 workspaces (1-9) (default: 1/monitor)
+	dkcmd set numws=9
 
-    # Indicates the active startup workspace layout beside the name.
-    # The polybar ewmh module will look like this:
-    # 1:T 2:S 3:N etc...(name:layout)
-    # shellcheck disable=SC2046
-    dkcmd set static_ws=true \
-    ws=1 name=1:$(_wslayout | awk '{print $1}') mon=$MONITOR1 \
-    ws=2 name=2:$(_wslayout | awk '{print $2}') mon=$MONITOR1 \
-    ws=3 name=3:$(_wslayout | awk '{print $3}') mon=$MONITOR1 \
-    ws=4 name=4:$(_wslayout | awk '{print $4}') mon=$MONITOR2 \
-    ws=5 name=5:$(_wslayout | awk '{print $5}') mon=$MONITOR2 \
-    ws=6 name=6:$(_wslayout | awk '{print $6}') mon=$MONITOR2 \
-    ws=7 name=7:$(_wslayout | awk '{print $7}') mon=$MONITOR3 \
-    ws=8 name=8:$(_wslayout | awk '{print $8}') mon=$MONITOR3 \
-    ws=9 name=9:$(_wslayout | awk '{print $9}') mon=$MONITOR3
-    
-    # let's include windows rules function
-    source ~/.config/dk/_WindowsRules
+	# default workspace '_' values used when allocating new workspaces
+	# can be applied to all existing workspaces when passed 'apply' after ws=_
+	# dkcmd set ws=_ apply layout=rtile master=1 stack=3 gap=5 msplit=0.6 ssplit=0.5
+	dkcmd set ws=_ apply layout=rtile master=1 stack=3 \
+	pad {l,r,t,b}=6 gap=5 msplit=0.65 ssplit=0.5
 
-    if ! hash polybar wmctrl >/dev/null 2>&1; then
-        notify-send -t 0 -u critical \
-        'polybar, wmctrl should be installed...'
-    fi
+	# none default layouts
+	dkcmd set ws=1 layout=grid
+	dkcmd set ws=7 layout=mono
+	
+	mon1='DVI-D-0'
+	mon2='HDMI-0'
+	mon3='DP-0'
 
-    # checking external scripts
-    _check launch_polybar && launch_polybar &
-    _check sxhkd-start && sxhkd-start &
+	# uppercase letters represent layouts
+	dkcmd set static_ws=true \
+		ws=1 name='1:G' mon=$mon1 ws=2 name='2:R' mon=$mon1 ws=3 name='3:R' mon=$mon1 \
+		ws=4 name='4:R' mon=$mon2 ws=5 name='5:R' mon=$mon2 ws=6 name='6:R' mon=$mon2 \
+		ws=7 name='7:M' mon=$mon3 ws=8 name='8:R' mon=$mon3 ws=9 name='9:R' mon=$mon3
 
-    # global settings
-    dkcmd set {focus_open,tile_tohead,obey_motif}=true
-    dkcmd set {focus_urgent,focus_mouse,tile_hints,smart_{border,gap}}=false
-    dkcmd set win_{minwh,minxy}=50
-    dkcmd set mouse mod=super move=button1 resize=button3
+	dkcmd set {focus_{mouse,open},tile_tohead,obey_motif}=true
+	dkcmd set {focus_urgent,tile_hints,smart_{border,gap}}=false
+	dkcmd set win_{minwh,minxy}=50
+	dkcmd set mouse mod=super move=button1 resize=button2
+	
+	# borders
+	dkcmd set border width=2 outer_width=1
+	
+	if [ -e "$HOME"/.Xresources ]; then
+		blk=$(xrdb -query | awk '/color8:/{print $NF}')
+		blu=$(xrdb -query | awk '/color4:/{print $NF}')
+		red=$(xrdb -query | awk '/color1:/{print $NF}')
+		ylw=$(xrdb -query | awk '/color3:/{print $NF}')
 
-    # assigning borders colors.
-    [[ -f $HOME/.Xresources ]] && _colours
+		dkcmd set border colour \
+			focus="$blu" \
+			urgent="$red" \
+			unfocus="$ylw" \
+			outer_focus="$blu" \
+			outer_urgent="$red" \
+			outer_unfocus="$blk"
+	else
+		dkcmd set border colour \
+			focus='#6699cc' \
+			unfocus='#444444' \
+			urgent='#ee5555' \
+			outer_focus='#222222' \
+			outer_unfocus='#222222' \
+			outer_urgent='#222222'
+	fi
+	
+	# window rules
+	# --------------
+	_WindowsRules
 
-    _WindowsRules
+	command -v sxhkd_start >/dev/null && launch_polybar &
+	
+	[ -p "$SXHKD_FIFO" ] && rm -f "$SXHKD_FIFO"
+	command -v sxhkd_start >/dev/null && sxhkd_start &
 
-    dkcmd set static_ws=false
+} >> "$logfile" 2>&1
 
-    polybar-msg -p $(pgrep --full dk-bar-3) \
-    action "#static_ws-ipc.hook.1" >/dev/null 2>&1
+# inform of any errors in a notification
+if grep -q 'error:' "$logfile"; then
+	hash notify-send && notify-send -t 0 -u critical "dkrc has errors"
+	"$(awk '/error:/ {sub(/^error: /, ""); gsub(/</, "\<"); print}' "$logfile")"
+	exit 1
+fi
 
-    # focusing monitor in the center
-    dkcmd mon HDMI-0; dkcmd ws 2
-
-    date > "$XDG_CONFIG_HOME/dk/dkrc.log"
-    dkcmd status type=full num=1 >> "$XDG_CONFIG_HOME/dk/dkrc.log"
-
-}
-
-_check() { command -v "$1" >/dev/null; }
-
-_colours() {
-    # let's use Xresources theme colors
-    local blk blu red ylw
-    blk=$(xrdb -query | awk '/color8:/{print $NF}')
-    blu=$(xrdb -query | awk '/color4:/{print $NF}')
-    red=$(xrdb -query | awk '/color1:/{print $NF}')
-    ylw=$(xrdb -query | awk '/color3:/{print $NF}')
-
-    dkcmd set border width=1 outer_width=0 \
-    colour \
-    focus="$blu" \
-    urgent="$ylw" \
-    unfocus="$blk" \
-    outer_focus="$blu" \
-    outer_urgent="$red" \
-    outer_unfocus="$blk"
-
-}
-
-_reload() {
-    source ~/.config/dk/_WindowsRules
-    _WindowsRules
-    _colours
-    date > "$XDG_CONFIG_HOME/dk/dkrc.log"
-    dkcmd status type=full num=1 \
-    | sed -n '/^rule:/,/^$/p' >> "$XDG_CONFIG_HOME/dk/dkrc.log"
-    notify-send 'windows rules reloaded'
-    exit 0
-}
-
-_wslayout() {
-    awk '
-    /^workspaces:/ {sub(/^workspaces: /, ""); gsub(/(*)?[0-9]*:\w*:/, ""); print; exit}
-    ' <(dkcmd status type=full num=1) \
-    | sed 's/dwindle/D/g;s/grid/G/g;s/mono/M/g;s/none/N/g;
-    s/rtile/R/g;s/spiral/S/g;s/tile/T/g;s/tstack/W/g'
-}
-
-# sxhkd shortcut: "$HOME"/.config/dk/dkrc -r
-case "$1" in
-    -r) _reload ;;
-    -s) _main "${@}" ;;
-esac
-
-_main "${@}"
+exit 0
