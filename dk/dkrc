@@ -12,7 +12,6 @@ logfile="$HOME/.config/dk/dkrc.log"
 
 	# workspace settings
 	# ------------------------
-
 	# initialize 9 workspaces (1-9) (default: 1/monitor)
 	dkcmd set numws=9
 
@@ -24,17 +23,20 @@ logfile="$HOME/.config/dk/dkrc.log"
 
 	# none default layouts
 	dkcmd set ws=1 layout=grid
-	dkcmd set ws=7 layout=mono
+	# if we want a floating desktop.
+	# dkcmd set ws=2 layout=none
 	
-	mon1='DVI-D-0'
-	mon2='HDMI-0'
-	mon3='DP-0'
+	# xrandr | grep -w 'connected' | awk '{print $1}'
+    # these are environment variables and needed elsewhere.
+    export MONITOR1="DVI-D-0"
+    export MONITOR2="HDMI-0"
+    export MONITOR3="DP-0"
 
-	# uppercase letters represent layouts
+	# uppercase letters represent layouts (Dwindle,Grig,Mono,None,Rtile,Spiral,Tile,W tstack)
 	dkcmd set static_ws=true \
-		ws=1 name='1:G' mon=$mon1 ws=2 name='2:R' mon=$mon1 ws=3 name='3:R' mon=$mon1 \
-		ws=4 name='4:R' mon=$mon2 ws=5 name='5:R' mon=$mon2 ws=6 name='6:R' mon=$mon2 \
-		ws=7 name='7:M' mon=$mon3 ws=8 name='8:R' mon=$mon3 ws=9 name='9:R' mon=$mon3
+		ws=1 name='1:G' mon=$MONITOR1 ws=2 name='2:R' mon=$MONITOR1 ws=3 name='3:R' mon=$MONITOR1 \
+		ws=4 name='4:R' mon=$MONITOR2 ws=5 name='5:M' mon=$MONITOR2 ws=6 name='6:R' mon=$MONITOR2 \
+		ws=7 name='7:M' mon=$MONITOR3 ws=8 name='8:R' mon=$MONITOR3 ws=9 name='9:R' mon=$MONITOR3
 
 	dkcmd set {focus_{mouse,open},tile_tohead,obey_motif}=true
 	dkcmd set {focus_urgent,tile_hints,smart_{border,gap}}=false
@@ -44,7 +46,7 @@ logfile="$HOME/.config/dk/dkrc.log"
 	# borders
 	dkcmd set border width=2 outer_width=1
 	
-	if [ -e "$HOME"/.Xresources ]; then
+	if [ -e "$RESOURCES_FILE" ]; then
 		blk=$(xrdb -query | awk '/color8:/{print $NF}')
 		blu=$(xrdb -query | awk '/color4:/{print $NF}')
 		red=$(xrdb -query | awk '/color1:/{print $NF}')
@@ -67,11 +69,9 @@ logfile="$HOME/.config/dk/dkrc.log"
 			outer_urgent='#222222'
 	fi
 	
-	# window rules
-	# --------------
 	_WindowsRules
 
-	command -v sxhkd_start >/dev/null && launch_polybar &
+	command -v launch_polybar >/dev/null && launch_polybar &
 	
 	[ -p "$SXHKD_FIFO" ] && rm -f "$SXHKD_FIFO"
 	command -v sxhkd_start >/dev/null && sxhkd_start &
