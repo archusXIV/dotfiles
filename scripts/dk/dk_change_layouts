@@ -1,25 +1,30 @@
 #!/bin/bash
 
 # Author: Barret E <archus@protonmail.com>
-# This script change workspaces layouts and toggles monocle/previous layout.
+# This script change focused workspace layout and toggles monocle/previous layout.
 # A polybar module is triggered and let us know if we are in static/dynamic mode,
 # of course workspaces indicators are renamed as we change layouts (1:G,2:R,3:T etc...)
 # Uppercase letters meaning:
 # D=dwindle,G=grid,M=mono,N=none,R=rtile,S=spiral,T=tile,W=tstack
 
-pls="$XDG_CACHE_HOME/previous_layouts"
-pls_tmp="$XDG_CACHE_HOME/previous_layouts_tmp"
+NL="$XDG_CACHE_HOME/new_layouts"
 
 _ApplyLayouts() {
     n=1
     while read -r line; do
         dkcmd set ws="$n" name="$line"
         ((n++))
-    done < "$pls"
-    rm "$pls"
+    done < "$NL"
+    rm "$NL"
 }
 
 _DefineWorkspaces() {
+    # xrandr | grep -w 'connected' | awk '{print $1}'
+    # these are environment variables
+    # MONITOR1='DVI-D-0'
+    # MONITOR2='HDMI-0'
+    # MONITOR3='DP-0'
+    # we have to reset our workspaces names before applying new changes.
     case "$1" in
         --dynamic)
             dkcmd set \
@@ -29,30 +34,26 @@ _DefineWorkspaces() {
             _ApplyLayouts
             ;;
         --static)
-            mon1='DVI-D-0'
-            mon2='HDMI-0'
-            mon3='DP-0'
             dkcmd set \
-                ws=1 name='1:G' mon=$mon1 ws=2 name='2:R' mon=$mon1 ws=3 name='3:R' mon=$mon1 \
-                ws=4 name='4:R' mon=$mon2 ws=5 name='5:R' mon=$mon2 ws=6 name='6:R' mon=$mon2 \
-                ws=7 name='7:M' mon=$mon3 ws=8 name='8:R' mon=$mon3 ws=9 name='9:R' mon=$mon3
+                ws=1 name='1:G' mon=$MONITOR1 ws=2 name='2:R' mon=$MONITOR1 ws=3 name='3:R' mon=$MONITOR1 \
+                ws=4 name='4:R' mon=$MONITOR2 ws=5 name='5:R' mon=$MONITOR2 ws=6 name='6:R' mon=$MONITOR2 \
+                ws=7 name='7:M' mon=$MONITOR3 ws=8 name='8:R' mon=$MONITOR3 ws=9 name='9:R' mon=$MONITOR3
             _ApplyLayouts
             ;;
     esac
 }
 
 _NewLayouts() {
-    wmctrl -d > "$pls"
-    while read -r line; do
+    wmctrl -d | while read -r line; do
         if [[ $line =~ '*' ]]; then
-            echo "$line" | sed "s/[A-Z]/${LAYOUT}/g" >> "$pls_tmp"
+            echo "$line" \
+            | sed "s/[A-Z]/${LAYOUT}/g" \
+            | awk '{print $NF}' >> "$NL"
         else
-            echo "$line" >> "$pls_tmp"
+            echo "$line" | awk '{print $NF}' >> "$NL"
         fi
-    done < "$pls"
-        
-    awk '{print $NF}' "$pls_tmp" > "$pls"
-    rm "$pls_tmp"
+    done
+    unset line
 }
 
 static_false=$(dkcmd status type=full num=1 | grep 'static_ws":false')
@@ -120,8 +121,8 @@ _ToggleMono() {
                 s/rtile/R/g;s/spiral/S/g;s/tile/T/g;s/tstack/W/g
             ' < "$fdl"
         )
-        _UpdateLayouts
         rm "$fdl"
+        _UpdateLayouts
     fi
 }
 
