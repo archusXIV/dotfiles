@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# dependency: xdo
 # send/follow all windows of the current ws to ws n°
 # options: dk_sendthemall -s (send) <workspace>
 #          dk_sendthemall -f (follow) <workspace>
