@@ -25,7 +25,7 @@ typeset -A layouts=(
 #[tstack]="󱒉"
 #)
 
-layout=$(dkcmd status num=1 | grep '^L' | sed 's/^L//')
+dkcmd status type=layout num=1 | jq '.[]' | sed 's/"//g'
 layout="${layouts[$layout]}"
 
 echo $layout
