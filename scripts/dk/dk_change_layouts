@@ -126,12 +126,8 @@ _ToggleMono() {
         dkcmd win focus last 2>/dev/null
         _SetLayout "$(cat "$FDL")"
         
-        LAYOUT=$(
-            sed '
-                s/dwindle/D/g;s/grid/G/g;s/mono/M/g;s/none/N/g;
-                s/rtile/R/g;s/spiral/S/g;s/tile/T/g;s/tstack/W/g
-            ' < "$FDL")
-            
+        LAYOUT=$(sed 's/./\U&/;s/[[:lower:]]//g' < "$FDL")
+
         rm "$FDL"
         _UpdateLayouts
         
