@@ -7,7 +7,10 @@
 # Uppercase letters meaning:
 # D=dwindle,G=grid,M=mono,N=none,R=rtile,S=spiral,T=tile,W=tstack
 
+# shellcheck disable=SC2049,SC2076
+DKRC="$HOME/.config/dk/dkrc"
 NL="$XDG_CACHE_HOME/new_layouts"
+FDL="$XDG_CACHE_HOME/focused_desktop_layout"
 
 _ApplyLayouts() {
     n=1
@@ -21,9 +24,9 @@ _ApplyLayouts() {
 _DefineWorkspaces() {
     # xrandr | grep -w 'connected' | awk '{print $1}'
     # these are environment variables
-    # MONITOR1='DVI-D-0'
-    # MONITOR2='HDMI-0'
-    # MONITOR3='DP-0'
+    MONITOR1='DVI-D-0'
+    MONITOR2='HDMI-0'
+    MONITOR3='DP-0'
     # we have to reset our workspaces names before applying new changes.
     case "$1" in
         --dynamic)
@@ -56,14 +59,14 @@ _NewLayouts() {
     unset line
 }
 
-static_false=$(dkcmd status type=full num=1 | grep 'static_ws":false')
-static_true=$(dkcmd status type=full num=1 | grep 'static_ws":true')
+currentModeFalse=$(dkcmd status type=full num=1 | grep 'static_ws":false')
+currentModeTrue=$(dkcmd status type=full num=1 | grep 'static_ws":true')
 
 _UpdateLayouts() {
-    if [[ $static_false ]]; then
+    if [[ $currentModeFalse ]]; then
         _NewLayouts
         _DefineWorkspaces --dynamic
-    elif [[ $static_true ]]; then
+    elif [[ $currentModeTrue ]]; then
         _NewLayouts
         _DefineWorkspaces --static
     fi
@@ -83,15 +86,25 @@ _BarStatic() {
     esac
 }
 
+_GetCurrentLayouts() {
+    dkcmd status type=ws num=1 | jq '.[]' \
+    | awk '/layout/{gsub(/"/,""); sub(/,/,""); print $2}'
+}
+
 _ChangeMode() {
-    if [[ $static_false ]]; then
-    
-        dkcmd set static_ws=true
-        _BarStatic --true
-        notify-send 'dk static mode'
+    if [[ $currentModeFalse ]]; then
         
-    elif [[ $static_true ]]; then
-    
+        if grep -qF --no-ignore-case 'static_ws=true' "$DKRC"; then
+            "$DKRC"
+            _BarStatic --true
+            notify-send 'dk static mode'
+        else
+            dkcmd set static_ws=true
+            notify-send 'dk static mode'
+        fi
+        
+    elif [[ $currentModeTrue ]]; then
+        
         dkcmd set static_ws=false
         _BarStatic --false
         notify-send 'dk dynamic mode'
@@ -101,39 +114,40 @@ _ChangeMode() {
 
 _SetLayout() { dkcmd set layout "$1"; }
 
-fdl="$XDG_CACHE_HOME/focused_desktop_layout"
 _ToggleMono() {
-    if [[ ! -f $fdl ]]; then
+    if [[ ! -f $FDL ]]; then
         
-        dkcmd status type=layout num=1 \
-        | jq '.[]' | sed 's/"//g' > "$fdl"
+        dkcmd status type=layout num=1 | jq '.[]' | sed 's/"//g' > "$FDL"
         
         _SetLayout mono
         LAYOUT="M"
         _UpdateLayouts
         
     else
+        
         dkcmd win focus last 2>/dev/null
-        _SetLayout "$(cat "$fdl")"
+        _SetLayout "$(cat "$FDL")"
+        
         LAYOUT=$(
             sed '
                 s/dwindle/D/g;s/grid/G/g;s/mono/M/g;s/none/N/g;
                 s/rtile/R/g;s/spiral/S/g;s/tile/T/g;s/tstack/W/g
-            ' < "$fdl"
-        )
-        rm "$fdl"
+            ' < "$FDL")
+            
+        rm "$FDL"
         _UpdateLayouts
+        
     fi
 }
 
 case "$1" in
     dwindle) LAYOUT="D"; _SetLayout dwindle && _UpdateLayouts ;;
-    false) _ChangeMode ;;
-    grid) LAYOUT="G"; _SetLayout grid && _UpdateLayouts ;;
-    toggle) _ToggleMono && _UpdateLayouts ;;
-    none) LAYOUT="N"; _SetLayout none && _UpdateLayouts ;;
-    rtile) LAYOUT="R"; _SetLayout rtile && _UpdateLayouts ;;
-    spiral) LAYOUT="S"; _SetLayout spiral && _UpdateLayouts ;;
-    tile) LAYOUT="T"; _SetLayout tile && _UpdateLayouts ;;
-    tstack) LAYOUT="W"; _SetLayout tstack && _UpdateLayouts ;;
+    false  ) _ChangeMode ;;
+    grid   ) LAYOUT="G"; _SetLayout grid && _UpdateLayouts ;;
+    toggle ) _ToggleMono && _UpdateLayouts ;;
+    none   ) LAYOUT="N"; _SetLayout none && _UpdateLayouts ;;
+    rtile  ) LAYOUT="R"; _SetLayout rtile && _UpdateLayouts ;;
+    spiral ) LAYOUT="S"; _SetLayout spiral && _UpdateLayouts ;;
+    tile   ) LAYOUT="T"; _SetLayout tile && _UpdateLayouts ;;
+    tstack ) LAYOUT="W"; _SetLayout tstack && _UpdateLayouts ;;
 esac
