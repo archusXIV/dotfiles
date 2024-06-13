@@ -1,6 +1,9 @@
 #!/bin/bash
 
 # Author: Barret E <archus@protonmail.com>
+#
+# Dependency: wmctrl
+#
 # This script change focused workspace layout and toggles monocle/previous layout.
 # A polybar module is triggered and let us know if we are in static/dynamic mode,
 # of course workspaces indicators are renamed as we change layouts (1:G,2:R,3:T etc...)
@@ -84,11 +87,6 @@ _BarStatic() {
             action "#static_ws-ipc.hook.1" >/dev/null 2>&1
         ;;
     esac
-}
-
-_GetCurrentLayouts() {
-    dkcmd status type=ws num=1 | jq '.[]' \
-    | awk '/layout/{gsub(/"/,""); sub(/,/,""); print $2}'
 }
 
 _ChangeMode() {
