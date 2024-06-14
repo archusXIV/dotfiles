@@ -63,7 +63,7 @@ logfile="$HOME/.config/dk/dkrc.log"
 	
 	_WindowsRules
 
-	command -v launch_polybar >/dev/null && launch_polybar &
+	command -v polybar_start >/dev/null && polybar_start &
 	
 	[ -p "$SXHKD_FIFO" ] && rm -f "$SXHKD_FIFO"
 	command -v sxhkd_start >/dev/null && sxhkd_start &
