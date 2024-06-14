@@ -1,9 +1,10 @@
 #!/bin/bash
 
 # Author: Barret E <archus@protonmail.com>
-#
+# 2024-06-14
 # Dependency: wmctrl
 #
+# Three monitors setup.
 # This script change focused workspace layout and toggles monocle/previous layout.
 # A polybar module is triggered and let us know if we are in static/dynamic mode,
 # of course workspaces indicators are renamed as we change layouts (1:G,2:R,3:T etc...)
@@ -20,8 +21,8 @@ _ApplyNewWsNames() {
     while read -r line; do
         dkcmd set ws="$n" name="$line"
         ((n++))
-    done < "$NL"
-    rm "$NL"
+    done < "$NWN"
+    rm "$NWN"
 }
 
 _ResetWsOrder() {
@@ -34,18 +35,16 @@ _ResetWsOrder() {
     case "$1" in
         --dynamic)
             dkcmd set \
-                ws=1 name=1 ws=2 name=2 ws=3 name=3 \
-                ws=4 name=4 ws=5 name=5 ws=6 name=6 \
-                ws=7 name=7 ws=8 name=8 ws=9 name=9
-            _ApplyNewWsNames
-            ;;
+            ws=1 name=1 ws=2 name=2 ws=3 name=3 \
+            ws=4 name=4 ws=5 name=5 ws=6 name=6 \
+            ws=7 name=7 ws=8 name=8 ws=9 name=9
+        ;;
         --static)
             dkcmd set \
-                ws=1 mon=$MONITOR1 ws=2 mon=$MONITOR1 ws=3 mon=$MONITOR1 \
-                ws=4 mon=$MONITOR2 ws=5 mon=$MONITOR2 ws=6 mon=$MONITOR2 \
-                ws=7 mon=$MONITOR3 ws=8 mon=$MONITOR3 ws=9 mon=$MONITOR3
-            _ApplyNewWsNames
-            ;;
+            ws=1 mon=$MONITOR1 ws=2 mon=$MONITOR1 ws=3 mon=$MONITOR1 \
+            ws=4 mon=$MONITOR2 ws=5 mon=$MONITOR2 ws=6 mon=$MONITOR2 \
+            ws=7 mon=$MONITOR3 ws=8 mon=$MONITOR3 ws=9 mon=$MONITOR3
+        ;;
     esac
 }
 
@@ -54,9 +53,9 @@ _SetNewWsNames() {
         if [[ $line =~ '*' ]]; then
             echo "$line" \
             | sed "s/[A-Z]/${LAYOUT}/g" \
-            | awk '{print $NF}' >> "$NL"
+            | awk '{print $NF}' >> "$NWN"
         else
-            echo "$line" | awk '{print $NF}' >> "$NL"
+            echo "$line" | awk '{print $NF}' >> "$NWN"
         fi
     done
     unset line
@@ -69,9 +68,11 @@ _TriggerNewNames() {
     if [[ $currentModeFalse ]]; then
         _SetNewWsNames
         _ResetWsOrder --dynamic
+        _ApplyNewWsNames
     elif [[ $currentModeTrue ]]; then
         _SetNewWsNames
         _ResetWsOrder --static
+        _ApplyNewWsNames
     fi
 }
 
@@ -97,6 +98,7 @@ _ChangeMode() {
             _BarStatic --true
             notify-send 'dk static mode'
         else
+            # workspaces will not be ordered if not already.
             dkcmd set static_ws=true
             notify-send 'dk static mode'
         fi
@@ -126,8 +128,8 @@ _ToggleMono() {
         dkcmd win focus last 2>/dev/null
         _SetLayout "$(cat "$FDL")"
         LAYOUT=$(sed 's/./\U&/;s/[[:lower:]]//g' < "$FDL")
-        rm "$FDL"
         _TriggerNewNames
+        rm "$FDL"
         
     fi
 }
