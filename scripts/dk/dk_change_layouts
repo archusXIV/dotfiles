@@ -12,7 +12,7 @@
 
 # shellcheck disable=SC2049,SC2076
 DKRC="$HOME/.config/dk/dkrc"
-NL="$XDG_CACHE_HOME/new_ws_names"
+NWN="$XDG_CACHE_HOME/new_ws_names"
 FDL="$XDG_CACHE_HOME/focused_desktop_layout"
 
 _ApplyNewWsNames() {
