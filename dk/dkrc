@@ -1,10 +1,11 @@
 #!/bin/bash
 
+# shellcheck disable=SC2034,SC1091
+############## DK WINDOW MANAGER CONFIGURATION FILE version 2.2 ##############
 # determine where to place the log file
 logfile="$HOME/.config/dk/dkrc.log"
 : > "$logfile"
 
-# shellcheck disable=SC1091
 # let's include our windows rules
 . "$HOME"/.config/dk/_WindowsRules
 
@@ -14,28 +15,27 @@ logfile="$HOME/.config/dk/dkrc.log"
 	# ------------------------
 	# initialize 9 workspaces (1-9) (default: 1/monitor)
 	dkcmd set numws=9
-
+	
 	# default workspace '_' values used when allocating new workspaces
 	# can be applied to all existing workspaces when passed 'apply' after ws=_
-	# dkcmd set ws=_ apply layout=rtile master=1 stack=3 gap=5 msplit=0.6 ssplit=0.5
 	dkcmd set ws=_ apply layout=rtile master=1 stack=3 \
 	pad {l,r,t,b}=6 gap=5 msplit=0.65 ssplit=0.5
 
 	# none default layouts
 	dkcmd set ws=1 layout=grid
-	# if we want a floating desktop.
-	# dkcmd set ws=2 layout=none
+	dkcmd set ws=7 layout=mono
 	
 	# xrandr | grep -w 'connected' | awk '{print $1}'
-    	# these are environment variables and needed elsewhere.
-    	export MONITOR1="DVI-D-0"
-    	export MONITOR2="HDMI-0"
-    	export MONITOR3="DP-0"
+	# these are environment variables and needed elsewhere.
+    	export MONITOR1='DVI-D-0'
+    	export MONITOR2='HDMI-0'
+    	export MONITOR3='DP-0'
 
-	# uppercase letters represent layouts (Dwindle,Grig,Mono,None,Rtile,Spiral,Tile,W tstack)
+	# A="dwindle" D="dyntile" G="grid" M="mono" N="none"
+	# R="rtile" S="spiral" T="tile" W="tstack"
 	dkcmd set static_ws=true \
 	ws=1 name='1:G' mon=$MONITOR1 ws=2 name='2:R' mon=$MONITOR1 ws=3 name='3:R' mon=$MONITOR1 \
-	ws=4 name='4:R' mon=$MONITOR2 ws=5 name='5:M' mon=$MONITOR2 ws=6 name='6:R' mon=$MONITOR2 \
+	ws=4 name='4:R' mon=$MONITOR2 ws=5 name='5:R' mon=$MONITOR2 ws=6 name='6:R' mon=$MONITOR2 \
 	ws=7 name='7:M' mon=$MONITOR3 ws=8 name='8:R' mon=$MONITOR3 ws=9 name='9:R' mon=$MONITOR3
 
 	dkcmd set {focus_{mouse,open},tile_tohead,obey_motif}=true
@@ -48,14 +48,14 @@ logfile="$HOME/.config/dk/dkrc.log"
 	
 	if [ -e "$RESOURCES_FILE" ]; then
 		blk=$(xrdb -query | awk '/color8:/{print $NF}')
-		grn=$(xrdb -query | awk '/color2:/{print $NF}')
+		blu=$(xrdb -query | awk '/color4:/{print $NF}')
 		red=$(xrdb -query | awk '/color1:/{print $NF}')
 		
 		dkcmd set border colour \
-		focus="$grn" \
+		focus="$blu" \
 		urgent="$red" \
 		unfocus="$blk" \
-		outer_focus="$grn" \
+		outer_focus="$blu" \
 		outer_urgent="$red" \
 		outer_unfocus="$blk"
 		# else defaults defined @compilation time will be applied.
@@ -68,13 +68,8 @@ logfile="$HOME/.config/dk/dkrc.log"
 	[ -p "$SXHKD_FIFO" ] && rm -f "$SXHKD_FIFO"
 	command -v sxhkd_start >/dev/null && sxhkd_start &
 
-} >> "$logfile" 2>&1
+	dkcmd mon view $MONITOR2; dkcmd ws view 4
 
-# inform of any errors in a notification
-if grep -q 'error:' "$logfile"; then
-	hash notify-send && notify-send -t 0 -u critical "dkrc has errors"
-	"$(awk '/error:/ {sub(/^error: /, ""); gsub(/</, "\<"); print}' "$logfile")"
-	exit 1
-fi
+} >> "$logfile" 2>&1
 
 exit 0
