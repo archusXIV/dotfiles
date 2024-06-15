@@ -2,14 +2,14 @@
 
 # Author: Barret E <archus@protonmail.com>
 # 2024-06-14
-# Dependency: wmctrl
+# Dependencies: jq wmctrl
 #
 # Three monitors setup.
 # This script change focused workspace layout and toggles monocle/previous layout.
 # A polybar module is triggered and let us know if we are in static/dynamic mode,
 # of course workspaces indicators are renamed as we change layouts (1:G,2:R,3:T etc...)
 # Uppercase letters meaning:
-# D=dwindle,G=grid,M=mono,N=none,R=rtile,S=spiral,T=tile,W=tstack
+# A=dwindle,D=dyntile,G=grid,M=mono,N=none,R=rtile,S=spiral,T=tile,W=tstack
 
 # shellcheck disable=SC2049,SC2076
 DKRC="$HOME/.config/dk/dkrc"
@@ -75,7 +75,6 @@ _TriggerNewNames() {
         _ApplyNewWsNames
     fi
 }
-
 # a mode indicator in polybar
 _BarStatic() {
     case "$1" in
@@ -91,24 +90,35 @@ _BarStatic() {
 }
 
 _ChangeMode() {
-    if [[ $currentModeFalse ]]; then
-        
-        if grep -qF --no-ignore-case 'static_ws=true' "$DKRC"; then
+    case "$1" in
+        --default)
             "$DKRC"
             _BarStatic --true
             notify-send 'dk static mode'
+        ;;
+        --dynamic)
+            dkcmd set static_ws=false
+            _BarStatic --false
+            notify-send 'dk dynamic mode'
+        ;;
+        --static)
+            dkcmd set static_ws=true
+            _BarStatic --true
+            notify-send 'dk static mode'
+        ;;
+    esac
+}
+
+_GetMode() {
+    if [[ $currentModeFalse ]]; then
+        if grep -qF --no-ignore-case 'static_ws=true' "$DKRC"; then
+            _ChangeMode --default
         else
             # workspaces will not be ordered if not already.
-            dkcmd set static_ws=true
-            notify-send 'dk static mode'
+            _ChangeMode --static
         fi
-        
     elif [[ $currentModeTrue ]]; then
-        
-        dkcmd set static_ws=false
-        _BarStatic --false
-        notify-send 'dk dynamic mode'
-        
+        _ChangeMode --dynamic
     fi
 }
 
@@ -116,32 +126,31 @@ _SetLayout() { dkcmd set layout "$1"; }
 
 _ToggleMono() {
     if [[ ! -f $FDL ]]; then
-        
         dkcmd status type=layout num=1 \
         | jq '.[]' | sed 's/"//g' > "$FDL"
         _SetLayout mono
         LAYOUT="M"
         _TriggerNewNames
-        
     else
-        
         dkcmd win focus last 2>/dev/null
         _SetLayout "$(cat "$FDL")"
         LAYOUT=$(sed 's/./\U&/;s/[[:lower:]]//g' < "$FDL")
         _TriggerNewNames
         rm "$FDL"
-        
     fi
 }
-
+# 9 available layouts, toggle {mono/last,static/dynamic}
 case "$1" in
-    dwindle) LAYOUT="D"; _SetLayout dwindle && _TriggerNewNames ;;
-    false  ) _ChangeMode ;;
-    grid   ) LAYOUT="G"; _SetLayout grid && _TriggerNewNames ;;
-    toggle ) _ToggleMono && _TriggerNewNames ;;
-    none   ) LAYOUT="N"; _SetLayout none && _TriggerNewNames ;;
-    rtile  ) LAYOUT="R"; _SetLayout rtile && _TriggerNewNames ;;
-    spiral ) LAYOUT="S"; _SetLayout spiral && _TriggerNewNames ;;
-    tile   ) LAYOUT="T"; _SetLayout tile && _TriggerNewNames ;;
-    tstack ) LAYOUT="W"; _SetLayout tstack && _TriggerNewNames ;;
+    alternate) LAYOUT="A"; _SetLayout dwindle && _TriggerNewNames ;;
+    dyntile  ) LAYOUT="D"; _SetLayout dyntile && _TriggerNewNames ;;
+    grid     ) LAYOUT="G"; _SetLayout grid && _TriggerNewNames ;;
+    none     ) LAYOUT="N"; _SetLayout none && _TriggerNewNames ;;
+    rtile    ) LAYOUT="R"; _SetLayout rtile && _TriggerNewNames ;;
+    spiral   ) LAYOUT="S"; _SetLayout spiral && _TriggerNewNames ;;
+    tile     ) LAYOUT="T"; _SetLayout tile && _TriggerNewNames ;;
+    tstack   ) LAYOUT="W"; _SetLayout tstack && _TriggerNewNames ;;
+    false    ) _GetMode ;;
+    static   ) _ChangeMode --static ;;
+    dynamic  ) _ChangeMode --dynamic ;;
+    mono     ) _ToggleMono && _TriggerNewNames ;;
 esac
