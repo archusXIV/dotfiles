@@ -1,33 +1,34 @@
 ######################################################################
 # THIS FILE IS THE DK WINDOWS, DESKTOP, MONITORS & LAYOUTS SHORTCUTS #
 ######################################################################
-# Reload, restart, quit dk.
+# Reload dk config, reload rules, quit dk.
 ctrl + alt + {r,q}
     { \
-    $DKRC -r, \
+    $DKRC; notify-send 'rules reloaded', \
     prompt "Do you really want to quit dk ?" "Xexit" \
     }
 
-#######################################################################
-##########################  WINDOWS MANAGEMENT  #######################
-#######################################################################
-# close/close all/kill focused window.
-super + {_,shift,ctrl} + End
+######################################################################
+##########################  WINDOWS MANAGEMENT  ######################
+######################################################################
+# close/close all unfocused/close all/kill focused window.
+super + {_,ctrl,alt,shift} + End
     {\
     dkcmd win kill, \
+    closethemall --unfocused, \
     closethemall --all, \
     xkill -id "$(xdo id $1)" \
     }
 
-# close all windows except the focused one
-alt + End
-    closethemall --unfocused
+# focus master in the current workspace.
+super + a
+    dkcmd win focusm
 
 # focus window/workspace previous/next
 super + {_,alt + }{Left,Right}
     dkcmd {win focus,ws} {prev,next}
 
-# focus next, 2,3 whatever windows from the focused one.
+# focus next, 2nd, 3th or whatever windows from the focused one.
 super + shift + {KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,KP_Home,KP_Up,KP_Prior}
     dkcmd win focus +{1-9}
 
@@ -56,12 +57,16 @@ super + shift + s ; {_,alt + }{KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,
     dk_sendthemall -{s,f} {1-9}
 
 # change active workspace layout (false changes the actual mode, static/dynamic)
-super + l ; {d,f,g,m,n,r,s,t,w}
-    dk_change_layouts {dwindle,false,grid,mono,none,rtile,spiral,tile,tstack}
+super + l ; {a,d,f,g,n,r,s,t,w}
+    dk_change_layouts {alternate,dyntile,false,grid,none,rtile,spiral,tile,tstack}
 
-# toggle between monocle and the last layout.
+# toggle between monocle/last layout.
 super + m
-    dk_change_layouts toggle
+    dk_change_layouts mono
+
+# toggle static/dynamic mode.
+alt + m ; {d,s}
+    dk_change_layouts {dynamic,static}
 
 # toggle floating, sticky
 super + alt + {s,space}
