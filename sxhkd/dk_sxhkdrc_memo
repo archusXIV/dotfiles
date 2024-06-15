@@ -1,5 +1,5 @@
-# reload, restart, exit dk
-ctrl + alt + {c,r,q}
+# reload, exit dk
+ctrl + alt + {r,q}
 
 # reload sxhkd configuration files.
 alt + Caps_Lock (Escape)
@@ -25,7 +25,7 @@ alt + u ; {a,c,d,e,h,j,m,n,p,r,s,t,v,x,y} (chain)
 # open sxhkdrc_<wm> in vim (s stands for main config)
 alt + k ; {b,d,i,s}
 
-# gui applications $EDITOR, $FILEMNGR, geany, $VIRTMNGR, $BROWSER
+# gui applications
 alt + g ; {e,f,g,v,w} (chain)
 
 # audio-video applications qv4l2, pavucontrol, qvidcap
@@ -55,53 +55,57 @@ XF86Audio{Prev,Play,Next}
 # player stop
 alt + F10
 
+# close/close all unfocused/close all/kill focused window.
+super + {_,ctrl,alt,shift} + End
+
+# focus master in the current workspace.
+super + a
+    dkcmd win focusm
+
 # focus window/workspace previous/next
 super + {_,alt + }{Left,Right}
 
-# focus next 2,3 whatever windows form the focused one.
+# focus next, 2nd, 3th or whatever windows from the focused one.
 super + shift + {1-9}
-
-# focus monitor next/previous/last
-super + {_,shift +,ctrl +}{BackSpace}
-
-# focus the last desktop/monitor
-super + {_,shift + }l
 
 # swap tiled window in/out of master, cycle tiled windows in place
 super + {space,Tab}
 
-# close/close all/kill focused window.
-super + {_,alt +,ctrl + }q
+# focus monitor next/previous/last
+super + {_,shift,ctrl} + {BackSpace}
 
-# close all windows except the focused one
-alt + q
+# {focus,send,send_&_follow} to monitor number
+super + {_,alt,ctrl} + {Print,Scroll_Lock,Pause}
 
-# toggle floating or sticky
+# {focus,send,send_&_follow} to workspace number
+super + {_,alt,ctrl} + {1-9}
+
+# focus the last window (in the current ws)/desktop
+super + {_,shift + }less
+
+# send/send & follow all windows of the current ws to ws n°
+super + shift + s ; {_,alt + }{1-9}
+
+# change active workspace layout (f changes the actual mode)
+super + l ; {a,d,f,g,n,r,s,t,w}
+
+# toggle between monocle/last layout.
+super + m
+
+# toggle static/dynamic mode.
+alt + m ; {d,s}
+
+# toggle floating, sticky
 super + alt + {s,space}
 
-# toggle fullscreen and fake fullscreen (enable manipulating fullscreen window)
-F11 {_,ctrl + }
-
-# toggle monocle/last layout.
-super + {_,shift +}m
-
-# resize/move window using custom script
-alt + {_,ctrl + }{Left,Up,Down,Right}
+# toggle fullscreen/fake fullscreen (enable manipulating fullscreen window)
+{_,alt +} F11
 
 # move the active window up/down the stack
 super + ctrl + {KP_Add,KP_Subtract}
 
-# view, send, or follow to workspace {1-9}
-super + {_,alt + ,ctrl + }{1-9}
-
-# focus/send/send & follow to monitor number 1, 2, 3
-super + {_,alt,ctrl} + {Print,Scroll_Lock,Pause}
-
-# send/follow all windows of the current ws to ws n°
-super + shift + s ; {_,alt + }{1-9} (chain) 
-
-# change active workspace layout (f=false, shift for dynamic)
-super + {_,shift + }t ; {d,f,g,n,r,s,t,w} (chain)
+# resize/move (floating) window using custom script
+alt + {_,ctrl + }{Left,Up,Down,Right}
 
 # change number of windows in master or first stack
 super + {_,shift + }{KP_Add,KP_Subtract}
