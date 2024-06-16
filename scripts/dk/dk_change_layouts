@@ -153,5 +153,5 @@ case "$1" in
     false    ) _GetMode ;;
     static   ) _ChangeMode --static ;;
     dynamic  ) _ChangeMode --dynamic ;;
-    mono     ) _ToggleMono && _TriggerNewNames ;;
+    mono     ) _ToggleMono ;;
 esac
