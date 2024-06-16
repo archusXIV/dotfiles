@@ -53,8 +53,7 @@ _SetNewWsNames() {
     wmctrl -d | while read -r line; do
         if [[ $line =~ '*' ]]; then
             echo "$line" \
-            | sed "s/[A-Z]/${LAYOUT}/g" \
-            | awk '{print $NF}' >> "$NWN"
+            | sed "s/[A-Z]/${LAYOUT}/g;s/.*\s//" >> "$NWN"
         else
             echo "$line" | awk '{print $NF}' >> "$NWN"
         fi
