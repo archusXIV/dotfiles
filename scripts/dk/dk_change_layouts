@@ -28,7 +28,7 @@ _ApplyNewWsNames() {
 }
 
 _ResetWsOrder() {
-    # xrandr | grep -w 'connected' | awk '{print $1}'
+    # xrandr --listactivemonitors | sed '1d;s/.*\s//'
     # these are environment variables
     MONITOR1='DVI-D-0'
     MONITOR2='HDMI-0'
