@@ -11,6 +11,7 @@
 # of course workspaces indicators are renamed as we change layouts (1:G,2:R,3:T etc...)
 # Uppercase letters meaning:
 # A=dwindle,D=dyntile,G=grid,M=mono,N=none,R=rtile,S=spiral,T=tile,W=tstack
+# See: https://github.com/archusXIV/dotfiles/blob/main/dk/dkrc
 
 # shellcheck disable=SC2049,SC2076
 DKRC="$HOME/.config/dk/dkrc"
