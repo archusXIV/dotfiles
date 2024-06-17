@@ -23,6 +23,7 @@ logfile="$HOME/.config/dk/dkrc.log"
 
 	# none default layouts
 	dkcmd set ws=1 layout=grid
+	dkcmd set ws=4 layout=tstack msplit=0.80
 	dkcmd set ws=7 layout=mono
 	
 	# xrandr | grep -w 'connected' | awk '{print $1}'
@@ -35,7 +36,7 @@ logfile="$HOME/.config/dk/dkrc.log"
 	# R="rtile" S="spiral" T="tile" W="tstack"
 	dkcmd set static_ws=true \
 	ws=1 name='1:G' mon=$MONITOR1 ws=2 name='2:R' mon=$MONITOR1 ws=3 name='3:R' mon=$MONITOR1 \
-	ws=4 name='4:R' mon=$MONITOR2 ws=5 name='5:R' mon=$MONITOR2 ws=6 name='6:R' mon=$MONITOR2 \
+	ws=4 name='4:W' mon=$MONITOR2 ws=5 name='5:R' mon=$MONITOR2 ws=6 name='6:R' mon=$MONITOR2 \
 	ws=7 name='7:M' mon=$MONITOR3 ws=8 name='8:R' mon=$MONITOR3 ws=9 name='9:R' mon=$MONITOR3
 
 	dkcmd set {focus_{mouse,open},tile_tohead,obey_motif}=true
