@@ -2,6 +2,7 @@
 
 # Author: Barret E <archus@protonmail.com>
 # 2024-06-17
+# Dependency: jq
 
 DKRC="$HOME/.config/dk/dkrc"
 numws=$(awk -F= '/numws/{print $2}' "$DKRC")
