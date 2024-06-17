@@ -7,58 +7,36 @@
 # Three monitors setup.
 # This script change focused workspace layout and toggles monocle/previous layout.
 # A polybar module is triggered and let us know if we are in static/dynamic mode,
-# https://github.com/archusXIV/dotfiles/blob/main/polybar/conf.d/active-modules-bar3.ini#L5
 # of course workspaces indicators are renamed as we change layouts (1:G,2:R,3:T etc...)
 # Uppercase letters meaning:
 # A=dwindle,D=dyntile,G=grid,M=mono,N=none,R=rtile,S=spiral,T=tile,W=tstack
-# See: https://github.com/archusXIV/dotfiles/blob/main/dk/dkrc
 
 # shellcheck disable=SC2049,SC2076
 DKRC="$HOME/.config/dk/dkrc"
-NWN="$XDG_CACHE_HOME/new_ws_names"
+NWSN="$XDG_CACHE_HOME/new_ws_names"
 FDL="$XDG_CACHE_HOME/focused_desktop_layout"
+numws=$(awk -F= '/numws/{print $2}' "$DKRC")
 
 _ApplyNewWsNames() {
     n=1
     while read -r line; do
         dkcmd set ws="$n" name="$line"
         ((n++))
-    done < "$NWN"
-    rm "$NWN"
+    done < "$NWSN"
+    unset line
+    rm "$NWSN"
 }
 
-_ResetWsOrder() {
-    # xrandr --listactivemonitors | sed '1d;s/.*\s//'
-    # these are environment variables
-    MONITOR1='DVI-D-0'
-    MONITOR2='HDMI-0'
-    MONITOR3='DP-0'
-    # we have to reset our workspaces names and order before applying new changes.
-    case "$1" in
-        --dynamic)
-            dkcmd set \
-            ws=1 name=1 ws=2 name=2 ws=3 name=3 \
-            ws=4 name=4 ws=5 name=5 ws=6 name=6 \
-            ws=7 name=7 ws=8 name=8 ws=9 name=9
-        ;;
-        --static)
-            dkcmd set \
-            ws=1 mon=$MONITOR1 ws=2 mon=$MONITOR1 ws=3 mon=$MONITOR1 \
-            ws=4 mon=$MONITOR2 ws=5 mon=$MONITOR2 ws=6 mon=$MONITOR2 \
-            ws=7 mon=$MONITOR3 ws=8 mon=$MONITOR3 ws=9 mon=$MONITOR3
-        ;;
-    esac
-}
-
-_SetNewWsNames() {
+_SetNewFocusedName() {
     wmctrl -d | while read -r line; do
         if [[ $line =~ '*' ]]; then
             echo "$line" \
-            | sed "s/[A-Z]/${LAYOUT}/g;s/.*\s//" >> "$NWN"
+            | sed "s/[A-Z]/${LAYOUT}/g;s/.*\s//" >> "$NWSN"
         else
-            echo "$line" | awk '{print $NF}' >> "$NWN"
+            echo "$line" | awk '{print $NF}' >> "$NWSN"
         fi
     done
+    
     unset line
 }
 
@@ -67,12 +45,10 @@ currentModeTrue=$(dkcmd status type=full num=1 | grep 'static_ws":true')
 
 _TriggerNewNames() {
     if [[ $currentModeFalse ]]; then
-        _SetNewWsNames
-        _ResetWsOrder --dynamic
+        _SetNewFocusedName
         _ApplyNewWsNames
     elif [[ $currentModeTrue ]]; then
-        _SetNewWsNames
-        _ResetWsOrder --static
+        _SetNewFocusedName
         _ApplyNewWsNames
     fi
 }
@@ -111,9 +87,26 @@ _ChangeMode() {
 }
 
 _GetMode() {
+    
     if [[ $currentModeFalse ]]; then
-        if grep -qF --no-ignore-case 'static_ws=true' "$DKRC"; then
+        
+        if grep -qF 'static_ws=true' "$DKRC"; then
+            
+            wmctrl -d | awk '{print $NF}' > "$NWSN"
+            
+            mapfile -t prevWsLayouts < <(
+                dkcmd status type=ws num=1 | jq -r '.workspaces | .[] | .layout'
+            )
             _ChangeMode --default
+            _ApplyNewWsNames
+            
+            wsn=1
+            for wslayout in "${prevWsLayouts[@]}"; do
+                dkcmd set ws="$wsn" layout "$wslayout"
+                ((wsn++))
+                sleep 0.1
+            done
+            unset prevWsLayouts
         else
             # workspaces will not be ordered if not already.
             _ChangeMode --static
