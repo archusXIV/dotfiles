@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# Author: Barret E <archus@protonmail.com>
+# 2024-06-17
+
+DKRC="$HOME/.config/dk/dkrc"
+numws=$(awk -F= '/numws/{print $2}' "$DKRC")
+
+if [[ $# -ne 1 ]]; then
+    echo ""
+    echo " [ERROR] Usage: ${0##*/} [-a|--all|number]"
+    exit 1
+fi
+
+echo ""
+case "$1" in
+    -a|--all)
+        for ((i=1;i<"$numws"+1;i++)); do
+            echo " WORKSPACE: $i"
+            echo " name:      $(dkcmd status type=ws num=1 | jq -r '.workspaces | .[] | .name' | sed -n "${i}p")"
+            echo " occupied:  $(dkcmd status type=ws num=1 | jq -r '.workspaces | .[] | .active' | sed -n "${i}p")"
+            echo " layout:    $(dkcmd status type=ws num=1 | jq -r '.workspaces | .[] | .layout' | sed -n "${i}p")"
+            echo " focused:   $(dkcmd status type=ws num=1 | jq -r '.workspaces | .[] | .focused' | sed -n "${i}p")"
+            echo " monitor:   $(dkcmd status type=ws num=1 | jq -r '.workspaces | .[] | .monitor' | sed -n "${i}p")"
+            echo ""
+        done
+    ;;
+    [1-"$numws"])
+        n="$1"
+        echo " WORKSPACE: $1"
+        echo " name:      $(dkcmd status type=ws num=1 | jq -r '.workspaces | .[] | .name' | sed -n "${n}p")"
+        echo " occupied:  $(dkcmd status type=ws num=1 | jq -r '.workspaces | .[] | .active' | sed -n "${n}p")"
+        echo " layout:    $(dkcmd status type=ws num=1 | jq -r '.workspaces | .[] | .layout' | sed -n "${n}p")"
+        echo " focused:   $(dkcmd status type=ws num=1 | jq -r '.workspaces | .[] | .focused' | sed -n "${n}p")"
+        echo " monitor:   $(dkcmd status type=ws num=1 | jq -r '.workspaces | .[] | .monitor' | sed -n "${n}p")"
+        echo ""
+    ;;
+esac
