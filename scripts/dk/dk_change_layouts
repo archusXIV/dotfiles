@@ -93,7 +93,6 @@ _GetMode() {
         if grep -qF 'static_ws=true' "$DKRC"; then
             
             wmctrl -d | awk '{print $NF}' > "$NWSN"
-            
             mapfile -t prevWsLayouts < <(
                 dkcmd status type=ws num=1 | jq -r '.workspaces | .[] | .layout'
             )
@@ -128,7 +127,11 @@ _ToggleMono() {
     else
         dkcmd win focus last 2>/dev/null
         _SetLayout "$(cat "$FDL")"
-        LAYOUT=$(sed 's/./\U&/;s/[[:lower:]]//g' < "$FDL")
+        if [[ $(cat "$FDL") = tstack ]]; then
+            LAYOUT="W"
+        else
+            LAYOUT=$(sed 's/./\U&/;s/[[:lower:]]//g' < "$FDL")
+        fi
         _TriggerNewNames
         rm "$FDL"
     fi
