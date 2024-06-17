@@ -27,7 +27,7 @@ case "$1" in
     ;;
     [1-"$numws"])
         n="$1"
-        echo " WORKSPACE: $1"
+        echo " WORKSPACE: $n"
         echo " name:      $(dkcmd status type=ws num=1 | jq -r '.workspaces | .[] | .name' | sed -n "${n}p")"
         echo " occupied:  $(dkcmd status type=ws num=1 | jq -r '.workspaces | .[] | .active' | sed -n "${n}p")"
         echo " layout:    $(dkcmd status type=ws num=1 | jq -r '.workspaces | .[] | .layout' | sed -n "${n}p")"
