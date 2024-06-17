@@ -31,7 +31,7 @@ _SetNewFocusedName() {
     wmctrl -d | while read -r line; do
         if [[ $line =~ '*' ]]; then
             echo "$line" \
-            | sed "s/[A-Z]/${LAYOUT}/g;s/.*\s//" >> "$NWSN"
+            | sed "s/[A-Z]/${SYMBOL}/g;s/.*\s//" >> "$NWSN"
         else
             echo "$line" | awk '{print $NF}' >> "$NWSN"
         fi
@@ -122,15 +122,15 @@ _ToggleMono() {
         dkcmd status type=layout num=1 \
         | jq '.[]' | sed 's/"//g' > "$FDL"
         _SetLayout mono
-        LAYOUT="M"
+        SYMBOL="M"
         _TriggerNewNames
     else
         dkcmd win focus last 2>/dev/null
         _SetLayout "$(cat "$FDL")"
         if [[ $(cat "$FDL") = tstack ]]; then
-            LAYOUT="W"
+            SYMBOL="W"
         else
-            LAYOUT=$(sed 's/./\U&/;s/[[:lower:]]//g' < "$FDL")
+            SYMBOL=$(sed 's/./\U&/;s/[[:lower:]]//g' < "$FDL")
         fi
         _TriggerNewNames
         rm "$FDL"
@@ -138,14 +138,14 @@ _ToggleMono() {
 }
 # 9 available layouts, toggle {mono/last,static/dynamic}
 case "$1" in
-    alternate) LAYOUT="A"; _SetLayout dwindle && _TriggerNewNames ;;
-    dyntile  ) LAYOUT="D"; _SetLayout dyntile && _TriggerNewNames ;;
-    grid     ) LAYOUT="G"; _SetLayout grid && _TriggerNewNames ;;
-    none     ) LAYOUT="N"; _SetLayout none && _TriggerNewNames ;;
-    rtile    ) LAYOUT="R"; _SetLayout rtile && _TriggerNewNames ;;
-    spiral   ) LAYOUT="S"; _SetLayout spiral && _TriggerNewNames ;;
-    tile     ) LAYOUT="T"; _SetLayout tile && _TriggerNewNames ;;
-    tstack   ) LAYOUT="W"; _SetLayout tstack && _TriggerNewNames ;;
+    alternate) SYMBOL="A"; _SetLayout dwindle && _TriggerNewNames ;;
+    dyntile  ) SYMBOL="D"; _SetLayout dyntile && _TriggerNewNames ;;
+    grid     ) SYMBOL="G"; _SetLayout grid && _TriggerNewNames ;;
+    none     ) SYMBOL="N"; _SetLayout none && _TriggerNewNames ;;
+    rtile    ) SYMBOL="R"; _SetLayout rtile && _TriggerNewNames ;;
+    spiral   ) SYMBOL="S"; _SetLayout spiral && _TriggerNewNames ;;
+    tile     ) SYMBOL="T"; _SetLayout tile && _TriggerNewNames ;;
+    tstack   ) SYMBOL="W"; _SetLayout tstack && _TriggerNewNames ;;
     false    ) _GetMode ;;
     static   ) _ChangeMode --static ;;
     dynamic  ) _ChangeMode --dynamic ;;
