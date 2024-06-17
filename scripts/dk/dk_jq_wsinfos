@@ -6,12 +6,17 @@
 DKRC="$HOME/.config/dk/dkrc"
 numws=$(awk -F= '/numws/{print $2}' "$DKRC")
 
+_Error() {
+    echo " [ERROR] Usage: ${0##*/} [-a|--all|<available desktop number>]"
+    exit 1
+}
+
 if [[ $# -ne 1 ]]; then
     echo ""
-    echo " [ERROR] Usage: ${0##*/} [-a|--all|number]"
-    exit 1
+    _Error
 fi
 
+clear
 echo ""
 case "$1" in
     -a|--all)
@@ -33,6 +38,6 @@ case "$1" in
         echo " layout:    $(dkcmd status type=ws num=1 | jq -r '.workspaces | .[] | .layout' | sed -n "${n}p")"
         echo " focused:   $(dkcmd status type=ws num=1 | jq -r '.workspaces | .[] | .focused' | sed -n "${n}p")"
         echo " monitor:   $(dkcmd status type=ws num=1 | jq -r '.workspaces | .[] | .monitor' | sed -n "${n}p")"
-        echo ""
     ;;
+    *) _Error ;;
 esac
