@@ -44,13 +44,8 @@ currentModeFalse=$(dkcmd status type=full num=1 | grep 'static_ws":false')
 currentModeTrue=$(dkcmd status type=full num=1 | grep 'static_ws":true')
 
 _TriggerNewNames() {
-    if [[ $currentModeFalse ]]; then
-        _SetNewFocusedName
-        _ApplyNewWsNames
-    elif [[ $currentModeTrue ]]; then
-        _SetNewFocusedName
-        _ApplyNewWsNames
-    fi
+    _SetNewFocusedName
+    _ApplyNewWsNames
 }
 # a mode indicator in polybar
 _BarStatic() {
