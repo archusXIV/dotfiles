@@ -4,7 +4,7 @@
 # 2024-06-14
 # Dependencies: jq wmctrl
 #
-# Three monitors setup.
+# Scenario: three monitors setup.
 # This script change focused workspace layout and toggles monocle/previous layout.
 # A polybar module is triggered and let us know if we are in static/dynamic mode,
 # of course workspaces indicators are renamed as we change layouts (1:G,2:R,3:T etc...)
@@ -15,7 +15,6 @@
 DKRC="$HOME/.config/dk/dkrc"
 NWSN="$XDG_CACHE_HOME/new_ws_names"
 FDL="$XDG_CACHE_HOME/focused_desktop_layout"
-numws=$(awk -F= '/numws/{print $2}' "$DKRC")
 
 _ApplyNewWsNames() {
     n=1
@@ -36,50 +35,47 @@ _SetNewFocusedName() {
             echo "$line" | awk '{print $NF}' >> "$NWSN"
         fi
     done
-    
     unset line
 }
-
-currentModeFalse=$(dkcmd status type=full num=1 | grep 'static_ws":false')
-currentModeTrue=$(dkcmd status type=full num=1 | grep 'static_ws":true')
 
 _TriggerNewNames() {
     _SetNewFocusedName
     _ApplyNewWsNames
 }
-# a mode indicator in polybar
+
+# a mode indicator:
+# https://github.com/archusXIV/dotfiles/blob/main/polybar/conf.d/active-modules-bar3.ini
 _BarStatic() {
-    case "$1" in
-        --true)
-            polybar-msg -p $(pgrep --full dk-bar-3) \
-            action "#static_ws-ipc.hook.0" >/dev/null 2>&1
-        ;;
-        --false)
-            polybar-msg -p $(pgrep --full dk-bar-3) \
-            action "#static_ws-ipc.hook.1" >/dev/null 2>&1
-        ;;
-    esac
+    polybar-msg -p $(pgrep --full dk-bar-3) \
+    action "#static_ws-ipc.hook.${hooknum}" >/dev/null 2>&1
 }
 
 _ChangeMode() {
+    local hooknum
     case "$1" in
         --default)
             "$DKRC"
-            _BarStatic --true
+            hooknum=1
+            _BarStatic
             notify-send 'dk static mode'
         ;;
         --dynamic)
             dkcmd set static_ws=false
-            _BarStatic --false
+            hooknum=0
+            _BarStatic
             notify-send 'dk dynamic mode'
         ;;
         --static)
             dkcmd set static_ws=true
-            _BarStatic --true
+            hooknum=1
+            _BarStatic
             notify-send 'dk static mode'
         ;;
     esac
 }
+
+currentModeFalse=$(dkcmd status type=full num=1 | grep 'static_ws":false')
+currentModeTrue=$(dkcmd status type=full num=1 | grep 'static_ws":true')
 
 _GetMode() {
     
@@ -141,8 +137,8 @@ case "$1" in
     spiral   ) SYMBOL="S"; _SetLayout spiral && _TriggerNewNames ;;
     tile     ) SYMBOL="T"; _SetLayout tile && _TriggerNewNames ;;
     tstack   ) SYMBOL="W"; _SetLayout tstack && _TriggerNewNames ;;
+    mono     ) _ToggleMono ;;
     false    ) _GetMode ;;
     static   ) _ChangeMode --static ;;
     dynamic  ) _ChangeMode --dynamic ;;
-    mono     ) _ToggleMono ;;
 esac
