@@ -4,12 +4,13 @@
 # 2024-06-14
 # Dependencies: jq wmctrl
 #
-# Scenario: three monitors setup.
-# This script change focused workspace layout and toggles monocle/previous layout.
-# A polybar module is triggered and let us know if we are in static/dynamic mode,
-# of course workspaces indicators are renamed as we change layouts (1:G,2:R,3:T etc...)
-# Uppercase letters meaning:
-# A=dwindle,D=dyntile,G=grid,M=mono,N=none,R=rtile,S=spiral,T=tile,W=tstack
+# Scenario:
+#    Three monitors setup.
+#    This script change focused workspace layout and toggles monocle/previous layout.
+#    A polybar module is triggered and let us know if we are in static/dynamic mode,
+#    of course workspaces indicators are renamed as we change layouts (1:G,2:R,3:T etc...)
+#    Uppercase letters meaning:
+#    A=dwindle,D=dyntile,G=grid,M=mono,N=none,R=rtile,S=spiral,T=tile,W=tstack
 
 # shellcheck disable=SC2049,SC2076
 DKRC="$HOME/.config/dk/dkrc"
@@ -43,8 +44,7 @@ _TriggerNewNames() {
     _ApplyNewWsNames
 }
 
-# a mode indicator:
-# https://github.com/archusXIV/dotfiles/blob/main/polybar/conf.d/active-modules-bar3.ini
+# a mode indicator in polybar
 _BarStatic() {
     polybar-msg -p $(pgrep --full dk-bar-3) \
     action "#static_ws-ipc.hook.${hooknum}" >/dev/null 2>&1
