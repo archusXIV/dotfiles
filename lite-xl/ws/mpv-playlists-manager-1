@@ -1,0 +1,1 @@
+return { path = "/home/archangel/.local/bin/mpv-playlists-manager", documents = {["type"]="leaf",["views"]={[1]={["type"]="view",["module"]="core.emptyview",["active"]=true,["scroll"]={["x"]=0,["y"]=0,["to"]={["x"]=0,["y"]=0}}}},["active_view"]=1}, directories = {} }

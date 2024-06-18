@@ -1,0 +1,1 @@
+return { path = "/home/archangel/Documents/iso", documents = {["views"]={[1]={["active"]=true,["scroll"]={["x"]=0,["y"]=0,["to"]={["y"]=0,["x"]=0}},["type"]="view",["module"]="core.emptyview"}},["type"]="leaf",["active_view"]=1}, directories = {} }

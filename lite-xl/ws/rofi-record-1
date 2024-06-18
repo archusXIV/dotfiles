@@ -1,0 +1,1 @@
+return { path = "/home/archangel/.local/bin/rofi-record", documents = {["type"]="leaf",["active_view"]=1,["views"]={[1]={["type"]="view",["module"]="core.emptyview",["active"]=false,["scroll"]={["to"]={["x"]=0,["y"]=0},["y"]=0,["x"]=0}}}}, directories = {} }

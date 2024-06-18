@@ -1,0 +1,1 @@
+return { path = "/home/archangel", documents = {["active_view"]=1,["type"]="leaf",["views"]={[1]={["type"]="doc",["selection"]={[1]=9,[2]=1,[3]=9,[4]=1},["scroll"]={["x"]=0,["y"]=0},["filename"]=".local/bin/mpv-playlists-manager/lib/_CheckDependencies",["text"]=false,["active"]=true}}}, directories = {} }

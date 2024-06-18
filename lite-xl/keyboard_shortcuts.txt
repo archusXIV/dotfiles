@@ -1,0 +1,214 @@
+################ LITE-XL KEYBOARD SHORTCUTS ###############
+# core quit
+ctrl + q
+
+# core find-{file,command}
+ctrl + {_,shift + }p
+
+# core open-file
+ctrl + o
+
+# core new-doc
+ctrl + n
+
+# core change-project-folder
+ctrl + shift + c
+
+# core open-project-folder
+ctrl + shift + o
+
+# core restart
+alt + r
+
+# treeview toggle
+f9
+
+# root split-{left,right,down,up}
+ctrl + shift + {h,l,j,k}
+
+# root close
+ctrl + w
+
+# root move-tab-{left,right}
+ctrl + {pageup,pagedown}
+
+# root switch-to-{left,right,up,down}
+alt + {j,l,i,k}
+
+# root switch-to-{next-tab,previous-tab}
+ctrl + {_,shift + }tab
+
+# root switch-to-tab-{1,2,3,4,5,6,7,8,9}
+alt + {1,2,3,4,5,6,7,8,9}
+
+# find-replace find
+ctrl + f
+
+# find-replace replace
+ctrl + r
+
+# find-replace repeat-find
+f3
+
+# find-replace previous-find 
+shift + f3
+
+# find-replace toggle-sensitivity
+ctrl + i
+
+# find-replace toggle-regex  
+ctrl + shift + i
+
+# doc align-carets   
+ctrl + shift + space
+
+# doc left-align-selections  
+ctrl + shift + l
+
+# doc right-align-selections
+ctrl + shift + r
+
+# doc go-to-line
+ctrl + g
+
+# doc {save,save-as}
+ctrl + {_,shift + }s
+
+# doc {undo,redo}
+ctrl + {z,y}
+
+# doc cut
+ctrl + x
+
+# doc copy
+ctrl + c
+
+# doc paste
+ctrl + v
+
+# doc unindent
+shift + tab
+
+# doc backspace
+backspace
+
+# doc delete-to-previous-word-start
+ctrl + backspace
+
+# doc delete
+delete
+
+# doc delete-to-next-word-end
+ctrl + delete
+
+# doc newline-below
+ctrl + return
+
+# doc newline-above
+ctrl + shift + return
+
+# doc join-lines
+ctrl + j
+
+# doc select-all
+ctrl + a
+
+# doc select-lines
+ctrl + l
+
+# doc toggle-line-comments
+ctrl + escape
+
+# doc duplicate-lines
+ctrl + shift + d
+
+# doc delete-lines
+ctrl + shift + k
+
+# doc move-lines-{up,down}
+ctrl + {up,down}
+
+# doc move-to-previous-word-start
+ctrl + left
+
+# doc move-to-next-word-end
+ctrl + right
+
+# doc move-to-previous-block-start
+ctrl + braketleft
+
+# doc move-to-next-block-end
+ctrl + braketright
+
+# doc move-to-start-of-indentation
+home
+
+# doc move-to-end-of-line
+end
+
+# doc move-to-{start,end}-of-doc
+ctrl + {home,end}
+
+# doc move-to-{previous,next}-page
+pageup,pagedown
+
+# doc select-to-{previous,next}-char
+shift + {left,righ}
+
+# doc select-to-{previous,next}-line
+shift + {up,down}
+
+# doc select-to-previous-word-start
+ctrl + shift + left
+
+# doc select-to-next-word-end
+ctrl + shift + right
+
+# doc select-to-previous-block-start
+ctrl + shift + braketleft
+
+# doc select-to-next-block-end
+ctrl + shift + braketright
+
+# doc select-to-start-of-indentation
+shift + home
+
+# doc select-to-end-of-line
+shift + end
+
+# doc select-to-{start,end}-of-doc
+ctrl + shift + {home,end}
+
+# doc select-to-{previous,next}-page
+shift + {pageup,pagedown}
+
+# doc create-cursor-{previous,next}-line
+ctrl + shift + {up,down}
+
+# exterm open-terminal
+f7
+
+# minimap toggle-visibility
+shift + delete
+
+# command escape doc select-none dialog select-no
+escape
+
+# command complete doc indent
+tab
+
+# command submit doc newline dialog select
+return
+
+# command submit doc newline dialog select
+keypad enter
+
+# find-replace select-next doc select-word
+ctrl + d
+
+# doc move-to-{previous,next}-char dialog {previous,next}-entry
+left,right
+
+# command select-{previous,next} doc move-to-{previous,next}-line
+up,down
+

@@ -1,0 +1,1 @@
+return { path = "/home/archangel/Documents/Downloads", documents = {["type"]="leaf",["active_view"]=1,["views"]={[1]={["scroll"]={["to"]={["y"]=0,["x"]=0},["x"]=0,["y"]=0},["active"]=false,["module"]="core.emptyview",["type"]="view"}}}, directories = {} }
