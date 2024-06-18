@@ -85,7 +85,8 @@ _GetMode() {
             
             wmctrl -d | awk '{print $NF}' > "$NWSN"
             mapfile -t prevWsLayouts < <(
-                dkcmd status type=ws num=1 | jq -r '.workspaces | .[] | .layout'
+                dkcmd status type=ws num=1 \
+                | jq -r '.workspaces | .[] | .layout'
             )
             _ChangeMode --default
             _ApplyNewWsNames
