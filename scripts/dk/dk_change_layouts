@@ -6,7 +6,8 @@
 #
 # Scenario:
 #    Three monitors setup.
-#    This script change focused workspace layout and toggles monocle/previous layout.
+#    This script change focused workspace layout and toggles monocle/previous layout,
+#    static/dynamic mode.
 #    A polybar module is triggered and let us know if we are in static/dynamic mode,
 #    of course workspaces indicators are renamed as we change layouts (1:G,2:R,3:T etc...)
 #    Uppercase letters meaning:
