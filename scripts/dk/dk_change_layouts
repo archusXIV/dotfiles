@@ -75,7 +75,7 @@ _ChangeMode() {
     esac
 }
 
-currentMode=$(
+currentModeStatic=$(
     dkcmd status type=full num=1 \
     | awk -F, '
         /global/{
@@ -87,7 +87,7 @@ currentMode=$(
 
 _GetMode() {
     
-    if [[ $currentMode = false ]]; then
+    if [[ $currentModeStatic = false ]]; then
         
         if grep -qF 'static_ws=true' "$DKRC"; then
             
@@ -110,7 +110,7 @@ _GetMode() {
             # workspaces will not be ordered if not already.
             _ChangeMode --static
         fi
-    elif [[ $currentMode = true ]]; then
+    elif [[ $currentModeStatic = true ]]; then
         _ChangeMode --dynamic
     fi
 }
