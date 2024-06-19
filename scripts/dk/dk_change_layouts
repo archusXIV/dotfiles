@@ -82,7 +82,7 @@ currentMode=$(
             gsub(/"/,"");
             sub(/static_ws:/,"");
             print $2
-        }'
+    }'
 )
 
 _GetMode() {
