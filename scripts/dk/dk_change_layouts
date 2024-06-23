@@ -3,7 +3,7 @@
 # Author: Barret E <archus@protonmail.com>
 # 2024-06-14
 # Dependencies: jq wmctrl
-#
+# Polybar module: https://github.com/archusXIV/dotfiles/blob/main/polybar/conf.d/active-modules-bar3.ini#L4
 # Scenario:
 #    This script change focused workspace layout
 #    and toggles monocle/previous layout, static/dynamic mode.
