@@ -6,8 +6,8 @@
 #
 # Scenario:
 #    Three monitors setup.
-#    This script change focused workspace layout and toggles monocle/previous layout,
-#    static/dynamic mode.
+#    This script change focused workspace layout
+#    and toggles monocle/previous layout, static/dynamic mode.
 #    A polybar module is triggered and let us know if we are in static/dynamic mode,
 #    of course workspaces indicators are renamed as we change layouts (1:G,2:R,3:T etc...)
 #    Uppercase letters meaning:
@@ -17,16 +17,6 @@
 DKRC="$HOME/.config/dk/dkrc"
 NWSN="$XDG_CACHE_HOME/new_ws_names"
 FDL="$XDG_CACHE_HOME/focused_desktop_layout"
-
-_ApplyNewWsNames() {
-    n=1
-    while read -r line; do
-        dkcmd set ws="$n" name="$line"
-        ((n++))
-    done < "$NWSN"
-    unset line
-    rm "$NWSN"
-}
 
 _SetNewFocusedName() {
     wmctrl -d | while read -r line; do
@@ -38,6 +28,16 @@ _SetNewFocusedName() {
         fi
     done
     unset line
+}
+
+_ApplyNewWsNames() {
+    n=1
+    while read -r line; do
+        dkcmd set ws="$n" name="$line"
+        ((n++))
+    done < "$NWSN"
+    unset line
+    rm "$NWSN"
 }
 
 _TriggerNewNames() {
@@ -86,30 +86,34 @@ currentModeStatic=$(
 )
 
 _GetMode() {
-    
+
     if [[ $currentModeStatic = false ]]; then
-        
+
         if grep -qF 'static_ws=true' "$DKRC"; then
-            
+
             wmctrl -d | awk '{print $NF}' > "$NWSN"
             mapfile -t prevWsLayouts < <(
                 dkcmd status type=ws num=1 \
                 | jq -r '.workspaces | .[] | .layout'
             )
+
             _ChangeMode --default
             _ApplyNewWsNames
-            
+
             wsn=1
             for wslayout in "${prevWsLayouts[@]}"; do
                 dkcmd set ws="$wsn" layout "$wslayout"
                 ((wsn++))
                 sleep 0.1
             done
+
             unset prevWsLayouts
+
         else
             # workspaces will not be ordered if not already.
             _ChangeMode --static
         fi
+
     elif [[ $currentModeStatic = true ]]; then
         _ChangeMode --dynamic
     fi
@@ -117,25 +121,49 @@ _GetMode() {
 
 _SetLayout() { dkcmd set layout "$1"; }
 
+FocusedWsNum=$(
+    dkcmd status type=ws num=1 \
+    | jq -r '
+        .workspaces | .[] | select(.focused==true) | .number
+    '
+)
+
+FocusedWsLayout=$(
+    dkcmd status type=ws num=1 \
+    | jq -r '
+        .workspaces | .[] | select(.focused==true) | .layout
+    '
+)
+
 _ToggleMono() {
-    if [[ ! -f $FDL ]]; then
-        dkcmd status type=layout num=1 \
-        | jq '.[]' | sed 's/"//g' > "$FDL"
+    
+    if [[ $FocusedWsLayout != mono ]]; then
+
+        echo "$FocusedWsLayout" > "$FDL"_"$FocusedWsNum"
+
         _SetLayout mono
         SYMBOL="M"
         _TriggerNewNames
+    
     else
+        
         dkcmd win focus last 2>/dev/null
-        _SetLayout "$(cat "$FDL")"
-        if [[ $(cat "$FDL") = tstack ]]; then
+        _SetLayout "$(cat "$FDL"_"$FocusedWsNum")"
+        
+        if [[ $(cat "$FDL"_"$FocusedWsNum") = tstack ]]; then
             SYMBOL="W"
         else
-            SYMBOL=$(sed 's/./\U&/;s/[[:lower:]]//g' < "$FDL")
+            SYMBOL=$(
+                sed 's/./\U&/;s/[[:lower:]]//g' < "$FDL"_"$FocusedWsNum"
+            )
         fi
+        
         _TriggerNewNames
-        rm "$FDL"
+        rm "$FDL"_"$FocusedWsNum" 2>/dev/null
+
     fi
 }
+
 # 9 available layouts, toggle {mono/last,static/dynamic}
 case "$1" in
     alternate) SYMBOL="A"; _SetLayout dwindle && _TriggerNewNames ;;
