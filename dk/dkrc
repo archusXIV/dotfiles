@@ -56,14 +56,17 @@ logfile="$HOME/.config/dk/dkrc.log"
         blu=$(xrdb -query | awk '/color4:/{print $NF}')
         red=$(xrdb -query | awk '/color1:/{print $NF}')
 
-        dkcmd set border colour \
-        {focus,outer_focus}="$blu" \
-        {urgent,outer_urgent}="$red" \
-        {unfocus,outer_unfocus}="$blk"
+    else
 
-    # else
-    #    defaults defined @compilation time will be applied.
+        blk='#222222'
+        blu='#6699cc'
+        red='#ee5555'
     fi
+
+    dkcmd set border colour \
+    {focus,outer_focus}="$blu" \
+    {urgent,outer_urgent}="$red" \
+    {unfocus,outer_unfocus}="$blk"
 
     _WindowsRules
 
