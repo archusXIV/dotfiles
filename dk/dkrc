@@ -1,12 +1,11 @@
 #!/bin/bash
 
-# shellcheck disable=SC2034
+# shellcheck disable=SC1091,SC2034
 ############## DK WINDOW MANAGER CONFIGURATION FILE version 2.2 ##############
 # determine where to place the log file
 logfile="$HOME/.config/dk/dkrc.log"
 : > "$logfile"
 
-# shellcheck disable=SC1091
 # let's include our windows rules
 . "$HOME"/.config/dk/_WindowsRules
 
