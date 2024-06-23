@@ -5,14 +5,13 @@
 # options: dk_sendthemall -s (send) <workspace>
 #          dk_sendthemall -f (follow) <workspace>
 
+_SendThemAllTo() {
+    for win in $(xdo id -d); do
+        dkcmd ws send "$2"
+    done
+}
+
 case "$1" in
-    -s) for win in $(xdo id -d); do
-            dkcmd ws send "$2"
-        done
-    ;;
-    -f) for win in $(xdo id -d); do
-            dkcmd ws send "$2"
-        done
-        dkcmd ws "$2"
-    ;;
+    -s) _SendThemAllTo ;;
+    -f) _SendThemAllTo && dkcmd ws "$2" ;;
 esac
