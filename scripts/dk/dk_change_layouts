@@ -96,7 +96,7 @@ _GetMode() {
                 dkcmd status type=ws num=1 \
                 | jq -r '.workspaces | .[] | .layout'
             )
-
+            # reordering workspaces across all monitors
             _ChangeMode --default
             _ApplyNewWsNames
 
