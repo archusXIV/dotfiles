@@ -24,6 +24,7 @@ FocusedWsNum=$(
         .workspaces | .[] | select(.focused==true) | .number
     '
 )
+
 FocusedWsLayout=$(
     dkcmd status type=ws num=1 \
     | jq -r '
