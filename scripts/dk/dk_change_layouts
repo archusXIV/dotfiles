@@ -31,6 +31,16 @@ FocusedWsLayout=$(
     '
 )
 
+currentModeStatic=$(
+    dkcmd status type=full num=1 \
+    | awk -F, '
+        /global/{
+            gsub(/"/,"")
+            sub(/static_ws:/,"")
+            print $2
+    }'
+)
+
 _SetNewFocusedName() {
     wmctrl -d | while read -r line; do
         if [[ $line =~ '*' ]]; then
@@ -87,16 +97,6 @@ _ChangeMode() {
         ;;
     esac
 }
-
-currentModeStatic=$(
-    dkcmd status type=full num=1 \
-    | awk -F, '
-        /global/{
-            gsub(/"/,"")
-            sub(/static_ws:/,"")
-            print $2
-    }'
-)
 
 _GetMode() {
 
