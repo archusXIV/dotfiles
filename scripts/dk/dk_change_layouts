@@ -2,8 +2,9 @@
 
 # Author: Barret E <archus@protonmail.com>
 # 2024-06-14
-# Dependencies: jq wmctrl
-# Polybar module: https://github.com/archusXIV/dotfiles/blob/main/polybar/conf.d/active-modules-bar3.ini#L4
+# Dependencies: jq wmctrl polybar (optional)
+# Polybar module:
+# https://github.com/archusXIV/dotfiles/blob/main/polybar/conf.d/active-modules-bar3.ini#L4
 # Scenario:
 #    This script change focused workspace layout
 #    and toggles monocle/previous layout, static/dynamic mode.
@@ -17,6 +18,18 @@
 DKRC="$HOME/.config/dk/dkrc"
 NWSN="$XDG_CACHE_HOME/new_ws_names"
 FDL="$XDG_CACHE_HOME/focused_desktop_layout"
+FocusedWsNum=$(
+    dkcmd status type=ws num=1 \
+    | jq -r '
+        .workspaces | .[] | select(.focused==true) | .number
+    '
+)
+FocusedWsLayout=$(
+    dkcmd status type=ws num=1 \
+    | jq -r '
+        .workspaces | .[] | select(.focused==true) | .layout
+    '
+)
 
 _SetNewFocusedName() {
     wmctrl -d | while read -r line; do
@@ -79,8 +92,8 @@ currentModeStatic=$(
     dkcmd status type=full num=1 \
     | awk -F, '
         /global/{
-            gsub(/"/,"");
-            sub(/static_ws:/,"");
+            gsub(/"/,"")
+            sub(/static_ws:/,"")
             print $2
     }'
 )
@@ -96,10 +109,11 @@ _GetMode() {
                 dkcmd status type=ws num=1 \
                 | jq -r '.workspaces | .[] | .layout'
             )
-            # reordering workspaces across all monitors
+            # reordering workspaces across all monitors and default layouts.
             _ChangeMode --default
             _ApplyNewWsNames
 
+            # applying the previous layouts, not the defaults.
             wsn=1
             for wslayout in "${prevWsLayouts[@]}"; do
                 dkcmd set ws="$wsn" layout "$wslayout"
@@ -121,20 +135,6 @@ _GetMode() {
 
 _SetLayout() { dkcmd set layout "$1"; }
 
-FocusedWsNum=$(
-    dkcmd status type=ws num=1 \
-    | jq -r '
-        .workspaces | .[] | select(.focused==true) | .number
-    '
-)
-
-FocusedWsLayout=$(
-    dkcmd status type=ws num=1 \
-    | jq -r '
-        .workspaces | .[] | select(.focused==true) | .layout
-    '
-)
-
 _ToggleMono() {
     
     if [[ $FocusedWsLayout != mono ]]; then
@@ -144,8 +144,8 @@ _ToggleMono() {
         _SetLayout mono
         SYMBOL="M"
         _TriggerNewNames
-    
-    else
+        
+    elif [[ -f "$FDL"_"$FocusedWsNum" ]]; then
         
         dkcmd win focus last 2>/dev/null
         _SetLayout "$(cat "$FDL"_"$FocusedWsNum")"
@@ -161,6 +161,8 @@ _ToggleMono() {
         _TriggerNewNames
         rm "$FDL"_"$FocusedWsNum" 2>/dev/null
 
+    else
+        notify-send "layout mono is the ws $FocusedWsNum default."
     fi
 }
 
