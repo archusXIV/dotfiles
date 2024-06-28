@@ -2,76 +2,69 @@
 
 # shellcheck disable=SC1091,SC2034
 ############## DK WINDOW MANAGER CONFIGURATION FILE version 2.2 ##############
-# determine where to place the log file
-logfile="$HOME/.config/dk/dkrc.log"
-: > "$logfile"
 
 # let's include our windows rules
 . "$HOME"/.config/dk/_WindowsRules
 
-{ # compound command to redirect all output
+# workspace settings
+# ------------------------
+# initialize 9 workspaces (1-9) (default: 1/monitor)
+dkcmd set numws=9
 
-    # workspace settings
-    # ------------------------
-    # initialize 9 workspaces (1-9) (default: 1/monitor)
-    dkcmd set numws=9
+# default workspace '_' values used when allocating new workspaces
+# can be applied to all existing workspaces when passed 'apply' after ws=_
+dkcmd set ws=_ apply layout=rtile master=1 stack=3 \
+pad {l,r,t,b}=6 gap=5 msplit=0.67 ssplit=0.5
 
-    # default workspace '_' values used when allocating new workspaces
-    # can be applied to all existing workspaces when passed 'apply' after ws=_
-    dkcmd set ws=_ apply layout=rtile master=1 stack=3 \
-    pad {l,r,t,b}=6 gap=5 msplit=0.67 ssplit=0.5
+# none default layouts
+dkcmd set ws=1 layout=grid
+dkcmd set ws=4 layout=tstack msplit=0.80
+dkcmd set ws=7 layout=mono
 
-    # none default layouts
-    dkcmd set ws=1 layout=grid
-    dkcmd set ws=4 layout=tstack msplit=0.80
-    dkcmd set ws=7 layout=mono
+# xrandr --listactivemonitors | awk '{sub(/Monitor.*/,""); print $NF}'
+# these are environment variables and needed elsewhere.
+export MONITOR1='DVI-D-0'
+export MONITOR2='HDMI-0'
+export MONITOR3='DP-0'
 
-    # xrandr --listactivemonitors | awk '{sub(/Monitor.*/,""); print $NF}'
-    # these are environment variables and needed elsewhere.
-    export MONITOR1='DVI-D-0'
-    export MONITOR2='HDMI-0'
-    export MONITOR3='DP-0'
+# A="dwindle" D="dyntile" G="grid" M="mono" N="none"
+# R="rtile" S="spiral" T="tile" W="tstack"
+# grid   dyntile   rtile   mono   tstack   dwindle   tile   none   spiral 
+dkcmd set static_ws=true \
+ws=1 name='1:G' mon=$MONITOR1 ws=2 name='2:R' mon=$MONITOR1 ws=3 name='3:R' mon=$MONITOR1 \
+ws=4 name='4:W' mon=$MONITOR2 ws=5 name='5:R' mon=$MONITOR2 ws=6 name='6:R' mon=$MONITOR2 \
+ws=7 name='7:M' mon=$MONITOR3 ws=8 name='8:R' mon=$MONITOR3 ws=9 name='9:R' mon=$MONITOR3
 
-    # A="dwindle" D="dyntile" G="grid" M="mono" N="none"
-    # R="rtile" S="spiral" T="tile" W="tstack"
-    # grid   dyntile   rtile   mono   tstack   dwindle   tile   none   spiral 
-    dkcmd set static_ws=true \
-    ws=1 name='1:G' mon=$MONITOR1 ws=2 name='2:R' mon=$MONITOR1 ws=3 name='3:R' mon=$MONITOR1 \
-    ws=4 name='4:W' mon=$MONITOR2 ws=5 name='5:R' mon=$MONITOR2 ws=6 name='6:R' mon=$MONITOR2 \
-    ws=7 name='7:M' mon=$MONITOR3 ws=8 name='8:R' mon=$MONITOR3 ws=9 name='9:R' mon=$MONITOR3
+dkcmd set {focus_open,tile_tohead,obey_motif}=true
+dkcmd set {focus_{mouse,urgent},tile_hints,smart_{border,gap}}=false
+dkcmd set win_{minwh,minxy}=50
+dkcmd set mouse mod=super move=button1 resize=button2
 
-    dkcmd set {focus_open,tile_tohead,obey_motif}=true
-    dkcmd set {focus_{mouse,urgent},tile_hints,smart_{border,gap}}=false
-    dkcmd set win_{minwh,minxy}=50
-    dkcmd set mouse mod=super move=button1 resize=button2
+# borders
+dkcmd set border width=2 outer_width=1
 
-    # borders
-    dkcmd set border width=2 outer_width=1
+if [ -e "$RESOURCES_FILE" ]; then
+    blk=$(xrdb -query | awk '/color8:/{print $NF}')
+    blu=$(xrdb -query | awk '/color4:/{print $NF}')
+    red=$(xrdb -query | awk '/color1:/{print $NF}')
+else
+    blk='#222222'
+    blu='#6699cc'
+    red='#ee5555'
+fi
+    
+dkcmd set border colour \
+{focus,outer_focus}="$blu" \
+{urgent,outer_urgent}="$red" \
+{unfocus,outer_unfocus}="$blk"
+    
+_WindowsRules
 
-    if [ -e "$RESOURCES_FILE" ]; then
-        blk=$(xrdb -query | awk '/color8:/{print $NF}')
-        blu=$(xrdb -query | awk '/color4:/{print $NF}')
-        red=$(xrdb -query | awk '/color1:/{print $NF}')
-    else
-        blk='#222222'
-        blu='#6699cc'
-        red='#ee5555'
-    fi
+command -v polybar_start >/dev/null && polybar_start &
 
-    dkcmd set border colour \
-    {focus,outer_focus}="$blu" \
-    {urgent,outer_urgent}="$red" \
-    {unfocus,outer_unfocus}="$blk"
+[ -p "$SXHKD_FIFO" ] && rm -f "$SXHKD_FIFO"
+command -v sxhkd_start >/dev/null && sxhkd_start &
 
-    _WindowsRules
-
-    command -v polybar_start >/dev/null && polybar_start &
-
-    [ -p "$SXHKD_FIFO" ] && rm -f "$SXHKD_FIFO"
-    command -v sxhkd_start >/dev/null && sxhkd_start &
-
-    dkcmd mon view $MONITOR2; dkcmd ws view 4
-
-} >> "$logfile" 2>&1
+dkcmd mon view $MONITOR2; dkcmd ws view 4
 
 exit 0
