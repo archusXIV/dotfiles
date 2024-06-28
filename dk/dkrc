@@ -41,7 +41,6 @@ logfile="$HOME/.config/dk/dkrc.log"
     ws=7 name='7:M' mon=$MONITOR3 ws=8 name='8:R' mon=$MONITOR3 ws=9 name='9:R' mon=$MONITOR3
 
     dkcmd set {focus_open,tile_tohead,obey_motif}=true
-    dkcmd set {focus_urgent,tile_hints,smart_{border,gap}}=false
     dkcmd set {focus_{mouse,urgent},tile_hints,smart_{border,gap}}=false
     dkcmd set win_{minwh,minxy}=50
     dkcmd set mouse mod=super move=button1 resize=button2
