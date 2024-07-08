@@ -16,16 +16,17 @@
 
 # shellcheck disable=SC2049,SC2076
 DKRC="$HOME/.config/dk/dkrc"
-NWSN="$XDG_CACHE_HOME/new_ws_names"
-FDL="$XDG_CACHE_HOME/focused_desktop_layout"
-FocusedWsNum=$(
+NWSN="$HOME/.cache/new_ws_names"
+FWSL="$HOME/.cache/focused_ws_layout"
+
+focusedWsNum=$(
     dkcmd status type=ws num=1 \
     | jq -r '
         .workspaces | .[] | select(.focused==true) | .number
     '
 )
 
-FocusedWsLayout=$(
+focusedWsLayout=$(
     dkcmd status type=ws num=1 \
     | jq -r '
         .workspaces | .[] | select(.focused==true) | .layout
@@ -75,7 +76,7 @@ _BarStatic() {
     action "#static_ws-ipc.hook.${hooknum}" >/dev/null 2>&1
 }
 
-_ChangeMode() {
+_ToggleMode() {
     local hooknum
     case "$1" in
         --default)
@@ -111,7 +112,7 @@ _GetMode() {
                 | jq -r '.workspaces | .[] | .layout'
             )
             # reordering workspaces across all monitors and default layouts.
-            _ChangeMode --default
+            _ToggleMode --default
             _ApplyNewWsNames
 
             # applying the previous layouts, not the defaults.
@@ -126,44 +127,44 @@ _GetMode() {
 
         else
             # workspaces will not be ordered if not already.
-            _ChangeMode --static
+            _ToggleMode --static
         fi
 
     elif [[ $currentModeStatic = true ]]; then
-        _ChangeMode --dynamic
+        _ToggleMode --dynamic
     fi
 }
 
 _SetLayout() { dkcmd set layout "$1"; }
 
 _ToggleMono() {
-    
-    if [[ $FocusedWsLayout != mono ]]; then
 
-        echo "$FocusedWsLayout" > "$FDL"_"$FocusedWsNum"
+    if [[ $focusedWsLayout != mono ]]; then
+
+        echo "$focusedWsLayout" > "$FWSL"_"$focusedWsNum"
 
         _SetLayout mono
         SYMBOL="M"
         _TriggerNewNames
-        
-    elif [[ -f "$FDL"_"$FocusedWsNum" ]]; then
-        
+
+    elif [[ -f "$FWSL"_"$focusedWsNum" ]]; then
+
         dkcmd win focus last 2>/dev/null
-        _SetLayout "$(cat "$FDL"_"$FocusedWsNum")"
-        
-        if [[ $(cat "$FDL"_"$FocusedWsNum") = tstack ]]; then
+        _SetLayout "$(cat "$FWSL"_"$focusedWsNum")"
+
+        if [[ $(cat "$FWSL"_"$focusedWsNum") = tstack ]]; then
             SYMBOL="W"
         else
             SYMBOL=$(
-                sed 's/./\U&/;s/[[:lower:]]//g' < "$FDL"_"$FocusedWsNum"
+                sed 's/./\U&/;s/[[:lower:]]//g' < "$FWSL"_"$focusedWsNum"
             )
         fi
-        
+
         _TriggerNewNames
-        rm "$FDL"_"$FocusedWsNum" 2>/dev/null
+        rm "$FWSL"_"$focusedWsNum" 2>/dev/null
 
     else
-        notify-send "layout mono is the ws $FocusedWsNum default."
+        notify-send "layout mono is the ws $focusedWsNum default."
     fi
 }
 
@@ -179,6 +180,6 @@ case "$1" in
     tstack   ) SYMBOL="W"; _SetLayout tstack && _TriggerNewNames ;;
     mono     ) _ToggleMono ;;
     false    ) _GetMode ;;
-    static   ) _ChangeMode --static ;;
-    dynamic  ) _ChangeMode --dynamic ;;
+    static   ) _ToggleMode --static ;;
+    dynamic  ) _ToggleMode --dynamic ;;
 esac
