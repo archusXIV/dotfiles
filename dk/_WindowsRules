@@ -13,27 +13,25 @@ _WindowsRules() {
         focus=true float=true
     done < "$HOME"/.config/dk/FloatingApps
 
-    # add windows classes/instances in those lists =========================================================#
+    # add windows classes/instances in those lists =============================================================#
     
     dkcmd rule class="^URxvt$" instance="^(cmus|ncmpcpp|pulsemixer|ripper)$" ws=1 focus=true
     dkcmd rule class="^(feh|Zathura)$"                                       ws=2 focus=true
     dkcmd rule class="^URxvt$" instance="^(ranger|sudoranger|youtube)$"      ws=3 focus=true
     dkcmd rule class="^(code-oss|Geany|lite-xl)$"                            ws=4 focus=true
-    dkcmd rule class="^(virt-manager|VirtualBox)$"                           ws=5 focus=true ignore_cfg=true
+    dkcmd rule class="^(virt-manager|VirtualBox)$"                           ws=5 focus=true
     dkcmd rule class="^mpv$" instance="^gl$"                                 ws=5 focus=true
     dkcmd rule class="^URxvt$" instance="^(htop|jnettop|newsboat)$"          ws=6 focus=true
     dkcmd rule class="^(Chromium|firefox)$"                                  ws=7 focus=true
     dkcmd rule class="^(file-roller|filezilla|Pcmanfm)$"                     ws=8 focus=true
     dkcmd rule class="^(obs|SimpleScreenRecorder)$"                          ws=9 focus=true
 
-    # Other rules ================================================ attributs ======================================#
+    # Other rules ================================================ attributs ===================================#
     
-    dkcmd rule class="^Five-or-more$"                             focus=true float=true x=2647 y=310 w=434 h=488
+    dkcmd rule class="^Five-or-more$"                             focus=true float=true w=434 h=488
     dkcmd rule instance="^(aur-cli|Browser|floaterm|pacman-cli)$" focus=true float=true
-    dkcmd rule class="^qvidcap$"                                  ws=4 focus=true float=true x=3420 y=720 w=400 h=305
     dkcmd rule class="^URxvt$" instance="^liteterm$"              ws=4 focus=true float=true
-    dkcmd rule class="^URxvt$" instance="^mpm$"                   focus=true float=true w=1260 h=738
-    dkcmd rule class="^URxvt$" instance="^bashterm$"              focus=true float=true w=1260 h=738
+    dkcmd rule class="^URxvt$" instance="^(bashterm|mpm)$"        focus=true float=true w=1260 h=738
     dkcmd rule class="^Screenkey$"                                ignore_cfg=true ignore_msg=true
 
     dkcmd rule apply '*'
