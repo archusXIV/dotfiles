@@ -47,6 +47,14 @@ typeset -a BASE_PKGS=(
 "alsa-firmware"
 "alsa-lib"
 "alsa-plugins"
+"archlabs-baph"
+"archlabs-fonts"
+"archlabs-icons"
+"archlabs-keyring"
+"archlabs-scripts"
+"archlabs-skel-base"
+"archlabs-themes"
+"archlabs-wallpapers"
 "htop"
 "ffmpeg"
 "imagemagick"
@@ -68,6 +76,10 @@ typeset -a BASE_PKGS=(
 "xorg"
 "xorg-xwayland"
 "xorg-drivers" # TODO: should we only install specific drivers?
+
+# all the sessions we offer use these
+"archlabs-i3lock-color"
+"archlabs-i3lock-fancy"
 "rofi"
 ) # }
 
@@ -78,7 +90,7 @@ typeset -a WM_PKGS=(
 "polkit-gnome"
 "arandr"
 "dunst"
-"exo"
+# "exo"
 "feh"
 "nitrogen"
 "picom"
@@ -683,7 +695,7 @@ select_mirrors()
 	Portugal PT
 	Romania RO
 	Russia RU
-	RÃ©union RE
+	Réunion RE
 	Serbia RS
 	Singapore SG
 	Slovakia SK
@@ -1884,7 +1896,7 @@ install_user()
 		cat > "$MNT/home/$NEWUSER/packages" <<- EOF
 		#!/bin/bash
 		sudo pacman -Syyu ${FAIL_PKG[*]} --needed --noconfirm || exit
-		rm -f /home/$NEWUSER/packages
+		rm -f /home/$NEWUSER/packages"
 		EOF
 	fi
 }
@@ -2024,7 +2036,12 @@ install_packages()
 	# but I'm done doing this manually every time the arch repos change
 	for pkg in "${inpkg[@]}"; do
 		if pacman -Ssq "^$pkg$" >/dev/null 2>&1; then
-			goodinpkg+=("$pkg")
+			if [[ $pkg =~ archlabs- ]]; then
+				# if it's an AL package we separate it and do an install for just them
+				alpkg+=("$pkg")
+			else
+				goodinpkg+=("$pkg")
+			fi
 		else
 			echo "package missing or no longer available: $pkg -- ignoring"
 			sleep 0.5
@@ -2034,6 +2051,39 @@ install_packages()
 	if [[ "${goodinpkg[*]}" ]]; then
 		chrun "pacman -S ${goodinpkg[*]} --needed --noconfirm" 2> "$ERR" 2>&1
 		errshow 1 "chrun 'pacman -S ${goodinpkg[*]} --needed --noconfirm'"
+	fi
+
+	# install the ArchLabs packages, if it fails we'll inform the user and try again
+	if [[ ${alpkg[*]} ]] && ! chrun "pacman -S ${alpkg[*]} --needed --noconfirm" 2> "$ERR" 2>&1; then
+		skelpkg=()
+		restpkg=()
+		echo "An error occurred during ArchLabs package install... Retrying"
+		sleep 1
+		# split skel packages from the rest
+		for pkg in "${alpkg[@]}"; do
+			if [[ $pkg =~ skel ]]; then
+				skelpkg+=("$pkg")
+			else
+				restpkg+=("$pkg")
+			fi
+		done
+
+		if [[ "${skelpkg[*]}" ]]; then
+			# if the skel packages aren't installed the created user's home will be empty
+			chrun "pacman -S ${skelpkg[*]} --needed --noconfirm" 2> "$ERR" 2>&1
+			errshow 1 "chrun 'pacman -S ${skelpkg[*]} --needed --noconfirm'"
+		fi
+
+		# other packages can be installed after if they fail again
+		if ! chrun "pacman -Syyu ${restpkg[*]} --needed --noconfirm" 2> "$ERR" 2>&1; then
+			echo
+			echo "Unable to install ArchLabs packages... Creating package list at /home/$NEWUSER/packages"
+			echo
+			echo "On first boot run: bash ~/packages"
+			echo
+			FAIL_PKG=("${restpkg[@]}")
+			sleep 2
+		fi
 	fi
 
 	# bootloader packages
@@ -2050,7 +2100,7 @@ install_packages()
 	fi
 
 	if [[ $VIRT == 'oracle' ]]; then
-		chrun "pacman -S ${KERNEL}-headers virtualbox-guest-utils virtualbox-guest-dkms --needed --noconfirm"
+		chrun "pacman -S ${KERNEL}-headers virtualbox-guest-utils --needed --noconfirm"
 	fi
 
 	chrun "pacman -Syyu --noconfirm" 2> "$ERR" 2>&1
@@ -2085,7 +2135,7 @@ install_check_bg()
 			chrun "pacman-key --lsign-key '$key'"
 		fi
 		chrun "pacman -Syyu --noconfirm"
-		chrun "pacman -S archlinux-keyring --noconfirm"
+		chrun "pacman -S archlinux-keyring archlabs-keyring --noconfirm"
 		chrun "pacman -S ${ISO_PKGS[*]} $luks $NET_TYPE --noconfirm --needed"
 
 	} >> /tmp/bgout 2>&1
@@ -2233,7 +2283,7 @@ install_background()
 				chrun "pacman-key --finger '$key'"
 				chrun "pacman-key --lsign-key '$key'"
 			fi
-			chrun "pacman -S archlinux-keyring --noconfirm"
+			chrun "pacman -S archlinux-keyring archlabs-keyring --noconfirm"
 			chrun "pacman -S ${ISO_PKGS[*]} $luks $NET_TYPE --noconfirm --needed"
 
 		} >> /tmp/bgout 2>&1
@@ -2305,7 +2355,7 @@ config_lightdm()
 {
 	sed -i "/greeter-session=/ c greeter-session=lightdm-$LIGHTDM_GREETER" "$MNT/etc/lightdm/lightdm.conf"
 
-	if [[ $LIGHTDM_GREETER == 'gtk-greeter' && $DIST == "Arch" ]]; then
+	if [[ $LIGHTDM_GREETER == 'gtk-greeter' && $DIST == "ArchLabs" ]]; then
 		mkdir -p "$MNT/etc/lightdm"
 		cat > "$MNT/etc/lightdm/lightdm-gtk-greeter.conf" <<- EOF
 		[greeter]
@@ -3732,4 +3782,3 @@ while :; do
 done
 
 # vim:fdm=marker:fmr={,}
-
