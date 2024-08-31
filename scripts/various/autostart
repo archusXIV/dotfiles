@@ -29,8 +29,5 @@ rsync -apq "$SCRIPTDIR"/* "$HOME"/Documents/scripts/ &
 rsync -apq --exclude 'VirtualBox' --exclude 'virt-manager' \
 "$XDG_CONFIG_HOME"/* "$HOME"/Documents/configs/CONFIGS/ &
 
-# Updating blocklist
-sudo hblock -H /etc/hosts_ &
-
 # Updates checking script
 sleep 10s && updates-manager --check
