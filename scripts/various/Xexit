@@ -1,23 +1,24 @@
 #!/bin/bash
 
 declare -a session=(
-"at-spi-dbus-bus" \
-"dbus" \
-"dunst" \
-"gnome-keyring-daemon.service" \
-"polkit-gnome.service" \
-"powerline-daemon.service"
-"gvfs-daemon" \
-"mpd" \
-"pulseaudio"
+    "at-spi-dbus-bus"
+    "dbus"
+    "dunst"
+    "gnome-keyring-daemon.service"
+    "polkit-gnome.service"
+    "powerline-daemon.service"
+    "gvfs-daemon"
+    "mpd"
+    "pulseaudio"
 )
 
 for service in "${session[@]}"; do
     systemctl --user stop "$service"
 done
 
+systemctl --user stop Xsession.target
+
 [[ -S /tmp/dk__0_0.socket ]] && rm -f /tmp/dk__0_0.socket
-rm /tmp/polybar_mqueue.* 2>/dev/null
-sudo rm -f /tmp/serverauth.*
+rm -f /tmp/{serverauth,polybar_mqueue}.*
 # powerline-daemon --kill
-pkill -9 -u $USER
+pkill -9 -u "$USER"
