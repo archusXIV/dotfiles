@@ -6,7 +6,6 @@
 # Yet Another Updates Manager Script for Arch Linux based systems.
 # Checks for updates, lists them in a readable file, update your polybar module.
 # timeshift is used to create a snapshot before update procedure
-# Of course you need sudo privileges without entering a password
 
 : "${XDG_RUNTIME_DIR:-/run/user/1000}"
 
@@ -109,22 +108,29 @@ _YesNoPrompt() {
 }
 
 _Snapshot() {
+
+    local OLDER_SNAPSHOT SNAPSHOT_NAME
     # will remove the second snapshot & create a new one.
-    if [[ $(command -v timeshift) ]]; then
+    if command -v timeshift >/dev/null; then
+        sudo mount /dev/sdb2 /mnt
         # The first snapshot in the list is the "after system installation"
         # awk '/^1/{print $3}' will match the second snapshot.
-        if [[ -n $(sudo timeshift --list | awk '/^1/{print $3}') ]]; then
-            SNAP=$(sudo timeshift --list | awk '/^1/{print $3}')
-            sudo timeshift --delete --snapshot "$SNAP"
+        OLDER_SNAPSHOT=$(sudo timeshift --list | awk '/^1/{print $1}')
+        SNAPSHOT_NAME=$(sudo timeshift --list | awk '/^1/{print $3}')
+
+        if [[ $OLDER_SNAPSHOT = '1' ]]; then
+            sudo timeshift --delete --snapshot "$SNAPSHOT_NAME"
             sudo timeshift --create --skip-grub --comment "Before updates"
             sleep 2
         else
             sudo timeshift --create --skip-grub --comment "Before updates"
         fi
+        sudo umount -R /mnt
     else
         echo " ${green}Timeshift is not installed...${nocolor}"
         sleep 2
     fi
+
 }
 
 MIRR="/etc/pacman.d/mirrorlist"
@@ -146,7 +152,7 @@ _NoReboot() {
     _Snapshot
     _Installation
     # cleaning our lists from old packages updates.
-    sed -i '/[[:graph:]]/d' {"$ARCH","$AUR","$ARCHAUR"}
+    sed -i '1,$d' {"$ARCH","$AUR","$ARCHAUR"}
     _PolybarHook
     exit 0
 }
@@ -157,28 +163,7 @@ _Poweroff() {
     sudo poweroff
 }
 
-_Criteria() {
-    # default is reboot.
-    # by pressing Enter we will get the default action.
-    echo ""
-    _YesNoPrompt -n " ${red}Poweroff ${nocolor}after updates?" || {
-        _YesNoPrompt " ${red}Reboot ${nocolor}after updates?" || {
-            _NoReboot
-        }
-        _Reboot
-    }
-    _Poweroff
-}
-
-_NoCriteria() {
-    # Here the default is '_NoReboot'.
-    _YesNoPrompt -n " ${red}Poweroff ${nocolor}after updates?" || {
-        _NoReboot
-    }
-    _Poweroff
-}
-
-_MakeUpdates() {
+_CheckReboot() {
 
     declare -a criteria=(
     "amd-ucode" \
@@ -193,14 +178,25 @@ _MakeUpdates() {
 
     for item in "${criteria[@]}"; do
         if grep -qw "$item" "$ARCHAUR"; then
-            echo " ${red}$item requires REBOOT!${nocolor}"
-            _Criteria
+            echo -e " ${red}$item requires REBOOT!${nocolor}\n"
+            # default is reboot.
+            # by pressing Enter we will get the default action.
+            _YesNoPrompt -n " ${red}Poweroff ${nocolor}after updates?" || {
+                _YesNoPrompt " ${red}Reboot ${nocolor}after updates?" || {
+                    _NoReboot
+                }
+                _Reboot
+            }
+            _Poweroff
         fi
     done
 
     echo -e " ${green}NO REBOOT NEEDED !${nocolor}\n"
-
-    _NoCriteria
+    # Here the default is '_NoReboot'.
+    _YesNoPrompt -n " ${red}Poweroff ${nocolor}after updates?" || {
+        _NoReboot
+    }
+    _Poweroff
 
 }
 
@@ -220,7 +216,8 @@ _ZnVer2() {
         && curl -L \
         "http://nhameh.ovh/linuxkernels/x86_64/linux-amd-znver2-headers-$VERSION-x86_64.pkg.tar.zst" -O \
         && sudo pacman \
-        -U linux-amd-znver2-"$VERSION"-x86_64.pkg.tar.zst linux-amd-znver2-headers-"$VERSION"-x86_64.pkg.tar.zst
+        -U linux-amd-znver2-"$VERSION"-x86_64.pkg.tar.zst \
+        linux-amd-znver2-headers-"$VERSION"-x86_64.pkg.tar.zst
 
         sed -i '/linux-amd-znver2/d' {"$AUR","$ARCHAUR"}
 
@@ -267,11 +264,11 @@ _List() {
 
         # then Arch...
         if (( $(grep "" -c "$ARCH") > 0 )); then
-            _MakeUpdates
+            _CheckReboot
         elif find "$XDG_CACHE_HOME" -type f -iname "*.zst"; then
             sudo grub-mkconfig -o /boot/grub/grub.cfg
             _YesNoPrompt " Linux-amd requires reboot, proceed so?" || {
-                sed -i '/[[:graph:]]/d' {"$ARCH","$ARCHAUR"}
+                sed -i '1,$d' {"$ARCH","$ARCHAUR"}
                 _PolybarHook
                 echo " bye..."
                 sleep 2s
