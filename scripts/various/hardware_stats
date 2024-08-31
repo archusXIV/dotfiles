@@ -29,7 +29,7 @@ _mpv() {
         local metadata="$XDG_RUNTIME_DIR/mpv.txt"
 
         [[ ! -f "$metadata" ]] && touch "$metadata"
-        echo '{ "command": ["get_property", "media-title"] }' \
+        echo '{ "command": ["get_property", "media-title"]}1' \
         | socat - /tmp/mpvsocket | awk -F '"' '{print $4}' > "$metadata"
 
         polybar-msg -p "$(pgrep --full "$WM_NAME"-bar-3)" \
@@ -61,10 +61,16 @@ _nvidia() {
 
 _fanspeed() { sensors | awk '/fan2/{print $2" ""rpm"}'; }
 
-_mem() { free -h | awk '/Mem:/{print $3}'; }
+_mem() {
+    total=$(free -m | awk '/Mem:/{print $2}')
+    free=$(free -m | awk '/Mem:/{print $4}')
+    shared=$(free -m | awk '/Mem:/{print $5}')
+    cache=$(free -m | awk '/Mem:/{print $6}')
+    echo "$((total - free - cache + shared)) MiB"
+}
 
 _disksusage() {
-    if (( $(df -h | awk '/sda2/{ sub("[%]",""); print $5 }') > 60 )); then
+    if (( $(df -h | awk '/sda2/{ sub("[%]",""); print $5 }') > 40 )); then
         echo "%{F#FF4747}$(df -h | awk '/sda2/{print $5}')%{F-}"
     else
         df -h | awk '/sda2/{print $5}'
@@ -90,4 +96,4 @@ ${icon_fan}${pad}${tc}$(_fanspeed)${pad}\
 ${icon_mem}${pad}${tc}$(_mem)${pad}\
 ${icon_disk}${pad}${tc}$(_disksusage)"
 eval _mpd
-eval _mpv
+# eval _mpv
