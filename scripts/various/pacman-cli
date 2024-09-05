@@ -116,8 +116,7 @@ _Purge() {
                     ;;
                     y|Y)
                         pacman -Qtdq | sudo pacman -Rdd --noconfirm -
-                        echo " ${green}A list of removed packages has been created"
-                        echo " in $pkgs${color_off}"
+                        echo " ${green}Removed packages list saved in $pkgs.${color_off}"
                         sleep 5s
                     ;;
                     *)
