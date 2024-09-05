@@ -2,8 +2,8 @@
 
 # Author: Barret E (2021) <archus@protonmail.com>
 # https://github.com/archusXIV/dotfiles
-# Dependencies: fzf, pacdiff, reflector, vim, updates-manager.
-# https://github.com/archusXIV/dotfiles/blob/main/scripts/various/updates-viewer
+# Dependencies: fzf, pacdiff, reflector, vim, pacman or/and updates-manager.
+# https://github.com/archusXIV/dotfiles/blob/main/scripts/various/updates-manager
 #
 # This script shows a menu to let you choose over severals pacman tools and options.
 # In order to install or remove packages it uses fzf utility on the fancy side.
@@ -15,9 +15,7 @@ color_off=$'\e[0m';
 red=$'\e[0;31m';
 green=$'\e[0;32m';
 
-# updates-manager: https://github.com/archusXIV/dotfiles/blob/main/scripts/various/updates-manager
-# !!! DEPENDENCY timeshift
-declare -a dependencies=( "fzf" "pacdiff" "reflector" "vim" "updates-manager" )
+declare -a dependencies=( "fzf" "pacdiff" "reflector" "vim" "pacman" )
 
 for package in "${dependencies[@]}"; do
     [[ -z $(command -v "$package") ]] && {
@@ -51,11 +49,12 @@ _Menu() {
             3) _PackagesList ;;
             4) _Purge ;;
             5) _Reflector ;;
-            6) updates-manager --list ;;
+            6) updates-manager --list || sudo pacman -Syu ;;
             7) _Pacdiff ;;
             8) sudo vim /etc/pacman.conf ;;
             9) sudo vim /etc/makepkg.conf ;;
             x|X) clear && exit ;;
+            *) echo " ${red}Unknown option $option.${color_off}" ;;
         esac
     done
 }
@@ -66,6 +65,9 @@ _Install() {
     pacman -Slq \
         | fzf \
         --multi \
+        --border rounded \
+        --border-label "| Install packages |" \
+        --preview-window='right:70%' \
         --preview \
         'cat <(sudo pacman -Si {1}) <(sudo pacman -Fl {1} | awk "{print \$2}")' \
         --layout=reverse \
@@ -76,6 +78,9 @@ _Uninstall() {
     pacman -Qnq \
         | fzf \
         --multi \
+        --border rounded \
+        --border-label "| Uninstall packages |" \
+        --preview-window='right:70%' \
         --preview \
         'cat <(sudo pacman -Si {1}) <(sudo pacman -Fl {1} | awk "{print \$2}")' \
         --layout=reverse \
@@ -85,6 +90,9 @@ _Uninstall() {
 _PackagesList() {
     pacman -Qq \
         | fzf \
+        --border rounded \
+        --border-label "| Installed packages |" \
+        --preview-window='right:70%' \
         --preview 'pacman -Qil {}' \
         --layout=reverse \
         --bind 'enter:execute(pacman -Qil {} | less)'
@@ -101,19 +109,19 @@ _Purge() {
                 pacman -Qdt > "$pkgs" && cat "$pkgs"
                 echo ""
                 echo " ${red}Would you like to purge orphan packages? [N/y]:${color_off}"
-                read -r orphan
+                read -rn 1 orphan
                 case "$orphan" in
-                    N[oO]|N|no )
+                    N|n)
                         _menu
                     ;;
-                    y|Y|yes)
-                        sudo pacman -Rdd "$(pacman -Qdtq)"
+                    y|Y)
+                        pacman -Qtdq | sudo pacman -Rdd --noconfirm -
                         echo " ${green}A list of removed packages has been created"
                         echo " in $pkgs${color_off}"
                         sleep 5s
                     ;;
                     *)
-                        echo " Bad option..."; sleep 2s && _menu
+                        echo " ${red}Bad option $orphan...${color_off}"; sleep 2s
                     ;;
                 esac
             else
@@ -128,7 +136,6 @@ _Purge() {
     esac
     return 0
 }
-
 
 _Pacdiff() {
     if [[ -z $(find /etc -maxdepth 2 -name "*.pacnew" 2> /dev/null) ]]; then
