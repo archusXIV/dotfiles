@@ -112,7 +112,7 @@ _Snapshot() {
     local OLDER_SNAPSHOT SNAPSHOT_NAME
     # will remove the second snapshot & create a new one.
     if command -v timeshift >/dev/null; then
-        sudo mount /dev/sdb2 /mnt
+        #sudo mount /dev/sdb2 /mnt
         # The first snapshot in the list is the "after system installation"
         # awk '/^1/{print $3}' will match the second snapshot.
         OLDER_SNAPSHOT=$(sudo timeshift --list | awk '/^1/{print $1}')
@@ -125,7 +125,7 @@ _Snapshot() {
         else
             sudo timeshift --create --skip-grub --comment "Before updates"
         fi
-        sudo umount -R /mnt
+        #sudo umount -R /mnt
     else
         echo " ${green}Timeshift is not installed...${nocolor}"
         sleep 2
