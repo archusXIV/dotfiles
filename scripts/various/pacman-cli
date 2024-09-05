@@ -152,7 +152,7 @@ _Reflector() {
     echo " Example for France: 21"
     echo -e " More details in a terminal, type: reflector --list-countries | less${color_off}\n"
     select country in $(reflector --list-countries \
-        | sed '1d;2d;8d
+        | sed '1,2d;8d
         s/Hong Kong/Hong-Kong/;s/North Macedonia/North-Macedonia/;
         s/New Caledonia/New-Caledonia/;s/New Zealand/New-Zealand/;
         s/South Africa/South-Africa/;s/South Korea/South-Korea/;
