@@ -8,7 +8,7 @@ _Dependencies() {
     DEPS=( "polybar" "rofi" "wmctrl" "xdo" "xprop" "xset" )
 
     for pkg in "${DEPS[@]}"; do
-        [[ -z $(which $pkg) ]] \
+        [[ -z $(command -v $pkg) ]] \
         && notify-send "$pkg is not installed...exiting" \
         && exit 127
     done
