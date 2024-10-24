@@ -18,9 +18,9 @@ BARPID=$(pgrep --full "$WM"-bar-1)
 
 declare -a DEPS=( "checkupdates" "polybar" "reflector" "yay" "wmctrl" )
 
-nocolor=$'\e[0m';
-red=$'\e[0;31m';
-green=$'\e[0;32m';
+nc=$'\e[0m';
+r=$'\e[0;31m';
+g=$'\e[0;32m';
 
 _PolybarHook() {
     polybar-msg -p "$BARPID" \
@@ -109,25 +109,26 @@ _YesNoPrompt() {
 
 _Snapshot() {
 
-    local OLDER_SNAPSHOT SNAPSHOT_NAME
+    local OLDER_SNAPSHOT_INDEX OLDER_SNAPSHOT_NAME
     # will remove the second snapshot & create a new one.
     if command -v timeshift >/dev/null; then
-        #sudo mount /dev/sdb2 /mnt
+        sudo mount /dev/sdb2 /mnt
+        sleep 3
         # The first snapshot in the list is the "after system installation"
         # awk '/^1/{print $3}' will match the second snapshot.
-        OLDER_SNAPSHOT=$(sudo timeshift --list | awk '/^1/{print $1}')
-        SNAPSHOT_NAME=$(sudo timeshift --list | awk '/^1/{print $3}')
+        OLDER_SNAPSHOT_INDEX=$(sudo timeshift --list | awk '/^1/{print $1}')
+        OLDER_SNAPSHOT_NAME=$(sudo timeshift --list | awk '/^1/{print $3}')
 
-        if [[ $OLDER_SNAPSHOT = '1' ]]; then
-            sudo timeshift --delete --snapshot "$SNAPSHOT_NAME"
+        if [[ $OLDER_SNAPSHOT_INDEX = '1' ]]; then
+            sudo timeshift --delete --snapshot "$OLDER_SNAPSHOT_NAME"
             sudo timeshift --create --skip-grub --comment "Before updates"
             sleep 2
         else
             sudo timeshift --create --skip-grub --comment "Before updates"
         fi
-        #sudo umount -R /mnt
+        sudo umount -R /mnt
     else
-        echo " ${green}Timeshift is not installed...${nocolor}"
+        echo " ${g}Timeshift is not installed...${nc}"
         sleep 2
     fi
 
@@ -176,51 +177,36 @@ _CheckReboot() {
     "xorg"
     )
 
-    for item in "${criteria[@]}"; do
-        if grep -qw "$item" "$ARCHAUR"; then
-            echo -e " ${red}$item requires REBOOT!${nocolor}\n"
-            # default is reboot.
-            # by pressing Enter we will get the default action.
-            _YesNoPrompt -n " ${red}Poweroff ${nocolor}after updates?" || {
-                _YesNoPrompt " ${red}Reboot ${nocolor}after updates?" || {
-                    _NoReboot
-                }
-                _Reboot
-            }
-            _Poweroff
+    index=0
+    while read -r line; do
+        if [[ "$line" =~ ${criteria[${index}]} ]]; then
+            echo -e " ${r}${criteria[${index}]} requires REBOOT!${nc}\n"
+            restart=yes
+            break
+        else
+            restart=no
+            ((index++))
+            [[ $index -eq 8 ]] && break
         fi
-    done
+    done < <(awk '{print $1}' "$ARCHAUR")
 
-    echo -e " ${green}NO REBOOT NEEDED !${nocolor}\n"
-    # Here the default is '_NoReboot'.
-    _YesNoPrompt -n " ${red}Poweroff ${nocolor}after updates?" || {
-        _NoReboot
-    }
-    _Poweroff
-
-}
-
-_ZnVer2() {
-
-    local VERSION
-    VERSION=$(yay -Ss linux-amd-znver2 | awk 'NR==1 {print $2}')
-
-    if grep -q -w 'linux-amd-znver2' "$AUR"; then
-
-        [[ $(grep "" -c "$ARCH") -eq 0 ]] && _Snapshot
-
-        cd "$XDG_CACHE_HOME" || exit 1
-
-        curl \
-        -L "http://nhameh.ovh/linuxkernels/x86_64/linux-amd-znver2-$VERSION-x86_64.pkg.tar.zst" -O \
-        && curl -L \
-        "http://nhameh.ovh/linuxkernels/x86_64/linux-amd-znver2-headers-$VERSION-x86_64.pkg.tar.zst" -O \
-        && sudo pacman \
-        -U linux-amd-znver2-"$VERSION"-x86_64.pkg.tar.zst \
-        linux-amd-znver2-headers-"$VERSION"-x86_64.pkg.tar.zst
-
-        sed -i '/linux-amd-znver2/d' {"$AUR","$ARCHAUR"}
-
+    # default is reboot.
+    # by pressing Enter we will get the default action.
+    if [[ $restart == yes ]]; then
+        _YesNoPrompt -n " ${r}Poweroff ${nc}after updates?" || {
+            _YesNoPrompt " ${r}Reboot ${nc}after updates?" || {
+                _NoReboot
+            }
+            _Reboot
+        }
+        _Poweroff
+    else
+        echo -e " ${g}NO REBOOT NEEDED!${nc}\n"
+        # Here the default is '_NoReboot'.
+        _YesNoPrompt -n " ${r}Poweroff ${nc}after updates?" || {
+            _NoReboot
+        }
+        _Poweroff
     fi
 
 }
@@ -231,7 +217,7 @@ _List() {
     TOTALUPDATES=$(sed -i '/^::/d;/^\s/g;/^\s*$/d' "$ARCHAUR" | grep "" -c "$ARCHAUR")
 
     if ((TOTALUPDATES == 0)); then
-        echo " ${red}No available update."
+        echo " ${r}No available update."
         sleep 3s
         return 0
     else
@@ -240,16 +226,13 @@ _List() {
         done < "$ARCHAUR"
 
         echo ""
-        echo -e " ${green}Available update(s): $TOTALUPDATES\n${nocolor}"
+        echo -e " ${g}Available update(s): $TOTALUPDATES\n${nc}"
 
         _YesNoPrompt " Proceed with installation?" || {
             echo " bye..."
             sleep 2s
             return 0
         }
-
-        # Get & install linux-amd-znver2 before yay tries to compile it
-        # _ZnVer2
 
         # first AUR packages update
         if (( $(grep "" -c "$AUR") > 0 )); then
