@@ -1,11 +1,12 @@
 #!/bin/bash
 
-# Author: Barret E (2020-23) <archus@protonmail.con>
+# Author: Barret E (2020-24) <archus@protonmail.con>
 # https://github.com/archusXIV/dotfiles
 #
 # Yet Another Updates Manager Script for Arch Linux based systems.
 # Checks for updates, lists them in a readable file, update your polybar module.
-# timeshift is used to create a snapshot before update procedure
+# Dependencies: checkupdates, reflector, timeshift (optional) yay, wmctrl.
+# timeshift is used (if installed) to create a snapshot before update procedure.
 
 : "${XDG_RUNTIME_DIR:-/run/user/1000}"
 
@@ -13,18 +14,28 @@ ARCH="$XDG_RUNTIME_DIR/archlinux.list"
 AUR="$XDG_RUNTIME_DIR/aur.list"
 ARCHAUR="$XDG_RUNTIME_DIR/combined.list"
 
+# we have three window managers,
+# so let's determine which one is running.
 WM=$(wmctrl -m | awk '/Name:/{print $2}')
+
+# we have three bars named as the running wm
+# and the update module is on bar-1
 BARPID=$(pgrep --full "$WM"-bar-1)
 
-declare -a DEPS=( "checkupdates" "polybar" "reflector" "yay" "wmctrl" )
+declare -a DEPS=( "checkupdates" "reflector" "yay" "wmctrl" )
 
 nc=$'\e[0m';
 r=$'\e[0;31m';
 g=$'\e[0;32m';
 
 _PolybarHook() {
-    polybar-msg -p "$BARPID" \
-    action "#updates-ipc.hook.0" >/dev/null 2>&1
+    if command -v polybar >/dev/null; then
+        polybar-msg -p "$BARPID" \
+        action "#updates-ipc.hook.0" >/dev/null 2>&1
+    else
+        notify-send "polybar isn't installed..." 2>/dev/null
+        printf '%s\n' " ${r}polybar isn't installed..."
+    fi
 }
 
 _CheckUpdates() {
@@ -60,7 +71,7 @@ _CheckUpdates() {
             sleep 1.5s
             yay -Qum | tee "$AUR" >> "$ARCHAUR"
 
-            # purge combined.list from possible duplicates.
+            # purge combined.list from possible weird characters & duplicates.
             sed -i '/^::/d;/^\s/g;/^\s*$/d' "$ARCHAUR"
             perl -i -ne 'print if ! $x{$_}++' "$ARCHAUR" >/dev/null 2>&1
         fi
@@ -110,25 +121,25 @@ _YesNoPrompt() {
 _Snapshot() {
 
     local OLDER_SNAPSHOT_INDEX OLDER_SNAPSHOT_NAME
-    # will remove the second snapshot & create a new one.
+    # will remove the first snapshot & create a new one.
     if command -v timeshift >/dev/null; then
         sudo mount /dev/sdb2 /mnt
         sleep 3
-        # The first snapshot in the list is the "after system installation"
-        # awk '/^1/{print $3}' will match the second snapshot.
-        OLDER_SNAPSHOT_INDEX=$(sudo timeshift --list | awk '/^1/{print $1}')
-        OLDER_SNAPSHOT_NAME=$(sudo timeshift --list | awk '/^1/{print $3}')
+        # awk '/^0/{print $3}' will match the first snapshot over three.
+        OLDER_SNAPSHOT_INDEX=$(sudo timeshift --list | awk '/^0/{print $1}')
+        OLDER_SNAPSHOT_NAME=$(sudo timeshift --list | awk '/^0/{print $3}')
 
-        if [[ $OLDER_SNAPSHOT_INDEX = '1' ]]; then
+        if [[ $OLDER_SNAPSHOT_INDEX == '0' ]]; then
             sudo timeshift --delete --snapshot "$OLDER_SNAPSHOT_NAME"
             sudo timeshift --create --skip-grub --comment "Before updates"
             sleep 2
         else
             sudo timeshift --create --skip-grub --comment "Before updates"
+            sleep 2
         fi
         sudo umount -R /mnt
     else
-        echo " ${g}Timeshift is not installed...${nc}"
+        printf '%s\n' " ${g}Timeshift is not installed...${nc}"
         sleep 2
     fi
 
@@ -167,28 +178,22 @@ _Poweroff() {
 _CheckReboot() {
 
     declare -a criteria=(
-    "amd-ucode" \
-    "grub" \
-    "linux" \
-    "mesa" \
-    "nvidia-dkms" \
-    "systemd" \
-    "xf86-video-*" \
-    "xorg"
+    "amd-ucode" "grub" "linux"
+    "mesa" "nvidia-dkms" "systemd"
+    "xf86-video-nouveau" "xorg"
     )
 
     index=0
-    while read -r line; do
-        if [[ "$line" =~ ${criteria[${index}]} ]]; then
-            echo -e " ${r}${criteria[${index}]} requires REBOOT!${nc}\n"
+    for pkg in "${criteria[@]}"; do
+        if grep -qw "${criteria[${index}]}" "$ARCH"; then
+            echo -e " ${r}${pkg} requires REBOOT!${nc}\n"
             restart=yes
             break
         else
-            restart=no
             ((index++))
             [[ $index -eq 8 ]] && break
         fi
-    done < <(awk '{print $1}' "$ARCHAUR")
+    done
 
     # default is reboot.
     # by pressing Enter we will get the default action.
@@ -211,13 +216,39 @@ _CheckReboot() {
 
 }
 
+# _ZnVer2() {
+
+#     local VERSION
+#     VERSION=$(yay -Ss linux-amd-znver2 | awk 'NR==1 {print $2}')
+
+#     if grep -q -w 'linux-amd-znver2' "$AUR"; then
+
+#         [[ $(grep "" -c "$ARCH") -eq 0 ]] && _Snapshot
+
+#         cd "$XDG_CACHE_HOME" || exit 1
+#         find "$XDG_CACHE_HOME" -type f -iname "*.zst" -exec rm {} \;
+
+#         curl \
+#         -L "http://nhameh.ovh/linuxkernels/x86_64/linux-amd-znver2-$VERSION-x86_64.pkg.tar.zst" -O \
+#         && curl -L \
+#         "http://nhameh.ovh/linuxkernels/x86_64/linux-amd-znver2-headers-$VERSION-x86_64.pkg.tar.zst" -O \
+#         && sudo pacman \
+#         -U linux-amd-znver2-"$VERSION"-x86_64.pkg.tar.zst \
+#         linux-amd-znver2-headers-"$VERSION"-x86_64.pkg.tar.zst
+
+#         sed -i '/linux-amd-znver2/d' {"$AUR","$ARCHAUR"}
+
+#     fi
+
+# }
+
 _List() {
 
     local TOTALUPDATES
     TOTALUPDATES=$(sed -i '/^::/d;/^\s/g;/^\s*$/d' "$ARCHAUR" | grep "" -c "$ARCHAUR")
 
     if ((TOTALUPDATES == 0)); then
-        echo " ${r}No available update."
+        printf '%s\n' " ${r}No available update."
         sleep 3s
         return 0
     else
@@ -225,14 +256,16 @@ _List() {
             echo " $line"
         done < "$ARCHAUR"
 
-        echo ""
-        echo -e " ${g}Available update(s): $TOTALUPDATES\n${nc}"
+        printf '\n%s\n' " ${g}Available update(s): $TOTALUPDATES${nc}"
 
         _YesNoPrompt " Proceed with installation?" || {
-            echo " bye..."
+            printf '%s\n' " bye..."
             sleep 2s
             return 0
         }
+
+        # Get & install linux-amd-znver2 before yay tries to compile it
+        # _ZnVer2
 
         # first AUR packages update
         if (( $(grep "" -c "$AUR") > 0 )); then
@@ -253,7 +286,7 @@ _List() {
             _YesNoPrompt " Linux-amd requires reboot, proceed so?" || {
                 sed -i '1,$d' {"$ARCH","$ARCHAUR"}
                 _PolybarHook
-                echo " bye..."
+                printf '%s\n' " bye..."
                 sleep 2s
                 exit 0
             }
