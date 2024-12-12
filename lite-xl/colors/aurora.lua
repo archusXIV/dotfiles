@@ -42,10 +42,3 @@ style.syntax["string2"]  = { common.color "#8E9FEB" }
 style.syntax["string3"]  = { common.color "#8E9FEB" }
 style.syntax["operator"] = { common.color "#9f93d9" }
 style.syntax["function"] = { common.color "#4f70b3" }
-
--- Lint+ --
-style.lint               = {}
-style.lint["info"]       = { common.color "#3b7aba" }
-style.lint["hint"]       = { common.color "#79c8c5" }
-style.lint["warning"]    = { common.color "#e3b71d" }
-style.lint["error"]      = { common.color "#ff3c41" }
