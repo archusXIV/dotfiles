@@ -1,5 +1,5 @@
 #!/bin/bash
-# ~/.config/mpm/mpmrc (version 2.0-2)
+# ~/.config/mpm/mpmrc (version 2.1-8)
 
 ########################################################
 #                                                      #
@@ -15,56 +15,62 @@
 #~~~~~ change the values, not the variables names ~~~~~#
 
 # shellcheck disable=SC2034,SC2016,SC2154
-: "${XDG_DATA_HOME:-$HOME/.local/share}"
+# : "${XDG_DATA_HOME:-$HOME/.local/share}"
 
-check_updates="no"
+check_updates=no
 width=1260
 height=738
+copy_width=1260
+copy_height=380
 
-# AVAILABLE THEMES: default, dracula, blacksea, chocolat-pistache, gruvbox, gotham,
-# jellybeans, monokai, nord, TokyoNight, solarized, vacuous, zenburn, zorange
-THEME="blacksea"
+# AVAILABLE THEMES:
+# default, blacksea, dracula, gotham, gruvbox, jellybeans, kasugano
+# monokai, nord, pistachio, solarized, TokyoNight, vacuous, zenburn, zorange
+THEME=embers
 
 ####################### SYSTEM TOOLS ######################
 MPMEDITOR=${VISUAL:-vim}
-FILEMANAGER="ranger"
+FILEMANAGER=ranger
 clipboardCmd=( xclip -out )
+use_somabox=yes
 
 ##################### MPM DIRECTORIES #####################
-MUSIC_DIR="$HOME/Documents/Music"
-VIDEO_DIR="$HOME/Documents/Videos"
-main_dir="$XDG_DATA_HOME/mpm"
+main_dir=${MPM_DIR:-$HOME/.local/share/mpm}
 playlists_dir="$main_dir/playlists"
-audios_dir="$MUSIC_DIR/mpm_audios"
-videos_dir="$VIDEO_DIR/mpm_videos"
 titles_dir="$main_dir/titles"
 tmp_dir="$main_dir/tmp"
+MUSIC_DIR=${MUZ:-$HOME/Documents/Music}
+VIDEO_DIR=${VID:-$HOME/Documents/Videos}
+audios_dir="$MUSIC_DIR/mpm_audios"
+videos_dir="$VIDEO_DIR/mpm_videos"
+radios_dir="$MUZ/mpd_playlists"
+
 
 ################### DEFAULT TASKS ANSWERS ##################
-keep_none_empty_playlist="yes"
-direct_download="yes"
-quit_after_task="no"
+keep_none_empty_playlist=yes
+direct_download=yes
+quit_after_task=no
 
 ################### GNU PARALLEL OPTIONS ###################
-use_parallel="yes"
-use_parallel_downloads="yes"
+use_parallel=yes
+use_parallel_downloads=yes
 # parallel_animation="progress"
-parallel_animation="spinners"
+parallel_animation=spinners
 parallel_threads="$(nproc)"
-parallel_conversion="yes"
+parallel_conversion=yes
 
 #################### FZF FUNCTIONALITY #####################
-use_fzf="yes"
-fzf_preview="mediainfo"
-# fzf_preview="exiftool"
+use_fzf=yes
+fzf_preview=mediainfo
+# fzf_preview=exiftool
 fzf_preview_size="40%"
-fzf_preview_layout="down"
+fzf_preview_layout=down
 
 ytfzfOptions_KC=( --keep-cache )
 ytfzfOptions_PG=( --pages=5 )
 ytfzfOptions_VD=( --video-duration=long )
 ytfzfOptions_SB=( --sort-by=relevance )
-ytfzfOptions_TY=( --type=all )
+ytfzfOptions_TP=( --type=all )
 # ytfzfOptions_TV=( --thumb-viewer=mpv )
 
 ytfzfOptions_X=(
@@ -72,12 +78,12 @@ ytfzfOptions_X=(
     "${ytfzfOptions_PG[@]}"
     "${ytfzfOptions_VD[@]}"
     "${ytfzfOptions_SB[@]}"
-    "${ytfzfOptions_TY[@]}"
+    "${ytfzfOptions_TP[@]}"
 )
 
 ############ FFMPEG SPECIFICS (audio conversion) ############
-automatic_audio_conversion="yes"
-default_conversion_format="flac"
+automatic_audio_conversion=yes
+default_conversion_format=mp3
 
 ffmpegAacCodecOptions=( -acodec aac -ar 48000 -ab 320k )
 ffmpegFlacCodecOptions=( -af aformat=s32:48000 )
@@ -86,9 +92,9 @@ ffmpegOggCodecOptions=( -acodec libvorbis -ar 48000 -ab 320k )
 ffmpegWavCodecOptions=( -acodec pcm_s32le -ar 48000 )
 
 ####################### MPV SPECIFICS #######################
-use_mpvc="yes"
-mpvc_tui="ncmpvc"
-#mpvc_tui=""
+use_mpvc=yes
+mpvc_tui=ncmpvc
+mpvc_tui_cheatsheet="/usr/local/share/doc/mpm/ncmpvc_cheatsheet"
 
 mpvGenOptions_CA=( --cache=yes )
 mpvGenOptions_SK=( --input-ipc-server='/tmp/mpvsocket' )
@@ -103,7 +109,6 @@ mpvGenOptions_X=(
     "${mpvGenOptions_ID[@]}"
     "${mpvGenOptions_CF[@]}"
     "${mpvGenOptions_RP[@]}"
-    "${mpvGenOptions_MS[@]}"
 )
 
 mpvAudioFormatOptions=( --ytdl-format='bestaudio/best' )
@@ -121,7 +126,7 @@ mpvVideoOptions_X=(
     "${mpvVideoOptions_DB[@]}"
 )
 
-################ YT-DLP PRESETS (youtube-dl) ################
+####################### YT-DLP PRESETS #######################
 ytdlPreset_BR=( --break-on-existing )
 ytdlPreset_DN=( --downloader m3u8:native )
 ytdlPreset_MF=( --merge-output-format mp4 )
@@ -132,15 +137,12 @@ ytdlPreset_FS=( --compat-options filename-sanitization )
 ytdlPreset_NC=(
     "${ytdlPreset_BR[@]}"
     "${ytdlPreset_DW[@]}"
+    "${ytdlPreset_DN[@]}"
     "${ytdlPreset_DP[@]}"
     "${ytdlPreset_FS[@]}"
 )
 
 ytdlPreset_X=(
+    "${ytdlPreset_NC[@]}"
     "${ytdlPreset_MF[@]}"
-    "${ytdlPreset_DN[@]}"
-    "${ytdlPreset_FS[@]}"
-    "${ytdlPreset_BR[@]}"
-    "${ytdlPreset_DW[@]}"
-    "${ytdlPreset_DP[@]}"
 )
