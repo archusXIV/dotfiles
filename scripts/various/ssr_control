@@ -3,13 +3,13 @@
 # simple script to run simplescreenrecorder in hidden mode
 # for the entered time & @screen.
 
-SSR_FIFO="$XDG_RUNTIME_DIR/ssr.fifo"
+ssr_fifo="$XDG_RUNTIME_DIR/ssr.fifo"
 # input-profiles directory contains {all,center,left,right}.conf files.
 configs_path="$XDG_CONFIG_HOME/simplescreenrecorder/input-profiles"
 
 _cleanup() {
     unset IFS
-    rm "$SSR_FIFO"
+    rm "$ssr_fifo"
     amixer set Capture,0 0%,0% mute nocap >/dev/null 2>&1
     polybar-msg action "#mic-ipc.hook.0" >/dev/null 2>&1
 }
@@ -18,7 +18,7 @@ _usage() {
     echo " Usage:   ${0##*/} duration screen"
     echo " Example: ${0##*/} 00:15:30 {all,center,left,right}"
     echo " or:      ${0##*/} 15:30 {all,center,left,right}"
-    [[ -p "$SSR_FIFO" ]] && _cleanup
+    [[ -p "$ssr_fifo" ]] && _cleanup
     exit 1
 }
 
@@ -26,10 +26,10 @@ if [[ $# -ne 4 ]]; then
     _usage
 fi
 
-if [[ -p "$SSR_FIFO" ]]; then
-    rm "$SSR_FIFO" && mkfifo "$SSR_FIFO"
+if [[ -p "$ssr_fifo" ]]; then
+    rm "$ssr_fifo" && mkfifo "$ssr_fifo"
 else
-    mkfifo "$SSR_FIFO"
+    mkfifo "$ssr_fifo"
 fi
 
 amixer set Capture,0 80%,80% unmute cap >/dev/null 2>&1
@@ -63,9 +63,9 @@ _timeConversion "$duration"
 # simplescreenrecorder commands
 simplescreenrecorder \
     --start-hidden \
-    --settingsfile="$configs_path/$screen.conf" < "$SSR_FIFO" &
+    --settingsfile="$configs_path/$screen.conf" < "$ssr_fifo" &
 
-exec 4> "$SSR_FIFO"
+exec 4> "$ssr_fifo"
 sleep 1
 echo "record-start" >&4
 sleep "$totalSeconds"
