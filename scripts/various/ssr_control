@@ -15,9 +15,9 @@ _cleanup() {
 }
 
 _usage() {
-    echo " Usage:   ${0##*/} -d duration -s screen"
+    echo -e "\n Usage:   ${0##*/} -d duration -s screen"
     echo " Example: ${0##*/} -d 00:15:30 -s {all,center,left,right}"
-    echo " or:      ${0##*/} -d 15:30 -s {all,center,left,right}"
+    echo -e " or:      ${0##*/} -d 15:30 -s {all,center,left,right}\n"
     [[ -p "$ssr_fifo" ]] && _cleanup
     exit 1
 }
