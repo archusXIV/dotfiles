@@ -1,9 +1,10 @@
 #!/bin/bash
 
 # simple script to run simplescreenrecorder in hidden mode
-# for the entered time & @screen_position.
+# for the entered time & @screen.
 
 SSR_FIFO="$XDG_RUNTIME_DIR/ssr.fifo"
+# input-profiles directory contains {all,center,left,right}.conf files.
 configs_path="$XDG_CONFIG_HOME/simplescreenrecorder/input-profiles"
 
 _cleanup() {
@@ -15,13 +16,13 @@ _cleanup() {
 
 _usage() {
     echo " Usage:   ${0##*/} duration screen"
-    echo " Example: ${0##*/} 00:15:30 {left,center,right,all}"
-    echo " or:      ${0##*/} 15:30 {left,center,right,all}"
+    echo " Example: ${0##*/} 00:15:30 {all,center,left,right}"
+    echo " or:      ${0##*/} 15:30 {all,center,left,right}"
     [[ -p "$SSR_FIFO" ]] && _cleanup
     exit 1
 }
 
-if [[ $# -ne 2 ]]; then
+if [[ $# -ne 4 ]]; then
     _usage
 fi
 
@@ -49,27 +50,21 @@ _timeConversion() {
     unset IFS
 }
 
-_ssrCmdLine() {
-    simplescreenrecorder \
-    --start-hidden \
-    --settingsfile="$configs_path/$1.conf" < "$SSR_FIFO" &
-}
-
 # getting user input according to _usage function
-while (($#)); do
-    TIME="$1"
-    case "$2" in
-        all   ) _ssrCmdLine triplescreen ;;
-        left  ) _ssrCmdLine screen1 ;;
-        center) _ssrCmdLine screen2 ;;
-        right ) _ssrCmdLine screen3 ;;
-        *     ) _usage ;;
-    esac
-    break
+while getopts d:s: opt; do
+    case "${opt}" in
+        d) duration=${OPTARG} ;;
+        s) screen=${OPTARG} ;;
+        *) _usage ;;
+     esac
 done
 
-_timeConversion "$TIME"
+_timeConversion "$duration"
 # simplescreenrecorder commands
+simplescreenrecorder \
+    --start-hidden \
+    --settingsfile="$configs_path/$screen.conf" < "$SSR_FIFO" &
+
 exec 4> "$SSR_FIFO"
 sleep 1
 echo "record-start" >&4
