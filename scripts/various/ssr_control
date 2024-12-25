@@ -34,7 +34,7 @@ fi
 amixer set Capture,0 80%,80% unmute cap >/dev/null 2>&1
 polybar-msg action "#mic-ipc.hook.1" >/dev/null 2>&1
 
-_timeConverdion() {
+_timeConversion() {
     convertString="$1"
     IFS=":";
     if [[ ${#convertString} -eq 5 ]]; then
@@ -68,7 +68,7 @@ while (($#)); do
     break
 done
 
-_timeConverdion "$TIME"
+_timeConversion "$TIME"
 # simplescreenrecorder commands
 exec 4> "$SSR_FIFO"
 sleep 1
