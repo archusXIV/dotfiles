@@ -49,7 +49,7 @@ _timeConversion() {
     unset IFS
 }
 
-_ssrConfig() {
+_ssrCmdLine() {
     simplescreenrecorder \
     --start-hidden \
     --settingsfile="$configs_path/$1.conf" < "$SSR_FIFO" &
@@ -59,10 +59,10 @@ _ssrConfig() {
 while (($#)); do
     TIME="$1"
     case "$2" in
-        all   ) _ssrConfig triplescreen ;;
-        left  ) _ssrConfig screen1 ;;
-        center) _ssrConfig screen2 ;;
-        right ) _ssrConfig screen3 ;;
+        all   ) _ssrCmdLine triplescreen ;;
+        left  ) _ssrCmdLine screen1 ;;
+        center) _ssrCmdLine screen2 ;;
+        right ) _ssrCmdLine screen3 ;;
         *     ) _usage ;;
     esac
     break
