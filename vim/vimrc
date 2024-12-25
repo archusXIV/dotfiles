@@ -26,7 +26,7 @@ set softtabstop=4                           " spaces to enter for each tab
 set shiftwidth=4                            " amount of spaces for indentation
 set shortmess+=aAcIws                       " Hide or shorten certain messages
 set splitbelow splitright                   " split on the right instead of below
-set rtp+=/usr/lib/python3.12/site-packages/powerline/bindings/vim
+set rtp+=/usr/lib/python3.13/site-packages/powerline/bindings/vim
 set wildmode=longest,list,full " Enable autocompletion ctrl+n to activate
 
 let g:netrw_banner=0
