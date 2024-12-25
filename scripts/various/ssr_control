@@ -1,51 +1,82 @@
 #!/bin/bash
 
-# runs simplescreenrecorder in hidden mode for the entered time.
-
+# simple script to run simplescreenrecorder in hidden mode
+# for the entered time & @screen_position.
 PIPE="$XDG_RUNTIME_DIR/ssr.fifo"
+configs_path="$XDG_CONFIG_HOME/simplescreenrecorder/input-profiles"
 
-if [[ -p "$PIPE" ]]; then
-    rm "$PIPE" && mkfifo "$PIPE" || exit 1
-else
-    mkfifo "$PIPE" || exit 1
+_End() {
+    rm "$PIPE"
+    amixer set Capture,0 0%,0% mute nocap >/dev/null 2>&1
+    polybar-msg action "#mic-ipc.hook.0" >/dev/null 2>&1
+    killall -q record_chrono
+    polybar-msg action "#chrono-ipc-2.hook.1" >/dev/null 2>&1
+}
+
+_Usage() {
+    echo " Usage:   ${0##*/} duration screen"
+    echo " Example: ${0##*/} 00:15:30 {left,center,right,all}"
+    echo " Or:      ${0##*/} 15:30 {left,center,right,all}"
+    [[ -p "$PIPE" ]] && _End
+    exit 1
+}
+
+if [[ $# -ne 2 ]]; then
+    _Usage
 fi
 
-amixer set Capture,0 75%,75% unmute cap >/dev/null 2>&1
+if [[ -p "$PIPE" ]]; then
+    rm "$PIPE" && mkfifo "$PIPE"
+else
+    mkfifo "$PIPE"
+fi
+
+amixer set Capture,0 80%,80% unmute cap >/dev/null 2>&1
 polybar-msg action "#mic-ipc.hook.1" >/dev/null 2>&1
 
 _how_long() {
     convertString="$1"
-    IFS=: read -r minute second <<< "$convertString"
-    secondsValue=$(((minute) * 60 + second))
-    echo "$secondsValue"
+    IFS=":";
+    if [[ $convertString != '^00' ]]; then
+        read -r minutes seconds <<< "$convertString"
+        totalSeconds=$((minutes * 60 + seconds))
+    else
+        read -r hours minutes seconds <<< "$convertString"
+        totalSeconds=$(((hours * 3600) + (minutes * 60 + seconds)))
+    fi
+    echo "$totalSeconds"
+    unset IFS
 }
 
-echo "How long do you want the desktop recording to last? (in minutes eg: 02:30): "
-read -r TIME
-
-simplescreenrecorder \
+_SSRC() {
+    simplescreenrecorder \
     --start-hidden \
-    --settingsfile="/home/archangel/.config/simplescreenrecorder/input-profiles/triplescreen.conf" < "$PIPE" &
+    --settingsfile="$configs_path/$1.conf" < "$PIPE" &
+}
+
+while (($#)); do
+    TIME="$1"
+    case "$2" in
+        all   ) _SSRC triplescreen ;;
+        left  ) _SSRC screen1 ;;
+        center) _SSRC screen2 ;;
+        right ) _SSRC screen3 ;;
+        *     ) _Usage ;;
+    esac
+    break
+done
 
 record_chrono 2 &
 
 exec 4> "$PIPE"
-sleep 2
-
+sleep 1
 echo "record-start" >&4
-sleep $(_how_long $TIME)
-
+sleep "$(_how_long "$TIME")"
 echo "record-save" >&4
 sleep 2
-
 echo "quit" >&4
 exec 4>&-
 
-rm "$PIPE"
-
-amixer set Capture,0 0%,0% mute nocap >/dev/null 2>&1
-polybar-msg action "#mic-ipc.hook.0" >/dev/null 2>&1
-killall -q record_chrono
-polybar-msg action "#chrono-ipc-2.hook.1" >/dev/null 2>&1
+_End
 clear
 exit
