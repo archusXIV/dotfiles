@@ -10,16 +10,10 @@ WM_NAME=$(wmctrl -m | awk '/Name/{print $2}')
 _mpd() {
     # if ncmpcpp is running it will activate the same polybar module,
     # but if it's not the case...
-    if pactl list sink-inputs | grep -w 'mpd'; then
-        if [[ -z $(pidof ncmpcpp) ]]; then
-            polybar-msg \
-            -p "$(pgrep --full "$WM_NAME"-bar-2)" \
-            action "#mpd-ipc.hook.1" >/dev/null 2>&1
-        fi
-    else
+    if pactl list sink-inputs | grep -w 'mpd' && [[ -z $(pidof ncmpcpp) ]]; then
         polybar-msg \
         -p "$(pgrep --full "$WM_NAME"-bar-2)" \
-        action "#mpd-ipc.hook.0" >/dev/null 2>&1
+        action "#player-ipc.hook.1" >/dev/null 2>&1
     fi
 }
 
@@ -46,34 +40,31 @@ _coretemp() {
     || sensors | awk '/Tdie/{ sub("[+]",""); print $2 }'
 }
 
-_nvidia() {
-    gputemp="$(nvidia-smi \
-            --format=nounits,csv,noheader \
-            --query-gpu=temperature.gpu)"
-    usedgpu="$(nvidia-smi \
-            --format=nounits,csv,noheader \
-            --query-gpu=utilization.gpu)"
-
-    [[ -x /bin/nvidia-smi ]] \
-        && echo "${usedgpu}% - ${gputemp}°C" \
-        || echo "no nvidia driver installed"
-}
+_gputemp() { sensors | awk '/edge:/{sub("+",""); print $2}'; }
 
 _fanspeed() { sensors | awk '/fan2/{print $2" ""rpm"}'; }
 
 _mem() {
     total=$(free -m | awk '/Mem:/{print $2}')
     free=$(free -m | awk '/Mem:/{print $4}')
-    shared=$(free -m | awk '/Mem:/{print $5}')
     cache=$(free -m | awk '/Mem:/{print $6}')
+    shared=$(free -m | awk '/Mem:/{print $5}')
     echo "$((total - free - cache + shared)) MiB"
 }
 
-_disksusage() {
-    if (( $(df -h | awk '/sda2/{ sub("[%]",""); print $5 }') > 40 )); then
-        echo "%{F#FF4747}$(df -h | awk '/sda2/{print $5}')%{F-}"
+_sysdisksusage() {
+    if (( $(df -h | awk '/sda2/{ sub("[%]",""); print $5 }') > 60 )); then
+        echo "/: %{F#FF4747}$(df -h | awk '/sda2/{print $5}')%{F-}"
     else
-        df -h | awk '/sda2/{print $5}'
+        echo "/: $(df -h | awk '/sda2/{print $5}')"
+    fi
+}
+
+_homedisksusage() {
+    if (( $(df -h | awk '/sda3/{ sub("[%]",""); print $5 }') > 85 )); then
+        echo "- : %{F#FF4747}$(df -h | awk '/sda3/{print $5}')%{F-}"
+    else
+        echo "- : $(df -h | awk '/sda3/{print $5}')"
     fi
 }
 
@@ -85,15 +76,16 @@ tc="%{F$(xrdb -query | awk '/color4:/{print $NF}')}"
 pad="%{F$(xrdb -query | awk '/background:/{print $NF}')}_%{F-}"
 
 icon_core="%{F$(_icons_color)}%{F-}"
-icon_nvidia="%{F$(_icons_color)}%{F-}"
+icon_gputemp="%{F$(_icons_color)}%{F-}"
 icon_fan="%{F$(_icons_color)}%{F-}"
 icon_mem="%{F$(_icons_color)}%{F-}"
 icon_disk="%{F$(_icons_color)}%{F-}"
 
 echo "${icon_core}${pad}${tc}$(_coreusage)% - $(_coretemp)${pad}\
-${icon_nvidia}${pad}${tc}$(_nvidia)${pad}\
+${icon_gputemp}${pad}${tc}$(_gputemp)${pad}\
 ${icon_fan}${pad}${tc}$(_fanspeed)${pad}\
 ${icon_mem}${pad}${tc}$(_mem)${pad}\
-${icon_disk}${pad}${tc}$(_disksusage)"
+${icon_disk}${pad}${tc}$(_sysdisksusage)${pad}\
+${tc}$(_homedisksusage)"
 eval _mpd
 # eval _mpv
