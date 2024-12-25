@@ -56,7 +56,14 @@ _timeConversion() {
 while getopts d:s: opt; do
     case "${opt}" in
         d) duration=${OPTARG} ;;
-        s) screen=${OPTARG} ;;
+        s)
+            screen=${OPTARG}
+            if [[ -z $(find "$configs_path" -name "$screen.conf") ]]; then
+                printf '%s\n' " profile $screen does not exist!"
+                _cleanup
+                exit 1
+            fi
+        ;;
         *) _usage ;;
      esac
 done
