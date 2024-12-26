@@ -38,11 +38,11 @@ polybar-msg action "#mic-ipc.hook.1" >/dev/null 2>&1
 _timeConversion() {
     convertString="$1"
     IFS=":";
-    if [[ ${#convertString} -eq 5 ]]; then
+    if [[ ${#convertString} -eq 5 && $convertString =~ ':' ]]; then
         # five characters (01:30)
         read -r minutes seconds <<< "$convertString"
         totalSeconds=$((minutes * 60 + seconds))
-    elif [[ ${#convertString} -eq 8 ]]; then
+    elif [[ ${#convertString} -eq 8 && $convertString =~ ':' ]]; then
         # eight characters (01:20:30)
         read -r hours minutes seconds <<< "$convertString"
         totalSeconds=$(((hours * 3600) + (minutes * 60 + seconds)))
