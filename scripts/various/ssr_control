@@ -15,16 +15,14 @@ _cleanup() {
 }
 
 _usage() {
-    echo -e "\n Usage:   ${0##*/} -d duration -s screen"
-    echo " Example: ${0##*/} -d 00:15:30 -s {all,center,left,right}"
-    echo -e " or:      ${0##*/} -d 15:30 -s {all,center,left,right}\n"
+    echo -e "\n Usage:   ${0##*/} -d duration -p profile"
+    echo " Example: ${0##*/} -d 00:15:30 -p {all,center,left,right}"
+    echo -e " or:      ${0##*/} -d 15:30 -p {all,center,left,right}\n"
     [[ -p "$ssr_fifo" ]] && _cleanup
     exit 1
 }
 
-if [[ $# -ne 4 ]]; then
-    _usage
-fi
+[[ $# -ne 4 ]] && _usage
 
 if [[ -p "$ssr_fifo" ]]; then
     rm "$ssr_fifo" && mkfifo "$ssr_fifo"
@@ -53,13 +51,13 @@ _timeConversion() {
 }
 
 # getting user input according to _usage function
-while getopts d:s: opt; do
+while getopts d:p: opt; do
     case "${opt}" in
         d) duration=${OPTARG} ;;
-        s)
-            screen=${OPTARG}
-            if [[ -z $(find "$configs_path" -name "$screen.conf") ]]; then
-                printf '%s\n' " profile $screen does not exist!"
+        p)
+            profile=${OPTARG}
+            if [[ -z $(find "$configs_path" -name "$profile.*") ]]; then
+                printf '%s\n' " profile $profile does not exist!"
                 _cleanup
                 exit 1
             fi
@@ -72,7 +70,7 @@ _timeConversion "$duration"
 # simplescreenrecorder commands
 simplescreenrecorder \
     --start-hidden \
-    --settingsfile="$configs_path/$screen.conf" < "$ssr_fifo" &
+    --settingsfile="$configs_path/$profile.conf" < "$ssr_fifo" &
 
 exec 4> "$ssr_fifo"
 sleep 1
