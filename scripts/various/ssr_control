@@ -7,7 +7,7 @@ ssr_fifo="$XDG_RUNTIME_DIR/ssr.fifo"
 # input-profiles directory contains {all,center,left,right}.conf files.
 configs_path="$XDG_CONFIG_HOME/simplescreenrecorder/input-profiles"
 
-_cleanup() {
+_close() {
     unset IFS
     rm "$ssr_fifo"
     amixer set Capture,0 0%,0% mute nocap >/dev/null 2>&1
@@ -16,9 +16,10 @@ _cleanup() {
 
 _usage() {
     echo -e "\n Usage:   ${0##*/} -d duration -p profile"
+    echo " duration=hours:minutes:seconds"
     echo " Example: ${0##*/} -d 00:15:30 -p {all,center,left,right}"
     echo -e " or:      ${0##*/} -d 15:30 -p {all,center,left,right}\n"
-    [[ -p "$ssr_fifo" ]] && _cleanup
+    [[ -p "$ssr_fifo" ]] && _close
     exit 1
 }
 
@@ -58,7 +59,7 @@ while getopts d:p: opt; do
             profile=${OPTARG}
             if [[ -z $(find "$configs_path" -name "$profile.*") ]]; then
                 printf '%s\n' " profile $profile does not exist!"
-                _cleanup
+                _close
                 exit 1
             fi
         ;;
@@ -81,6 +82,6 @@ sleep 1
 echo "quit" >&4
 exec 4>&-
 
-_cleanup
+_close
 clear
 exit
