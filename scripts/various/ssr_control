@@ -25,12 +25,6 @@ _usage() {
 
 [[ $# -ne 4 ]] && _usage
 
-if [[ -p "$ssr_fifo" ]]; then
-    rm "$ssr_fifo" && mkfifo "$ssr_fifo"
-else
-    mkfifo "$ssr_fifo"
-fi
-
 amixer set Capture,0 80%,80% unmute cap >/dev/null 2>&1
 polybar-msg action "#mic-ipc.hook.1" >/dev/null 2>&1
 
@@ -68,20 +62,21 @@ while getopts d:p: opt; do
 done
 
 _timeConversion "$duration"
-# simplescreenrecorder commands
+
+if [[ -p "$ssr_fifo" ]]; then
+    rm "$ssr_fifo" && mkfifo "$ssr_fifo"
+else
+    mkfifo "$ssr_fifo"
+fi
+
+# ssr commands
 simplescreenrecorder \
     --start-hidden \
     --settingsfile="$configs_path/$profile.conf" < "$ssr_fifo" &
 
-exec 4> "$ssr_fifo"
-sleep 1
-echo "record-start" >&4
-sleep "$totalSeconds"
-echo "record-save" >&4
-sleep 1
-echo "quit" >&4
-exec 4>&-
+exec 4> "$ssr_fifo"; sleep 1
+echo "record-start" >&4; sleep "$totalSeconds"
+echo "record-save" >&4; sleep 1
+echo "quit" >&4; exec 4>&-
 
-_close
-clear
-exit
+_close; clear; exit
