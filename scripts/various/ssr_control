@@ -1,7 +1,8 @@
 #!/bin/bash
 
+# Author: Barret E 2024 <archus@protonmail.com>
 # simple script to run simplescreenrecorder in hidden mode
-# for the entered time & @screen.
+# for the entered time & @screen. (see _usage function)
 
 ssr_fifo="$XDG_RUNTIME_DIR/ssr.fifo"
 # input-profiles directory contains {all,center,left,right}.conf files.
@@ -10,20 +11,23 @@ configs_path="$XDG_CONFIG_HOME/simplescreenrecorder/input-profiles"
 _close() {
     unset IFS
     rm "$ssr_fifo"
-    amixer set Capture,0 0%,0% mute nocap >/dev/null 2>&1
-    polybar-msg action "#mic-ipc.hook.0" >/dev/null 2>&1
-}
+    amixer set Capture,0 0%,0% mute nocap
+    polybar-msg action "#mic-ipc.hook.0"
+} >/dev/null 2>&1
 
 _usage() {
     echo -e "\n Usage:   ${0##*/} -d duration -p profile"
-    echo " duration=hours:minutes:seconds"
+    echo "             duration = hh:mm:ss"
     echo " Example: ${0##*/} -d 00:15:30 -p {all,center,left,right}"
     echo -e " or:      ${0##*/} -d 15:30 -p {all,center,left,right}\n"
     [[ -p "$ssr_fifo" ]] && _close
     exit 1
 }
 
-[[ $# -ne 4 ]] && _usage
+[[ $# -ne 4 ]] && {
+    printf '\n%s\n' " Missing arguments..."
+    _usage
+}
 
 amixer set Capture,0 80%,80% unmute cap >/dev/null 2>&1
 polybar-msg action "#mic-ipc.hook.1" >/dev/null 2>&1
