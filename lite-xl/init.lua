@@ -7,6 +7,8 @@ local common = require "core.common"
 local config = require "core.config"
 local style = require "core.style"
 local lintplus = require "plugins.lintplus"
+local lsp_snippets = require 'plugins.lsp_snippets'
+local snippets = require 'plugins.snippets'
 
 config.message_timeout = 10
 config.max_tabs = 9
@@ -20,7 +22,7 @@ config.plugins.themes = false
 -- config.plugins.terminal = false
 
 config.plugins.autocomplete = {
-    ["min_len"]        = 2,
+    ["min_len"]        = 3,
     ["max_height"]     = 12,
     ["desc_font_size"] = 14,
 }
@@ -31,10 +33,10 @@ lintplus.setup.lint_on_doc_load()
 lintplus.setup.lint_on_doc_save()
 
 style.lint = {
-    ["info"]       = { common.color "#3b7aba" },
-    ["hint"]       = { common.color "#79c8c5" },
-    ["warning"]    = { common.color "#e3b71d" },
-    ["error"]      = { common.color "#ff3c41" },
+    ["info"]    = { common.color "#3b7aba" },
+    ["hint"]    = { common.color "#79c8c5" },
+    ["warning"] = { common.color "#e3b71d" },
+    ["error"]   = { common.color "#ff3c41" },
 }
 
 -------------------- Themes -----------------------
@@ -43,10 +45,11 @@ style.lint = {
 -- core.reload_module("colors.aurora")
 -- core.reload_module("colors.blacksea")
 -- core.reload_module("colors.betelgeuse")
-core.reload_module("colors.embers-dark")
+-- core.reload_module("colors.embers-dark")
 -- core.reload_module("colors.gruvbox_dark")
 -- core.reload_module("colors.monochrome-dark")
 -- core.reload_module("colors.predawn")
+core.reload_module("colors.simplicity")
 -- core.reload_module("colors.winter")
 ---------------------- lite -----------------------
 -- core.reload_module("colors.github")
