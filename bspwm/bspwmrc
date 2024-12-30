@@ -1,13 +1,12 @@
 #!/bin/bash
 
-#### BSPWM CONFIGURATION FILE ####
+############ BSPWM CONFIGURATION FILE ############
 # shellcheck source=/dev/null
-
 _Main() {
 
     source ~/.config/bspwm/_WindowRules
 
-    #### MONITORS & DESKTOP SETTINGS ####
+    ######### MONITORS & DESKTOPS SETTINGS #########
     # $MONITOR{1,2,3} are environment variables.
     bspc wm -O "$MONITOR1" "$MONITOR2" "$MONITOR3"
     bspc monitor "$MONITOR1" -d 1 2 3
@@ -17,72 +16,17 @@ _Main() {
     # bspc desktop ^2 -l monocle
 
     # checking external commands/scripts
-    pgrep -x polybar >/dev/null || {
-        _Check launch_polybar && launch_polybar &
-    }
-    pgrep -x sxhkd >/dev/null || {
-        _Check sxhkd_start && sxhkd_start &
-    }
-
+    _Check polybar_start && polybar_start
+    _Check sxhkd_start && sxhkd_start
     _Check bspwm_backnforth && bspwm_backnforth
-    _Check bspwm_external_rules && \
-        bspc config external_rules_command \
-            "$(which bspwm_external_rules)"
 
-    _Check bsp-layout && {
-        pgrep --full bsp-layout >/dev/null && \
-        kill -KILL $(pgrep --full bsp-layout)
-    }
+    # which may not be installed...
+    bspc config external_rules_command "$(command -v bspwm_external_rules)"
 
-    ######### BSPC CONFIG CALLS #########
-    # see man bspc and search for SETTINGS
-    declare -a settings=(
-        "automatic_scheme spiral"
-        "border_width 1"
-        "click_to_focus button1"
-        "initial_polarity second_child"
-        "pointer_modifier mod4"
-        "pointer_action1 move"
-        "pointer_action2 resize_side"
-        "pointer_action3 resize_corner"
-        "split_ratio 0.40"
-        "top_padding 35"
-        "top_monocle_padding 0"
-        "window_gap 5"
-    )
-
-    for opts in "${settings[@]}"; do
-        # we want term splitting, so we don't quote here.
-        # shellcheck disable=SC2086
-        set -- $opts
-        bspc config "$@"
-    done
-
-    declare -A bool=(
-        [borderless_monocle]="false"
-        [center_pseudo_tiled]="true"
-        [focus_follows_pointer]="false"
-        [gapless_monocle]="false"
-        [ignore_ewmh_focus]="true"
-        [pointer_follows_monitor]="true"
-        [pointer_follows_focus]="true"
-        [presel_feedback]="true"
-        [single_monocle]="false"
-    )
-
-    for key in "${!bool[@]}"; do
-        bspc config "$key" "${bool[${key}]}"
-    done
-    
-    local SP=4 MP=3
-    for side in bottom left right; do
-        bspc config ${side}_padding "$SP"
-        bspc config ${side}_monocle_padding "$MP"
-    done
-
-    #### BSPC CONFIG COLORS (see _GetColors function) ####
-    # RESOURCES_FILE is an environment variable
-    [[ -f $RESOURCES_FILE ]] && _GetColors
+    _StringSettings
+    _BooleanSettings
+    _Paddings
+    _Colors
 
     #### BSPWM SPECIFIC CURSOR SHAPE ####
     xsetroot -cursor_name left_ptr
@@ -96,20 +40,72 @@ _Main() {
 
 _Check() { command -v "$1" >/dev/null; }
 
-_GetColors() {
+_StringSettings() {
+    # see man bspc and search for SETTINGS
+    declare -a strings=(
+        "window_gap 8"
+        "top_padding 40"
+        "border_width 3"
+        "split_ratio 0.33"
+        "pointer_action1 move"
+        "pointer_modifier mod4"
+        "top_monocle_padding 0"
+        "click_to_focus button1"
+        "automatic_scheme spiral"
+        "pointer_action2 resize_side"
+        "initial_polarity second_child"
+        "pointer_action3 resize_corner"
+    )
 
-    local red blu mag blk
+    for opts in "${strings[@]}"; do
+        # we want term splitting, so we don't quote here.
+        # shellcheck disable=SC2086
+        set -- $opts
+        bspc config "$@"
+    done
+}
 
-    red=$(xrdb -query | awk '/color1:/{print $NF}')
-    blu=$(xrdb -query | awk '/color4:/{print $NF}')
-    mag=$(xrdb -query | awk '/color5:/{print $NF}')
-    blk=$(xrdb -query | awk '/color0:/{print $NF}')
+_BooleanSettings() {
+    declare -A booleans=(
+        [single_monocle]="false"
+        [presel_feedback]="true"
+        [gapless_monocle]="false"
+        [ignore_ewmh_focus]="true"
+        [center_pseudo_tiled]="true"
+        [borderless_monocle]="false"
+        [pointer_follows_focus]="true"
+        [focus_follows_pointer]="false"
+        [pointer_follows_monitor]="true"
+    )
 
-    bspc config active_border_color   "$blk"
-    bspc config focused_border_color  "$blu"
-    bspc config normal_border_color   "$mag"
+    for key in "${!booleans[@]}"; do
+        bspc config "$key" "${booleans[${key}]}"
+    done
+}
+
+_Colors() {
+    local blu grn red
+    if [[ -e "$HOME"/.Xresources ]] && _Check xrdb; then
+        blu=$(xrdb -query | awk '/color4:/{print $NF}')
+        grn=$(xrdb -query | awk '/color2:/{print $NF}')
+        red=$(xrdb -query | awk '/color1:/{print $NF}')
+    else
+        blu='#005577'
+        grn='#63b96c'
+        red='#ee5555'
+    fi
+    bspc config normal_border_color   "$blu"
+    bspc config active_border_color   "$blu"
+    bspc config focused_border_color  "$grn"
     bspc config presel_feedback_color "$red"
+}
 
+_Paddings() {
+    local SP=3 MP=0
+    for side in bottom left right; do
+        bspc config ${side}_padding "$SP"
+        bspc config ${side}_monocle_padding "$MP"
+    done
 }
 
 _Rules() { bspc rule --add "$@"; }
@@ -117,11 +113,10 @@ _Rules() { bspc rule --add "$@"; }
 case "$1" in
     -r) source ~/.config/bspwm/_WindowRules
         _WindowRules
-        _GetColors
+        _Colors
         notify-send 'window rules reloaded'
         exit 0
     ;;
-    *) notify-send "wrong option $1, try ctrl+alt+c"
 esac
 
 _Main "${@}" > "$XDG_CONFIG_HOME"/bspwm/bspwm.log
