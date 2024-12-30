@@ -9,19 +9,19 @@ _WindowRules() {
 
     # add windows class names to this file if you want them to float.
     while read -r line; do
-        _Rules "$line" state=floating focus=on center=on
+        _Rules "$line" state=floating focus=on
     done < "$XDG_CONFIG_HOME"/bspwm/FloatingApps
 
     term="URxvt"
     # [class:instance]="desktop number"
     declare -A apps=(
         [$term:cmus]="1" [$term:ncmpcpp]="1"
-        [$term:ripper]="1" [$term:youtube]="1"
-        [feh]="2" [Zathura]="2"
+        [$term:ripper]="1" [$term:pulsemixer]="1"
+        [feh]="2" [Zathura]="2" [qv4l2]="2"
         [$term:ranger]="3" [$term:sudoranger]="3"
         [code-oss]="4" [Geany]="4" [lite-xl]="4"
-        [VirtualBox]="5" [mpv:gl]="5"
-        [$term:htop]="6" [$term:jnettop]="6"
+        [VirtualBox]="5" [Org.gnome.Boxes]="5" [mpv:gl]="5"
+        [$term:htop]="6" [$term:jnettop]="6" [$term:top]="6"
         [Chromium]="7" [firefox]="7"
         [file-roller]="8" [filezilla]="8" [Pcmanfm]="8"
         [obs]="9" [SimpleScreenRecorder]="9"
@@ -31,7 +31,10 @@ _WindowRules() {
         _Rules "$class" desktop=^"${apps[${class}]}" follow=on
     done
 
-    # Specials ============= attributs =======================#
-    _Rules URxvt:liteterm desktop=^4 follow=on state=floating rectangle=1553x462+2274+575
+    # Specials ========== Attributs ====================================================#
+    _Rules URxvt:liteterm desktop=^4 follow=on state=floating rectangle=1506x465+2322+568
+    _Rules mpv:gl         layer=above
+    _Rules qvidcap        layer=above rectangle=445x329+3374+720
     _Rules Five-or-more   state=floating rectangle=434x488+2662+281
+    _Rules qv4l2:qv4l2    state=floating rectangle=632x362+1261+667
 }
