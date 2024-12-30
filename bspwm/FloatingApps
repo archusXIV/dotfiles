@@ -1,19 +1,17 @@
-Alacritty
 Confirm
-Gcolor3
+Nl.hjdskes.gcolor3
 Gnome-disks
 Gufw.py
 GParted
 Lxappearance
 mpv
-Mumble
 Nitrogen
 Nm-connection-editor
 URxvt:packagelist
 Pavucontrol
 qt5ct
 qt6ct
-Quadrapassel
+qvidcap
 Rofi
 Sol
 Timeshift-gtk
@@ -24,4 +22,5 @@ URxvt:floaterm
 URxvt:mpm
 URxvt:pacman-cli
 URxvt:pulsemixer
+URxvt:somabox
 URxvt:vim_script
