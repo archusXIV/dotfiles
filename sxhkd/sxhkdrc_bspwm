@@ -9,48 +9,19 @@ ctrl + alt + {c,r,q}
     prompt "Do you really want to quit Bspwm ?" "Xexit" \
     }
 
-################### APPLICATIONS ##################
-
-super + Return
-    bspwm_run xterm
-
-# URxvt terminals
-super + u ; {a,b,c,d,e,f,h,j,m,n,p,r,s,t,x,y}
-    bspwm_run_urxvt \
-    {\
-    aur-cli,bashterm,cmus,mpm,mutt,ranger,htop,jnettop,pulsemixer, \
-    ncmpcpp,pacman-cli,newsboat,vim_script,termscp,ripper,youtube-viewer \
-    }
-
-# most used gui applications
-super + g ; {c,e,f,g,o,p,w}
-    {\
-    bspwm_run chromium, \
-    bspwm_run lite-xl, \
-    bspwm_run pcmanfm, \
-    bspwm_run geany, \
-    bspwm_run code-oss, \
-    bspwm_run pavucontrol, \
-    bspwm_run Navigator \
-    }
-
 ################# WINDOWS MANAGEMENT ##################
 
 # equalize windows size in the viewport
 super + @equal
     bspc query -N -d | xargs -I % bspc node % -B
 
-# center term in screens.
-super + c
-    center_default_terminal
-
-# close/kill focused window.
-super + {_,ctrl + }q
-    bspc node -{c,k}
-
-# close all windows in the present desktop.
-super + alt + ctrl + c
-    closethemall
+# close/close all/kill focused window.
+super + {_,alt + ,ctrl + } End
+    {\
+    bspc node -c, \
+    closethemall, \
+    bspc node -k \
+    }
 
 # close {or kill} all windows or except the focused/marked ones.
 super + alt + {n,c,k}
@@ -61,10 +32,6 @@ super + alt + {n,c,k}
     }
 
 ################### MONITORS ########################
-
-# focus to next monitor.
-#super + BackSpace
-#    bspc monitor -f next
 
 # send focused window to next {right,left} monitor.
 super + {_,shift + }BackSpace
@@ -82,10 +49,10 @@ alt + l ; {a,l,s}
 
 # set the window state.
 super + alt + {f,p,s,t}
-    bspwm_alternate_state -{nf,np,ns,nt}
+    bspwm_alternate_state --{node-{fullscreen,pseudo_tiled,floating,tiled}}
 
 # assign/remove the locked flag to all windows in the current desktop.
-super + Caps_Lock ; {l,u}
+super + Escape ; {l,u}
     bspwm_nodes_operations {--lock-all-local,--unlock-all-local}
 
 # set the node flag.
@@ -123,7 +90,7 @@ super + {o,n}
     bspc wm -h on
 
 # focus the parent node of a node
-super + p
+super + shift + p
     bspc node @parent -f
 
 # focus or send (focused node) to the given desktop (using numpad).
@@ -169,36 +136,34 @@ super + ctrl + {Left,Right}
 ######## CIRCULATE/FLIP/ROTATE/SWAP ########
 
 # circulate the leaves of the tree.
-super + {_,shift + }c
-    bspc node @/ --circulate {backward,forward}
+# change layout horizontally/vertically
+# swap focused window with the next one.
+super + {c,t,Tab}
+    {\
+        bspc node @/ --circulate forward, \
+        bspwm_arrange_tree, \
+        bspc node --swap last.local; bspc node --focus biggest.local \
+    }
 
 # flip layout vertically/horizontally.
 super + {_,shift + }l
     bspc node @/ --flip {vertical,horizontal}
 
 # rotate all the nodes in screen.
-super + shift + r
+super + alt + r
     bspc node @/ --rotate {90,-90}
 
 # focus or swap the node in the given direction.
 super + {_,shift + }{Left,Down,Up,Right}
-    bspc node --{focus,swap} {west,south,north,east}
+    bspc node --{focus,swap} {west,south,north,east} --focus last
 
-# swap current node with the next/previous one.
+# swap current node with the next/previous one across desktops.
 super + {_,shift + }s
-    bspc node --swap {next.active,prev.active}
+    bspc node --swap {next.active,prev.active} --focus last
 
 # swap the current node and the biggest node in the same desktop.
 super + shift + b
-    bspc node --swap biggest.local; bspc node --focus biggest.locals
-
-# swap focused window with the last focused one.
-super + w
-    bspc node --swap last
-
-# layout splits are balanced vertical/horizontal
-super + {z,x}
-    bspwm_arrange_tree
+    bspc node --swap biggest.local --follow
 
 ############ PRESELECT/RECEPTACLES ############
 
@@ -218,15 +183,19 @@ super + Insert ; {Left,Down,Up,Right}
 super + ctrl + {KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,KP_Home,KP_Up,KP_Prior,KP_Insert}
     bspc node -o 0.{1-9}
 
+# move current window to a preselected space
+super + shift + m
+    bspc node -n last.!automatic
+
 # cancel the preselection for the focused node/desktop.
 super + space
-    bspc query -N -d | xargs -I id -n 1 bspc node id -p cancel
+    bspc node -p cancel
 
 ############### MOVE/RESIZE ################
 
 # move a floating window.
 ctrl + {Left,Down,Up,Right}
-    bspc node -v {-10 0,0 10,0 -10,10 0}
+    bspc node -v {-25 0,0 25,0 -25,25 0}
 
 # mode for dynamic gaps. Continuous input mode & Escape to exit mode.
 ctrl + g : {h,j,k,l}
@@ -238,11 +207,11 @@ ctrl + g : {h,j,k,l}
 
 # resize node in the given direction.
 alt + {Left,Down,Up,Right}
-    bspwm_resize {west,south,north,east} 25
+    bspwm_resize {west,south,north,east}
 
 #[mouse control]
 # move or resize window.
-alt + button{1-3}
-    bspc pointer -g {move,resize_side,resize_corner}
+#ctrl + button{1-3}
+#    bspc pointer -g {move,resize_side,resize_corner}
 
 # vim:ft=sxhkdrc
