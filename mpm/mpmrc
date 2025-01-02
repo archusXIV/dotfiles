@@ -1,5 +1,5 @@
 #!/bin/bash
-# ~/.config/mpm/mpmrc (version 2.1-8)
+# ~/.config/mpm/mpmrc (version 2.2-0)
 
 ########################################################
 #                                                      #
@@ -13,6 +13,7 @@
 ####### MPV-PLAYLISTS-MANAGER CONFIGURATION FILE #######
 ######### THE PLACE FOR YOUR PERSONAL SETTINGS #########
 #~~~~~ change the values, not the variables names ~~~~~#
+# To launch mpm faster add 'source ~/.config/mpm/mpmrc' in your .bashrc
 
 # shellcheck disable=SC2034,SC2016,SC2154
 # : "${XDG_DATA_HOME:-$HOME/.local/share}"
@@ -23,10 +24,11 @@ height=738
 copy_width=1260
 copy_height=380
 
-# AVAILABLE THEMES:
-# default, blacksea, dracula, gotham, gruvbox, jellybeans, kasugano
-# monokai, nord, pistachio, solarized, TokyoNight, vacuous, zenburn, zorange
-THEME=embers
+######################### THEMES #########################
+# default, blacksea, dracula, embers, gotham, gruvbox,
+# jellybeans, kasugano, monokai, nord, pistachio, retro,
+# simplicity, solarized, TokyoNight, vacuous, zenburn, zorange
+THEME=simplicity
 
 ####################### SYSTEM TOOLS ######################
 MPMEDITOR=${VISUAL:-vim}
@@ -43,12 +45,12 @@ MUSIC_DIR=${MUZ:-$HOME/Documents/Music}
 VIDEO_DIR=${VID:-$HOME/Documents/Videos}
 audios_dir="$MUSIC_DIR/mpm_audios"
 videos_dir="$VIDEO_DIR/mpm_videos"
-radios_dir="$MUZ/mpd_playlists"
-
+radios_dir="$MUSIC_DIR/mpd_playlists"
 
 ################### DEFAULT TASKS ANSWERS ##################
 keep_none_empty_playlist=yes
 direct_download=yes
+remove_video_ids=yes
 quit_after_task=no
 
 ################### GNU PARALLEL OPTIONS ###################
@@ -59,7 +61,7 @@ parallel_animation=spinners
 parallel_threads="$(nproc)"
 parallel_conversion=yes
 
-#################### FZF FUNCTIONALITY #####################
+################## YT{FZF} FUNCTIONALITY ###################
 use_fzf=yes
 fzf_preview=mediainfo
 # fzf_preview=exiftool
