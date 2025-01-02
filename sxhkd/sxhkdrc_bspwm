@@ -4,7 +4,7 @@
 # reload/restart/quit bspwm.
 ctrl + alt + {c,r,q}
     { \
-    ~/.config/bspwm/bspwmrc -r, \
+    ~/.config/bspwm/bspwmrc -c, \
     bspc wm -r, \
     prompt "Do you really want to quit Bspwm ?" "Xexit" \
     }
