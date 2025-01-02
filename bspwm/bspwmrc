@@ -111,7 +111,7 @@ _Paddings() {
 _Rules() { bspc rule --add "$@"; }
 
 case "$1" in
-    -r) source ~/.config/bspwm/_WindowRules
+    -c) source ~/.config/bspwm/_WindowRules
         _WindowRules
         _Colors
         notify-send 'window rules reloaded'
