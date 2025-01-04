@@ -1,21 +1,30 @@
 // Enter your personal settings here[]
 {
-    "bashIde.explainshellEndpoint": "http://localhost:5000",
-    
+
+    // GITHUB COPILOT SETTINGS
+    "github.copilot.enable": {
+        "markdown": false,
+        "plaintext": false,
+        "*": true
+    },
+
     // EDITOR SETTINGS
     "editor.accessibilitySupport": "off",
+    "editor.autoClosingQuotes": "always",
     "editor.bracketPairColorization.enabled": true,
     "editor.cursorSmoothCaretAnimation": "on",
     "editor.cursorBlinking": "smooth",
-    "editor.fontFamily": "'JetBrains Mono','IBM Plex Mono','Fira Code'",
+    "editor.fontFamily": "'JetBrainsMono Nerd Font','IBM Plex Mono','Fira Code'",
     "editor.fontLigatures": true,
     "editor.fontSize": 16,
+    "editor.fontWeight": "300",
     "editor.formatOnPaste": true,
     "editor.formatOnType": true,
     "editor.guides.bracketPairs": "active",
     "editor.guides.bracketPairsHorizontal": true,
     "editor.insertSpaces": false,
     "editor.lineNumbers": "relative",
+    "editor.matchBrackets": "always",
     "editor.minimap.autohide": true,
     "editor.mouseWheelZoom": true,
     "editor.multiCursorModifier": "ctrlCmd",
@@ -23,12 +32,15 @@
         "other": "inline",
         "strings": "inline"
     },
-    "editor.rulers": [
-        100
-    ],
+    "editor.renderControlCharacters": true,
+    "editor.rulers": [100],
     "editor.scrollBeyondLastLine": false,
     "editor.tabCompletion": "on",
     "editor.wordWrapColumn": 85,
+
+    // EXTENSIONS SETTINGS
+    "bashIde.explainshellEndpoint": "http://localhost:5000",
+    "extensions.ignoreRecommendations": true,
 
     // FILES SETTINGS
     "explorer.confirmDragAndDrop": false,
@@ -84,7 +96,7 @@
         "files.eol": "\n",
         "editor.defaultFormatter": "foxundermoon.shell-format"
     },
-    
+
     // SECURITY SETTINGS
     "security.workspace.trust.untrustedFiles": "open",
     "telemetry.telemetryLevel": "off",
@@ -106,9 +118,6 @@
     "window.titleBarStyle": "custom",
 
     // WORKBENCH SETTINGS
-    "workbench.settings.applyToAllProfiles": [
-        
-    ],
     "workbench.editor.showTabs": "multiple",
     "workbench.editor.enablePreview": false,
     "workbench.colorTheme": "Kanagawa Wave",
@@ -128,10 +137,14 @@
         "editorBracketHighlight.foreground4": "#d4775a",
         "editorBracketHighlight.foreground5": "#c25762",
         "editorBracketHighlight.foreground6": "#9caac4",
+        "editorBracketMatch.background": "#1e1f29",
         "editorBracketHighlight.unexpectedBracket.foreground": "#db6165",
         "editorStickyScroll.background": "#2d4f67",
         "editorStickyScrollHover.background": "#2a317c",
     },
+    "workbench.settings.applyToAllProfiles": [
+        "workbench.colorCustomizations"
+    ],
     "workbench.productIconTheme": "material-product-icons",
     "workbench.iconTheme": "vscode-simpler-icons",
     "workbench.navigationControl.enabled": false
