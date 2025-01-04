@@ -24,9 +24,15 @@
         "other": "inline",
         "strings": "inline"
     },
+    "editor.rulers": [
+        100
+    ],
+    "explorer.confirmDragAndDrop": false,
     "files.autoSave": "afterDelay",
     "files.autoSaveWhenNoErrors": true,
-    "explorer.confirmDragAndDrop": false,
+    "git.autofetch": true,
+    "git.enableSmartCommit": true,
+    "git.confirmSync": false,
     "shellcheck.executablePath": "/usr/bin/shellcheck",
     "shellcheck.enable": true,
     "shellcheck.run": "onType",
@@ -65,20 +71,13 @@
         "spring-boot-properties",
         "azcli"
     ],
-    "telemetry.telemetryLevel": "off",
-    "git.autofetch": true,
-    "git.enableSmartCommit": true,
-    "workbench.editor.showTabs": "multiple",
-    "workbench.editor.enablePreview": false,
     "[shellscript]": {
         "editor.autoIndent": "full",
         "files.eol": "\n",
         "editor.defaultFormatter": "foxundermoon.shell-format"
     },
-    "git.confirmSync": false,
-    "editor.rulers": [
-        100
-    ],
+    "security.workspace.trust.untrustedFiles": "open",
+    "telemetry.telemetryLevel": "off",
     "terminal.integrated.fontSize": 16,
     "window.openFilesInNewWindow": "on",
     "window.zoomLevel": 1,
@@ -88,6 +87,8 @@
     "workbench.settings.applyToAllProfiles": [
         
     ],
+    "workbench.editor.showTabs": "multiple",
+    "workbench.editor.enablePreview": false,
     "workbench.colorTheme": "Kanagawa Wave",
     "workbench.tree.indent": 30,
     "workbench.tree.renderIndentGuides": "always",
@@ -108,7 +109,6 @@
         "editorStickyScroll.background": "#2d4f67",
         "editorStickyScrollHover.background": "#2a317c",
     },
-    "security.workspace.trust.untrustedFiles": "open",
     "workbench.productIconTheme": "material-product-icons",
     "workbench.iconTheme": "vscode-simpler-icons",
     "workbench.navigationControl.enabled": false,
