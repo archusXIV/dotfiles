@@ -1,25 +1,24 @@
 // Enter your personal settings here[]
 {
     "bashIde.explainshellEndpoint": "http://localhost:5000",
-    "editor.multiCursorModifier": "ctrlCmd",
+    
+    // EDITOR SETTINGS
+    "editor.accessibilitySupport": "off",
+    "editor.bracketPairColorization.enabled": true,
+    "editor.cursorSmoothCaretAnimation": "on",
+    "editor.cursorBlinking": "smooth",
     "editor.fontFamily": "'JetBrains Mono','IBM Plex Mono','Fira Code'",
     "editor.fontLigatures": true,
-    "editor.fontSize": 15,
-    "editor.accessibilitySupport": "off",
-    "editor.minimap.autohide": true,
+    "editor.fontSize": 16,
     "editor.formatOnPaste": true,
     "editor.formatOnType": true,
-    "editor.bracketPairColorization.enabled": true,
-    "editor.tabCompletion": "on",
-    "editor.wordWrapColumn": 85,
-    "editor.cursorBlinking": "smooth",
-    "editor.mouseWheelZoom": true,
-    "editor.insertSpaces": false,
-    "editor.cursorSmoothCaretAnimation": "on",
-    "editor.lineNumbers": "relative",
-    "editor.scrollBeyondLastLine": false,
     "editor.guides.bracketPairs": "active",
     "editor.guides.bracketPairsHorizontal": true,
+    "editor.insertSpaces": false,
+    "editor.lineNumbers": "relative",
+    "editor.minimap.autohide": true,
+    "editor.mouseWheelZoom": true,
+    "editor.multiCursorModifier": "ctrlCmd",
     "editor.quickSuggestions": {
         "other": "inline",
         "strings": "inline"
@@ -27,12 +26,21 @@
     "editor.rulers": [
         100
     ],
+    "editor.scrollBeyondLastLine": false,
+    "editor.tabCompletion": "on",
+    "editor.wordWrapColumn": 85,
+
+    // FILES SETTINGS
     "explorer.confirmDragAndDrop": false,
     "files.autoSave": "afterDelay",
     "files.autoSaveWhenNoErrors": true,
+
+    // GIT SETTINGS
     "git.autofetch": true,
     "git.enableSmartCommit": true,
     "git.confirmSync": false,
+
+    // SHELL SETTINGS
     "shellcheck.executablePath": "/usr/bin/shellcheck",
     "shellcheck.enable": true,
     "shellcheck.run": "onType",
@@ -76,14 +84,28 @@
         "files.eol": "\n",
         "editor.defaultFormatter": "foxundermoon.shell-format"
     },
+    
+    // SECURITY SETTINGS
     "security.workspace.trust.untrustedFiles": "open",
     "telemetry.telemetryLevel": "off",
+
+    // TERMINAL SETTINGS
     "terminal.integrated.fontSize": 16,
+    "terminal.integrated.fontWeight": "normal",
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "terminal.integrated.cursorBlinking": true,
+    "terminal.integrated.cursorStyle": "line",
+    "terminal.integrated.allowChords": false,
+    "terminal.integrated.enablePersistentSessions": false,
+
+    // WINDOW SETTINGS
     "window.openFilesInNewWindow": "on",
-    "window.zoomLevel": 1,
+    "window.zoomLevel": 0,
     "window.customTitleBarVisibility": "auto",
     "window.density.editorTabHeight": "compact",
     "window.titleBarStyle": "custom",
+
+    // WORKBENCH SETTINGS
     "workbench.settings.applyToAllProfiles": [
         
     ],
@@ -95,6 +117,7 @@
     "workbench.colorCustomizations": {
         "tree.indentGuidesStroke": "#45b8ac",
         "tree.inactiveIndentGuidesStroke": "#059def",
+        "editor.background": "#1e1f29",
         "editor.lineHighlightBorder": "#447ad8",
         "editor.lineHighlightBackground": "#1f1f28",
         "editorCursor.foreground": "#d89e44",
@@ -111,11 +134,5 @@
     },
     "workbench.productIconTheme": "material-product-icons",
     "workbench.iconTheme": "vscode-simpler-icons",
-    "workbench.navigationControl.enabled": false,
-    "terminal.integrated.fontWeight": "normal",
-    "terminal.integrated.defaultProfile.linux": "bash",
-    "terminal.integrated.cursorBlinking": true,
-    "terminal.integrated.cursorStyle": "line",
-    "terminal.integrated.allowChords": false,
-    "terminal.integrated.enablePersistentSessions": false
+    "workbench.navigationControl.enabled": false
 }
