@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# we need plugin_ipc.py...
+# cp /usr/share/doc/ranger/examples/plugin_ipc.py ~/.config/ranger/plugins/plugin_ipc.py
+# ranger must be already running!!!
+# usage: ranger_tabs <path1> <path2> <path3> etc...
+
+pid=$(pidof -x ranger)
+fifo="/tmp/ranger-ipc.$pid"
+
+[[ -z $pid || $# -eq 0 ]] && exit 1
+
+while (($#)); do
+    echo tab_new "$1" > "$fifo"
+    sleep 0.5
+    shift
+done
