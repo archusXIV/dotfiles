@@ -1,0 +1,179 @@
+#!/bin/bash
+
+# original idea: <https://github.com/epitron/scripts/blob/master/somafm>
+# Modified and extended by Barret E <https://github.com/archusXIV>
+#
+# Dependencies: dialog, mpv, wmctrl, streamripper (optional).
+# It is also provided as third party software in Mpv-Playlists-Manager.
+# <https://github.com/archusXIV/mpv-playlists-manager>
+#
+# somabox let you play/rip chosen channels from <https://somafm.com/>
+# Add/Remove items from their respective arrays and change the window size
+# using the wmctrl command line below to correctly fit the amount
+# of CHANNELS and stream informations at the bottom of the box.
+# If streamripper is installed, don't forget to change the rip_dir variable.
+
+for pkg in dialog mpv wmctrl; do
+    ! command -v "$pkg" && {
+        notify-send -t 0 -u critical "$pkg isn't installed, exiting!"
+        printf '%s\n' " $pkg isn't installed, exiting!"
+        exit 127
+    }
+done
+
+# resize the window according to the amount of channels
+wmctrl -r :ACTIVE: -e 5,-1,-1,980,660
+
+VERSION="v.0.6"
+
+export MPVSOCKET="/tmp/mpvsocket"
+soma_url="http://somafm.com/nossl/"
+nowPlaying="NO STATION SELECTED"
+nowRipping="$nowPlaying"
+rip_dir="$MUZ/streamripper"
+low=64 medium=130 high=256 higher=320
+
+if [[ -n $(command -v streamripper) ]]; then
+    select="PLAY/RIP SELECTED"
+else
+    select="PLAY SELECTED"
+fi
+
+# Add channels names and descriptions here
+# "channel_name" "description" on each line.
+LIST=(
+    "Boot Liquor" "Americana Roots music"
+    "Dark Zone" "The darker side of deep ambient"
+    "Deep Space One" "Deep ambient electronic, experimental and space music"
+    "Drone Zone" "Served best chilled, safe with most medications"
+    "Folk Forward" "Indie Folk, Alt-folk and the occasional folk classics"
+    "Groove Salad" "Nicely chilled plate of ambient/downtempo beats"
+    "Mission Control" "Celebrating NASA and Space Explorers everywhere"
+    "SF 10-33" "Ambient tunes mixed with San Francisco public safety radio"
+    "Space Station" "Spaced-out ambient and mid-tempo electronica"
+    "Synphaera Radio" "Featuring the music from an independent record label"
+    "ThistleRadio" "Exploring music from Celtic roots and branches"
+    "Underground 80s" "Early 80s UK Synthpop and a bit of New Wave"
+)
+
+# keep this one empty to create a blank line between
+# channels and tuned station quality informations.
+LIST+=("" "")
+
+# Add/Remove array index [0],[2] etc...
+# use even numbers for the channel name
+declare -A LOWBITRATES=(
+    [${LIST[0]}]="${soma_url}bootliquor${medium}.pls"
+    [${LIST[2]}]="${soma_url}darkzone${medium}.pls"
+    [${LIST[4]}]="${soma_url}deepspaceone${low}.pls"
+    [${LIST[6]}]="${soma_url}dronezone${medium}.pls"
+    [${LIST[8]}]="${soma_url}folkfwd${low}.pls"
+    [${LIST[10]}]="${soma_url}gsclassic${low}.pls"
+    [${LIST[12]}]="${soma_url}missioncontrol${low}.pls"
+    [${LIST[14]}]="${soma_url}sf1033${low}.pls"
+    [${LIST[16]}]="${soma_url}spacestation${low}.pls"
+    [${LIST[18]}]="${soma_url}synphaera${medium}.pls"
+    [${LIST[20]}]="${soma_url}thistle${low}.pls"
+    [${LIST[22]}]="${soma_url}u80s${medium}.pls"
+)
+
+declare -A HIGHBITRATES=(
+    [${LIST[0]}]="${soma_url}bootliquor${higher}.pls"
+    [${LIST[2]}]="${soma_url}darkzone${high}.pls"
+    [${LIST[4]}]="${soma_url}deepspaceone${medium}.pls"
+    [${LIST[6]}]="${soma_url}dronezone${high}.pls"
+    [${LIST[8]}]="${soma_url}folkfwd${medium}.pls"
+    [${LIST[10]}]="${soma_url}gsclassic${medium}.pls"
+    [${LIST[12]}]="${soma_url}missioncontrol${medium}.pls"
+    [${LIST[14]}]="${soma_url}sf1033${medium}.pls"
+    [${LIST[16]}]="${soma_url}spacestation${medium}.pls"
+    [${LIST[18]}]="${soma_url}synphaera${high}.pls"
+    [${LIST[20]}]="${soma_url}thistle${medium}.pls"
+    [${LIST[22]}]="${soma_url}u80s${high}.pls"
+)
+
+_main() {
+    while true; do
+
+        channelChoice=$(
+            dialog --stdout --backtitle "SOMABOX $VERSION" \
+            --ok-label "$select" --cancel-label "QUIT SOMABOX" \
+            --title "SOMAFM CHANNELS LIST" --no-shadow \
+            --menu "Select a radio station:" 0 90 0 \
+            "${LIST[@]}" \
+            "NOW PLAYING:" "${nowPlaying}" \
+            "" "${BITRATES_MSG}" \
+            "NOW RIPPING:" "${nowRipping}" \
+            "" "${RIPPING_MSG}"
+        )
+
+        case $? in 1|255) clear; _killMpv; _killStreamripper; exit 0 ;; esac
+
+        bitrates=$(
+            dialog --stdout --backtitle "SOMABOX $VERSION" \
+            --title "AUDIO BITRATES" \
+            --menu "Select a bitrate for ${channelChoice}:" 10 50 2 \
+            LOW  "(AAC 64k / MP3 128k)" \
+            HIGH "(AAC 128k / MP3 256/320k)"
+        )
+
+        [[ -n $(command -v streamripper) && -n $bitrates ]] && {
+            ripping=$(
+                dialog --stdout --backtitle "SOMABOX $VERSION" \
+                --title "STREAMRIPPER OPTIONS" \
+                --menu "Do you want to record ${channelChoice}?" 10 50 2 \
+                YES  "Rip in selected quality" \
+                NO   "Play selected station instead."
+            )
+            [[ ! -d $rip_dir && $ripping == 'YES' ]] && mkdir --parents "$rip_dir"
+        }
+
+        if [[ $bitrates == 'LOW' && $ripping == 'YES' ]]; then
+            nowRipping="${channelChoice}"
+            RIPPING_MSG="Ripping in LOW quality: (AAC 64k / MP3 128k)"
+            _ripStation "${LOWBITRATES[${channelChoice}]}" &
+        elif [[ $bitrates == 'HIGH' && $ripping == 'YES' ]]; then
+            nowRipping="${channelChoice}"
+            RIPPING_MSG="Ripping in HIGH quality: (AAC 128k / MP3 256/320k)"
+            _ripStation "${HIGHBITRATES[${channelChoice}]}" &
+        elif [[ $bitrates == 'LOW' ]]; then
+            nowPlaying="${channelChoice}"
+            BITRATES_MSG="Playing in LOW quality: (AAC 64k / MP3 128k)"
+            _mpvOptions "${LOWBITRATES[${channelChoice}]}"
+        elif [[ $bitrates == 'HIGH' ]]; then
+            nowPlaying="${channelChoice}"
+            BITRATES_MSG="Playing in HIGH quality: (AAC 128k / MP3 256/320k)"
+            _mpvOptions "${HIGHBITRATES[${channelChoice}]}"
+        else
+            continue
+        fi
+
+    done
+}
+
+_killStreamripper() {
+    kill -SIGTERM "$(pgrep -x streamripper)"
+    rm -rf "$rip_dir"/incomplete
+} 2>/dev/null
+
+_ripStation() {
+    _killStreamripper; sleep 0.2
+    streamripper "$*" \
+    -u "FreeAmp/2.x" \
+    -d "$rip_dir" -s >/dev/null 2>&1
+}
+
+_killMpv() { kill -SIGTERM "$(pgrep -x mpv)" 2>/dev/null; }
+
+_mpvOptions() {
+    _killMpv; sleep 0.2
+    mpv \
+    --no-config \
+    --idle=no \
+    --cache=no \
+    --no-terminal \
+    --force-window=no \
+    "${MPVSOCKET}" "$*" &
+}
+
+_main "${@}"
