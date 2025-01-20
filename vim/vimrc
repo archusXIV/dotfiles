@@ -127,7 +127,7 @@ Plug 'preservim/nerdtree', { 'on': 'NERDTreeToggle' }
 " - Automatically executes `filetype plugin indent on` and `syntax enable`.
 call plug#end()
 
-""""" Bash-Languga-Server """""
+""""" Bash-Language-Server """""
 if executable('bash-language-server')
     augroup LspBash
         autocmd!
