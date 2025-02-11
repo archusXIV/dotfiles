@@ -1,27 +1,24 @@
 #!/bin/bash
 
-WmName=$(wmctrl -m | awk '/Name:/{print $2}')
+WmName=$(wmctrl -m | awk '/Name: /{print $2}')
 
 WinId() { wmctrl -lx | awk '{print $1}'; }
 
-restartmsg() {
-    if [[ $WmName == bspwm ]]; then
-        bspc wm -r
-    elif [[ $WmName == i3 ]]; then
-        i3-msg -q restart
-    elif [[ $WmName == dk ]]; then
-        dkcmd restart
-    fi
-}
-
-if [[ $WmName == dk ]]; then
-    for wd in $(WinId); do
-        dkcmd win "$wd" kill
-    done
-    restartmsg
-else
-    for wd in $(WinId); do
-        xdo close "$wd"
-    done
-    restartmsg
-fi
+case "$1" in
+    restartmsg)
+		for wd in $(WinId); do
+            [[ $WmName == bspwm ]] && xdo close "$wd"
+            [[ $WmName == i3 ]] && xdo close "$wd"
+            [[ $WmName == dk ]] && dkcmd win "$wd" kill
+        done
+    ;;
+    reloadmsg )
+        if [[ $WmName = bspwm ]]; then
+            "$HOME"/.config/bspwm/bspwmrc -c
+        elif [[ $WmName = i3 ]]; then
+            i3-msg reload
+        elif [[ $WmName = dk ]]; then
+            "$HOME"/.config/dk/dkrc
+        fi
+    ;;
+esac
