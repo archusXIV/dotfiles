@@ -46,8 +46,9 @@ _whoisplaying() {
 }
 
 # SUGGESTION
-#     Now you can define keybindings in your window manager config,
-#     eg: XF86Audio{Play,Pause} mediacontrol --toggle
+#    Now you can define keybindings in your window manager config,
+#    sxhkd: XF86Audio{Play,Pause}
+#   mediacontrol --toggle
 
 player=$(_whoisplaying)
 
@@ -71,5 +72,11 @@ case "$1" in
         [[ $player = mpv  ]] && echo stop | socat - /tmp/mpvsocket
         [[ $player = cmus ]] && cmus-remote --stop
         [[ $player = mpd  ]] && mpc_control stop
+    ;;
+    --kill )
+        if [[ $player = mpv ]]; then
+            echo stop | socat - /tmp/mpvsocket
+            killall -q mpv
+        fi
     ;;
 esac
