@@ -12,7 +12,7 @@ ctrl + alt + {c,r,q}
 ######################################################################
 ##########################  WINDOWS MANAGEMENT  ######################
 ######################################################################
-# close/close all unfocused/close all/kill focused window.
+# close/close all unfocused/close all, kill focused window.
 super + {_,ctrl +,alt +,shift +} End
     {\
     dkcmd win kill, \
@@ -28,17 +28,20 @@ super + a
 # focus window/workspace previous/next
 super + {_,alt + }{Left,Right}
     dkcmd {win focus,ws} {prev,next}
+# or
+super + {_,alt + }{h,l}
+    dkcmd {win focus,ws} {prev,next}
 
 # focus next, 2nd, 3rd, 4th or whatever windows from the focused one.
-super + shift + {KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,KP_Home,KP_Up,KP_Prior}
-    dkcmd win focus +{1-9}
+super + shift + {KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,KP_Home,KP_Up,KP_Prior,KP_Insert}
+    dkcmd win focus +{1-9,10}
 
 # swap tiled window in/out of master, cycle tiled windows in place
 super + {space,Tab}
     dkcmd win {swap,cycle}
 
 # focus monitor next/previous
-super + {_,shift} + {BackSpace}
+super + {_,shift} + BackSpace
     dkcmd mon view {next,prev}
 
 # {focus,send,send_&_follow} to monitor number
@@ -46,16 +49,16 @@ super + {_,alt +,ctrl +} {Print,Scroll_Lock,Pause}
     dkcmd mon {view,send,follow} {$MONITOR1,$MONITOR2,$MONITOR3}
 
 # {focus,send,send_&_follow} to workspace number
-super + {_,alt +,ctrl +} {KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,KP_Home,KP_Up,KP_Prior}
-    dkcmd ws {view,send,follow} {1-9}
+super + {_,alt +,ctrl +} {KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,KP_Home,KP_Up,KP_Prior,KP_Insert}
+    dkcmd ws {view,send,follow} {1-9,10}
 
 # focus the last window (in the current ws)/desktop
 super + {_,shift + }less
     dkcmd {win focus,ws} last
 
 # send/send & follow all windows of the current ws to ws n°
-super + shift + s ; {_,alt + }{KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,KP_Home,KP_Up,KP_Prior}
-    dk_sendthemall -{s,f} {1-9}
+super + shift + s ; {_,alt + }{KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,KP_Home,KP_Up,KP_Prior,KP_Insert}
+    dk_sendthemall -{s,f} {1-9,10}
 
 # change active workspace layout.
 alt + l ; {a,d,g,n,r,s,t,w}
@@ -82,7 +85,7 @@ super + ctrl + {KP_Add,KP_Subtract}
     dkcmd win mvstack {up,down}
 
 # resize/move (floating) window using custom script
-# none effective in grid layout.
+# none effective in grid desktop layout.
 alt + {_,ctrl + }{Left,Up,Down,Right}
     dk_winresize --{resize,move} {Left,Up,Down,Right}
 
