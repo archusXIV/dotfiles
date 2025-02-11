@@ -1,5 +1,5 @@
 #!/bin/bash
-# ~/.config/mpm/themerc (version 1.5-4)
+# ~/.config/mpm/themerc (version 2.2-7)
 
 ###########################################################################
 #'########:'##::::'##:'########:'##::::'##:'########:'########:::'######::#
@@ -23,6 +23,16 @@
 ### task=infos like: direct download, audio conversion type etc...
 ### customColors is called from lib/_LittleStars function.
 
+_NativePlayerColors() {
+    export FZF_DEFAULT_OPTS='
+        --color=header:bold:#87afaf
+        --color=fg:#af5faa,fg+:#ffffff,bg:#21242b,bg+:#2e3944
+        --color=hl:#5f87af,hl+:#5fd7ff,info:#afaf87
+        --color=prompt:#af5fff,spinner:#af5fff,pointer:#af5fff
+        --color=border:#554476,label:#aeaeae,query:#d9d9d9
+    '
+}
+
 _Theme() {
 
     case "$1" in
@@ -43,15 +53,6 @@ _Theme() {
             customColors=( "0x76 0x72 0xe8" "0xa0 0x6d 0x4e" "0x69 0xb0 0xbf" \
             "0x81 0x7c 0x5c" "0xf8 0xf8 0xf0" )
         ;;
-        chocolat-pistache)
-            nc=$'\e[38;2;140;117;94m';      #8C755E "0x8c 0x75 0x5e"
-            critical=$'\e[38;2;215;95;65m'; #D75F41 "0xd7 0x5f 0x41"
-            info=$'\e[38;2;146;196;113m';   #92C471 "0x92 0xc4 0x71"
-            mtitle=$'\e[38;2;242;203;87m';  #F2CB57 "0xf2 0xcb 0x57"
-            task=$'\e[38;2;249;230;176m';   #F9E6B0 "0xf9 0xe6 0xb0"
-            customColors=( "0x8c 0x75 0x5e" "0xd7 0x5f 0x41" "0x92 0xc4 0x71" \
-            "0xf2 0xcb 0x57" "0xf9 0xe6 0xb0" )
-        ;;
         dracula)
             nc=$'\e[38;2;189;147;249m';     #BD93F9 "0xbd 0x93 0xf9"
             critical=$'\e[38;2;255;85;85m'; #FF5555 "0xff 0x55 0x55"
@@ -62,13 +63,13 @@ _Theme() {
             "0xf1 0xfa 0x8c" "0xbf 0xbf 0xbf" )
         ;;
         gotham)
-            nc=$'\e[38;2;136;139;165m';     #888BA5 "0x88 0x8b 0xa5"
-            critical=$'\e[38;2;195;48;39m'; #C33027 "0xc3 0x30 0x27"
-            info=$'\e[38;2;38;169;139m';    #26A98B "0x26 0xa9 0x8b"
-            mtitle=$'\e[38;2;237;181;75m';  #EDB54B "0xed 0xb5 0x4b"
-            task=$'\e[38;2;152;209;206m';   #98D1CE "0x98 0xd1 0xce"
-            customColors=( "0x88 0x8b 0xa5" "0xc3 0x30 0x27" "0x26 0xa9 0x8b" \
-            "0xed 0xb5 0x4b" "0x98 0xd1 0xce" )
+            nc=$'\e[38;2;25;84;101m';        #195465 "0x19 0x54 0x65"
+            critical=$'\e[38;2;210;105;57m'; #d26939 "0xd2 0x69 0x39"
+            info=$'\e[38;2;38;169;139m';     #26A98B "0x26 0xa9 0x8b"
+            mtitle=$'\e[38;2;237;181;75m';   #EDB54B "0xed 0xb5 0x4b"
+            task=$'\e[38;2;89;156;170m';     #599caa "0x59 0x9c 0xaa"
+            customColors=( "0x19 0x54 0x65" "0xd2 0x69 0x39" "0x26 0xa9 0x8b" \
+            "0xed 0xb5 0x4b" "0x59 0x9c 0xaa" )
         ;;
         gruvbox)
             # Using RGB colors for array 'customColors'
@@ -81,16 +82,35 @@ _Theme() {
                         #   normal text  critical      info          mtitle       task
             customColors=( "69;133;136" "204;36;29" "104;157;106" "215;153;33" "235;219;178" )
         ;;
+        jellybeans)
+            # Using HEX colors for array 'customColors'
+            nc=$'\e[38;2;89;123;197m';       #597bc5 "0x59 0x7b 0xc5"
+            critical=$'\e[38;2;207;106;76m'; #cf6a4c "0xcf 0x6a 0x4c"
+            info=$'\e[38;2;153;173;106m';    #99ad6a "0x99 0xad 0x6a"
+            mtitle=$'\e[38;2;216;173;76m';   #d8ad4c "0xd8 0xad 0x4c"
+            task=$'\e[38;2;113;185;248m';    #a9a9a9 "0xa9 0xa9 0xa9"
+            customColors=( "0x59 0x7b 0xc5" "0xcf 0x6a 0x4c" "0x99 0xad 0x6a" \
+            "0xd8 0xad 0x4c" "0xa9 0xa9 0xa9" )
+        ;;
         monokai)
             # Using RGB colors for array 'customColors'
-            nc=$'\e[38;2;161;239;228m';      #A1EFE4 "0xa1 0xef 0xe4"
+            nc=$'\e[38;2;102;217;239m';      #66d9ef "0x66 0xd9 0xef"
             critical=$'\e[38;2;249;38;114m'; #F92672 "0xf9 0x26 0x72"
             info=$'\e[38;2;166;226;46m';     #A6E22E "0xa6 0xe2 0x2e"
             mtitle=$'\e[38;2;244;191;171m';  #F4BF75 "0xf4 0xbf 0x75"
             task=$'\e[38;2;248;248;242m';    #F8F8F2 "0xf8 0xf8 0xf2"
             # enter the last three numbers of your custom sequence.
                         #   normal text   critical      info          mtitle       task
-            customColors=( "161;239;228" "249;38;114" "166;226;46" "244;191;171" "248;248;242" )
+            customColors=( "102;217;239" "249;38;114" "166;226;46" "244;191;171" "248;248;242" )
+        ;;
+        pistachio)
+            nc=$'\e[38;2;146;196;113m';     #92C471 "0x92 0xc4 0x71"
+            critical=$'\e[38;2;215;95;65m'; #D75F41 "0xd7 0x5f 0x41"
+            info=$'\e[38;2;146;196;113m';   #92C471 "0x92 0xc4 0x71"
+            mtitle=$'\e[38;2;242;203;87m';  #F2CB57 "0xf2 0xcb 0x57"
+            task=$'\e[38;2;249;230;176m';   #F9E6B0 "0xf9 0xe6 0xb0"
+            customColors=( "0x92 0xc4 0x71" "0xd7 0x5f 0x41" "0x92 0xc4 0x71" \
+            "0xf2 0xcb 0x57" "0xf9 0xe6 0xb0" )
         ;;
         TokyoNight)
             nc=$'\e[38;2;169;177;214m';       #A9B1D6 "0xa9 0xb1 0xd6"
