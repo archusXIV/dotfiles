@@ -1,33 +1,31 @@
 #!/usr/bin/env bash
 
+xset s off -dpms
+xset r rate 660 25
+urxvtd -q -o -f &
+numlockx on &
+
+# Sound
+# muting HDMI source/sink & webcam mic too.
+pactl set-source-volume 0 0%
+pactl set-source-volume 1 0%
+pactl set-source-mute 0 1
+pactl set-source-mute 1 1
+pactl set-sink-volume 0 0%
+pactl set-sink-mute 0 1
+amixer -D pulse set Master 70%,52% >/dev/null 2>&1
+
 # Wallpaper setter
-if [[ -n $(command -v nitrogen) ]]; then
+if command -v nitrogen >/dev/null; then
     nitrogen --restore &
 else
     sh -c "$XDG_CONFIG_HOME"/.fehbg &
 fi
 
-# Sound
-# muting HDMI source/sink & webcam mic too.
-for id in 0 1; do
-    pactl set-source-mute "$id" 1
-    pactl set-source-volume "$id" 0%
-    pactl set-sink-mute "$id" 1
-    pactl set-sink-volume "$id" 0%
-done
-
-unset id
-
-DEFAULT_SINK=$(pactl get-default-sink)
-pactl set-sink-mute "${DEFAULT_SINK}" 0
-pactl set-sink-volume "${DEFAULT_SINK}" 50%
-
-
 # Other settings
 cleanup &
 rsync -apq "$SCRIPTDIR"/* "$HOME"/Documents/scripts/ &
-rsync -apq --exclude 'VirtualBox' --exclude 'virt-manager' \
-"$XDG_CONFIG_HOME"/* "$HOME"/Documents/configs/CONFIGS/ &
+rsync -apq "$XDG_CONFIG_HOME"/* "$HOME"/Documents/configs/CONFIGS/ &
 
 # Updates checking script
-sleep 10s && updates-manager --check
+sleep 10s; updates-manager --check
