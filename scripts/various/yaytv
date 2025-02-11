@@ -194,14 +194,13 @@ else
         cat "${0##*/}.m3u" \
         | "$player" --cache=yes --idle=no --no-terminal --playlist=- &
     else
-        cat "${0##*/}.m3u" > "$playlist"
-        "$player" "$playlist"
+        "$player" "${0##*/}.m3u"
     fi
 
     if [[ $player == mpv ]]; then
-        read -rp ' Launch player [Y/n]: ' answer
+        read -rp ' Launch player interface [Y/n]: ' answer
         case "$answer" in
-            y|Y) _fzfPlayer ;;
+            y*|Y*) _fzfPlayer ;;
             *) exit 0 ;;
         esac
     fi
