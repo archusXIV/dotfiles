@@ -1,5 +1,5 @@
 #!/bin/bash
-# ~/.config/mpm/mpmrc (version 2.2-0)
+# ~/.config/mpm/mpmrc (version 2.2-7)
 
 ########################################################
 #'##::::'##:'########::'##::::'##:'########:::'######::#
@@ -19,10 +19,10 @@
 # : "${XDG_DATA_HOME:-$HOME/.local/share}"
 
 check_updates=no
-width=1260
-height=738
-copy_width=1260
-copy_height=380
+width=124
+height=32
+copy_width=124
+copy_height=16
 
 ######################### THEMES #########################
 # default, blacksea, dracula, embers, gotham, gruvbox,
@@ -84,7 +84,7 @@ ytfzfOptions_X=(
 )
 
 ############ FFMPEG SPECIFICS (audio conversion) ############
-automatic_audio_conversion=yes
+automatic_audio_conversion=no
 default_conversion_format=mp3
 
 ffmpegAacCodecOptions=( -acodec aac -ar 48000 -ab 320k )
@@ -95,7 +95,8 @@ ffmpegWavCodecOptions=( -acodec pcm_s32le -ar 48000 )
 
 ####################### MPV SPECIFICS #######################
 use_mpvc=yes
-mpvc_tui=ncmpvc
+#mpvc_tui=ncmpvc
+mpvc_tui=native
 mpvc_tui_cheatsheet="/usr/local/share/doc/mpm/ncmpvc_cheatsheet"
 
 mpvGenOptions_CA=( --cache=yes )
@@ -135,6 +136,7 @@ ytdlPreset_MF=( --merge-output-format mp4 )
 ytdlPreset_DW=( --no-warnings --ignore-errors )
 ytdlPreset_DP=( --progress )
 ytdlPreset_FS=( --compat-options filename-sanitization )
+ytdlPreset_NR=( 50 )
 
 ytdlPreset_NC=(
     "${ytdlPreset_BR[@]}"
