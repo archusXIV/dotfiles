@@ -1,13 +1,12 @@
-# vim:ft=sxhkdrc
 ##############################################################
 # THIS FILE IS USED WITH BSPWM, I3 & DK FOR COMMON SHORTCUTS #
 ##############################################################
+
 # reload sxhkd configuration files.
 alt + Escape
-    pkill -USR1 -x sxhkd; \
+    sxhkd_start; \
     notify-send "sxhkd config reloaded"
 
-# Invoke the session managemnt menu.
 ctrl + alt + Delete
     rofi_run -l
 
@@ -20,7 +19,7 @@ Menu ; {d,l,r}
     }
 
 # scratchpad custom script
-alt + shift + {h,u,r}
+super + shift + {h,u,r}
     {\
     scratchpad -h, \
     scratchpad -u, \
@@ -29,43 +28,46 @@ alt + shift + {h,u,r}
 
 # applications bindings
 # terminal emulators
-alt + {_,shift +,ctrl + }Return
+super + {_,shift +,ctrl + }Return
     {\
     xterm, \
     urxvtc -name bashterm -geometry 124x30 -e bash, \
-    alacritty \
+    xterm -e bash \
     }
 
-alt + x ; {r,s}
+# ranger stuff
+super + r ; {r,s,t}
     {\
     urxvtc -name ranger -e ranger, \
-    urxvtc -name sudoranger -e sudo ranger /etc \
+    urxvtc -name sudoranger -e sudo ranger /etc, \
+    ranger_tab ~/Documents/ ~/.config/
     }
 
 # URxvt applications (urxvt_apps script)
-alt + u ; {a,b,c,d,e,h,j,m,n,p,r,s,t,x,y}
-    urxvt_apps -{a,b,c,d,e,h,j,m,n,p,r,s,t,x,y}
+super + u ; {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}
+    urxvt_apps -{a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}
 
 # gui applications
-alt + g ; {c,e,f,g,o,p,v,w}
+super + g ; {c,e,f,g,o,p,s,v,w}
     {\
     chromium, \
     $EDITOR, \
     $FILEMNGR, \
     geany, \
-    code-oss, \
+    obs, \
+    code, \
     pavucontrol, \
     $VIRTMNGR, \
     $BROWSER \
     }
 
-# open sxhkdrc_<wm> in vim (s stands for main config)
+# opens sxhkdrc_<wm> in vim (s stands for main config)
 super + k ; {b,d,i,s}
     vim_sxhkdrc -{b,d,i,s}
 
 # script to launch rofi-record, obs/ssr.
-super + shift + v ; {a,o,v,k}
-    record_options -{a,o,v,k}
+super + shift + v ; {a,o,v,k,s}
+    record_options -{a,o,v,k,s}
 
 # polycontrol
 # toggle/restart polybar(s)
@@ -78,12 +80,25 @@ ctrl + {_,shift + }{KP_End,KP_Down,KP_Next,KP_Left}
 
 # volume/mic
 {_,alt + }XF86Audio{Lower,Raise}Volume
-    volume_control {sink,source} --{down,up}
+    volume_control --{sink,source} --{down,up}
 
 {_,alt + }XF86AudioMute
-    volume_control {sink,source} --toggle
+    volume_control --{sink,source} --toggle
 
 # player control
-# XF86Audio{Prev,Stop,Play,Next}
-alt + {F9,F10,F11,F12}
-    mediacontrol --{prev,stop,toggle,next}
+XF86Audio{Prev,Play,Next}
+    mediacontrol --{prev,toggle,next}
+
+# no XF86AudioStop on g815 keyboard
+alt + {_,ctrl + }F10
+    mediacontrol --{stop,kill}
+
+# mpv_control script
+ctrl + XF86Audio{Lower,Raise}Volume
+    mpv_control vol {-,+}5%
+
+# equalize volume {left/right,last position}
+super + alt + {equal,l}
+    volume_control --sink --{equalize,last}
+
+# vim:ft=sxhkdrc
