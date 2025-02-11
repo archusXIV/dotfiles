@@ -13,15 +13,17 @@ alt + shift + {h,u,r}
 # terminal emulators: xterm, bashterm, alacritty
 alt + {_,shift +,ctrl + }Return
 
-# ranger,sudo ranger /etc
-alt + x ; {r,s}
+# ranger stuff
+alt + r ; {a,m,r,s,v}
 
 # URxvt applications (use super to recall)
 alt + u ; {a,b,c,d,e,h,j,m,n,p,r,s,t,v,x,y}
 
 # gui applications (use super to recall)
-alt + g ; {c,e,f,g,p,v,w}
+alt + g ; {c,e,f,g,o,p,v,w}
 
+# disactivate/activate the keyboard repetition
+shift + {_,ctrl + }
 # open sxhkdrc_<wm> in vim (s stands for main config)
 super + k ; {b,d,i,s}
 
@@ -43,16 +45,13 @@ alt + {F9,F10,F11,F12}
 # reload rules/restart/quit bspwm.
 ctrl + alt + {c,r,q}
 
-# center term in screens.
-super + c
+# equalize windows size in the viewport
+super + @equal
 
-# close/kill focused window.
-super + {_,ctrl + }q
+# close/close all/kill focused window.
+super + {_,alt + ,ctrl + } End
 
-# close all windows in the present workspace.
-super + alt + ctrl + c
-
-# close/kill all windows or except the focused/marked ones.
+# close {or kill} all windows or except the focused/marked ones.
 super + alt + {n,c,k}
 
 # send focused window to {right,left} monitor.
@@ -119,7 +118,7 @@ super + ctrl + r
 super + ctrl + {Left,Right}
 
 # circulate the leaves of the tree.
-super + {_,shift + }c
+super + c
 
 # flip layout vertically/horizontally.
 super + {_,shift + }l
