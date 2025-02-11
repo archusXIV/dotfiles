@@ -18,7 +18,7 @@ done
 
 systemctl --user stop Xsession.target
 
-[[ -S /tmp/dk__0_0.socket ]] && rm -f /tmp/dk__0_0.socket
+#[[ -S /tmp/dk__0_0.socket ]] && rm -f /tmp/dk__0_0.socket
 rm -f /tmp/{serverauth,polybar_mqueue}.*
 # powerline-daemon --kill
 pkill -9 -u "$USER"
