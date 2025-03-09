@@ -1,5 +1,5 @@
 #!/bin/bash
-# ~/.config/mpm/mpmrc (version 2.2-7)
+# ~/.config/mpm/mpmrc (version 2.3-0)
 
 ########################################################
 #'##::::'##:'########::'##::::'##:'########:::'######::#
@@ -25,9 +25,11 @@ copy_width=124
 copy_height=16
 
 ######################### THEMES #########################
-# default, blacksea, dracula, embers, gotham, gruvbox,
-# jellybeans, kasugano, monokai, nord, pistachio, retro,
-# simplicity, solarized, TokyoNight, vacuous, zenburn, zorange
+mainThemes=(
+    default archlabs blacksea c64 dracula embers gotham
+    gruvbox jellybeans kasugano monokai nord pistachio retro
+    simplicity solarized TokyoNight vacuous zenburn zorange
+)
 THEME=simplicity
 
 ####################### SYSTEM TOOLS ######################
@@ -51,7 +53,7 @@ radios_dir="$MUSIC_DIR/mpd_playlists"
 keep_none_empty_playlist=yes
 direct_download=yes
 remove_video_ids=yes
-quit_after_task=no
+quit_after_task=yes
 
 ################### GNU PARALLEL OPTIONS ###################
 use_parallel=yes
@@ -73,7 +75,7 @@ ytfzfOptions_PG=( --pages=5 )
 ytfzfOptions_VD=( --video-duration=long )
 ytfzfOptions_SB=( --sort-by=relevance )
 ytfzfOptions_TP=( --type=all )
-# ytfzfOptions_TV=( --thumb-viewer=mpv )
+ytfzfOptions_TV=( --thumb-viewer=mpv )
 
 ytfzfOptions_X=(
     "${ytfzfOptions_KC[@]}"
@@ -84,8 +86,8 @@ ytfzfOptions_X=(
 )
 
 ############ FFMPEG SPECIFICS (audio conversion) ############
-automatic_audio_conversion=no
-default_conversion_format=mp3
+automatic_audio_conversion=yes
+default_conversion_format=
 
 ffmpegAacCodecOptions=( -acodec aac -ar 48000 -ab 320k )
 ffmpegFlacCodecOptions=( -af aformat=s32:48000 )
@@ -93,12 +95,17 @@ ffmpegMp3CodecOptions=( -acodec libmp3lame -ar 48000 -ab 320k )
 ffmpegOggCodecOptions=( -acodec libvorbis -ar 48000 -ab 320k )
 ffmpegWavCodecOptions=( -acodec pcm_s32le -ar 48000 )
 
-####################### MPV SPECIFICS #######################
+####################### MPVC SETTINGS #######################
 use_mpvc=yes
-#mpvc_tui=ncmpvc
+# mpvc_tui=ncmpvc
 mpvc_tui=native
+# mpvc_tui=
+
+nativeThemes=( default c64 dark gruvbox molokai nord seoul256 )
+native_tui_colors=default
 mpvc_tui_cheatsheet="/usr/local/share/doc/mpm/ncmpvc_cheatsheet"
 
+####################### MPV SPECIFICS #######################
 mpvGenOptions_CA=( --cache=yes )
 mpvGenOptions_SK=( --input-ipc-server='/tmp/mpvsocket' )
 mpvGenOptions_ID=( --idle=no )
