@@ -106,6 +106,7 @@ native_tui_colors=default
 mpvc_tui_cheatsheet="/usr/local/share/doc/mpm/ncmpvc_cheatsheet"
 
 ####################### MPV SPECIFICS #######################
+mpvGenOptions_AO=( --ao=pulse )
 mpvGenOptions_CA=( --cache=yes )
 mpvGenOptions_SK=( --input-ipc-server='/tmp/mpvsocket' )
 mpvGenOptions_ID=( --idle=no )
@@ -114,6 +115,7 @@ mpvGenOptions_RP=( --no-resume-playback )
 mpvGenOptions_MS=( --term-playing-msg='[Title]: ${media-title}' )
 
 mpvGenOptions_X=(
+    "${mpvGenOptions_AO[@]}"
     "${mpvGenOptions_CA[@]}"
     "${mpvGenOptions_SK[@]}"
     "${mpvGenOptions_ID[@]}"
