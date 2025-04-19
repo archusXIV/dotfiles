@@ -58,7 +58,17 @@ core.reload_module("colors.simplicity")
 ------------------------------------------ Fonts ----------------------------------------
 -- customize fonts:Medium
 style.font = renderer.font.load("/usr/share/fonts/TTF/FiraCode-Regular.ttf", 15 * SCALE)
-style.code_font = renderer.font.load("/usr/share/fonts/TTF/JetBrainsMono-Regular.ttf", 19 * SCALE)
+style.code_font = renderer.font.load("/usr/share/fonts/TTF/JetBrainsMono-Regular.ttf", 18 * SCALE)
 -- style.code_font = renderer.font.load("/usr/share/fonts/TTF/IBMPlexMono-Regular.ttf", 19 * SCALE)
 -- style.code_font = renderer.font.load("/usr/share/fonts/TTF/VictorMonoNerdFont-Medium.ttf", 18 * SCALE)
+-- style.code_font = renderer.font.load("/usr/share/fonts/TTF/CaskaydiaCoveNerdFont-Regular.ttf", 18 * SCALE)
 -- style.code_font = renderer.font.load("/usr/share/fonts/TTF/FiraCode-Regular.ttf", 18 * SCALE)
+local italic = renderer.font.load("/usr/share/fonts/TTF/JetBrainsMono-Italic.ttf", 16)
+local semiBold = renderer.font.load("/usr/share/fonts/TTF/JetBrainsMono-SemiBold.ttf", 18)
+local semiBoldItalic = renderer.font.load("/usr/share/fonts/TTF/JetBrainsMono-SemiBoldItalic.ttf", 18)
+
+style.syntax_fonts = {
+    ["comment"] = italic,
+    ["keyword"] = semiBold,
+    ["function"] = semiBoldItalic,
+}
