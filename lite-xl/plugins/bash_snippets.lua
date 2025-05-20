@@ -1,13 +1,13 @@
 -- mod-version:3
-local lsp_snippets = require 'plugins.lsp_snippets'
+-- local lsp_snippets = require 'plugins.lsp_snippets'
 local snippets = require 'plugins.snippets'
 
 snippets.add {
-    trigger  = 'bash',
+    trigger  = 'myb',
     info     = 'bash Shebang',
     format   = 'lsp',
     template = [[
-#!/bin/bash
+#!/usr/bin/env bash
 ## This is a part of main script: mpm.
 
 # shellcheck disable=SC2154
@@ -15,7 +15,7 @@ snippets.add {
 }
 
 snippets.add {
-    trigger  = 'case',
+    trigger  = 'myc',
     info     = 'case statement',
     format   = 'lsp',
     template = [[
@@ -34,7 +34,7 @@ esac
 }
 
 snippets.add {
-    trigger  = 'declare',
+    trigger  = 'myd',
     info     = 'declare an array',
     format   = 'lsp',
     template = [[
@@ -51,29 +51,29 @@ declare -a $1arrayName=(
 }
 
 snippets.add {
-    trigger  = 'fora',
+    trigger  = 'myfa',
     info     = 'for loop in array',
     format   = 'lsp',
     template = [[
 for $1var in "\${$2arrayName[@]}"; do
-    command \${$1var}
+    ${3:command} \${$1var}
 done
 ]]
 }
 
 snippets.add {
-    trigger  = 'fore',
+    trigger  = 'myfe',
     info     = 'loop few elements',
     format   = 'lsp',
     template = [[
 for $1elm in ${2:item1} ${3:item2} ${4:item3}; do
-    ${5:command} \${$elm}
+    ${5:command} \${$1elm}
 done
 ]]
 }
 
 snippets.add {
-    trigger  = 'fori',
+    trigger  = 'myfi',
     info     = 'for loop integer',
     format   = 'lsp',
     template = [[
@@ -84,7 +84,7 @@ done
 }
 
 snippets.add {
-    trigger  = 'function',
+    trigger  = 'func',
     info     = 'function snippet',
     format   = 'lsp',
     template = [[
@@ -95,7 +95,7 @@ _${1:functionName}() {
 }
 
 snippets.add {
-    trigger  = 'mapf',
+    trigger  = 'mymap',
     info     = 'mapfile snippet',
     format   = 'lsp',
     template = [[
@@ -115,7 +115,7 @@ __${1:nestedFunctionName}() (
 }
 
 snippets.add {
-    trigger  = 'myprintf',
+    trigger  = 'mypf',
     info     = 'printf statement',
     format   = 'lsp',
     template = [[
@@ -159,10 +159,10 @@ fi
 }
 
 snippets.add {
-    trigger  = 'myie',
+    trigger  = 'myel',
     info     = 'if elif statement',
     format   = 'lsp',
-    template = [=[
+    template = [==[
 if [[ ${1:condition1} ]]; then
     ${2:command1}
 elif [[ ${3:condition2} ]]
@@ -170,7 +170,7 @@ elif [[ ${3:condition2} ]]
 else
     ${5:command3}
 fi
-]=]
+]==]
 }
 
 snippets.add {
@@ -183,23 +183,23 @@ snippets.add {
 }
 
 snippets.add {
-    trigger  = 'mye',
+    trigger  = 'els',
     info     = 'adding else statement',
     format   = 'lsp',
     template = [[
 else
-	${1:command2}
+    ${1:command2}
 fi
 ]]
 }
 
 snippets.add {
-    trigger  = 'myt',
+    trigger  = 'thn',
     info     = 'adding then statement',
     format   = 'lsp',
     template = [[
 then
-	${1:command1}
+    ${1:command1}
 else
     ${2:command2}
 fi
