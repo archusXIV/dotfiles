@@ -306,7 +306,7 @@ main() {
     installation_base
     configuration_systeme
     installation_grub
-    install_complementaire
+    install_complementaire "$profile"
     log "Installation complétée avec succès. Vous pouvez redémarrer."
 }
 
