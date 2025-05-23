@@ -1,1 +1,249 @@
-####################
+#!/bin/bash
+
+# This script automates the base installation of Arch Linux with configurable options.
+# It allows customization of keyboard layout, locale, timezone and hostname through
+# command line arguments. The script handles both UEFI and BIOS systems, guides through
+# disk selection and partitioning, and performs the core system installation steps.
+
+# Display usage information if no arguments provided
+if [ $# -eq 0 ]; then
+    echo " Arch Linux Installation Script"
+    echo " ============================="
+    echo " This script will guide you through installing Arch Linux."
+    echo ""
+    echo " Available options:"
+    echo "   -k <layout>   Set keyboard layout (default: us)"
+    echo "   -l <locale>   Set system locale (default: en_US)"
+    echo "   -t <zone>     Set timezone (default: UTC)"
+    echo "   -h <name>     Set hostname (default: archlinux)"
+    echo ""
+    echo " Example usage:"
+    echo "   $0 -k uk -l en_GB -t Europe/London -h myarch"
+    echo ""
+    exit 1
+fi
+
+# Parse command line arguments
+while getopts "k:l:t:h:" opt; do
+  case $opt in
+    k) keyboard_layout="$OPTARG" ;;
+    l) locale="$OPTARG" ;;
+    t) timezone="$OPTARG" ;;
+    h) hostname="$OPTARG" ;;
+    \?) echo "Invalid option -$OPTARG" >&2; exit 1 ;;
+  esac
+done
+
+# Set defaults if not provided
+keyboard_layout=${keyboard_layout:-us}
+locale=${locale:-en_US}
+timezone=${timezone:-UTC}
+hostname=${hostname:-archlinux}
+
+# Function to check if running in UEFI mode
+check_uefi() {
+    if [ -d "/sys/firmware/efi" ]; then
+        echo "System is booted in UEFI mode"
+        return 0
+    else
+        echo "System is booted in BIOS mode"
+        return 1
+    fi
+}
+
+# Function to list available disks
+list_disks() {
+    echo "Available disks:"
+    lsblk -d -n -p -o NAME,SIZE,MODEL
+}
+
+# Function to get user disk selection
+get_disk_selection() {
+    local prompt=$1
+    local disk
+    while true; do
+        list_disks
+        read -rp "$prompt" disk
+        if [ -b "$disk" ]; then
+            echo "$disk"
+            return
+        else
+            echo "Invalid disk selection. Please try again."
+        fi
+    done
+}
+
+# Function to partition disk
+partition_disk() {
+    local disk=$1
+    local second_disk=$2
+    local is_uefi=$3
+
+    # Clear existing partition tables
+    sgdisk -Z "$disk"
+    if [ -n "$second_disk" ]; then
+        sgdisk -Z "$second_disk"
+    fi
+
+    if [ "$is_uefi" -eq 0 ]; then
+        # UEFI partitioning
+        sgdisk -n 1:0:+512M -t 1:ef00 -c 1:"EFI System" "$disk"  # EFI partition
+        sgdisk -n 2:0:+2G -t 2:8200 -c 2:"Linux swap" "$disk"    # Swap partition
+        sgdisk -n 3:0:0 -t 3:8300 -c 3:"Linux root" "$disk"      # Root partition (remaining space)
+
+        if [ -n "$second_disk" ]; then
+            sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$second_disk"  # Home partition (entire second disk)
+        fi
+    else
+        # BIOS partitioning
+        sgdisk -n 1:0:+2G -t 1:8200 -c 1:"Linux swap" "$disk"    # Swap partition
+        sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux root" "$disk"      # Root partition (remaining space)
+
+        if [ -n "$second_disk" ]; then
+            sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$second_disk"  # Home partition (entire second disk)
+        fi
+    fi
+}
+
+# Function to format and mount partitions
+setup_partitions() {
+    local disk=$1
+    local is_uefi=$2
+
+    if [ "$is_uefi" -eq 0 ]; then
+        mkfs.fat -F32 "${disk}1"
+        mkswap "${disk}2"
+        mkfs.ext4 "${disk}3"
+		mkfs.ext4 "${disk}4"
+        mount "${disk}3" /mnt
+        mkdir -p /mnt/{boot/efi,home}
+        mount "${disk}1" /mnt/boot/efi
+        mount "${disk}4" /mnt/home
+        swapon "${disk}2"
+    else
+        mkswap "${disk}1"
+        mkfs.ext4 "${disk}2"
+		mkfs.ext4 "${disk}3"
+        mount "${disk}2" /mnt
+        mkdir -p /mnt/home
+		mount "${disk}3" /mnt/home
+        swapon "${disk}1"
+    fi
+}
+
+# Function to install base system
+install_base_system() {
+    # Update package database first
+    pacman -Sy archlinux-keyring --noconfirm
+    pacstrap -K /mnt base base-devel linux linux-firmware vim
+    genfstab -U /mnt >> /mnt/etc/fstab
+}
+
+# Function to configure system
+configure_system() {
+    local is_uefi=$1
+    local system_disk=$2
+	read -rp "Enter your timezone (e.g., Europe/Paris): " timezone
+	read -rp "Enter your keyboard layout (e.g., us): " keyboard_layout
+	read -rp "Enter your locale (e.g., en_US): " locale
+	read -rp "Enter your hostname: " hostname
+
+    # Create configuration script
+    cat > /mnt/root/configure.sh <<EOF
+#!/bin/bash
+# Set timezone
+ln -sf /usr/share/zoneinfo/$timezone /etc/localtime
+hwclock --systohc --utc
+
+# Set locale
+echo "$locale.UTF-8" >> /etc/locale.gen
+locale-gen
+echo "LANG=$locale.UTF-8" > /etc/locale.conf
+echo "LC_COLLATE=C" >> /etc/locale.conf
+export LANG=$locale.UTF-8
+
+# Set hostname
+echo "$hostname" > /etc/hostname
+
+# Set keyboard layout
+echo "KEYMAP=$keyboard_layout" > /etc/vconsole.conf
+mkinitcpio -P
+
+# Configure network
+pacman -S --noconfirm networkmanager
+systemctl enable NetworkManager
+
+# Set root password
+echo "Set root password:"
+passwd
+
+# Install and configure bootloader
+if [ "$is_uefi" -eq 0 ]; then
+    pacman -S --noconfirm grub efibootmgr
+    grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
+else
+    pacman -S --noconfirm grub
+    grub-install --target=i386-pc "$system_disk"
+fi
+grub-mkconfig -o /boot/grub/grub.cfg
+
+exit  # Exit chroot
+EOF
+
+    chmod +x /mnt/root/configure.sh
+    arch-chroot /mnt /root/configure.sh
+    rm /mnt/root/configure.sh
+}
+
+# Main installation script
+echo "Starting Arch Linux installation..."
+
+# Verify we're in the live environment and running as root
+if [ ! -f /run/archiso/bootmnt/arch/boot/x86_64/vmlinuz-linux ]; then
+    echo "This script must be run from the Arch Linux live environment!"
+    exit 1
+fi
+
+# Check internet connectivity
+if ! ping -c 1 archlinux.org >/dev/null 2>&1; then
+    echo "No internet connection! Please connect to the internet first."
+    exit 1
+fi
+
+# Check UEFI status
+check_uefi
+is_uefi=$?
+
+# Get disk selection
+system_disk=$(get_disk_selection "Select disk for installation (e.g., /dev/sda): ")
+
+# Confirm installation
+echo "WARNING: This will erase ALL data on $system_disk"
+read -rp "Do you want to continue? (y/N) " confirm
+if [[ ! $confirm =~ ^[Yy]$ ]]; then
+    echo "Installation cancelled."
+    exit 1
+fi
+
+# Perform installation steps
+echo "Partitioning disk..."
+partition_disk "$system_disk" "$is_uefi"
+
+echo "Setting up partitions..."
+setup_partitions "$system_disk" "$is_uefi"
+
+echo "Installing base system..."
+install_base_system
+
+echo "Configuring system..."
+configure_system "$is_uefi" "$system_disk"
+
+# Cleanup and finish
+echo "Unmounting partitions..."
+umount -R /mnt
+
+echo "Installation complete!"
+echo "You can now reboot into your new Arch Linux system."
+echo "After reboot, log in as root with the password you set."
+
+
