@@ -37,7 +37,7 @@ error_exit() {
 choix_langue_clavier() {
     echo "Choisir la langue d'installation :"
     select opt in "Français" "Anglais"; do
-        case "$opt" in
+        case "$REPLY" in
             1) lang="fr_CA.UTF-8"; break ;;
             2) lang="en_US.UTF-8"; break ;;
             *) echo "Option invalide" ;;
@@ -46,7 +46,7 @@ choix_langue_clavier() {
 
     echo "Choisir la disposition du clavier :"
     select opt in "us (Anglais)" "fr (Français de France)" "ca (Français Canadien)"; do
-        case "$opt" in
+        case "$REPLY" in
             1) kb_layout="us"; break ;;
             2) kb_layout="fr"; break ;;
             3) kb_layout="ca"; break ;;
@@ -62,7 +62,7 @@ choix_langue_clavier() {
 choix_nom_machine() {
     echo "Voulez-vous utiliser le nom d'hôte par défaut (nordri) ?"
     select opt in Oui Non; do
-        case "$opt" in
+        case "$REPLY" in
             1) hostname="nordri"; break ;;
             2)
                 read -rp "Entrez le nom d'hôte souhaité : " hostname
@@ -77,7 +77,7 @@ choix_nom_machine() {
 menu() {
     echo "Choisir le profil d'installation: "
     select opt in "Base" "XFCE" "Norðri"; do
-        case "$opt" in
+        case "$REPLY" in
             1) profile="base"; ajouter_utilisateur=false; break ;;
             2) profile="xfce"; break ;;
             3) profile="Norðri"; break ;;
@@ -122,7 +122,7 @@ partitionner_disque() {
     )
     echo "Choisissez le type de partitionnement :"
     select part_opt in "${table[@]}"; do
-        case "$part_opt" in
+        case "$REPLY" in
             1)
                 log "Partitionnement simple"
                 parted -s "$cible" mklabel gpt
