@@ -114,7 +114,7 @@ setup_partitions() {
         mkfs.fat -F32 "${disk}1"
         mkswap "${disk}2"
         mkfs.ext4 "${disk}3"
-		mkfs.ext4 "${disk}4"
+	mkfs.ext4 "${disk}4"
         mount "${disk}3" /mnt
         mkdir -p /mnt/{boot/efi,home}
         mount "${disk}1" /mnt/boot/efi
@@ -123,10 +123,10 @@ setup_partitions() {
     else
         mkswap "${disk}1"
         mkfs.ext4 "${disk}2"
-		mkfs.ext4 "${disk}3"
+	mkfs.ext4 "${disk}3"
         mount "${disk}2" /mnt
         mkdir -p /mnt/home
-		mount "${disk}3" /mnt/home
+	mount "${disk}3" /mnt/home
         swapon "${disk}1"
     fi
 }
