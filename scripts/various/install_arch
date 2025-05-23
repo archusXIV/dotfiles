@@ -216,6 +216,7 @@ is_uefi=$?
 
 # Get disk selection
 system_disk=$(get_disk_selection "Select disk for installation (e.g., /dev/sda): ")
+read -rp "Do you want to use a second disk for /home? (leave blank to skip): " second_disk
 
 # Confirm installation
 echo "WARNING: This will erase ALL data on $system_disk"
@@ -227,7 +228,7 @@ fi
 
 # Perform installation steps
 echo "Partitioning disk..."
-partition_disk "$system_disk" "$is_uefi"
+partition_disk "$system_disk" "$second_disk" "$is_uefi"
 
 echo "Setting up partitions..."
 setup_partitions "$system_disk" "$is_uefi"
