@@ -6,7 +6,7 @@
 # disk selection and partitioning, and performs the core system installation steps.
 
 # Display usage information if no arguments provided
-if [ $# -ne 4 ]; then
+if [ $# -ne 8 ]; then
     echo " Arch Linux Installation Script"
     echo " ============================="
     echo " This script will guide you through installing Arch Linux."
