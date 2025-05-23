@@ -143,10 +143,10 @@ install_base_system() {
 configure_system() {
     local is_uefi=$1
     local system_disk=$2
-	read -rp "Enter your timezone (e.g., Europe/Paris): " timezone
-	read -rp "Enter your keyboard layout (e.g., us): " keyboard_layout
-	read -rp "Enter your locale (e.g., en_US): " locale
-	read -rp "Enter your hostname: " hostname
+	# read -rp "Enter your timezone (e.g., Europe/Paris): " timezone
+	# read -rp "Enter your keyboard layout (e.g., us): " keyboard_layout
+	# read -rp "Enter your locale (e.g., en_US): " locale
+	# read -rp "Enter your hostname: " hostname
 
     # Create configuration script
     cat > /mnt/root/configure.sh <<EOF
