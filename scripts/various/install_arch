@@ -93,15 +93,17 @@ partition_disk() {
     fi
 
     # Verify disk exists
-    if [ ! -b "$disk" ]; then
+    local disk_name=${disk#/dev/}
+    if [ ! -b "/dev/$disk_name" ]; then
         echo "Error: Disk $disk does not exist"
         exit 1
     fi
 
     # Clear existing partition tables
-    sgdisk -Z "$disk" || { echo "Failed to clear partition table on $disk"; exit 1; }
+    sgdisk -Z "/dev/$disk_name" || { echo "Failed to clear partition table on $disk"; exit 1; }
     if [ -n "$second_disk" ]; then
-        if [ ! -b "$second_disk" ]; then
+        local second_disk_name=${second_disk#/dev/}
+        if [ ! -b "/dev/$second_disk_name" ]; then
             echo "Error: Second disk $second_disk does not exist"
             exit 1
         fi
