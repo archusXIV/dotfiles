@@ -67,7 +67,7 @@ get_disk_selection() {
     lsblk -d -o NAME,SIZE,MODEL
     
     # Read user input
-    read -p "$prompt" selected_disk
+    read -rp "$prompt" selected_disk
     
     # Validate if disk exists
     if [ ! -b "/dev/$selected_disk" ]; then
@@ -84,33 +84,50 @@ partition_disk() {
     local second_disk=$2
     local is_uefi=$3
 
+    # Ensure disk paths are complete
+    if [[ ! "$disk" =~ ^/dev/ ]]; then
+        disk="/dev/$disk"
+    }
+    if [ -n "$second_disk" ] && [[ ! "$second_disk" =~ ^/dev/ ]]; then
+        second_disk="/dev/$second_disk"
+    fi
+
+    # Verify disk exists
+    if [ ! -b "$disk" ]; then
+        echo "Error: Disk $disk does not exist"
+        exit 1
+    fi
+
     # Clear existing partition tables
-    sgdisk -Z "$disk"
+    sgdisk -Z "$disk" || { echo "Failed to clear partition table on $disk"; exit 1; }
     if [ -n "$second_disk" ]; then
-        sgdisk -Z "$second_disk"
+        if [ ! -b "$second_disk" ]; then
+            echo "Error: Second disk $second_disk does not exist"
+            exit 1
+        fi
+        sgdisk -Z "$second_disk" || { echo "Failed to clear partition table on $second_disk"; exit 1; }
     fi
 
     if [ "$is_uefi" -eq 0 ]; then
         # UEFI partitioning
         sgdisk -n 1:0:+512M -t 1:ef00 -c 1:"EFI System" "$disk"  # EFI partition
         sgdisk -n 2:0:+2G -t 2:8200 -c 2:"Linux swap" "$disk"    # Swap partition
-        sgdisk -n 3:0:0 -t 3:8300 -c 3:"Linux root" "$disk"      # Root partition (remaining space)
+        sgdisk -n 3:0:0 -t 3:8300 -c 3:"Linux root" "$disk"      # Root partition
 
         if [ -n "$second_disk" ]; then
-            sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$second_disk"  # Home partition (entire second disk)
+            sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$second_disk"  # Home partition
         fi
     else
         # BIOS partitioning
         sgdisk -n 1:0:+2G -t 1:8200 -c 1:"Linux swap" "$disk"    # Swap partition
-        sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux root" "$disk"      # Root partition (remaining space)
+        sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux root" "$disk"      # Root partition
 
         if [ -n "$second_disk" ]; then
-            sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$second_disk"  # Home partition (entire second disk)
+            sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$second_disk"  # Home partition
         fi
     fi
 }
 
-# Function to format and mount partitions
 # Function to format and mount partitions
 setup_partitions() {
     local disk=$1
