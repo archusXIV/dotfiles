@@ -269,7 +269,7 @@ fi
 
 # Perform installation steps
 echo "Partitioning disk..."
-partition_disk "$system_disk" "" "$is_uefi"
+partition_disk "$system_disk" "$is_uefi"
 
 # Set up partitions
 echo "Setting up partitions..."
