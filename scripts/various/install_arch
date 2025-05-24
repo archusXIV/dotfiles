@@ -87,7 +87,7 @@ partition_disk() {
     # Ensure disk paths are complete
     if [[ ! "$disk" =~ ^/dev/ ]]; then
         disk="/dev/$disk"
-    }
+    fi
     if [ -n "$second_disk" ] && [[ ! "$second_disk" =~ ^/dev/ ]]; then
         second_disk="/dev/$second_disk"
     fi
