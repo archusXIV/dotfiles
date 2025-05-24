@@ -6,7 +6,7 @@
 # disk selection and partitioning, and performs the core system installation steps.
 
 # Display usage information if no arguments provided
-if [ $# -ne 8 ]; then
+if [ $# -eq 0 ]; then
     echo " Arch Linux Installation Script"
     echo " ============================="
     echo " This script will guide you through installing Arch Linux."
@@ -25,13 +25,13 @@ fi
 
 # Parse command line arguments
 while getopts "k:l:t:h:" opt; do
-  case $opt in
-    k) keyboard_layout="$OPTARG" ;;
-    l) locale="$OPTARG" ;;
-    t) timezone="$OPTARG" ;;
-    h) hostname="$OPTARG" ;;
-    \?) echo "Invalid option -$OPTARG" >&2; exit 1 ;;
-  esac
+    case $opt in
+        k) keyboard_layout="$OPTARG" ;;
+        l) locale="$OPTARG" ;;
+        t) timezone="$OPTARG" ;;
+        h) hostname="$OPTARG" ;;
+        \?) echo "Invalid option -$OPTARG" >&2; exit 1 ;;
+    esac
 done
 
 # Set defaults if not provided
@@ -106,33 +106,51 @@ partition_disk() {
 }
 
 # Function to format and mount partitions
+# Function to format and mount partitions
 setup_partitions() {
     local disk=$1
     local is_uefi=$2
+    local second_disk=$3  # Add parameter for second disk
 
     if [ "$is_uefi" -eq 0 ]; then
-        mkfs.fat -F32 "${disk}1"
-        mkswap "${disk}2"
-        mkfs.ext4 "${disk}3"
-	mkfs.ext4 "${disk}4"
-        mount "${disk}3" /mnt
-        mkdir -p /mnt/{boot/efi,home}
-        mount "${disk}1" /mnt/boot/efi
-        mount "${disk}4" /mnt/home
-        swapon "${disk}2"
+        # UEFI system partitioning
+        mkfs.fat -F32 "${disk}1" || { echo "Failed to format EFI partition"; exit 1; }
+        mkswap "${disk}2" || { echo "Failed to create swap"; exit 1; }
+        mkfs.ext4 "${disk}3" || { echo "Failed to format root partition"; exit 1; }
+
+        # Mount partitions
+        mount "${disk}3" /mnt || { echo "Failed to mount root partition"; exit 1; }
+        mkdir -p /mnt/{boot/efi,home} || { echo "Failed to create mount points"; exit 1; }
+        mount "${disk}1" /mnt/boot/efi || { echo "Failed to mount EFI partition"; exit 1; }
+        swapon "${disk}2" || { echo "Failed to enable swap"; exit 1; }
+
+        # Handle second disk if present
+        if [ -n "$second_disk" ]; then
+            mkfs.ext4 "${second_disk}1" || { echo "Failed to format home partition"; exit 1; }
+            mount "${second_disk}1" /mnt/home || { echo "Failed to mount home partition"; exit 1; }
+        fi
     else
-        mkswap "${disk}1"
-        mkfs.ext4 "${disk}2"
-	mkfs.ext4 "${disk}3"
-        mount "${disk}2" /mnt
-        mkdir -p /mnt/home
-	mount "${disk}3" /mnt/home
-        swapon "${disk}1"
+        # BIOS system partitioning
+        mkswap "${disk}1" || { echo "Failed to create swap"; exit 1; }
+        mkfs.ext4 "${disk}2" || { echo "Failed to format root partition"; exit 1; }
+
+        # Mount partitions
+        mount "${disk}2" /mnt || { echo "Failed to mount root partition"; exit 1; }
+        mkdir -p /mnt/home || { echo "Failed to create home directory"; exit 1; }
+        swapon "${disk}1" || { echo "Failed to enable swap"; exit 1; }
+
+        # Handle second disk if present
+        if [ -n "$second_disk" ]; then
+            mkfs.ext4 "${second_disk}1" || { echo "Failed to format home partition"; exit 1; }
+            mount "${second_disk}1" /mnt/home || { echo "Failed to mount home partition"; exit 1; }
+        fi
     fi
 }
 
 # Function to install base system
 install_base_system() {
+    # ensure the system clock is synchronized
+    timedatectl set-ntp true
     # Update package database first
     pacman -Sy archlinux-keyring --noconfirm
     pacstrap -K /mnt base base-devel linux linux-firmware vim
@@ -143,10 +161,10 @@ install_base_system() {
 configure_system() {
     local is_uefi=$1
     local system_disk=$2
-	# read -rp "Enter your timezone (e.g., Europe/Paris): " timezone
-	# read -rp "Enter your keyboard layout (e.g., us): " keyboard_layout
-	# read -rp "Enter your locale (e.g., en_US): " locale
-	# read -rp "Enter your hostname: " hostname
+    # read -rp "Enter your timezone (e.g., Europe/Paris): " timezone
+    # read -rp "Enter your keyboard layout (e.g., us): " keyboard_layout
+    # read -rp "Enter your locale (e.g., en_US): " locale
+    # read -rp "Enter your hostname: " hostname
 
     # Create configuration script
     cat > /mnt/root/configure.sh <<EOF
@@ -190,9 +208,9 @@ grub-mkconfig -o /boot/grub/grub.cfg
 exit  # Exit chroot
 EOF
 
-    chmod +x /mnt/root/configure.sh
-    arch-chroot /mnt /root/configure.sh
-    rm /mnt/root/configure.sh
+chmod +x /mnt/root/configure.sh
+arch-chroot /mnt /root/configure.sh
+rm /mnt/root/configure.sh
 }
 
 # Main installation script
@@ -216,7 +234,6 @@ is_uefi=$?
 
 # Get disk selection
 system_disk=$(get_disk_selection "Select disk for installation (e.g., /dev/sda): ")
-read -rp "Do you want to use a second disk for /home? (leave blank to skip): " second_disk
 
 # Confirm installation
 echo "WARNING: This will erase ALL data on $system_disk"
@@ -228,8 +245,9 @@ fi
 
 # Perform installation steps
 echo "Partitioning disk..."
-partition_disk "$system_disk" "$second_disk" "$is_uefi"
+partition_disk "$system_disk" "" "$is_uefi"
 
+# Set up partitions
 echo "Setting up partitions..."
 setup_partitions "$system_disk" "$is_uefi"
 
@@ -246,5 +264,3 @@ umount -R /mnt
 echo "Installation complete!"
 echo "You can now reboot into your new Arch Linux system."
 echo "After reboot, log in as root with the password you set."
-
-
