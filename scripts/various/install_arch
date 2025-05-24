@@ -59,18 +59,23 @@ list_disks() {
 
 # Function to get user disk selection
 get_disk_selection() {
-    local prompt=$1
-    local disk
-    while true; do
-        list_disks
-        read -rp "$prompt" disk
-        if [ -b "$disk" ]; then
-            echo "$disk"
-            return
-        else
-            echo "Invalid disk selection. Please try again."
-        fi
-    done
+    local prompt="$1"
+    local selected_disk
+    
+    # List available disks
+    echo "Available disks:"
+    lsblk -d -o NAME,SIZE,MODEL
+    
+    # Read user input
+    read -p "$prompt" selected_disk
+    
+    # Validate if disk exists
+    if [ ! -b "/dev/$selected_disk" ]; then
+        echo "Error: Selected disk /dev/$selected_disk does not exist"
+        return 1
+    fi
+    
+    echo "/dev/$selected_disk"
 }
 
 # Function to partition disk
