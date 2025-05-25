@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This script automates the base installation of Arch Linux with configurable options.
-# It allows customization of keyboard layout, locale, timezone and hostname through
+# It allows customization of system disk, keyboard layout, locale, timezone and hostname through
 # command line arguments. The script handles both UEFI and BIOS systems, guides through
 # disk selection and partitioning, and performs the core system installation steps.
 
@@ -12,11 +12,12 @@ if [ $# -eq 0 ]; then
     echo " This script will guide you through installing Arch Linux."
     echo ""
     echo " Available options:"
-    echo "   -d <root disk>     Set the system disk (default: sda)"
-    echo "   -k <layout>   Set keyboard layout (default: us)"
-    echo "   -l <locale>   Set system locale (default: en_US)"
-    echo "   -t <zone>     Set timezone (default: UTC)"
-    echo "   -h <name>     Set hostname (default: archlinux)"
+    echo "   -d <root disk> Set the system disk (default: sda)"
+    echo "   -k <layout>    Set keyboard layout (default: us)"
+    echo "   -l <locale>    Set system locale (default: en_US)"
+    echo "   -s <home disk> Set the disk for /home (default: sdb)"
+    echo "   -t <zone>      Set timezone (default: UTC)"
+    echo "   -h <name>      Set hostname (default: archlinux)"
     echo ""
     echo " Example usage:"
     echo "   $0 -d sda -k uk -l en_GB -t Europe/London -h myarch"
@@ -25,13 +26,14 @@ if [ $# -eq 0 ]; then
 fi
 
 # Parse command line arguments
-while getopts "d:k:l:t:h:" opt; do
+while getopts "d:k:l:t:h:s:" opt; do
     case $opt in
         d) system_disk="$OPTARG" ;;
         k) keyboard_layout="$OPTARG" ;;
         l) locale="$OPTARG" ;;
         t) timezone="$OPTARG" ;;
         h) hostname="$OPTARG" ;;
+        s) second_disk="$OPTARG" ;;
         \?) echo "Invalid option -$OPTARG" >&2; exit 1 ;;
     esac
 done
@@ -62,30 +64,24 @@ list_disks() {
 
 # Function to get user disk selection
 get_disk_selection() {
-    local prompt="$1"
-    local selected_disk
-
     # List available disks
     echo "Available disks:"
     lsblk -d -o NAME,SIZE,MODEL
 
-    # Read user input
-    read -rp "$prompt" selected_disk
-
     # Validate if disk exists
-    if [[ ! -b /dev/$selected_disk ]]; then
-        echo "Error: Selected disk /dev/$selected_disk does not exist"
+    if [[ ! -b /dev/$disk ]]; then
+        echo "Error: Selected disk /dev/$disk does not exist"
         return 1
     fi
 
-    echo "/dev/$selected_disk"
+    echo "/dev/$disk"
 }
 
 # Function to partition disk
 partition_disk() {
     local disk="$1"
-    local second_disk="$2"
-    local is_uefi="$3"
+    local is_uefi="$2"
+    local second_disk="$3"
 
     # Ensure disk paths are complete
     if [[ ! $disk =~ ^/dev/ ]]; then
@@ -116,8 +112,7 @@ partition_disk() {
     if [[ $is_uefi -eq 0 ]]; then
         # UEFI partitioning
         sgdisk -n 1:0:+512M -t 1:ef00 -c 1:"EFI System" "$disk"  # EFI partition
-        sgdisk -n 2:0:+2G -t 2:8200 -c 2:"Linux swap" "$disk"    # Swap partition
-        sgdisk -n 3:0:0 -t 3:8300 -c 3:"Linux root" "$disk"      # Root partition
+        sgdisk -n 2:0:0 -t 2:8300 -c 3:"Linux root" "$disk"      # Root partition
 
         if [[ -n $second_disk ]]; then
             sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$second_disk"  # Home partition
@@ -135,25 +130,24 @@ partition_disk() {
 
 # Function to format and mount partitions
 setup_partitions() {
-    local disk="$1"
-    local is_uefi="$2"
+    local is_uefi="$1"
+    local disk="$2"
     local second_disk="$3"  # Add parameter for second disk
 
     if [[ $is_uefi -eq 0 ]]; then
         # UEFI system partitioning
         mkfs.fat -F32 "${disk}1" || { echo "Failed to format EFI partition"; exit 1; }
-        mkswap "${disk}2" || { echo "Failed to create swap"; exit 1; }
-        mkfs.ext4 "${disk}3" || { echo "Failed to format root partition"; exit 1; }
+        mkfs.ext4 "${disk}2" || { echo "Failed to format root partition"; exit 1; }
 
         # Mount partitions
-        mount "${disk}3" /mnt || { echo "Failed to mount root partition"; exit 1; }
-        mkdir -p /mnt/{boot/efi,home} || { echo "Failed to create mount points"; exit 1; }
+        mount "${disk}2" /mnt || { echo "Failed to mount root partition"; exit 1; }
+        mkdir -p /mnt/boot/efi || { echo "Failed to create mount points"; exit 1; }
         mount "${disk}1" /mnt/boot/efi || { echo "Failed to mount EFI partition"; exit 1; }
-        swapon "${disk}2" || { echo "Failed to enable swap"; exit 1; }
 
         # Handle second disk if present
         if [[ -n $second_disk ]]; then
             mkfs.ext4 "${second_disk}1" || { echo "Failed to format home partition"; exit 1; }
+            mkdir -p /mnt/home || { echo "Failed to create mount points"; exit 1; }
             mount "${second_disk}1" /mnt/home || { echo "Failed to mount home partition"; exit 1; }
         fi
     else
@@ -163,12 +157,12 @@ setup_partitions() {
 
         # Mount partitions
         mount "${disk}2" /mnt || { echo "Failed to mount root partition"; exit 1; }
-        mkdir -p /mnt/home || { echo "Failed to create home directory"; exit 1; }
         swapon "${disk}1" || { echo "Failed to enable swap"; exit 1; }
 
         # Handle second disk if present
         if [[ -n $second_disk ]]; then
             mkfs.ext4 "${second_disk}1" || { echo "Failed to format home partition"; exit 1; }
+            mkdir -p /mnt/home || { echo "Failed to create home directory"; exit 1; }
             mount "${second_disk}1" /mnt/home || { echo "Failed to mount home partition"; exit 1; }
         fi
     fi
@@ -179,7 +173,13 @@ install_base_system() {
     # ensure the system clock is synchronized
     timedatectl set-ntp true
     # Update package database first
-    pacman -Sy archlinux-keyring --noconfirm
+    reflector \
+    -l 10 \
+    -a 24 \
+    -p https \
+    --sort rate \
+    --save /etc/pacman.d/mirrorlist
+    pacman -Syy archlinux-keyring --noconfirm
     pacstrap -K /mnt base base-devel linux linux-firmware vim
     genfstab -U /mnt >> /mnt/etc/fstab
 }
@@ -188,10 +188,6 @@ install_base_system() {
 configure_system() {
     local is_uefi="$1"
     local system_disk="$2"
-    # read -rp "Enter your timezone (e.g., Europe/Paris): " timezone
-    # read -rp "Enter your keyboard layout (e.g., us): " keyboard_layout
-    # read -rp "Enter your locale (e.g., en_US): " locale
-    # read -rp "Enter your hostname: " hostname
 
     # Create configuration script
     cat > /mnt/root/configure.sh <<EOF
