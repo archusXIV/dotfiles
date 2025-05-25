@@ -31,8 +31,9 @@ while getopts "x:d:k:l:t:h:s:" opt; do
     case $opt in
         x)
             echo -e " \nAvailable disks:\n"
-           lsblk -d -n -p -o NAME,SIZE,MODEL
-           exit 0
+            lsblk -d -n -p -o NAME,SIZE,MODEL
+            echo ""
+            exit 0
         ;;
         d) system_disk="$OPTARG" ;;
         k) keyboard_layout="$OPTARG" ;;
