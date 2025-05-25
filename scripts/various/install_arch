@@ -204,7 +204,7 @@ export LANG="$locale.UTF-8"
 
 # Set hostname
 echo "$hostname" > /etc/hostname
-echo "127.0.1.1    $hostname.localdomain    $hostname" >> /etc/hosts
+echo "127.0.1.1     $hostname.localdomain    $hostname" >> /etc/hosts
 
 # Set keyboard layout
 echo "KEYMAP=$keyboard_layout" > /etc/vconsole.conf
