@@ -20,17 +20,17 @@ if [ $# -eq 0 ]; then
  ==============================
 
  Available options:
-  -x all         List all present disks
-  -c <country>   Set your actual location (default: United States)
-  -d <root disk> Set the system disk (default: sda)
-  -k <layout>    Set keyboard layout (default: us)
-  -l <locale>    Set system locale (default: en_US)
-  -s <home disk> Set the disk for /home (optional)
-  -t <zone>      Set timezone (default: UTC)
-  -h <name>      Set hostname (default: archlinux)
+  -x all              List all present disks for decision making
+  -c <country>        Set your actual location (default: United States)
+  -d <root disk>      Set the system disk (default: sda)
+  -k <kbd layout>     Set your keyboard layout (default: us)
+  -l <locale>         Set system locale (default: en_US)
+  -s <home disk>      Set the disk for /home (optional)
+  -t <Region/Capital> Set timezone (default: UTC)
+  -h <name>           Set hostname (default: archlinux)
 
  Example usage:
-  $(basename "$0") -d sda -s sdb -k fr -l en_FR -t Europe/Paris -h myarch
+  $(basename "$0") -d sda -s sdb -k fr -l fr_FR -t Europe/Paris -h myarch
 
 USAGE
     exit 1
@@ -76,7 +76,8 @@ checkUefi() {
 
 ensureDiskPathsAreComplete() {
     [[ ! $disk =~ ^\/dev\/ ]] && disk="/dev/$disk"
-    [[ -n $second_disk ]] && [[ ! $second_disk =~ ^\/dev\/ ]] && second_disk="/dev/$second_disk"
+    [[ -n $second_disk ]] && [[ ! $second_disk =~ ^\/dev\/ ]] \
+    && second_disk="/dev/$second_disk"
 }
 
 errorDisk() {
@@ -115,20 +116,26 @@ partitionDisk() {
 
     if [[ $is_uefi -eq 0 ]]; then
         # UEFI partitioning
-        sgdisk -n 1:0:+512M -t 1:ef00 -c 1:"EFI System" "$disk" || errorDisk "create_efi"
-        sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux root" "$disk" || errorDisk "create_root"
+        sgdisk -n 1:0:+512M -t 1:ef00 -c 1:"EFI System" "$disk" \
+        || errorDisk "create_efi"
+        sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux root" "$disk" \
+        || errorDisk "create_root"
 
         if [[ -n $second_disk ]]; then
-            sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$second_disk" || errorDisk "create_home"
+            sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$second_disk" \
+            || errorDisk "create_home"
         fi
     else
         # BIOS partitioning
-        sgdisk -n 1:0:+2G -t 1:8200 -c 1:"Linux swap" "$disk" || errorDisk "create_swap"
-        sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux root" "$disk" || errorDisk "create_root"
+        sgdisk -n 1:0:+4G -t 1:8200 -c 1:"Linux swap" "$disk" \
+        || errorDisk "create_swap"
+        sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux root" "$disk" \
+        || errorDisk "create_root"
 
-        if [[ -n $second_disk ]]; then
-            sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$second_disk" || errorDisk "create_home"
-        fi
+        [[ -n $second_disk ]] && {
+            sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$second_disk" \
+            || errorDisk "create_home"
+        }
     fi
 }
 
@@ -147,11 +154,11 @@ setupPartitions() {
         mkdir -p /mnt/boot/efi || errorDisk "create_efi_mount"
         mount "${disk}1" /mnt/boot/efi || errorDisk "mount_efi"
 
-        if [[ -n $second_disk ]]; then
+        [[ -n $second_disk ]] && {
             mkfs.ext4 "${second_disk}1" || errorDisk "format_home"
             mkdir -p /mnt/home || errorDisk "create_home_mount"
             mount "${second_disk}1" /mnt/home || errorDisk "mount_home"
-        fi
+        }
     else
         mkswap "${disk}1" || errorDisk "create_swap"
         mkfs.ext4 "${disk}2" || errorDisk "format_root"
@@ -159,11 +166,11 @@ setupPartitions() {
         mount "${disk}2" /mnt || errorDisk "mount_root"
         swapon "${disk}1" || errorDisk "enable_swap"
 
-        if [[ -n $second_disk ]]; then
+        [[ -n $second_disk ]] && {
             mkfs.ext4 "${second_disk}1" || errorDisk "format_home"
             mkdir -p /mnt/home || errorDisk "create_home_mount"
             mount "${second_disk}1" /mnt/home || errorDisk "mount_home"
-        fi
+        }
     fi
 }
 
@@ -204,7 +211,7 @@ export LANG="$locale.UTF-8"
 
 # Set hostname
 echo "$hostname" > /etc/hostname
-echo "127.0.1.1     $hostname.localdomain    $hostname" >> /etc/hosts
+echo "127.0.1.1    $hostname.localdomain    $hostname" >> /etc/hosts
 
 # Set keyboard layout
 echo "KEYMAP=$keyboard_layout" > /etc/vconsole.conf
@@ -224,10 +231,10 @@ if [[ $is_uefi -eq 0 ]]; then
     grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=ARCH_GRUB
 else
     pacman -S --noconfirm grub
-    if [[ -z "$system_disk" || ! -b "$system_disk" ]]; then
+    [[ -z "$system_disk" || ! -b "$system_disk" ]] && {
         echo "Error: Invalid or unset system disk for BIOS bootloader installation."
         exit 1
-    fi
+    }
     grub-install --target=i386-pc "$system_disk"
 fi
 grub-mkconfig -o /boot/grub/grub.cfg
@@ -253,10 +260,10 @@ if [[ ! -f /run/archiso/bootmnt/arch/boot/x86_64/vmlinuz-linux ]]; then
 fi
 
 # Check internet connectivity
-if ! ping -c 1 archlinux.org >/dev/null 2>&1; then
+ping -c 1 archlinux.org >/dev/null 2>&1 || {
     echo "No internet connection! Please connect to the internet first."
     exit 1
-fi
+}
 
 # Check UEFI status
 checkUefi
@@ -265,10 +272,10 @@ is_uefi=$?
 # Confirm installation
 echo "WARNING: This will erase ALL data on $system_disk"
 read -rp "Do you want to continue? (y/N) " confirm
-if [[ ! $confirm =~ ^[Yy]$ ]]; then
+[[ ! $confirm =~ ^[Yy]$ ]] && {
     echo "Installation cancelled."
     exit 1
-fi
+}
 
 # Perform disks operations
 if [[ -n $second_disk ]]; then
