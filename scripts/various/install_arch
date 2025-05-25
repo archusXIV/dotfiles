@@ -190,21 +190,22 @@ configure_system() {
     local system_disk="$2"
 
     # Create configuration script
-    cat > /mnt/root/configure.sh <<EOF
+cat > /mnt/root/configure.sh <<-EOF
 #!/bin/bash
 # Set timezone
 ln -sf /usr/share/zoneinfo/"$timezone" /etc/localtime
 hwclock --systohc --utc
 
 # Set locale
-sed "s/#${locale.UTF-8}/${locale.UTF-8}/" /etc/locale.gen
+sed -i "s/#${locale}/${locale}/" /etc/locale.gen
 locale-gen
-echo "LANG=$locale.UTF-8" > /etc/locale.conf
+echo "LANG=$locale" > /etc/locale.conf
 echo "LC_COLLATE=C" >> /etc/locale.conf
 export LANG="$locale.UTF-8"
 
 # Set hostname
 echo "$hostname" > /etc/hostname
+echo "127.0.1.1    $hostname.localdomain    $hostname" >> /etc/hosts
 
 # Set keyboard layout
 echo "KEYMAP=$keyboard_layout" > /etc/vconsole.conf
@@ -221,9 +222,13 @@ passwd
 # Install and configure bootloader
 if [[ $is_uefi -eq 0 ]]; then
     pacman -S --noconfirm grub efibootmgr
-    grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
+    grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=ARCH_GRUB
 else
     pacman -S --noconfirm grub
+    if [[ -z "$system_disk" || ! -b "$system_disk" ]]; then
+        echo "Error: Invalid or unset system disk for BIOS bootloader installation."
+        exit 1
+    fi
     grub-install --target=i386-pc "$system_disk"
 fi
 grub-mkconfig -o /boot/grub/grub.cfg
@@ -231,9 +236,12 @@ grub-mkconfig -o /boot/grub/grub.cfg
 exit  # Exit chroot
 EOF
 
-chmod +x /mnt/root/configure.sh
-arch-chroot /mnt /root/configure.sh
-rm /mnt/root/configure.sh
+    chmod +x /mnt/root/configure.sh
+    if ! arch-chroot /mnt /root/configure.sh; then
+        echo "Error: Configuration script failed. Retaining /mnt/root/configure.sh for debugging."
+    else
+        rm /mnt/root/configure.sh
+    fi
 }
 
 # Main installation script
