@@ -12,20 +12,22 @@ if [ $# -eq 0 ]; then
     echo " This script will guide you through installing Arch Linux."
     echo ""
     echo " Available options:"
+    echo "   -d <root disk>     Set the system disk (default: sda)"
     echo "   -k <layout>   Set keyboard layout (default: us)"
     echo "   -l <locale>   Set system locale (default: en_US)"
     echo "   -t <zone>     Set timezone (default: UTC)"
     echo "   -h <name>     Set hostname (default: archlinux)"
     echo ""
     echo " Example usage:"
-    echo "   $0 -k uk -l en_GB -t Europe/London -h myarch"
+    echo "   $0 -d sda -k uk -l en_GB -t Europe/London -h myarch"
     echo ""
     exit 1
 fi
 
 # Parse command line arguments
-while getopts "k:l:t:h:" opt; do
+while getopts "d:k:l:t:h:" opt; do
     case $opt in
+        d) system_disk="$OPTARG" ;;
         k) keyboard_layout="$OPTARG" ;;
         l) locale="$OPTARG" ;;
         t) timezone="$OPTARG" ;;
@@ -35,6 +37,7 @@ while getopts "k:l:t:h:" opt; do
 done
 
 # Set defaults if not provided
+disk=${system_disk:-sda}
 keyboard_layout=${keyboard_layout:-us}
 locale=${locale:-en_US}
 timezone=${timezone:-UTC}
@@ -42,7 +45,7 @@ hostname=${hostname:-archlinux}
 
 # Function to check if running in UEFI mode
 check_uefi() {
-    if [ -d "/sys/firmware/efi" ]; then
+    if [[ -d /sys/firmware/efi ]]; then
         echo "System is booted in UEFI mode"
         return 0
     else
@@ -61,62 +64,62 @@ list_disks() {
 get_disk_selection() {
     local prompt="$1"
     local selected_disk
-    
+
     # List available disks
     echo "Available disks:"
     lsblk -d -o NAME,SIZE,MODEL
-    
+
     # Read user input
     read -rp "$prompt" selected_disk
-    
+
     # Validate if disk exists
-    if [ ! -b "/dev/$selected_disk" ]; then
+    if [[ ! -b /dev/$selected_disk ]]; then
         echo "Error: Selected disk /dev/$selected_disk does not exist"
         return 1
     fi
-    
+
     echo "/dev/$selected_disk"
 }
 
 # Function to partition disk
 partition_disk() {
-    local disk=$1
-    local second_disk=$2
-    local is_uefi=$3
+    local disk="$1"
+    local second_disk="$2"
+    local is_uefi="$3"
 
     # Ensure disk paths are complete
-    if [[ ! "$disk" =~ ^/dev/ ]]; then
+    if [[ ! $disk =~ ^/dev/ ]]; then
         disk="/dev/$disk"
     fi
-    if [ -n "$second_disk" ] && [[ ! "$second_disk" =~ ^/dev/ ]]; then
+    if [[ -n $second_disk ]] && [[ ! $second_disk =~ ^/dev/ ]]; then
         second_disk="/dev/$second_disk"
     fi
 
     # Verify disk exists
-    local disk_name=${disk#/dev/}
-    if [ ! -b "/dev/$disk_name" ]; then
+    local disk_name="${disk#/dev/}"
+    if [[ ! -b /dev/$disk_name ]]; then
         echo "Error: Disk $disk does not exist"
         exit 1
     fi
 
     # Clear existing partition tables
     sgdisk -Z "/dev/$disk_name" || { echo "Failed to clear partition table on $disk"; exit 1; }
-    if [ -n "$second_disk" ]; then
-        local second_disk_name=${second_disk#/dev/}
-        if [ ! -b "/dev/$second_disk_name" ]; then
+    if [[ -n $second_disk ]]; then
+        local second_disk_name="${second_disk#/dev/}"
+        if [[ ! -b /dev/$second_disk_name ]]; then
             echo "Error: Second disk $second_disk does not exist"
             exit 1
         fi
         sgdisk -Z "$second_disk" || { echo "Failed to clear partition table on $second_disk"; exit 1; }
     fi
 
-    if [ "$is_uefi" -eq 0 ]; then
+    if [[ $is_uefi -eq 0 ]]; then
         # UEFI partitioning
         sgdisk -n 1:0:+512M -t 1:ef00 -c 1:"EFI System" "$disk"  # EFI partition
         sgdisk -n 2:0:+2G -t 2:8200 -c 2:"Linux swap" "$disk"    # Swap partition
         sgdisk -n 3:0:0 -t 3:8300 -c 3:"Linux root" "$disk"      # Root partition
 
-        if [ -n "$second_disk" ]; then
+        if [[ -n $second_disk ]]; then
             sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$second_disk"  # Home partition
         fi
     else
@@ -124,7 +127,7 @@ partition_disk() {
         sgdisk -n 1:0:+2G -t 1:8200 -c 1:"Linux swap" "$disk"    # Swap partition
         sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux root" "$disk"      # Root partition
 
-        if [ -n "$second_disk" ]; then
+        if [[ -n $second_disk ]]; then
             sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$second_disk"  # Home partition
         fi
     fi
@@ -132,11 +135,11 @@ partition_disk() {
 
 # Function to format and mount partitions
 setup_partitions() {
-    local disk=$1
-    local is_uefi=$2
-    local second_disk=$3  # Add parameter for second disk
+    local disk="$1"
+    local is_uefi="$2"
+    local second_disk="$3"  # Add parameter for second disk
 
-    if [ "$is_uefi" -eq 0 ]; then
+    if [[ $is_uefi -eq 0 ]]; then
         # UEFI system partitioning
         mkfs.fat -F32 "${disk}1" || { echo "Failed to format EFI partition"; exit 1; }
         mkswap "${disk}2" || { echo "Failed to create swap"; exit 1; }
@@ -149,7 +152,7 @@ setup_partitions() {
         swapon "${disk}2" || { echo "Failed to enable swap"; exit 1; }
 
         # Handle second disk if present
-        if [ -n "$second_disk" ]; then
+        if [[ -n $second_disk ]]; then
             mkfs.ext4 "${second_disk}1" || { echo "Failed to format home partition"; exit 1; }
             mount "${second_disk}1" /mnt/home || { echo "Failed to mount home partition"; exit 1; }
         fi
@@ -164,7 +167,7 @@ setup_partitions() {
         swapon "${disk}1" || { echo "Failed to enable swap"; exit 1; }
 
         # Handle second disk if present
-        if [ -n "$second_disk" ]; then
+        if [[ -n $second_disk ]]; then
             mkfs.ext4 "${second_disk}1" || { echo "Failed to format home partition"; exit 1; }
             mount "${second_disk}1" /mnt/home || { echo "Failed to mount home partition"; exit 1; }
         fi
@@ -183,8 +186,8 @@ install_base_system() {
 
 # Function to configure system
 configure_system() {
-    local is_uefi=$1
-    local system_disk=$2
+    local is_uefi="$1"
+    local system_disk="$2"
     # read -rp "Enter your timezone (e.g., Europe/Paris): " timezone
     # read -rp "Enter your keyboard layout (e.g., us): " keyboard_layout
     # read -rp "Enter your locale (e.g., en_US): " locale
@@ -194,7 +197,7 @@ configure_system() {
     cat > /mnt/root/configure.sh <<EOF
 #!/bin/bash
 # Set timezone
-ln -sf /usr/share/zoneinfo/$timezone /etc/localtime
+ln -sf /usr/share/zoneinfo/"$timezone" /etc/localtime
 hwclock --systohc --utc
 
 # Set locale
@@ -202,7 +205,7 @@ echo "$locale.UTF-8" >> /etc/locale.gen
 locale-gen
 echo "LANG=$locale.UTF-8" > /etc/locale.conf
 echo "LC_COLLATE=C" >> /etc/locale.conf
-export LANG=$locale.UTF-8
+export LANG="$locale.UTF-8"
 
 # Set hostname
 echo "$hostname" > /etc/hostname
@@ -220,7 +223,7 @@ echo "Set root password:"
 passwd
 
 # Install and configure bootloader
-if [ "$is_uefi" -eq 0 ]; then
+if [[ $is_uefi -eq 0 ]]; then
     pacman -S --noconfirm grub efibootmgr
     grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
 else
@@ -240,8 +243,8 @@ rm /mnt/root/configure.sh
 # Main installation script
 echo "Starting Arch Linux installation..."
 
-# Verify we're in the live environment and running as root
-if [ ! -f /run/archiso/bootmnt/arch/boot/x86_64/vmlinuz-linux ]; then
+# Verify we're in the live environment
+if [[ ! -f /run/archiso/bootmnt/arch/boot/x86_64/vmlinuz-linux ]]; then
     echo "This script must be run from the Arch Linux live environment!"
     exit 1
 fi
@@ -257,7 +260,7 @@ check_uefi
 is_uefi=$?
 
 # Get disk selection
-system_disk=$(get_disk_selection "Select disk for installation (e.g., /dev/sda): ")
+# system_disk=$(get_disk_selection "Select disk for installation (e.g., sda): ")
 
 # Confirm installation
 echo "WARNING: This will erase ALL data on $system_disk"
