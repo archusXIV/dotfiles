@@ -40,7 +40,7 @@ while getopts "x:d:k:l:t:h:s:" opt; do
         t) timezone="$OPTARG" ;;
         h) hostname="$OPTARG" ;;
         s) second_disk="$OPTARG" ;;
-        \?) echo "Invalid option -$OPTARG" >&2; exit 1 ;;
+        *) echo "Invalid option -$OPTARG" >&2; exit 1 ;;
     esac
 done
 
