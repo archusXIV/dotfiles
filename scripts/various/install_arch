@@ -130,25 +130,25 @@ partition_disk() {
 
 # Function to format and mount partitions
 setup_partitions() {
-    local is_uefi="$1"
-    local disk="$2"
+    local is_uefi="$2"
+    local disk="$1"
     local second_disk="$3"  # Add parameter for second disk
 
     if [[ $is_uefi -eq 0 ]]; then
         # UEFI system partitioning
-        mkfs.fat -F32 "${disk}1" || { echo "Failed to format EFI partition"; exit 1; }
-        mkfs.ext4 "${disk}2" || { echo "Failed to format root partition"; exit 1; }
+        mkfs.fat -F32 "/dev/${disk}1" || { echo "Failed to format EFI partition"; exit 1; }
+        mkfs.ext4 "/dev/${disk}2" || { echo "Failed to format root partition"; exit 1; }
 
         # Mount partitions
-        mount "${disk}2" /mnt || { echo "Failed to mount root partition"; exit 1; }
+        mount "/dev/${disk}2" /mnt || { echo "Failed to mount root partition"; exit 1; }
         mkdir -p /mnt/boot/efi || { echo "Failed to create mount points"; exit 1; }
-        mount "${disk}1" /mnt/boot/efi || { echo "Failed to mount EFI partition"; exit 1; }
+        mount "/dev/${disk}1" /mnt/boot/efi || { echo "Failed to mount EFI partition"; exit 1; }
 
         # Handle second disk if present
         if [[ -n $second_disk ]]; then
-            mkfs.ext4 "${second_disk}1" || { echo "Failed to format home partition"; exit 1; }
+            mkfs.ext4 "/dev/${second_disk}1" || { echo "Failed to format home partition"; exit 1; }
             mkdir -p /mnt/home || { echo "Failed to create mount points"; exit 1; }
-            mount "${second_disk}1" /mnt/home || { echo "Failed to mount home partition"; exit 1; }
+            mount "/dev/${second_disk}1" /mnt/home || { echo "Failed to mount home partition"; exit 1; }
         fi
     else
         # BIOS system partitioning
