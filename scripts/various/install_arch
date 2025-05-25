@@ -13,21 +13,26 @@ if [ $# -eq 0 ]; then
     echo ""
     echo " Available options:"
     echo "   -d <root disk> Set the system disk (default: sda)"
+    echo "   -D             List all present disks in your machine"
     echo "   -k <layout>    Set keyboard layout (default: us)"
     echo "   -l <locale>    Set system locale (default: en_US)"
-    echo "   -s <home disk> Set the disk for /home (default: sdb)"
+    echo "   -s <home disk> Set the disk for /home (optional)"
     echo "   -t <zone>      Set timezone (default: UTC)"
     echo "   -h <name>      Set hostname (default: archlinux)"
     echo ""
     echo " Example usage:"
-    echo "   $0 -d sda -k uk -l en_GB -t Europe/London -h myarch"
+    echo "   $0 -d sda -s sdb -k uk -l en_GB -t Europe/London -h myarch"
     echo ""
     exit 1
 fi
 
 # Parse command line arguments
-while getopts "d:k:l:t:h:s:" opt; do
+while getopts "D:d:k:l:t:h:s:" opt; do
     case $opt in
+        D)
+            echo -e " \nAvailable disks:\n"
+            lsblk -d -n -p -o NAME,SIZE,MODEL
+        ;;
         d) system_disk="$OPTARG" ;;
         k) keyboard_layout="$OPTARG" ;;
         l) locale="$OPTARG" ;;
@@ -180,7 +185,7 @@ install_base_system() {
     --sort rate \
     --save /etc/pacman.d/mirrorlist
     pacman -Syy archlinux-keyring --noconfirm
-    pacstrap -K /mnt base base-devel linux linux-firmware vim
+    pacstrap -K /mnt base base-devel linux linux-firmware vim zram-generator
     genfstab -U /mnt >> /mnt/etc/fstab
 }
 
@@ -197,7 +202,7 @@ ln -sf /usr/share/zoneinfo/"$timezone" /etc/localtime
 hwclock --systohc --utc
 
 # Set locale
-echo "$locale.UTF-8" >> /etc/locale.gen
+sed "s/#${locale.UTF-8}/${locale.UTF-8}/" /etc/locale.gen
 locale-gen
 echo "LANG=$locale.UTF-8" > /etc/locale.conf
 echo "LC_COLLATE=C" >> /etc/locale.conf
@@ -237,7 +242,7 @@ rm /mnt/root/configure.sh
 }
 
 # Main installation script
-echo "Starting Arch Linux installation..."
+echo -e "\nStarting Arch Linux installation...\n"
 
 # Verify we're in the live environment
 if [[ ! -f /run/archiso/bootmnt/arch/boot/x86_64/vmlinuz-linux ]]; then
@@ -255,9 +260,6 @@ fi
 check_uefi
 is_uefi=$?
 
-# Get disk selection
-# system_disk=$(get_disk_selection "Select disk for installation (e.g., sda): ")
-
 # Confirm installation
 echo "WARNING: This will erase ALL data on $system_disk"
 read -rp "Do you want to continue? (y/N) " confirm
@@ -268,11 +270,11 @@ fi
 
 # Perform installation steps
 echo "Partitioning disk..."
-partition_disk "$system_disk" "$is_uefi"
+partition_disk "$system_disk" "$is_uefi" "$second_disk"
 
 # Set up partitions
 echo "Setting up partitions..."
-setup_partitions "$system_disk" "$is_uefi"
+setup_partitions "$system_disk" "$is_uefi" "$second_disk"
 
 echo "Installing base system..."
 install_base_system
@@ -284,6 +286,6 @@ configure_system "$is_uefi" "$system_disk"
 echo "Unmounting partitions..."
 umount -R /mnt
 
-echo "Installation complete!"
+echo -e "\nInstallation complete!"
 echo "You can now reboot into your new Arch Linux system."
 echo "After reboot, log in as root with the password you set."
