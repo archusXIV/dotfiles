@@ -13,7 +13,7 @@ if [ $# -eq 0 ]; then
     echo ""
     echo " Available options:"
     echo "   -d <root disk> Set the system disk (default: sda)"
-    echo "   -D             List all present disks in your machine"
+    echo "   -x             List all present disks"
     echo "   -k <layout>    Set keyboard layout (default: us)"
     echo "   -l <locale>    Set system locale (default: en_US)"
     echo "   -s <home disk> Set the disk for /home (optional)"
@@ -27,11 +27,12 @@ if [ $# -eq 0 ]; then
 fi
 
 # Parse command line arguments
-while getopts "D:d:k:l:t:h:s:" opt; do
+while getopts "x:d:k:l:t:h:s:" opt; do
     case $opt in
-        D)
+        x)
             echo -e " \nAvailable disks:\n"
-            lsblk -d -n -p -o NAME,SIZE,MODEL
+           lsblk -d -n -p -o NAME,SIZE,MODEL
+           exit 0
         ;;
         d) system_disk="$OPTARG" ;;
         k) keyboard_layout="$OPTARG" ;;
@@ -50,7 +51,6 @@ locale=${locale:-en_US}
 timezone=${timezone:-UTC}
 hostname=${hostname:-archlinux}
 
-# Function to check if running in UEFI mode
 check_uefi() {
     if [[ -d /sys/firmware/efi ]]; then
         echo "System is booted in UEFI mode"
@@ -61,119 +61,115 @@ check_uefi() {
     fi
 }
 
-# Function to list available disks
-list_disks() {
-    echo "Available disks:"
-    lsblk -d -n -p -o NAME,SIZE,MODEL
-}
-
-# Function to get user disk selection
-get_disk_selection() {
-    # List available disks
-    echo "Available disks:"
-    lsblk -d -o NAME,SIZE,MODEL
-
-    # Validate if disk exists
-    if [[ ! -b /dev/$disk ]]; then
-        echo "Error: Selected disk /dev/$disk does not exist"
-        return 1
-    fi
-
-    echo "/dev/$disk"
-}
-
-# Function to partition disk
 partition_disk() {
-    local disk="$1"
-    local is_uefi="$2"
+    local is_uefi="$1"
+    local disk="$2"
     local second_disk="$3"
 
     # Ensure disk paths are complete
-    if [[ ! $disk =~ ^/dev/ ]]; then
+    if [[ ! $disk =~ ^\/dev\/ ]]; then
         disk="/dev/$disk"
     fi
-    if [[ -n $second_disk ]] && [[ ! $second_disk =~ ^/dev/ ]]; then
+    if [[ -n $second_disk ]] && [[ ! $second_disk =~ ^\/dev\/ ]]; then
         second_disk="/dev/$second_disk"
     fi
 
-    # Verify disk exists
-    local disk_name="${disk#/dev/}"
-    if [[ ! -b /dev/$disk_name ]]; then
-        echo "Error: Disk $disk does not exist"
-        exit 1
-    fi
-
-    # Clear existing partition tables
-    sgdisk -Z "/dev/$disk_name" || { echo "Failed to clear partition table on $disk"; exit 1; }
-    if [[ -n $second_disk ]]; then
-        local second_disk_name="${second_disk#/dev/}"
-        if [[ ! -b /dev/$second_disk_name ]]; then
-            echo "Error: Second disk $second_disk does not exist"
+    # Verify disks exist and clear partition tables
+    for d in "$disk" ${second_disk:+"$second_disk"}; do
+        if [[ ! -b $d ]]; then
+            echo "Error: Disk $d does not exist"
             exit 1
         fi
-        sgdisk -Z "$second_disk" || { echo "Failed to clear partition table on $second_disk"; exit 1; }
-    fi
+        echo "Clearing partition table on $d..."
+        sgdisk -Z "$d" || { echo "Failed to clear partition table on $d"; exit 1; }
+    done
 
     if [[ $is_uefi -eq 0 ]]; then
+        echo "Creating UEFI partitions..."
         # UEFI partitioning
-        sgdisk -n 1:0:+512M -t 1:ef00 -c 1:"EFI System" "$disk"  # EFI partition
-        sgdisk -n 2:0:0 -t 2:8300 -c 3:"Linux root" "$disk"      # Root partition
+        sgdisk -n 1:0:+512M -t 1:ef00 -c 1:"EFI System" "$disk" || { echo "Failed to create EFI partition"; exit 1; }
+        sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux root" "$disk" || { echo "Failed to create root partition"; exit 1; }
 
         if [[ -n $second_disk ]]; then
-            sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$second_disk"  # Home partition
+            echo "Creating home partition on second disk..."
+            sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$second_disk" || { echo "Failed to create home partition"; exit 1; }
         fi
     else
+        echo "Creating BIOS partitions..."
         # BIOS partitioning
-        sgdisk -n 1:0:+2G -t 1:8200 -c 1:"Linux swap" "$disk"    # Swap partition
-        sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux root" "$disk"      # Root partition
+        sgdisk -n 1:0:+2G -t 1:8200 -c 1:"Linux swap" "$disk" || { echo "Failed to create swap partition"; exit 1; }
+        sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux root" "$disk" || { echo "Failed to create root partition"; exit 1; }
 
         if [[ -n $second_disk ]]; then
-            sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$second_disk"  # Home partition
+            echo "Creating home partition on second disk..."
+            sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$second_disk" || { echo "Failed to create home partition"; exit 1; }
         fi
     fi
 }
 
 # Function to format and mount partitions
 setup_partitions() {
-    local is_uefi="$2"
     local disk="$1"
-    local second_disk="$3"  # Add parameter for second disk
+    local is_uefi="$2"
+    local second_disk="$3"
+
+    # Ensure disk paths are complete
+    if [[ ! $disk =~ ^\/dev\/ ]]; then
+        disk="/dev/$disk"
+    fi
+    if [[ -n $second_disk ]] && [[ ! $second_disk =~ ^\/dev\/ ]]; then
+        second_disk="/dev/$second_disk"
+    fi
 
     if [[ $is_uefi -eq 0 ]]; then
         # UEFI system partitioning
-        mkfs.fat -F32 "/dev/${disk}1" || { echo "Failed to format EFI partition"; exit 1; }
-        mkfs.ext4 "/dev/${disk}2" || { echo "Failed to format root partition"; exit 1; }
-
-        # Mount partitions
-        mount "/dev/${disk}2" /mnt || { echo "Failed to mount root partition"; exit 1; }
-        mkdir -p /mnt/boot/efi || { echo "Failed to create mount points"; exit 1; }
-        mount "/dev/${disk}1" /mnt/boot/efi || { echo "Failed to mount EFI partition"; exit 1; }
-
-        # Handle second disk if present
-        if [[ -n $second_disk ]]; then
-            mkfs.ext4 "/dev/${second_disk}1" || { echo "Failed to format home partition"; exit 1; }
-            mkdir -p /mnt/home || { echo "Failed to create mount points"; exit 1; }
-            mount "/dev/${second_disk}1" /mnt/home || { echo "Failed to mount home partition"; exit 1; }
-        fi
-    else
-        # BIOS system partitioning
-        mkswap "${disk}1" || { echo "Failed to create swap"; exit 1; }
+        echo "Formatting EFI partition..."
+        mkfs.fat -F32 "${disk}1" || { echo "Failed to format EFI partition"; exit 1; }
+        echo "Formatting root partition..."
         mkfs.ext4 "${disk}2" || { echo "Failed to format root partition"; exit 1; }
 
         # Mount partitions
+        echo "Mounting root partition..."
         mount "${disk}2" /mnt || { echo "Failed to mount root partition"; exit 1; }
+        echo "Creating EFI mount point..."
+        mkdir -p /mnt/boot/efi || { echo "Failed to create EFI mount point"; exit 1; }
+        echo "Mounting EFI partition..."
+        mount "${disk}1" /mnt/boot/efi || { echo "Failed to mount EFI partition"; exit 1; }
+
+        # Handle second disk if present
+        if [[ -n $second_disk ]]; then
+            echo "Formatting home partition..."
+            mkfs.ext4 "${second_disk}1" || { echo "Failed to format home partition"; exit 1; }
+            echo "Creating home mount point..."
+            mkdir -p /mnt/home || { echo "Failed to create home mount point"; exit 1; }
+            echo "Mounting home partition..."
+            mount "${second_disk}1" /mnt/home || { echo "Failed to mount home partition"; exit 1; }
+        fi
+    else
+        # BIOS system partitioning
+        echo "Creating swap partition..."
+        mkswap "${disk}1" || { echo "Failed to create swap"; exit 1; }
+        echo "Formatting root partition..."
+        mkfs.ext4 "${disk}2" || { echo "Failed to format root partition"; exit 1; }
+
+        # Mount partitions
+        echo "Mounting root partition..."
+        mount "${disk}2" /mnt || { echo "Failed to mount root partition"; exit 1; }
+        echo "Enabling swap..."
         swapon "${disk}1" || { echo "Failed to enable swap"; exit 1; }
 
         # Handle second disk if present
         if [[ -n $second_disk ]]; then
+            echo "Formatting home partition..."
             mkfs.ext4 "${second_disk}1" || { echo "Failed to format home partition"; exit 1; }
-            mkdir -p /mnt/home || { echo "Failed to create home directory"; exit 1; }
+            echo "Creating home mount point..."
+            mkdir -p /mnt/home || { echo "Failed to create home mount point"; exit 1; }
+            echo "Mounting home partition..."
             mount "${second_disk}1" /mnt/home || { echo "Failed to mount home partition"; exit 1; }
         fi
     fi
 }
 
-# Function to install base system
 install_base_system() {
     # ensure the system clock is synchronized
     timedatectl set-ntp true
@@ -189,7 +185,6 @@ install_base_system() {
     genfstab -U /mnt >> /mnt/etc/fstab
 }
 
-# Function to configure system
 configure_system() {
     local is_uefi="$1"
     local system_disk="$2"
@@ -270,7 +265,7 @@ fi
 
 # Perform installation steps
 echo "Partitioning disk..."
-partition_disk "$system_disk" "$is_uefi" "$second_disk"
+partition_disk "$is_uefi" "$system_disk" "$second_disk"
 
 # Set up partitions
 echo "Setting up partitions..."
