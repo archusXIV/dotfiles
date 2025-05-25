@@ -1,33 +1,43 @@
 #!/bin/bash
 
-# This script automates the base installation of Arch Linux with configurable options.
-# It allows customization of system disk, keyboard layout, locale, timezone and hostname through
-# command line arguments. The script handles both UEFI and BIOS systems, guides through
-# disk selection and partitioning, and performs the core system installation steps.
+# Author: Barret E <https://github.com/archusXIV/>
+# Creation date: 2025-05-25
+# License: GPLv2
+# This script automates the installation of Arch Linux with the following features:
+# - Supports both UEFI and BIOS systems
+# - Configurable disk partitioning with option for separate /home partition
+# - Customizable keyboard layout, locale, timezone and hostname
+# - Automatic mirror selection based on response rate and package database update
+# - Installation of base system packages (minimal) and bootloader
+# - Network configuration via NetworkManager
+# - Root password setup during installation
+# - Safety checks for live environment and internet connectivity
 
 # Display usage information if no arguments provided
 if [ $# -eq 0 ]; then
-    echo " Arch Linux Installation Script"
-    echo " ============================="
-    echo " This script will guide you through installing Arch Linux."
-    echo ""
-    echo " Available options:"
-    echo "   -d <root disk> Set the system disk (default: sda)"
-    echo "   -x all         List all present disks"
-    echo "   -k <layout>    Set keyboard layout (default: us)"
-    echo "   -l <locale>    Set system locale (default: en_US)"
-    echo "   -s <home disk> Set the disk for /home (optional)"
-    echo "   -t <zone>      Set timezone (default: UTC)"
-    echo "   -h <name>      Set hostname (default: archlinux)"
-    echo ""
-    echo " Example usage:"
-    echo "   $0 -d sda -s sdb -k uk -l en_GB -t Europe/London -h myarch"
-    echo ""
+    cat <<'USAGE'
+ Arch Linux Installation Script
+ ==============================
+
+ Available options:
+  -x all         List all present disks
+  -c <country>   Set your actual location (default: United States)
+  -d <root disk> Set the system disk (default: sda)
+  -k <layout>    Set keyboard layout (default: us)
+  -l <locale>    Set system locale (default: en_US)
+  -s <home disk> Set the disk for /home (optional)
+  -t <zone>      Set timezone (default: UTC)
+  -h <name>      Set hostname (default: archlinux)
+
+ Example usage:
+  $(basename "$0") -d sda -s sdb -k fr -l en_FR -t Europe/Paris -h myarch
+
+USAGE
     exit 1
 fi
 
 # Parse command line arguments
-while getopts "x:d:k:l:t:h:s:" opt; do
+while getopts "x:c:d:k:l:t:h:s:" opt; do
     case $opt in
         x)
             echo -e " \nAvailable disks:\n"
@@ -35,24 +45,26 @@ while getopts "x:d:k:l:t:h:s:" opt; do
             echo ""
             exit 0
         ;;
+        c) country="$OPTARG" ;;
         d) system_disk="$OPTARG" ;;
         k) keyboard_layout="$OPTARG" ;;
         l) locale="$OPTARG" ;;
         t) timezone="$OPTARG" ;;
         h) hostname="$OPTARG" ;;
         s) second_disk="$OPTARG" ;;
-        *) echo "Invalid option -$OPTARG" >&2; exit 1 ;;
+        \?) echo "Invalid option -$OPTARG" >&2; exit 1 ;;
     esac
 done
 
 # Set defaults if not provided
+country=${country:-"United States"}
 disk=${system_disk:-sda}
+hostname=${hostname:-archlinux}
 keyboard_layout=${keyboard_layout:-us}
 locale=${locale:-en_US}
 timezone=${timezone:-UTC}
-hostname=${hostname:-archlinux}
 
-check_uefi() {
+checkUefi() {
     if [[ -d /sys/firmware/efi ]]; then
         echo "System is booted in UEFI mode"
         return 0
@@ -62,120 +74,105 @@ check_uefi() {
     fi
 }
 
-partition_disk() {
+ensureDiskPathsAreComplete() {
+    [[ ! $disk =~ ^\/dev\/ ]] && disk="/dev/$disk"
+    [[ -n $second_disk ]] && [[ ! $second_disk =~ ^\/dev\/ ]] && second_disk="/dev/$second_disk"
+}
+
+errorDisk() {
+    case "$1" in
+        "clear_partition") echo "Error: Failed to clear partition table" ;;
+        "create_efi") echo "Error: Failed to create EFI partition" ;;
+        "create_efi_mount") echo "Error: Failed to create EFI mount point" ;;
+        "create_root") echo "Error: Failed to create root partition" ;;
+        "create_home") echo "Error: Failed to create home partition" ;;
+        "create_home_mount") echo "Error: Failed to create home mount point" ;;
+        "create_swap") echo "Error: Failed to create swap partition" ;;
+        "disk_not_exist") echo "Error: Disk does not exist" ;;
+        "enable_swap") echo "Error: Failed to enable swap" ;;
+        "format_efi") echo "Error: Failed to format EFI partition" ;;
+        "format_root") echo "Error: Failed to format root partition" ;;
+        "format_home") echo "Error: Failed to format home partition" ;;
+        "mount_root") echo "Error: Failed to mount root partition" ;;
+        "mount_efi") echo "Error: Failed to mount EFI partition" ;;
+        "mount_home") echo "Error: Failed to mount home partition" ;;
+    esac
+    exit 1
+}
+
+partitionDisk() {
     local is_uefi="$1"
     local disk="$2"
     local second_disk="$3"
 
-    # Ensure disk paths are complete
-    if [[ ! $disk =~ ^\/dev\/ ]]; then
-        disk="/dev/$disk"
-    fi
-    if [[ -n $second_disk ]] && [[ ! $second_disk =~ ^\/dev\/ ]]; then
-        second_disk="/dev/$second_disk"
-    fi
+    ensureDiskPathsAreComplete
 
     # Verify disks exist and clear partition tables
     for d in "$disk" ${second_disk:+"$second_disk"}; do
-        if [[ ! -b $d ]]; then
-            echo "Error: Disk $d does not exist"
-            exit 1
-        fi
-        echo "Clearing partition table on $d..."
-        sgdisk -Z "$d" || { echo "Failed to clear partition table on $d"; exit 1; }
+        [[ ! -b $d ]] && errorDisk "disk_not_exist"
+        sgdisk -Z "$d" || errorDisk "clear_partition"
     done
 
     if [[ $is_uefi -eq 0 ]]; then
-        echo "Creating UEFI partitions..."
         # UEFI partitioning
-        sgdisk -n 1:0:+512M -t 1:ef00 -c 1:"EFI System" "$disk" || { echo "Failed to create EFI partition"; exit 1; }
-        sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux root" "$disk" || { echo "Failed to create root partition"; exit 1; }
+        sgdisk -n 1:0:+512M -t 1:ef00 -c 1:"EFI System" "$disk" || errorDisk "create_efi"
+        sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux root" "$disk" || errorDisk "create_root"
 
         if [[ -n $second_disk ]]; then
-            echo "Creating home partition on second disk..."
-            sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$second_disk" || { echo "Failed to create home partition"; exit 1; }
+            sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$second_disk" || errorDisk "create_home"
         fi
     else
-        echo "Creating BIOS partitions..."
         # BIOS partitioning
-        sgdisk -n 1:0:+2G -t 1:8200 -c 1:"Linux swap" "$disk" || { echo "Failed to create swap partition"; exit 1; }
-        sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux root" "$disk" || { echo "Failed to create root partition"; exit 1; }
+        sgdisk -n 1:0:+2G -t 1:8200 -c 1:"Linux swap" "$disk" || errorDisk "create_swap"
+        sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux root" "$disk" || errorDisk "create_root"
 
         if [[ -n $second_disk ]]; then
-            echo "Creating home partition on second disk..."
-            sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$second_disk" || { echo "Failed to create home partition"; exit 1; }
+            sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$second_disk" || errorDisk "create_home"
         fi
     fi
 }
 
-# Function to format and mount partitions
-setup_partitions() {
+setupPartitions() {
     local disk="$1"
     local is_uefi="$2"
     local second_disk="$3"
 
-    # Ensure disk paths are complete
-    if [[ ! $disk =~ ^\/dev\/ ]]; then
-        disk="/dev/$disk"
-    fi
-    if [[ -n $second_disk ]] && [[ ! $second_disk =~ ^\/dev\/ ]]; then
-        second_disk="/dev/$second_disk"
-    fi
+    ensureDiskPathsAreComplete
 
     if [[ $is_uefi -eq 0 ]]; then
-        # UEFI system partitioning
-        echo "Formatting EFI partition..."
-        mkfs.fat -F32 "${disk}1" || { echo "Failed to format EFI partition"; exit 1; }
-        echo "Formatting root partition..."
-        mkfs.ext4 "${disk}2" || { echo "Failed to format root partition"; exit 1; }
+        mkfs.fat -F32 "${disk}1" || errorDisk "format_efi"
+        mkfs.ext4 "${disk}2" || errorDisk "format_root"
 
-        # Mount partitions
-        echo "Mounting root partition..."
-        mount "${disk}2" /mnt || { echo "Failed to mount root partition"; exit 1; }
-        echo "Creating EFI mount point..."
-        mkdir -p /mnt/boot/efi || { echo "Failed to create EFI mount point"; exit 1; }
-        echo "Mounting EFI partition..."
-        mount "${disk}1" /mnt/boot/efi || { echo "Failed to mount EFI partition"; exit 1; }
+        mount "${disk}2" /mnt || errorDisk "mount_root"
+        mkdir -p /mnt/boot/efi || errorDisk "create_efi_mount"
+        mount "${disk}1" /mnt/boot/efi || errorDisk "mount_efi"
 
-        # Handle second disk if present
         if [[ -n $second_disk ]]; then
-            echo "Formatting home partition..."
-            mkfs.ext4 "${second_disk}1" || { echo "Failed to format home partition"; exit 1; }
-            echo "Creating home mount point..."
-            mkdir -p /mnt/home || { echo "Failed to create home mount point"; exit 1; }
-            echo "Mounting home partition..."
-            mount "${second_disk}1" /mnt/home || { echo "Failed to mount home partition"; exit 1; }
+            mkfs.ext4 "${second_disk}1" || errorDisk "format_home"
+            mkdir -p /mnt/home || errorDisk "create_home_mount"
+            mount "${second_disk}1" /mnt/home || errorDisk "mount_home"
         fi
     else
-        # BIOS system partitioning
-        echo "Creating swap partition..."
-        mkswap "${disk}1" || { echo "Failed to create swap"; exit 1; }
-        echo "Formatting root partition..."
-        mkfs.ext4 "${disk}2" || { echo "Failed to format root partition"; exit 1; }
+        mkswap "${disk}1" || errorDisk "create_swap"
+        mkfs.ext4 "${disk}2" || errorDisk "format_root"
 
-        # Mount partitions
-        echo "Mounting root partition..."
-        mount "${disk}2" /mnt || { echo "Failed to mount root partition"; exit 1; }
-        echo "Enabling swap..."
-        swapon "${disk}1" || { echo "Failed to enable swap"; exit 1; }
+        mount "${disk}2" /mnt || errorDisk "mount_root"
+        swapon "${disk}1" || errorDisk "enable_swap"
 
-        # Handle second disk if present
         if [[ -n $second_disk ]]; then
-            echo "Formatting home partition..."
-            mkfs.ext4 "${second_disk}1" || { echo "Failed to format home partition"; exit 1; }
-            echo "Creating home mount point..."
-            mkdir -p /mnt/home || { echo "Failed to create home mount point"; exit 1; }
-            echo "Mounting home partition..."
-            mount "${second_disk}1" /mnt/home || { echo "Failed to mount home partition"; exit 1; }
+            mkfs.ext4 "${second_disk}1" || errorDisk "format_home"
+            mkdir -p /mnt/home || errorDisk "create_home_mount"
+            mount "${second_disk}1" /mnt/home || errorDisk "mount_home"
         fi
     fi
 }
 
-install_base_system() {
-    # ensure the system clock is synchronized
+installBaseSystem() {
+    # Ensure the system clock is synchronized
     timedatectl set-ntp true
     # Update package database first
     reflector \
+    -c "${country}" \
     -l 10 \
     -a 24 \
     -p https \
@@ -184,9 +181,10 @@ install_base_system() {
     pacman -Syy archlinux-keyring --noconfirm
     pacstrap -K /mnt base base-devel linux linux-firmware vim zram-generator
     genfstab -U /mnt >> /mnt/etc/fstab
+    cp -f /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
 }
 
-configure_system() {
+configureSystem() {
     local is_uefi="$1"
     local system_disk="$2"
 
@@ -213,19 +211,19 @@ echo "KEYMAP=$keyboard_layout" > /etc/vconsole.conf
 mkinitcpio -P
 
 # Configure network
-pacman -Sy --noconfirm networkmanager
+pacman -S --noconfirm networkmanager
 systemctl enable NetworkManager
 
 # Set root password
 echo "Set root password:"
 passwd
 
-pacman -S --noconfirm grub
 # Install and configure bootloader
 if [[ $is_uefi -eq 0 ]]; then
-    pacman -S --noconfirm efibootmgr
+    pacman -S --noconfirm grub efibootmgr
     grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=ARCH_GRUB
 else
+    pacman -S --noconfirm grub
     if [[ -z "$system_disk" || ! -b "$system_disk" ]]; then
         echo "Error: Invalid or unset system disk for BIOS bootloader installation."
         exit 1
@@ -245,7 +243,7 @@ EOF
     fi
 }
 
-# Main installation script
+# We start from here
 echo -e "\nStarting Arch Linux installation...\n"
 
 # Verify we're in the live environment
@@ -261,7 +259,7 @@ if ! ping -c 1 archlinux.org >/dev/null 2>&1; then
 fi
 
 # Check UEFI status
-check_uefi
+checkUefi
 is_uefi=$?
 
 # Confirm installation
@@ -272,26 +270,25 @@ if [[ ! $confirm =~ ^[Yy]$ ]]; then
     exit 1
 fi
 
-# Perform installation steps
+# Perform disks operations
 if [[ -n $second_disk ]]; then
     echo "Partitioning disks..."
-    partition_disk "$is_uefi" "$system_disk" "$second_disk"
+    partitionDisk "$is_uefi" "$system_disk" "$second_disk"
     echo "Setting up partitions..."
-    setup_partitions "$system_disk" "$is_uefi" "$second_disk"
+    setupPartitions "$system_disk" "$is_uefi" "$second_disk"
 else
     echo "Formatting disk..."
-    partition_disk "$is_uefi" "$system_disk"
+    partitionDisk "$is_uefi" "$system_disk"
     echo "Setting up partitions..."
-    setup_partitions "$system_disk" "$is_uefi"
+    setupPartitions "$system_disk" "$is_uefi"
 fi
 
 echo "Installing base system..."
-install_base_system
+installBaseSystem
 
 echo "Configuring system..."
-configure_system "$is_uefi" "$system_disk"
+configureSystem "$is_uefi" "$system_disk"
 
-# Cleanup and finish
 echo "Unmounting partitions..."
 umount -R /mnt
 
