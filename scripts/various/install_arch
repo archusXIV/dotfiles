@@ -13,7 +13,7 @@ if [ $# -eq 0 ]; then
     echo ""
     echo " Available options:"
     echo "   -d <root disk> Set the system disk (default: sda)"
-    echo "   -x             List all present disks"
+    echo "   -x all         List all present disks"
     echo "   -k <layout>    Set keyboard layout (default: us)"
     echo "   -l <locale>    Set system locale (default: en_US)"
     echo "   -s <home disk> Set the disk for /home (optional)"
