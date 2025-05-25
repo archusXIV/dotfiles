@@ -264,12 +264,17 @@ if [[ ! $confirm =~ ^[Yy]$ ]]; then
 fi
 
 # Perform installation steps
-echo "Partitioning disk..."
-partition_disk "$is_uefi" "$system_disk" "$second_disk"
-
-# Set up partitions
-echo "Setting up partitions..."
-setup_partitions "$system_disk" "$is_uefi" "$second_disk"
+if [[ -n $second_disk ]]; then
+    echo "Partitioning disks..."
+    partition_disk "$is_uefi" "$system_disk" "$second_disk"
+    echo "Setting up partitions..."
+    setup_partitions "$system_disk" "$is_uefi" "$second_disk"
+else
+    echo "Formatting disk..."
+    partition_disk "$is_uefi" "$system_disk"
+    echo "Setting up partitions..."
+    setup_partitions "$system_disk" "$is_uefi"
+fi
 
 echo "Installing base system..."
 install_base_system
