@@ -212,19 +212,19 @@ echo "KEYMAP=$keyboard_layout" > /etc/vconsole.conf
 mkinitcpio -P
 
 # Configure network
-pacman -S --noconfirm networkmanager
+pacman -Sy --noconfirm networkmanager
 systemctl enable NetworkManager
 
 # Set root password
 echo "Set root password:"
 passwd
 
+pacman -S --noconfirm grub
 # Install and configure bootloader
 if [[ $is_uefi -eq 0 ]]; then
-    pacman -S --noconfirm grub efibootmgr
+    pacman -S --noconfirm efibootmgr
     grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=ARCH_GRUB
 else
-    pacman -S --noconfirm grub
     if [[ -z "$system_disk" || ! -b "$system_disk" ]]; then
         echo "Error: Invalid or unset system disk for BIOS bootloader installation."
         exit 1
