@@ -36,10 +36,10 @@ if [ $# -eq 0 ]; then
   -h <name>           Set hostname (default: archlinux)
 
  Example usage for UEFI install (no swap):
-  ./install_arch -d sda -s sdb -k fr -l fr_FR -t Europe/Paris -h myarchuefi
+  ./install_arch -d sda -s sdb -c France -k fr -l fr_FR -t Europe/Paris -h myarchuefi
 
  Example usage for BIOS install (with swap size):
-  ./install_arch -d sda -S 4 -s sdb -k fr -l fr_FR -t Europe/Paris -h myarchbios
+  ./install_arch -d sda -S 4 -s sdb -c France -k fr -l fr_FR -t Europe/Paris -h myarchbios
 
 USAGE
     exit 1
