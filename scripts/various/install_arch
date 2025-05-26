@@ -130,6 +130,8 @@ partitionDisk() {
         # UEFI partitioning
         sgdisk -n 1:0:+512M -t 1:ef00 -c 1:"EFI System" "$disk" \
         || errorDisk "create_efi"
+        sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux root" "$disk" \
+        || errorDisk "create_root"
     else
         # BIOS partitioning
         # Create a 1MB BIOS Boot Partition first
@@ -138,12 +140,6 @@ partitionDisk() {
         # Create swap partition
         sgdisk -n 2:0:+"$swap_size"G -t 2:8200 -c 2:"Linux swap" "$disk" \
         || errorDisk "create_swap"
-    fi
-
-    if [[ $is_uefi -eq 0 ]]; then
-        sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux root" "$disk" \
-        || errorDisk "create_root"
-    else
         sgdisk -n 3:0:0 -t 3:8300 -c 3:"Linux root" "$disk" \
         || errorDisk "create_root"
     fi
