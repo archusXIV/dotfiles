@@ -276,7 +276,7 @@ cat > /etc/systemd/system.conf.d/boot-options.conf <<EOL
 [Manager]
 DefaultTimeoutStartSec=10s
 DefaultTimeoutStopSec=10s
-EOL
+EOF
 
 # Install and configure bootloader
 pacman -S --noconfirm grub
