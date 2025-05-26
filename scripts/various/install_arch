@@ -193,6 +193,9 @@ configureSystem() {
     local is_uefi="$1"
     local system_disk="$2"
 
+    # Ensure disk path is complete
+    [[ ! $system_disk =~ ^\/dev\/ ]] && system_disk="/dev/$system_disk"
+
     # Create configuration script
 cat > /mnt/root/configure.sh <<-EOF
 #!/bin/bash
@@ -224,11 +227,11 @@ echo "Set the root password:"
 passwd
 
 # Install and configure bootloader
+pacman -S --noconfirm grub
 if [[ $is_uefi -eq 0 ]]; then
-    pacman -S --noconfirm grub efibootmgr
+    pacman -S --noconfirm efibootmgr
     grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=ARCH_GRUB
 else
-    pacman -S --noconfirm grub
     [[ -z "$system_disk" || ! -b "$system_disk" ]] && {
         echo "${r}Error: Invalid or unset system disk for BIOS bootloader installation.${c}"
         exit 1
@@ -237,15 +240,15 @@ else
 fi
 grub-mkconfig -o /boot/grub/grub.cfg
 
-exit  # Exit chroot
+exit
 EOF
-
     chmod +x /mnt/root/configure.sh
-    if ! arch-chroot /mnt /root/configure.sh; then
+    if ! arch-chroot /mnt /root/configure.sh "$system_disk"; then
         echo "${r}Error: Configuration script failed. Retaining /mnt/root/configure.sh for debugging.${c}"
     else
         rm /mnt/root/configure.sh
     fi
+
 }
 
 # We start from here
