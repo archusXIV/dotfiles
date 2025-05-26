@@ -165,9 +165,7 @@ setupPartitions() {
     local is_uefi="$2"
     local second_disk="$3"
 
-    # Convert disk name to full path if needed
-    [[ ! $disk =~ ^\/dev\/ ]] && disk="/dev/$disk"
-    [[ -n $second_disk ]] && [[ ! $second_disk =~ ^\/dev\/ ]] && second_disk="/dev/$second_disk"
+    ensureDisksPathsAreCorrect
 
     # Debug output
     echo "Debug: Setting up partitions for disk: $disk"
