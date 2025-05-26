@@ -212,7 +212,7 @@ setupPartitions() {
 installBaseSystem() {
     # Ensure the system clock is synchronized
     timedatectl set-ntp true
-    # Update package database first
+    echo "${g}Updating mirrolist for ${country}${c}"
     reflector \
     -c "${country}" \
     -l 10 \
