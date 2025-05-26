@@ -4,14 +4,15 @@
 # Creation date: 2025-05-25
 # License: GPLv2
 # This script automates the installation of Arch Linux with the following features:
-# - Supports both UEFI and BIOS systems
-# - Configurable disk partitioning with option for separate /home partition
-# - Customizable keyboard layout, locale, timezone and hostname
-# - Automatic mirror selection based on response rate and package database update
-# - Installation of base system packages (minimal) and bootloader
-# - Network configuration via NetworkManager
-# - Root password setup during installation
-# - Safety checks for live environment and internet connectivity
+# - Supports both UEFI and BIOS systems.
+# - Configurable disk partitioning with option for separate /home partition.
+#   and custom swap size if needed (only for BIOS install).
+# - Customizable keyboard layout, locale, timezone and hostname.
+# - Automatic mirror selection based on response rate and package database update.
+# - Installation of base system packages (minimal) and bootloader.
+# - Network configuration via NetworkManager.
+# - Root password setup during installation.
+# - Safety checks for live environment and internet connectivity.
 
 # Display usage information if no arguments provided
 r=$'\e[31m';
@@ -24,38 +25,43 @@ if [ $# -eq 0 ]; then
  ==============================
 
  Available options:
-  -x all              List all present disks for decision making
+  -D all              List all present disks for decision making
+  -r <root disk>      Set the system disk (default: sda)
+  -s <home disk>      Set the second disk for /home (optional)
+  -S <swap size>      Set the swap size for BIOS install (default: 4G)
   -c <country>        Set your actual location (default: United States)
-  -d <root disk>      Set the system disk (default: sda)
   -k <kbd layout>     Set your keyboard layout (default: us)
   -l <locale>         Set system locale (default: en_US)
-  -s <home disk>      Set the disk for /home (optional)
   -t <Region/Capital> Set timezone (default: UTC)
   -h <name>           Set hostname (default: archlinux)
 
- Example usage:
-  $(basename "$0") -d sda -s sdb -k fr -l fr_FR -t Europe/Paris -h myarch
+ Example usage for UEFI install (no swap):
+  ./install_arch -d sda -s sdb -k fr -l fr_FR -t Europe/Paris -h myarchuefi
+
+ Example usage for BIOS install (with swap size):
+  ./install_arch -d sda -S 4 -s sdb -k fr -l fr_FR -t Europe/Paris -h myarchbios
 
 USAGE
     exit 1
 fi
 
 # Parse command line arguments
-while getopts "x:c:d:k:l:t:h:s:" opt; do
+while getopts "D:c:r:k:l:t:h:s:S:" opt; do
     case $opt in
-        x)
+        D)
             echo -e " \n${g}Available disks:\n${c}"
             lsblk -I 8 -d -o NAME,SIZE,MODEL
             echo ""
             exit 0
         ;;
         c) country="$OPTARG" ;;
-        d) system_disk="$OPTARG" ;;
+        r) system_disk="$OPTARG" ;;
         k) keyboard_layout="$OPTARG" ;;
         l) locale="$OPTARG" ;;
         t) timezone="$OPTARG" ;;
         h) hostname="$OPTARG" ;;
         s) second_disk="$OPTARG" ;;
+        S) swap_size="$OPTARG" ;;
         \?) echo "${r}Invalid option -$OPTARG${c}" >&2; exit 1 ;;
     esac
 done
@@ -63,6 +69,7 @@ done
 # Set defaults if not provided
 country=${country:-"United States"}
 disk=${system_disk:-sda}
+swap_size=${swap_size:-4G}
 hostname=${hostname:-archlinux}
 keyboard_layout=${keyboard_layout:-us}
 locale=${locale:-en_US}
@@ -122,25 +129,19 @@ partitionDisk() {
         # UEFI partitioning
         sgdisk -n 1:0:+512M -t 1:ef00 -c 1:"EFI System" "$disk" \
         || errorDisk "create_efi"
-        sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux root" "$disk" \
-        || errorDisk "create_root"
-
-        if [[ -n $second_disk ]]; then
-            sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$second_disk" \
-            || errorDisk "create_home"
-        fi
     else
         # BIOS partitioning
-        sgdisk -n 1:0:+4G -t 1:8200 -c 1:"Linux swap" "$disk" \
+        sgdisk -n 1:0:+"$swap_size" -t 1:8200 -c 1:"Linux swap" "$disk" \
         || errorDisk "create_swap"
-        sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux root" "$disk" \
+    fi
+
+    sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux root" "$disk" \
         || errorDisk "create_root"
 
-        [[ -n $second_disk ]] && {
-            sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$second_disk" \
-            || errorDisk "create_home"
-        }
-    fi
+    [[ -n $second_disk ]] && {
+        sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$second_disk" \
+        || errorDisk "create_home"
+    }
 }
 
 setupPartitions() {
@@ -153,29 +154,22 @@ setupPartitions() {
     if [[ $is_uefi -eq 0 ]]; then
         mkfs.fat -F32 "${disk}1" || errorDisk "format_efi"
         mkfs.ext4 "${disk}2" || errorDisk "format_root"
-
         mount "${disk}2" /mnt || errorDisk "mount_root"
         mkdir -p /mnt/boot/efi || errorDisk "create_efi_mount"
         mount "${disk}1" /mnt/boot/efi || errorDisk "mount_efi"
-
-        [[ -n $second_disk ]] && {
-            mkfs.ext4 "${second_disk}1" || errorDisk "format_home"
-            mkdir -p /mnt/home || errorDisk "create_home_mount"
-            mount "${second_disk}1" /mnt/home || errorDisk "mount_home"
-        }
     else
         mkswap "${disk}1" || errorDisk "create_swap"
         mkfs.ext4 "${disk}2" || errorDisk "format_root"
-
         mount "${disk}2" /mnt || errorDisk "mount_root"
         swapon "${disk}1" || errorDisk "enable_swap"
-
-        [[ -n $second_disk ]] && {
-            mkfs.ext4 "${second_disk}1" || errorDisk "format_home"
-            mkdir -p /mnt/home || errorDisk "create_home_mount"
-            mount "${second_disk}1" /mnt/home || errorDisk "mount_home"
-        }
     fi
+
+    [[ -n $second_disk ]] && {
+        mkfs.ext4 "${second_disk}1" || errorDisk "format_home"
+        mkdir -p /mnt/home || errorDisk "create_home_mount"
+        mount "${second_disk}1" /mnt/home || errorDisk "mount_home"
+    }
+
 }
 
 installBaseSystem() {
