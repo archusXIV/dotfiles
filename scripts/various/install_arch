@@ -69,7 +69,7 @@ done
 # Set defaults if not provided
 country=${country:-"United States"}
 disk=${system_disk:-sda}
-swap_size=${swap_size:-4G}
+swap_size=${swap_size:-4}
 hostname=${hostname:-archlinux}
 keyboard_layout=${keyboard_layout:-us}
 locale=${locale:-en_US}
@@ -131,7 +131,7 @@ partitionDisk() {
         || errorDisk "create_efi"
     else
         # BIOS partitioning
-        sgdisk -n 1:0:+"$swap_size" -t 1:8200 -c 1:"Linux swap" "$disk" \
+        sgdisk -n 1:0:+"$swap_size"G -t 1:8200 -c 1:"Linux swap" "$disk" \
         || errorDisk "create_swap"
     fi
 
