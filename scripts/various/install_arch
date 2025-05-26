@@ -127,17 +127,14 @@ partitionDisk() {
     done
 
     if [[ $is_uefi -eq 0 ]]; then
-        # UEFI partitioning
         sgdisk -n 1:0:+512M -t 1:ef00 -c 1:"EFI System" "$disk" \
         || errorDisk "create_efi"
         sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux root" "$disk" \
         || errorDisk "create_root"
     else
         # BIOS partitioning
-        # Create a 1MB BIOS Boot Partition first
         sgdisk -n 1:0:+1M -t 1:ef02 -c 1:"BIOS boot partition" "$disk" \
         || errorDisk "create_bios_boot"
-        # Create swap partition
         sgdisk -n 2:0:+"$swap_size"G -t 2:8200 -c 2:"Linux swap" "$disk" \
         || errorDisk "create_swap"
         sgdisk -n 3:0:0 -t 3:8300 -c 3:"Linux root" "$disk" \
@@ -149,8 +146,7 @@ partitionDisk() {
         || errorDisk "create_home"
     }
 
-    # Ensure kernel rereads partition table
-    echo "Debug: Refreshing partition table..."
+    echo "${g}Debug: Refreshing partition table...${c}"
     partprobe "$disk"
     [[ -n $second_disk ]] && partprobe "$second_disk"
     sleep 2  # Give the kernel some time to process
@@ -163,42 +159,37 @@ setupPartitions() {
 
     ensureDisksPathsAreCorrect
 
-    # Debug output
-    echo "Debug: Setting up partitions for disk: $disk"
-    echo "Debug: UEFI mode: $is_uefi"
+    echo "${g}Debug: Setting up partitions for disk: $disk${c}"
+    echo "${g}Debug: UEFI mode: $is_uefi${c}"
     lsblk "$disk"
 
     if [[ $is_uefi -eq 0 ]]; then
-        echo "Debug: Setting up UEFI partitions..."
+        echo "${g}Debug: Setting up UEFI partitions...${c}"
         mkfs.fat -F32 "${disk}1" || errorDisk "format_efi"
         mkfs.ext4 "${disk}2" || errorDisk "format_root"
         mount "${disk}2" /mnt || errorDisk "mount_root"
         mkdir -p /mnt/boot/efi || errorDisk "create_efi_mount"
         mount "${disk}1" /mnt/boot/efi || errorDisk "mount_efi"
     else
-        echo "Debug: Setting up BIOS partitions..."
+        echo "${g}Debug: Setting up BIOS partitions...${c}"
         # Note: partition 1 is BIOS boot, no formatting needed
         mkswap "${disk}2" || errorDisk "create_swap"
-        echo "Debug: Checking if partition ${disk}3 exists..."
-        if [[ ! -b "${disk}3" ]]; then
+        [[ ! -b "${disk}3" ]] && {
             echo "${r}Error: Partition ${disk}3 does not exist. Available partitions:${c}"
             lsblk "$disk"
             exit 1
-        fi
-        echo "Debug: Creating ext4 on ${disk}3"
+        }
         mkfs.ext4 "${disk}3" 2>&1 || {
             echo "${r}Error details for ext4 formatting:${c}"
             mkfs.ext4 "${disk}3" 2>&1
             errorDisk "format_root"
         }
-        echo "Debug: Mounting ${disk}3 to /mnt"
         mount "${disk}3" /mnt || errorDisk "mount_root"
-        echo "Debug: Enabling swap on ${disk}2"
         swapon "${disk}2" || errorDisk "enable_swap"
     fi
 
     [[ -n $second_disk ]] && {
-        echo "Debug: Setting up home partition on $second_disk"
+        echo "${g}Debug: Setting up home partition on $second_disk${c}"
         mkfs.ext4 "${second_disk}1" || errorDisk "format_home"
         mkdir -p /mnt/home || errorDisk "create_home_mount"
         mount "${second_disk}1" /mnt/home || errorDisk "mount_home"
@@ -326,7 +317,7 @@ is_uefi=$?
 echo "${r}WARNING: This will erase ALL data on $system_disk${c}"
 read -rp "Do you want to continue? (y/N) " confirm
 [[ ! $confirm =~ ^[Yy]$ ]] && {
-    echo "${g}Installation cancelled.${c}"
+    echo "${r}Installation cancelled.${c}"
     exit 1
 }
 
