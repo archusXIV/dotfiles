@@ -152,6 +152,12 @@ partitionDisk() {
         sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$second_disk" \
         || errorDisk "create_home"
     }
+
+    # Ensure kernel rereads partition table
+    echo "Debug: Refreshing partition table..."
+    partprobe "$disk"
+    [[ -n $second_disk ]] && partprobe "$second_disk"
+    sleep 2  # Give the kernel some time to process
 }
 
 setupPartitions() {
@@ -179,8 +185,18 @@ setupPartitions() {
         echo "Debug: Setting up BIOS partitions..."
         # Note: partition 1 is BIOS boot, no formatting needed
         mkswap "${disk}2" || errorDisk "create_swap"
+        echo "Debug: Checking if partition ${disk}3 exists..."
+        if [[ ! -b "${disk}3" ]]; then
+            echo "${r}Error: Partition ${disk}3 does not exist. Available partitions:${c}"
+            lsblk "$disk"
+            exit 1
+        fi
         echo "Debug: Creating ext4 on ${disk}3"
-        mkfs.ext4 "${disk}3" || errorDisk "format_root"
+        mkfs.ext4 "${disk}3" 2>&1 || {
+            echo "${r}Error details for ext4 formatting:${c}"
+            mkfs.ext4 "${disk}3" 2>&1
+            errorDisk "format_root"
+        }
         echo "Debug: Mounting ${disk}3 to /mnt"
         mount "${disk}3" /mnt || errorDisk "mount_root"
         echo "Debug: Enabling swap on ${disk}2"
