@@ -268,7 +268,7 @@ passwd
 # Performance optimizations
 echo "Adding performance tweaks..."
 # Enable parallel module loading
-sed -i 's/^#MODULES_DECOMPRESS="yes"/MODULES_DECOMPRESS="yes"/' /etc/mkinitcpio.conf
+sed -i 's/^#MODULES_DECOMPRESS="no"/MODULES_DECOMPRESS="yes"/' /etc/mkinitcpio.conf
 sed -i 's/^MODULES=()/MODULES=(sd_mod)/' /etc/mkinitcpio.conf
 
 # Create systemd-boot-options.conf for kernel parameters
@@ -278,9 +278,6 @@ cat > /etc/systemd/system.conf.d/boot-options.conf <<EOL
 DefaultTimeoutStartSec=10s
 DefaultTimeoutStopSec=10s
 EOL
-
-# Optimize systemd services
-systemctl disable systemd-random-seed
 
 # Install and configure bootloader
 pacman -S --noconfirm grub
