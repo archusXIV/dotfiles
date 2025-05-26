@@ -132,8 +132,8 @@ partitionDisk() {
         || errorDisk "create_efi"
     else
         # BIOS partitioning
-        # Create a 2MB BIOS Boot Partition first
-        sgdisk -n 1:0:+2M -t 1:ef02 -c 1:"BIOS boot partition" "$disk" \
+        # Create a 1MB BIOS Boot Partition first
+        sgdisk -n 1:0:+1M -t 1:ef02 -c 1:"BIOS boot partition" "$disk" \
         || errorDisk "create_bios_boot"
         # Create swap partition
         sgdisk -n 2:0:+"$swap_size"G -t 2:8200 -c 2:"Linux swap" "$disk" \
@@ -265,6 +265,23 @@ systemctl enable NetworkManager
 echo "Set the root password:"
 passwd
 
+# Performance optimizations
+echo "Adding performance tweaks..."
+# Enable parallel module loading
+sed -i 's/^#MODULES_DECOMPRESS="yes"/MODULES_DECOMPRESS="yes"/' /etc/mkinitcpio.conf
+sed -i 's/^MODULES=()/MODULES=(sd_mod)/' /etc/mkinitcpio.conf
+
+# Create systemd-boot-options.conf for kernel parameters
+mkdir -p /etc/systemd/system.conf.d/
+cat > /etc/systemd/system.conf.d/boot-options.conf <<EOL
+[Manager]
+DefaultTimeoutStartSec=10s
+DefaultTimeoutStopSec=10s
+EOL
+
+# Optimize systemd services
+systemctl disable systemd-random-seed
+
 # Install and configure bootloader
 pacman -S --noconfirm grub
 if [[ $is_uefi -eq 0 ]]; then
@@ -277,6 +294,10 @@ else
     }
     grub-install --target=i386-pc "$system_disk"
 fi
+
+# Add performance-related kernel parameters to GRUB
+sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT=".*"/GRUB_CMDLINE_LINUX_DEFAULT="quiet nowatchdog nmi_watchdog=0 raid=noautodetect"/' /etc/default/grub
+
 grub-mkconfig -o /boot/grub/grub.cfg
 
 exit
