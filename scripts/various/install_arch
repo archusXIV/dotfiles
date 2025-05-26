@@ -21,19 +21,20 @@ c=$'\e[0m';
 
 if [ $# -eq 0 ]; then
     cat <<'USAGE'
- Arch Linux Installation Script
- ==============================
+             Arch Linux Installation Script by archusXIV
+ ===================================================================
+ Do not add swap in UEFI mode, configure zram-generator after reboot
 
  Available options:
+  -c <country>        Set your actual location (default: United States)
   -D all              List all present disks for decision making
+  -h <name>           Set hostname (default: archlinux)
+  -k <kbd layout>     Set your keyboard layout (default: us)
+  -l <locale>         Set system locale (default: en_US)
   -r <root disk>      Set the system disk (default: sda)
   -s <home disk>      Set the second disk for /home (optional)
   -S <swap size>      Set the swap size for BIOS install (default: 4G)
-  -c <country>        Set your actual location (default: United States)
-  -k <kbd layout>     Set your keyboard layout (default: us)
-  -l <locale>         Set system locale (default: en_US)
   -t <Region/Capital> Set timezone (default: UTC)
-  -h <name>           Set hostname (default: archlinux)
 
  Example usage for UEFI install (no swap):
   ./install_arch -r sda -s sdb -c France -k fr -l fr_FR -t Europe/Paris -h myarchuefi
@@ -46,22 +47,22 @@ USAGE
 fi
 
 # Parse command line arguments
-while getopts "D:c:r:k:l:t:h:s:S:" opt; do
+while getopts "c:D:h:k:l:r:s:S:t:" opt; do
     case $opt in
+        c) country="$OPTARG" ;;
         D)
             echo -e " \n${g}Available disks:\n${c}"
             lsblk -I 8 -d -o NAME,SIZE,MODEL
             echo ""
             exit 0
         ;;
-        c) country="$OPTARG" ;;
-        r) system_disk="$OPTARG" ;;
+        h) hostname="$OPTARG" ;;
         k) keyboard_layout="$OPTARG" ;;
         l) locale="$OPTARG" ;;
-        t) timezone="$OPTARG" ;;
-        h) hostname="$OPTARG" ;;
+        r) system_disk="$OPTARG" ;;
         s) second_disk="$OPTARG" ;;
         S) swap_size="$OPTARG" ;;
+        t) timezone="$OPTARG" ;;
         \?) echo "${r}Invalid option -$OPTARG${c}" >&2; exit 1 ;;
     esac
 done
