@@ -255,6 +255,7 @@ echo "127.0.1.1     $hostname.localdomain    $hostname" >> /etc/hosts
 
 # Set keyboard layout
 echo "KEYMAP=$keyboard_layout" > /etc/vconsole.conf
+echo "FONT=sun12x22" >> /etc/vconsole.conf
 mkinitcpio -P
 
 # Configure network
