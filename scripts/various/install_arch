@@ -159,28 +159,40 @@ setupPartitions() {
     local is_uefi="$2"
     local second_disk="$3"
 
-    ensureDisksPathsAreCorrect
+    # Convert disk name to full path if needed
+    [[ ! $disk =~ ^\/dev\/ ]] && disk="/dev/$disk"
+    [[ -n $second_disk ]] && [[ ! $second_disk =~ ^\/dev\/ ]] && second_disk="/dev/$second_disk"
+
+    # Debug output
+    echo "Debug: Setting up partitions for disk: $disk"
+    echo "Debug: UEFI mode: $is_uefi"
+    lsblk "$disk"
 
     if [[ $is_uefi -eq 0 ]]; then
+        echo "Debug: Setting up UEFI partitions..."
         mkfs.fat -F32 "${disk}1" || errorDisk "format_efi"
         mkfs.ext4 "${disk}2" || errorDisk "format_root"
         mount "${disk}2" /mnt || errorDisk "mount_root"
         mkdir -p /mnt/boot/efi || errorDisk "create_efi_mount"
         mount "${disk}1" /mnt/boot/efi || errorDisk "mount_efi"
     else
+        echo "Debug: Setting up BIOS partitions..."
         # Note: partition 1 is BIOS boot, no formatting needed
         mkswap "${disk}2" || errorDisk "create_swap"
+        echo "Debug: Creating ext4 on ${disk}3"
         mkfs.ext4 "${disk}3" || errorDisk "format_root"
+        echo "Debug: Mounting ${disk}3 to /mnt"
         mount "${disk}3" /mnt || errorDisk "mount_root"
+        echo "Debug: Enabling swap on ${disk}2"
         swapon "${disk}2" || errorDisk "enable_swap"
     fi
 
     [[ -n $second_disk ]] && {
+        echo "Debug: Setting up home partition on $second_disk"
         mkfs.ext4 "${second_disk}1" || errorDisk "format_home"
         mkdir -p /mnt/home || errorDisk "create_home_mount"
         mount "${second_disk}1" /mnt/home || errorDisk "mount_home"
     }
-
 }
 
 installBaseSystem() {
