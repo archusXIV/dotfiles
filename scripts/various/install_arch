@@ -256,8 +256,8 @@ passwd
 # Performance optimizations
 echo "Adding performance tweaks..."
 # Enable parallel module loading
-sed -i 's/^#MODULES_DECOMPRESS="no"/MODULES_DECOMPRESS="yes"/' /etc/mkinitcpio.conf
 sed -i 's/^MODULES=()/MODULES=(sd_mod)/' /etc/mkinitcpio.conf
+sed -i 's/^#MODULES_DECOMPRESS="no"/MODULES_DECOMPRESS="yes"/' /etc/mkinitcpio.conf
 
 # Create systemd-boot-options.conf for kernel parameters
 mkdir -p /etc/systemd/system.conf.d/
@@ -284,7 +284,10 @@ else
 fi
 
 # Add performance-related kernel parameters to GRUB
-sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT=".*"/GRUB_CMDLINE_LINUX_DEFAULT="quiet nowatchdog nmi_watchdog=0 raid=noautodetect"/' /etc/default/grub
+GCLD="GRUB_CMDLINE_LINUX_DEFAULT"
+sed -i "
+    s/^${GCLD}=\".*\"/${GCLD}=\"quiet nowatchdog nmi_watchdog=0 raid=noautodetect\"/
+" /etc/default/grub
 
 grub-mkconfig -o /boot/grub/grub.cfg
 
