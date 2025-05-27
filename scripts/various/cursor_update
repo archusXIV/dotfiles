@@ -96,7 +96,7 @@ installCursor() {
 # Download the desired version of Cursor
 downloadCursor() {
     echo -e "\n ${g}Fetching the $version version of Cursor...${c}\n"
-    curl -sL "$(curl -sL "$app_api" | jq -r '.downloadUrl')" -O
+    curl -sL "$(curl -fsSL "$app_api" | jq -r '.downloadUrl')" -O
     curl -sL "https://www.cursor.so/brand/icon.svg" -O
 }
 
