@@ -23,25 +23,23 @@ c=$'\e[0m';
 if [ $# -eq 0 ]; then
     cat <<'USAGE'
              Arch Linux Installation Script by archusXIV
- ===================================================================
- Do not add swap in UEFI mode, configure zram-generator after reboot
+    ===================================================================
+    Do not add swap in UEFI mode, configure zram-generator after reboot
 
- Available options:
-  -c <country>        Set your actual location (default: United States)
-  -D all              List all present disks for decision making
-  -h <name>           Set hostname (default: archlinux)
-  -k <kbd layout>     Set your keyboard layout (default: us)
-  -l <locale>         Set system locale (default: en_US)
-  -r <root disk>      Set the system disk (default: sda)
-  -s <home disk>      Set the second disk for /home (optional)
-  -S <swap size>      Set the swap size for BIOS install (default: 4G)
-  -t <Region/Capital> Set timezone (default: UTC)
-
- Example usage for UEFI install (no swap):
-  ./install_arch -r sda -s sdb -c France -k fr -l fr_FR -t Europe/Paris -h myarchuefi
-
- Example usage for BIOS install (with swap size):
-  ./install_arch -r sda -S 4 -s sdb -c France -k fr -l fr_FR -t Europe/Paris -h myarchbios
+    Available options:
+    -c <country>        Set your actual location (default: United States)
+    -D all              List all present disks for decision making
+    -h <name>           Set hostname (default: archlinux)
+    -k <kbd layout>     Set your keyboard layout (default: us)
+    -l <locale>         Set system locale (default: en_US)
+    -r <root disk>      Set the system disk (default: sda)
+    -s <home disk>      Set the second disk for /home (optional)
+    -S <swap size>      Set the swap size for BIOS install (default: 4G)
+    -t <Region/Capital> Set timezone (default: UTC)
+    Example usage for UEFI install (no swap):
+    ./install_arch -r sda -s sdb -c France -k fr -l fr_FR -t Europe/Paris -h myarchuefi
+    Example usage for BIOS install (with swap size):
+    ./install_arch -r sda -S 4 -s sdb -c France -k fr -l fr_FR -t Europe/Paris -h myarchbios
 
 USAGE
     exit 1
