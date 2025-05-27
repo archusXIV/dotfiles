@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+
+# Author: Barret E <https://github.com/archusXIV>
+# Script name: update_cursor version 1.0.0
+# Licensed under the GPLv2
+#
+# This script install/update the Cursor AI IDE software for Linux
+# <https://www.cursor.com/downloads>
+# It also creates a desktop entry in your applications menu
+# Please be carefull an read this file before your run it
+# You will certainly be prompt for your sudo password
+# If not argument is given the usage message is printed
+# The default application name is cursor.AppImage
+
+# Display usage information if no arguments provided
+if [[ $# -eq 0 ]]; then
+    cat <<'USAGE'
+  Cursor AI Installation Script by archusXIV
+  ==========================================
+
+ Available options:
+  -d <path>    Set the download directory (default: "$HOME"/Downloads)
+  -i <path>    Set the installation directory (default: /usr/local/bin)
+  -v <version> Set desired version: stable or latest
+
+ Example usage with the defaults:
+    cursor_update -v stable
+
+ Example usage customized:
+  cursor_update -d $HOME/Documents/Downloads -i /opt -v latest
+
+USAGE
+    exit 1
+fi
+
+# Some colors
+r=$'\e[31m';
+g=$'\e[32m';
+c=$'\e[0m';
+
+# Parse command line arguments
+while getopts "d:i:v:" opt; do
+    case $opt in
+        d) download_dir="$OPTARG" ;;
+        i) install_dir="$OPTARG" ;;
+        v) version="$OPTARG" ;;
+        \?) echo "${r}Invalid option -$OPTARG${c}" >&2; exit 1 ;;
+    esac
+done
+
+# Set defaults if not provided
+app_name="cursor.AppImage"
+download_dir=${download_dir:-"$HOME"/Downloads}
+install_dir=${install_dir:-"/usr/local/bin"}
+version=${version:-stable}
+app_api="https://www.cursor.com/api/download?platform=linux-x64&releaseTrack=$version"
+desktop_file="/usr/share/applications/Cursor.desktop"
+icon="$install_dir/cursor.svg"
+
+error() {
+    echo "${r}Error: $1${c}"
+    exit 1
+}
+
+# Ensure curl, jq are installed
+command -v curl &> /dev/null || error "Please install curl first and try again."
+command -v jq &> /dev/null || error "Please install jq first and try again."
+cd "$download_dir" || error "Failed to access $download_dir."
+
+createDesktopFile() {
+    # Create or update desktop entry
+    cat <<EOF | sudo tee "$desktop_file" > /dev/null
+[Desktop Entry]
+Name=Cursor
+Exec=$install_dir/cursor.AppImage
+Terminal=false
+Type=Application
+Icon=$icon
+StartupWMClass=Cursor
+X-AppImage-Version=$version
+Comment=Cursor AI coding IDE.
+MimeType=x-scheme-handler/cursor;
+Categories=Utility;Development;
+EOF
+}
+
+installCursor() {
+    find . -maxdepth 1 -type f -name "Cursor-*" -exec mv {} "$app_name" \;
+    sudo chown root:root "$app_name"
+    sudo chmod +x "$app_name"
+    sudo mkdir -p "$install_dir" || error "Failed to create directory $install_dir"
+    sudo mv -f "$app_name" "$install_dir"
+    sudo mv -f "icon.svg" "$icon"
+}
+
+# Download the desired version of Cursor
+downloadCursor() {
+    echo -e "\n ${g}Fetching the $version version of Cursor...${c}\n"
+    curl -sL "$(curl -sL "$app_api" | jq -r '.downloadUrl')" -O
+    curl -sL "https://www.cursor.so/brand/icon.svg" -O
+}
+
+downloadCursor || error "Cursor download failed."
+echo "${g} cursor download successful${c}"
+installCursor || error "Cursor installation failed"
+echo "${g} cursor installation successful${c}"
+createDesktopFile || error "Failed to update cursor.desktop"
+echo "${g} cursor desktop file installed, happy coding.${c}"
+
