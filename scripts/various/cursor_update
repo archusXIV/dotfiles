@@ -15,20 +15,17 @@
 # Display usage information if no arguments provided
 if [[ $# -eq 0 ]]; then
     cat <<'USAGE'
-  Cursor AI Installation Script by archusXIV
-  ==========================================
+    Cursor AI Installation Script by archusXIV
+    ==========================================
 
- Available options:
-  -d <path>    Set the download directory (default: "$HOME"/Downloads)
-  -i <path>    Set the installation directory (default: /usr/local/bin)
-  -v <version> Set desired version: stable or latest
-
- Example usage with the defaults:
+    Available options:
+    -d <path>    Set the download directory (default: "$HOME"/Downloads)
+    -i <path>    Set the installation directory (default: /usr/local/bin)
+    -v <version> Set desired version: stable or latest
+    Example usage with the defaults:
     cursor_update -v stable
-
- Example usage customized:
-  cursor_update -d $HOME/Documents/Downloads -i /opt -v latest
-
+    Example usage customized:
+    cursor_update -d $HOME/Documents/Downloads -i /opt -v latest
 USAGE
     exit 1
 fi
