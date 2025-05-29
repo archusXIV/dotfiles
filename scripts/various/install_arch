@@ -41,9 +41,9 @@ if [ $# -eq 0 ]; then
     -x <swap size>      Set the swap size for BIOS install (default: 4G)
     -t <Region/Capital> Set timezone (default: UTC)
     Example usage for UEFI install (no swap):
-    ./install_arch -r sda -s sdb -c France -k fr -l fr_FR -t Europe/Paris -h myarchuefi
+    ./install_arch -r sda -R 30 -s sdb -S 100 -c France -k fr -l fr_FR -t Europe/Paris -h myarchuefi
     Example usage for BIOS install (with swap size):
-    ./install_arch -r sda -S 4 -s sdb -c France -k fr -l fr_FR -t Europe/Paris -h myarchbios
+    ./install_arch -r sda -x 4 -s sdb -c France -k fr -l fr_FR -t Europe/Paris -h myarchbios
 
 USAGE
     exit 1
