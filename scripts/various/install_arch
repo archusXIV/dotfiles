@@ -311,8 +311,7 @@ fi
 
 # Add performance-related kernel parameters to GRUB
 if [[ -f /etc/default/grub ]]; then
-    GCLD="GRUB_CMDLINE_LINUX_DEFAULT"
-    sed -i "s/^${GCLD}=\".*\"/${GCLD}=\"quiet nowatchdog nmi_watchdog=0 raid=noautodetect\"/" /etc/default/grub
+    sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT=\".*\"/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet nowatchdog nmi_watchdog=0 raid=noautodetect\"/' /etc/default/grub
 fi
 
 grub-mkconfig -o /boot/grub/grub.cfg
