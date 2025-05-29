@@ -135,32 +135,32 @@ partitionDisk() {
     done
 
     if [[ $is_uefi -eq 0 ]]; then
-        sgdisk -n 1:0:+512M -t 1:ef00 -c 1:"EFI System" "$root_disk" ||
-            errorDisk "create_efi"
+        sgdisk -n 1:0:+512M -t 1:ef00 -c 1:"EFI System" "$root_disk" \
+        || errorDisk "create_efi"
         if [[ -n $root_size ]]; then
-            sgdisk -n 2:0:+"${root_size}"G -t 2:8300 -c 2:"Linux root" "$root_disk" ||
-                errorDisk "create_root"
+            sgdisk -n 2:0:+"${root_size}"G -t 2:8300 -c 2:"Linux root" "$root_disk" \
+            || errorDisk "create_root"
         else
-            sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux root" "$root_disk" ||
-                errorDisk "create_root"
+            sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux root" "$root_disk" \
+            || errorDisk "create_root"
         fi
     else
         # BIOS partitioning
-        sgdisk -n 1:0:+1M -t 1:ef02 -c 1:"BIOS boot partition" "$root_disk" ||
-            errorDisk "create_bios_boot"
-        sgdisk -n 2:0:+"${swap_size}"G -t 2:8200 -c 2:"Linux swap" "$root_disk" ||
-            errorDisk "create_swap"
-        sgdisk -n 3:0:+"${root_size}"G -t 3:8300 -c 3:"Linux root" "$root_disk" ||
-            errorDisk "create_root"
+        sgdisk -n 1:0:+1M -t 1:ef02 -c 1:"BIOS boot partition" "$root_disk" \
+        || errorDisk "create_bios_boot"
+        sgdisk -n 2:0:+"${swap_size}"G -t 2:8200 -c 2:"Linux swap" "$root_disk" \
+        || errorDisk "create_swap"
+        sgdisk -n 3:0:+"${root_size}"G -t 3:8300 -c 3:"Linux root" "$root_disk" \
+        || errorDisk "create_root"
     fi
 
     [[ -n $home_disk ]] && {
         if [[ -n $home_size ]]; then
-            sgdisk -n 1:0:+"${home_size}"G -t 1:8300 -c 1:"Linux home" "$home_disk" ||
-                errorDisk "create_home"
+            sgdisk -n 1:0:+"${home_size}"G -t 1:8300 -c 1:"Linux home" "$home_disk" \
+            || errorDisk "create_home"
         else
-            sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$home_disk" ||
-                errorDisk "create_home"
+            sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$home_disk" \
+            || errorDisk "create_home"
         fi
     }
 
