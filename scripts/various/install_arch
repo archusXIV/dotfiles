@@ -15,9 +15,9 @@
 # - Safety checks for live environment and internet connectivity.
 
 # Some colors
-r=$'\e[31m';
-g=$'\e[32m';
-c=$'\e[0m';
+r=$'\e[31m'
+g=$'\e[32m'
+c=$'\e[0m'
 
 # Display usage information if no arguments provided
 if [ $# -eq 0 ]; then
@@ -33,8 +33,10 @@ if [ $# -eq 0 ]; then
     -k <kbd layout>     Set your keyboard layout (default: us)
     -l <locale>         Set system locale (default: en_US)
     -r <root disk>      Set the system disk (default: sda)
+    -R <root size>      Set the root partition size in GB (default: 30)
     -s <home disk>      Set the second disk for /home (optional)
-    -S <swap size>      Set the swap size for BIOS install (default: 4G)
+    -S <home size>      Set the home partition size in GB (uses remaining space if not set)
+    -x <swap size>      Set the swap size for BIOS install (default: 4G)
     -t <Region/Capital> Set timezone (default: UTC)
     Example usage for UEFI install (no swap):
     ./install_arch -r sda -s sdb -c France -k fr -l fr_FR -t Europe/Paris -h myarchuefi
@@ -46,29 +48,35 @@ USAGE
 fi
 
 # Parse command line arguments
-while getopts "c:D:h:k:l:r:s:S:t:" opt; do
+while getopts "c:D:h:k:l:r:R:s:S:x:t:" opt; do
     case $opt in
-        c) country="$OPTARG" ;;
-        D)
-            echo -e " \n${g}Available disks:\n${c}"
-            lsblk -I 8 -d -o NAME,SIZE,MODEL
-            echo ""
-            exit 0
+    c) country="$OPTARG" ;;
+    D)
+        echo -e " \n${g}Available disks:\n${c}"
+        lsblk -I 8 -d -o NAME,SIZE,MODEL
+        echo ""
+        exit 0
         ;;
-        h) hostname="$OPTARG" ;;
-        k) keyboard_layout="$OPTARG" ;;
-        l) locale="$OPTARG" ;;
-        r) system_disk="$OPTARG" ;;
-        s) second_disk="$OPTARG" ;;
-        S) swap_size="$OPTARG" ;;
-        t) timezone="$OPTARG" ;;
-        \?) echo "${r}Invalid option -$OPTARG${c}" >&2; exit 1 ;;
+    h) hostname="$OPTARG" ;;
+    k) keyboard_layout="$OPTARG" ;;
+    l) locale="$OPTARG" ;;
+    r) root_disk="$OPTARG" ;;
+    R) root_size="$OPTARG" ;;
+    s) home_disk="$OPTARG" ;;
+    S) home_size="$OPTARG" ;;
+    t) timezone="$OPTARG" ;;
+    x) swap_size="$OPTARG" ;;
+    \?)
+        echo "${r}Invalid option -$OPTARG${c}" >&2
+        exit 1
+        ;;
     esac
 done
 
 # Set defaults if not provided
 country=${country:-"United States"}
-disk=${system_disk:-sda}
+root_disk=${root_disk:-sda}
+root_size=${root_size:-30}
 swap_size=${swap_size:-4}
 hostname=${hostname:-archlinux}
 keyboard_layout=${keyboard_layout:-us}
@@ -86,113 +94,123 @@ checkUefi() {
 }
 
 ensureDisksPathsAreCorrect() {
-    [[ ! $disk =~ ^\/dev\/ ]] && disk="/dev/$disk"
-    [[ -n $second_disk ]] && [[ ! $second_disk =~ ^\/dev\/ ]] \
-    && second_disk="/dev/$second_disk"
+    [[ ! $root_disk =~ ^\/dev\/ ]] && root_disk="/dev/$root_disk"
+    [[ -n $home_disk ]] && [[ ! $home_disk =~ ^\/dev\/ ]] &&
+        home_disk="/dev/$home_disk"
 }
 
 errorDisk() {
     case "$1" in
-        "clear_partition") echo "${r}Error: Failed to clear partition table${c}" ;;
-        "create_efi") echo "${r}Error: Failed to create EFI partition${c}" ;;
-        "create_bios_boot") echo "${r}Error: Failed to create BIOS boot partition${c}" ;;
-        "create_efi_mount") echo "${r}Error: Failed to create EFI mount point${c}" ;;
-        "create_root") echo "${r}Error: Failed to create root partition${c}" ;;
-        "create_home") echo "${r}Error: Failed to create home partition${c}" ;;
-        "create_home_mount") echo "${r}Error: Failed to create home mount point${c}" ;;
-        "create_swap") echo "${r}Error: Failed to create swap partition${c}" ;;
-        "disk_not_exist") echo "${r}Error: Disk does not exist${c}" ;;
-        "enable_swap") echo "${r}Error: Failed to enable swap${c}" ;;
-        "format_efi") echo "${r}Error: Failed to format EFI partition${c}" ;;
-        "format_root") echo "${r}Error: Failed to format root partition${c}" ;;
-        "format_home") echo "${r}Error: Failed to format home partition${c}" ;;
-        "mount_root") echo "${r}Error: Failed to mount root partition${c}" ;;
-        "mount_efi") echo "${r}Error: Failed to mount EFI partition${c}" ;;
-        "mount_home") echo "${r}Error: Failed to mount home partition${c}" ;;
+    "clear_partition") echo "${r}Error: Failed to clear partition table${c}" ;;
+    "create_efi") echo "${r}Error: Failed to create EFI partition${c}" ;;
+    "create_bios_boot") echo "${r}Error: Failed to create BIOS boot partition${c}" ;;
+    "create_efi_mount") echo "${r}Error: Failed to create EFI mount point${c}" ;;
+    "create_root") echo "${r}Error: Failed to create root partition${c}" ;;
+    "create_home") echo "${r}Error: Failed to create home partition${c}" ;;
+    "create_home_mount") echo "${r}Error: Failed to create home mount point${c}" ;;
+    "create_swap") echo "${r}Error: Failed to create swap partition${c}" ;;
+    "disk_not_exist") echo "${r}Error: Disk does not exist${c}" ;;
+    "enable_swap") echo "${r}Error: Failed to enable swap${c}" ;;
+    "format_efi") echo "${r}Error: Failed to format EFI partition${c}" ;;
+    "format_root") echo "${r}Error: Failed to format root partition${c}" ;;
+    "format_home") echo "${r}Error: Failed to format home partition${c}" ;;
+    "mount_root") echo "${r}Error: Failed to mount root partition${c}" ;;
+    "mount_efi") echo "${r}Error: Failed to mount EFI partition${c}" ;;
+    "mount_home") echo "${r}Error: Failed to mount home partition${c}" ;;
     esac
     exit 1
 }
 
 partitionDisk() {
     local is_uefi="$1"
-    local disk="$2"
-    local second_disk="$3"
+    local root_disk="$2"
+    local home_disk="$3"
 
     ensureDisksPathsAreCorrect
 
     # Verify disks exist and clear partition tables
-    for d in "$disk" ${second_disk:+"$second_disk"}; do
+    for d in "$root_disk" ${home_disk:+"$home_disk"}; do
         [[ ! -b $d ]] && errorDisk "disk_not_exist"
         sgdisk -Z "$d" || errorDisk "clear_partition"
     done
 
     if [[ $is_uefi -eq 0 ]]; then
-        sgdisk -n 1:0:+512M -t 1:ef00 -c 1:"EFI System" "$disk" \
-        || errorDisk "create_efi"
-        sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux root" "$disk" \
-        || errorDisk "create_root"
+        sgdisk -n 1:0:+512M -t 1:ef00 -c 1:"EFI System" "$root_disk" ||
+            errorDisk "create_efi"
+        if [[ -n $root_size ]]; then
+            sgdisk -n 2:0:+"${root_size}"G -t 2:8300 -c 2:"Linux root" "$root_disk" ||
+                errorDisk "create_root"
+        else
+            sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux root" "$root_disk" ||
+                errorDisk "create_root"
+        fi
     else
         # BIOS partitioning
-        sgdisk -n 1:0:+1M -t 1:ef02 -c 1:"BIOS boot partition" "$disk" \
-        || errorDisk "create_bios_boot"
-        sgdisk -n 2:0:+"$swap_size"G -t 2:8200 -c 2:"Linux swap" "$disk" \
-        || errorDisk "create_swap"
-        sgdisk -n 3:0:0 -t 3:8300 -c 3:"Linux root" "$disk" \
-        || errorDisk "create_root"
+        sgdisk -n 1:0:+1M -t 1:ef02 -c 1:"BIOS boot partition" "$root_disk" ||
+            errorDisk "create_bios_boot"
+        sgdisk -n 2:0:+"${swap_size}"G -t 2:8200 -c 2:"Linux swap" "$root_disk" ||
+            errorDisk "create_swap"
+        sgdisk -n 3:0:+"${root_size}"G -t 3:8300 -c 3:"Linux root" "$root_disk" ||
+            errorDisk "create_root"
     fi
 
-    [[ -n $second_disk ]] && {
-        sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$second_disk" \
-        || errorDisk "create_home"
+    [[ -n $home_disk ]] && {
+        if [[ -n $home_size ]]; then
+            sgdisk -n 1:0:+"${home_size}"G -t 1:8300 -c 1:"Linux home" "$home_disk" ||
+                errorDisk "create_home"
+        else
+            sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$home_disk" ||
+                errorDisk "create_home"
+        fi
     }
 
     echo "${g}Debug: Refreshing partition table...${c}"
-    partprobe "$disk"
-    [[ -n $second_disk ]] && partprobe "$second_disk"
-    sleep 2  # Give the kernel some time to process
+    partprobe "$root_disk"
+    [[ -n $home_disk ]] && partprobe "$home_disk"
+    sleep 2 # Give the kernel some time to process
 }
 
 setupPartitions() {
-    local disk="$1"
+    local root_disk="$1"
     local is_uefi="$2"
-    local second_disk="$3"
+    local home_disk="$3"
 
     ensureDisksPathsAreCorrect
 
-    echo "${g}Debug: Setting up partitions for disk: $disk${c}"
+    echo "${g}Debug: Setting up partitions for disk: $root_disk${c}"
     echo "${g}Debug: UEFI mode: $is_uefi${c}"
-    lsblk "$disk"
+    lsblk "$root_disk"
 
     if [[ $is_uefi -eq 0 ]]; then
         echo "${g}Debug: Setting up UEFI partitions...${c}"
-        mkfs.fat -F32 "${disk}1" || errorDisk "format_efi"
-        mkfs.ext4 "${disk}2" || errorDisk "format_root"
-        mount "${disk}2" /mnt || errorDisk "mount_root"
+        mkfs.fat -F32 "${root_disk}1" || errorDisk "format_efi"
+        mkfs.ext4 "${root_disk}2" || errorDisk "format_root"
+        mount "${root_disk}2" /mnt || errorDisk "mount_root"
         mkdir -p /mnt/boot/efi || errorDisk "create_efi_mount"
-        mount "${disk}1" /mnt/boot/efi || errorDisk "mount_efi"
+        mount "${root_disk}1" /mnt/boot/efi || errorDisk "mount_efi"
     else
         echo "${g}Debug: Setting up BIOS partitions...${c}"
         # Note: partition 1 is BIOS boot, no formatting needed
-        mkswap "${disk}2" || errorDisk "create_swap"
-        [[ ! -b "${disk}3" ]] && {
-            echo "${r}Error: Partition ${disk}3 does not exist. Available partitions:${c}"
-            lsblk "$disk"
+        mkswap "${root_disk}2" || errorDisk "create_swap"
+        [[ ! -b "${root_disk}3" ]] && {
+            echo "${r}Error: Partition ${root_disk}3 does not exist. Available partitions:${c}"
+            lsblk "$root_disk"
             exit 1
         }
-        mkfs.ext4 "${disk}3" 2>&1 || {
+        mkfs.ext4 "${root_disk}3" 2>&1 || {
             echo "${r}Error details for ext4 formatting:${c}"
-            mkfs.ext4 "${disk}3" 2>&1
+            mkfs.ext4 "${root_disk}3" 2>&1
             errorDisk "format_root"
         }
-        mount "${disk}3" /mnt || errorDisk "mount_root"
-        swapon "${disk}2" || errorDisk "enable_swap"
+        mount "${root_disk}3" /mnt || errorDisk "mount_root"
+        swapon "${root_disk}2" || errorDisk "enable_swap"
     fi
 
-    [[ -n $second_disk ]] && {
-        echo "${g}Debug: Setting up home partition on $second_disk${c}"
-        mkfs.ext4 "${second_disk}1" || errorDisk "format_home"
+    [[ -n $home_disk ]] && {
+        echo "${g}Debug: Setting up home partition on $home_disk${c}"
+        mkfs.ext4 "${home_disk}1" || errorDisk "format_home"
         mkdir -p /mnt/home || errorDisk "create_home_mount"
-        mount "${second_disk}1" /mnt/home || errorDisk "mount_home"
+        mount "${home_disk}1" /mnt/home || errorDisk "mount_home"
     }
 }
 
@@ -201,38 +219,46 @@ installBaseSystem() {
     timedatectl set-ntp true
     echo "${g}Updating mirrolist for ${country}${c}"
     reflector \
-    -c "${country}" \
-    -l 10 \
-    -a 24 \
-    -p https \
-    --sort rate \
-    --save /etc/pacman.d/mirrorlist
+        -c "${country}" \
+        -l 10 \
+        -a 24 \
+        -p https \
+        --sort rate \
+        --save /etc/pacman.d/mirrorlist
     pacman -Syy archlinux-keyring --noconfirm
-    pacstrap -K /mnt base base-devel less linux linux-firmware reflector vim zram-generator
-    genfstab -U /mnt >> /mnt/etc/fstab
+    pacstrap -K /mnt \
+        base \
+        base-devel \
+        less \
+        linux \
+        linux-firmware \
+        reflector \
+        vim \
+        zram-generator
+    genfstab -U /mnt >>/mnt/etc/fstab
     cp -f /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
 }
 
 configureSystem() {
     local is_uefi="$1"
-    local system_disk="$2"
+    local root_disk="$2"
 
     # Ensure disk path is complete
-    [[ ! $system_disk =~ ^\/dev\/ ]] && system_disk="/dev/$system_disk"
+    [[ ! $root_disk =~ ^\/dev\/ ]] && root_disk="/dev/$root_disk"
 
     # Create configuration script
-cat > /mnt/root/configure.sh <<-EOF
+    cat >/mnt/root/configure.sh <<-EOF
 #!/bin/bash
 # Set timezone
 ln -sf /usr/share/zoneinfo/"$timezone" /etc/localtime
 hwclock --systohc --utc
 
 # Set locale
-sed -i "s/#${locale}/${locale}/" /etc/locale.gen
+sed -i "s/#${locale}.UTF-8/${locale}.UTF-8/" /etc/locale.gen
 locale-gen
-echo "LANG=$locale" > /etc/locale.conf
+echo "LANG=${locale}.UTF-8" > /etc/locale.conf
 echo "LC_COLLATE=C" >> /etc/locale.conf
-export LANG="$locale.UTF-8"
+export LANG="${locale}.UTF-8"
 
 # Set hostname
 echo "$hostname" > /etc/hostname
@@ -274,16 +300,16 @@ if [[ $is_uefi -eq 0 ]]; then
     --efi-directory=/boot/efi \
     --bootloader-id=ARCH_GRUB
 else
-    [[ -z "$system_disk" || ! -b "$system_disk" ]] && {
+    [[ -z "$root_disk" || ! -b "$root_disk" ]] && {
         echo "${r}Error: Invalid or unset system disk for BIOS bootloader installation.${c}"
         exit 1
     }
-    grub-install --target=i386-pc "$system_disk"
+    grub-install --target=i386-pc "$root_disk"
 fi
 
 # Add performance-related kernel parameters to GRUB
 if [[ -f /etc/default/grub ]]; then
-    local GCLD="GRUB_CMDLINE_LINUX_DEFAULT"
+    GCLD="GRUB_CMDLINE_LINUX_DEFAULT"
     sed -i "s/^${GCLD}=\".*\"/${GCLD}=\"quiet nowatchdog nmi_watchdog=0 raid=noautodetect\"/" /etc/default/grub
 fi
 
@@ -292,7 +318,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 exit
 EOF
     chmod +x /mnt/root/configure.sh
-    if ! arch-chroot /mnt /root/configure.sh "$system_disk"; then
+    if ! arch-chroot /mnt /root/configure.sh "$root_disk"; then
         echo "${r}Error: Configuration script failed. Retaining /mnt/root/configure.sh for debugging.${c}"
     else
         rm /mnt/root/configure.sh
@@ -320,7 +346,7 @@ checkUefi
 is_uefi=$?
 
 # Confirm installation
-echo "${r}WARNING: This will erase ALL data on $system_disk${c}"
+echo "${r}WARNING: This will erase ALL data on $root_disk${c}"
 read -rp "Do you want to continue? (y/N) " confirm
 [[ ! $confirm =~ ^[Yy]$ ]] && {
     echo "${r}Installation cancelled.${c}"
@@ -328,23 +354,23 @@ read -rp "Do you want to continue? (y/N) " confirm
 }
 
 # Perform disks operations
-if [[ -n $second_disk ]]; then
+if [[ -n $home_disk ]]; then
     echo "${g}Partitioning disks...${c}"
-    partitionDisk "$is_uefi" "$system_disk" "$second_disk"
+    partitionDisk "$is_uefi" "$root_disk" "$home_disk"
     echo "${g}Setting up partitions...${c}"
-    setupPartitions "$system_disk" "$is_uefi" "$second_disk"
+    setupPartitions "$root_disk" "$is_uefi" "$home_disk"
 else
     echo "${g}Formatting disk...${c}"
-    partitionDisk "$is_uefi" "$system_disk"
+    partitionDisk "$is_uefi" "$root_disk"
     echo "${g}Setting up partitions...${c}"
-    setupPartitions "$system_disk" "$is_uefi"
+    setupPartitions "$root_disk" "$is_uefi"
 fi
 
 echo "${g}Installing base system...${c}"
 installBaseSystem
 
 echo "${g}Configuring system...${c}"
-configureSystem "$is_uefi" "$system_disk"
+configureSystem "$is_uefi" "$root_disk"
 
 echo "${g}Unmounting partitions...${c}"
 umount -R /mnt
