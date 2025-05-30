@@ -290,8 +290,14 @@ DefaultTimeoutStartSec=10s
 DefaultTimeoutStopSec=10s
 EOL
 
-# Install and configure bootloader
+# Configure zram device and install/configure bootloader
 if [[ $is_uefi -eq 0 ]]; then
+    cat > /etc/systemd/zram-generator.conf <<EOZ
+[zram0]
+zram-size = min (ram /2, ram)
+compression-algorithm = zstd
+EOZ
+
     mkdir --parents /etc/pacman.d/hooks
     cat > /etc/pacman.d/hooks/update_grub.hook <<EOG
 [Trigger]
