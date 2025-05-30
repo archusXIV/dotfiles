@@ -26,7 +26,7 @@ if [ $# -eq 0 ]; then
     cat <<'USAGE'
              Arch Linux Installation Script by archusXIV
     ===================================================================
-    Do not add swap in UEFI mode, configure zram-generator after reboot
+        Do not add swap in UEFI mode, zram0 will be configured
 
     Available options:
     -c <country>        Set your actual location (default: United States)
