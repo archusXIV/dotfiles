@@ -111,7 +111,7 @@ menu() {
 
 detect_disque() {
     local disk_infos=()
-    local disks=("$(lsblk -dpno NAME | grep -E "/dev/sd|/dev/nvme|/dev/vd")")
+    local disks=($(lsblk -dpno NAME | grep -E "/dev/sd|/dev/nvme|/dev/vd"))
 
     [[ ${#disks[@]} -eq 0 ]] && error_exit "No disk detected."
 
@@ -222,7 +222,7 @@ installation_base() {
     echo -e "[\033[1;32mINFO\033[0m] Basic Installation of Arch Linux "
     echo ""
     sleep 2
-    pacstrap -K /mnt "$BASE_ARCH"
+    pacstrap -K /mnt a$BASE_ARCH
     #genfstab -U /mnt >> /mnt/etc/fstab
     genfstab -U -p /mnt >> /mnt/etc/fstab
 }
@@ -304,10 +304,9 @@ install_complementaire() {
 
     case "$profile" in
         xfce)
-            log "Installing the XFCE profile"
-            echo -e "[\033[1;32mINFO\033[0m] Installing the XFCE profile. "
+            log "Installing the XFCE profile"n
             sleep 2s
-            arch-chroot /mnt pacman -S --noconfirm "$XFCE_PACKAGES"
+            arch-chroot /mnt pacman -S --noconfirm $XFCE_PACKAGES
             # arch-chroot /mnt pacman -S --noconfirm "$HYPERLAND_PACKAGES"
             # arch-chroot /mnt pacman -S --noconfirm "$HYPERLAND_DEPENDANCES"
             # arch-chroot /mnt pacman -S --noconfirm "$SWAY_PACKAGES"
@@ -317,7 +316,7 @@ install_complementaire() {
             log "Installing the Norðri profile"
             echo -e "[\033[1;32mINFO\033[0m] Installing the Norðri profile."
             sleep 1s
-            arch-chroot /mnt pacman -S --noconfirm "$NORDRI_PACKAGES"
+            arch-chroot /mnt pacman -S --noconfirm $NORDRI_PACKAGES
             arch-chroot /mnt systemctl enable lightdm.service
         ;;
     esac
