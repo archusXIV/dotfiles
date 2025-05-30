@@ -23,6 +23,7 @@ c=$'\e[0m'
 
 # Display usage information if no arguments provided
 if [ $# -eq 0 ]; then
+    echo ""
     cat <<'USAGE'
              Arch Linux Installation Script by archusXIV
     ===================================================================
