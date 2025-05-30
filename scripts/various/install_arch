@@ -8,7 +8,7 @@
 # This script automates the installation of Arch Linux with the following features:
 # - Supports both UEFI and BIOS systems.
 # - Configurable disk partitioning with option for separate /home partition.
-#   and custom swap size if needed (only for BIOS install).
+#   and custom root/home disk/swap* size if needed (*only for BIOS install).
 # - Customizable keyboard layout, locale, timezone and hostname.
 # - Automatic mirror selection based on response rate and package database update.
 # - Installation of base system packages (minimal) and bootloader.
@@ -81,7 +81,7 @@ while getopts "c:D:h:k:l:r:R:s:S:x:t:" opt; do
     esac
 done
 
-# Set defaults if not provided
+# Set defaults if not given
 country=${country:-"United States"}
 root_disk=${root_disk:-sda}
 root_size=${root_size:-30}
@@ -222,13 +222,15 @@ installBaseSystem() {
     timedatectl set-ntp true
     echo "${g}Updating mirrolist for ${country}${c}"
     reflector \
-        -c "${country}" \
-        -l 10 \
-        -a 24 \
-        -p https \
+        --country "${country}" \
+        --latest 10 \
+        --age 24 \
+        --protocol https \
         --sort rate \
         --save /etc/pacman.d/mirrorlist
+
     pacman -Syy archlinux-keyring --noconfirm
+
     pacstrap -K /mnt \
         base \
         base-devel \
@@ -256,33 +258,27 @@ configureSystem() {
 ln -sf /usr/share/zoneinfo/"$timezone" /etc/localtime
 hwclock --systohc --utc
 
-# Set locale
 sed -i "s/#${locale}.UTF-8/${locale}.UTF-8/" /etc/locale.gen
 locale-gen
 echo "LANG=${locale}.UTF-8" > /etc/locale.conf
 echo "LC_COLLATE=C" >> /etc/locale.conf
 export LANG="${locale}.UTF-8"
 
-# Set hostname
 echo "$hostname" > /etc/hostname
 echo "127.0.1.1        $hostname.localdomain    $hostname" >> /etc/hosts
 
-# Set keyboard layout
 echo "KEYMAP=$keyboard_layout" > /etc/vconsole.conf
 echo "FONT=sun12x22" >> /etc/vconsole.conf
 
-# Performance optimizations
 echo "Adding performance tweaks..."
 # Enable parallel module loading
 sed -i 's/^MODULES=()/MODULES=(sd_mod)/' /etc/mkinitcpio.conf
 sed -i 's/^#MODULES_DECOMPRESS="no"/MODULES_DECOMPRESS="yes"/' /etc/mkinitcpio.conf
 mkinitcpio -P
 
-# Configure network
 pacman -S --noconfirm networkmanager
 systemctl enable NetworkManager
 
-# Set root password
 echo "Set the root password:"
 passwd
 
@@ -295,25 +291,36 @@ DefaultTimeoutStopSec=10s
 EOL
 
 # Install and configure bootloader
-pacman -S --noconfirm grub
 if [[ $is_uefi -eq 0 ]]; then
-    pacman -S --noconfirm efibootmgr
-    grub-install \
-    --target=x86_64-efi \
-    --efi-directory=/boot/efi \
-    --bootloader-id=ARCH_GRUB
+    mkdir --parents /etc/pacman.d/hooks
+    cat > /etc/pacman.d/hooks/update_grub.hook <<EOG
+[Trigger]
+Operation=Install
+Operation=Upgrade
+Type=Package
+Target=grub
+
+[Action]
+Description=INSTALLING GRUB...
+When=PostTransaction
+Exec=/usr/bin/grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=ARCH_GRUB
+EOG
+    pacman -S --noconfirm grub os-prober efibootmgr
 else
     [[ -z "$root_disk" || ! -b "$root_disk" ]] && {
         echo "${r}Error: Invalid or unset system disk for BIOS bootloader installation.${c}"
         exit 1
     }
+    pacman -S --noconfirm grub os-prober
     grub-install --target=i386-pc "$root_disk"
 fi
 
 # Add performance-related kernel parameters to GRUB
-if [[ -f /etc/default/grub ]]; then
-    sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT=\".*\"/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet nowatchdog nmi_watchdog=0 raid=noautodetect\"/' /etc/default/grub
-fi
+[[ -f /etc/default/grub ]] && {
+    sed -i '
+        s/GRUB_CMDLINE_LINUX_DEFAULT=\".*\"/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet nowatchdog nmi_watchdog=0 raid=noautodetect\"/
+    ' /etc/default/grub
+}
 
 grub-mkconfig -o /boot/grub/grub.cfg
 
