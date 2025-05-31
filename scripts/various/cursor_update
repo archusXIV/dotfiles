@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 
 # Author: Barret E <https://github.com/archusXIV>
-# Script name: cursor_update version 1.0.1
+# Script name: update_cursor version 1.0.1
 # Licensed under the GPLv2
 #
 # This script install/update the Cursor AI IDE software for Linux
 # <https://www.cursor.com/downloads>
 # It also creates a desktop entry in your applications menu
 # Please be carefull an read this file before your run it
-# You will certainly be prompt for your sudo password
+# You will certainly be prompt for your (sudo,doas) password
 # If not argument is given the usage message is printed
 # The default application name is cursor.AppImage
 
@@ -22,34 +22,40 @@ if [[ $# -eq 0 ]]; then
     Available options:
     -d <path>    Set the download directory (default: "$HOME"/Downloads)
     -i <path>    Set the installation directory (default: /usr/local/bin)
-    -v <version> Set desired version: stable or latest
+    -s <su cmd>  Set the elevetaded privileges command (defaut: sudo)
+    -v <version> Set desired version: stable or latest (defaut: stable)
     Example usage with the defaults:
-    cursor_update -v stable
+    cursor_update (no option needed)
     Example usage customized:
-    cursor_update -d $HOME/Documents/Downloads -i /opt -v latest
+    cursor_update -s doas -d $HOME/Documents/Downloads -i /opt -v latest
 USAGE
     exit 1
 fi
 
 # Some colors
-r=$'\e[31m';
-g=$'\e[32m';
-c=$'\e[0m';
+r=$'\e[31m'
+g=$'\e[32m'
+c=$'\e[0m'
 
 # Parse command line arguments
-while getopts "d:i:v:" opt; do
+while getopts "d:i:s:v:" opt; do
     case $opt in
-        d) download_dir="$OPTARG" ;;
-        i) install_dir="$OPTARG" ;;
-        v) version="$OPTARG" ;;
-        \?) echo "${r}Invalid option -$OPTARG${c}" >&2; exit 1 ;;
+    d) download_dir="$OPTARG" ;;
+    i) install_dir="$OPTARG" ;;
+    s) su_cmd="$OPTARG" ;;
+    v) version="$OPTARG" ;;
+    \?)
+        echo "${r}Invalid option -$OPTARG${c}" >&2
+        exit 1
+        ;;
     esac
 done
 
 # Set defaults if not provided
 app_name="cursor.AppImage"
-download_dir=${download_dir:-"$HOME"/Downloads}
+download_dir=${download_dir:-"$HOME/Downloads"}
 install_dir=${install_dir:-"/usr/local/bin"}
+su_cmd=${su_cmd:-sudo}
 version=${version:-stable}
 app_api="https://www.cursor.com/api/download?platform=linux-x64&releaseTrack=$version"
 desktop_file="/usr/share/applications/Cursor.desktop"
@@ -61,13 +67,13 @@ error() {
 }
 
 # Ensure curl, jq are installed
-command -v curl &> /dev/null || error "Please install curl first and try again."
-command -v jq &> /dev/null || error "Please install jq first and try again."
+command -v curl &>/dev/null || error "Please install curl first and try again."
+command -v jq &>/dev/null || error "Please install jq first and try again."
 cd "$download_dir" || error "Failed to access $download_dir."
 
 createDesktopFile() {
     # Create or update desktop entry
-    cat <<EOF | sudo tee "$desktop_file" > /dev/null
+    cat <<EOF | "${su_cmd}" tee "$desktop_file" >/dev/null
 [Desktop Entry]
 Name=Cursor
 Exec=$install_dir/cursor.AppImage
@@ -84,11 +90,11 @@ EOF
 
 installCursor() {
     find . -maxdepth 1 -type f -name "Cursor-*" -exec mv {} "$app_name" \;
-    sudo chown root:root "$app_name"
-    sudo chmod +x "$app_name"
-    sudo mkdir -p "$install_dir" || error "Failed to create directory $install_dir"
-    sudo mv -f "$app_name" "$install_dir"
-    sudo mv -f "icon.svg" "$icon"
+    "${su_cmd}" chown root:root "$app_name"
+    "${su_cmd}" chmod +x "$app_name"
+    "${su_cmd}" mkdir -p "$install_dir" || error "Failed to create directory $install_dir"
+    "${su_cmd}" mv -f "$app_name" "$install_dir"
+    "${su_cmd}" mv -f "icon.svg" "$icon"
 }
 
 # Download the desired version of Cursor
@@ -104,4 +110,3 @@ installCursor || error "Cursor installation failed"
 echo "${g} cursor installation successful${c}"
 createDesktopFile || error "Failed to update cursor.desktop"
 echo "${g} cursor desktop file installed, happy coding.${c}"
-
