@@ -1,30 +1,43 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Author Barret Eric (2021) <archus@protonmail.con>
+# Author: LinuxInFrench (2025) <https://github.com/archusXIV/>
+#
 # Simple script to concatenate mp4 or mkv video files.
 # First create a new directory, move your media files in it,
 # cd in that directory, then run this script: ffmpeg_concat mymediafile.{mp4,mkv}.
 # If files names contain whitespaces they will be replace with underscores,
 # because ffmpeg will try to treat each term (word) of the filename.
+# Usage: ffmpeg_concat <filename>.{mp4,mkv}
 
-if [[ -n $(find . -name "*.mp4" -o -name "*.mkv") ]]; then
-    if [[ -n $(find . -depth -name "* *") ]]; then
-        find . -depth -name "* *" -exec \
-        bash -c '
-        for f in "$@"; do
-            n="${f##*/}"
-            mv -nv "$f" "${f%/*}/${n// /_}"
-        done
+# NOTA BENE:
+# mv -n (do not overwrite an existing file)
+# files.txt example:
+# file myVideoFile-part1.mp4
+# file myVideoFile-part2.mp4
+
+cd "$HOME"/Documents/Videos/concat || exit 1
+
+mpFourFiles=(*.mp4)
+mkvFiles=(*.mkv)
+ffmpegInputFile="./files.txt"
+filesWithSpaces=(* *)
+
+if ((${#mpFourFiles[@]} >= 2 || ${#mkvFiles[@]} >= 2)); then
+
+    if ((${#filesWithSpaces[@]} >= 1)); then
+        find . -depth -name "* *" -exec bash -c '
+            for f in "$@"; do
+                n="${f##*/}"
+                mv -n "$f" "${f%/*}/${n// /_}"
+            done
         ' dummy {} +
     fi
 
     find . -name "*.mp4" -o -name "*.mkv" \
-    | sed 's:\ :\ :g;s/^/file /' \
-    | sort -d > files.txt
-    ffmpeg -safe 0 -f concat -i files.txt -c copy "$1"
-    rm files.txt
-    mv "$1" .. >/dev/null
+    | sed ':\ :\ :g;s/^/file /' | sort -d > "$ffmpegInputFile"
+    ffmpeg -safe 0 -f concat -i "$ffmpegInputFile" -c copy "$1"
+    mv "$1" ..
+    rm ./*
 else
     echo "No mp4 or mkv file found..." && exit 1
 fi
-
