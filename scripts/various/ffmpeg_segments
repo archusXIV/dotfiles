@@ -1,105 +1,122 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+# Author: LinuxInFrench (2025) <https://github.com/archusXIV/>
+# Script name: ffmpeg_segments
+# License: GPlv2
+# In order to work properly this script acts on ONE file at a time and ONLY
+# if the current directory contains ONE file.
+# Dependencies: ffmpeg, GNU/sed
+#
+# When launched, first the duration of the current file will appear,
+# just so you know at what time to cut out your media file.
+# Enter time clips format as such: HH:MM:SS
+# You will be asked for the start and the end of your clips.
+# Ffmpeg will encode the new file for precise cutting operation.
+# At the end you will also be asked if you want the script to concatenate clips.
+
+cd "$HOME"/Documents/Videos/concat || exit 1
 
 file="$1"
 filename="${file%.*}"
 extension="${file##*.}"
-duration=$(ffmpeg -i "$1" 2>&1 | awk '/Duration/{print substr($2, 1, length($2)-4)}')
+duration=$(ffmpeg -i "${file}" 2>&1 | awk '/Duration/{print substr($2, 1, length($2)-4)}')
 
-_Segmentize() {
+_ConcatClips() {
+
+    local ffmpegInputFile="./files.txt"
+    declare -a filesWithSpaces=(* *)
+
+    if ((${#filesWithSpaces[@]} >= 1)); then
+        find . -depth -name "* *" -exec bash -c '
+            for f in "$@"; do
+                n="${f##*/}"
+                mv -n "$f" "${f%/*}/${n// /_}"
+            done
+        ' dummy {} +
+    fi
+
+    find . -name "*.mp4" -o -name "*.mkv" \
+    | sed ':\ :\ :g;s/^/file /' | sort -d > "$ffmpegInputFile"
+    ffmpeg \
+    -safe 0 \
+    -f concat \
+    -i "$ffmpegInputFile" \
+    -c copy "$1" >/dev/null 2>&1
+    mv "$1" ..
+    rm ./*
+
+}
+
+_CheckTimeFormat() {
+    [[ ! $1 =~ ^[0-9]{2}:[0-9]{2}:[0-9]{2}$ ]] && {
+        ((clip--))
+        echo " Not a valid time format $1"
+        sleep 2
+        clear
+    }
+}
+
+_MakeClips() {
+
     while true; do
-        printf '\n'
-        echo -e "\n Duration = $duration\n make sure this directory contains only one file."
-        read -rsn 1 -p ' Would you like to cut out a segment? [Y/n] or [Q]uit: ' CHOICE
-        case "$CHOICE" in
-            q|Q)
-                clear; exit
-            ;;
-            n|N)
-                clear; break
-            ;;
-            y|Y*)
-                ((segments++))
+
+        echo -e "\n Duration = ${duration}\n MAKE SURE ${PWD##*/} DIRECTORY CONTAINS ONLY ONE FILE\n"
+        if ((clip == 0)); then
+            read -rn 1 -p ' Would you like to cut out clips? [Y/n] or [Q]uit: ' choice
+        else
+            read -rn 1 -p ' Would you like to cut out MORE clips? [Y/n] or [Q]uit: ' choice
+        fi
+        case "${choice}" in
+            [nN]) clear; break ;;
+            [qQ]) echo " Selection aborted"; exit 0 ;;
+            [yY])
+                ((clip++))
                 printf '\n'
-                read -r -p " What time does the segment ${segments} starts?: " START
-                echo -e "\n Segment ${segments} start at $START\n"
-                read -r -p " What time does segment ${segments} ends?: " END
-                echo -e "\n Segment ${segments} ends at $END\n"
-                if [[ -n $START && -n $END ]]; then
-                    printf '%s\n' " Cutting ${file} video segment ${segments}" \
-                    " starting at ${START}, ending at ${END}"; sleep 1
-                    ffmpeg \
-                    -i "${file}" \
-                    -ss "${START}" \
-                    -to "${END}" \
-                    -map 0:0 \
-                    -map 0:1 \
-                    -c:a copy \
-                    -c:v copy  "${filename}-part${segments}.${extension}" >/dev/null 2>&1
-                    sleep 1
-                    clear
-                    printf '\n%s\n' " segment ${segments} done"
-                else
-                    continue
-                fi
+                read -rp " What time does clip ${clip} starts?: " start
+                _CheckTimeFormat "${start}" && continue
+                read -rp " What time does clip ${clip} ends?: " end
+                _CheckTimeFormat "${end}" && continue
+                printf '%s\n' " ...Clip ${clip} starts at ${start}, ends at ${end}" \
+                " ...Cutting out ${filename} video clip ${clip}, please be patient."
+                ffmpeg \
+                -ss "${start}" \
+                -i "${file}" \
+                -to "${end}" \
+                -c:a aac \
+                -c:v libx264 \
+                -avoid_negative_ts make_zero \
+                "${filename}-part${clip}.${extension}" >/dev/null 2>&1
+                clear
             ;;
-            *)
-                printf '\n'
-                echo -e " Bad option\n"
-            ;;
+            *) echo -e " Wrong option ${choice}"; continue ;;
         esac
 
     done
-
     
 }
 
-_Concatentate() {
-    if [[ -n $(find . -name "*.mp4" -o -name "*.mkv") ]]; then
-        if [[ -n $(find . -depth -name "* *") ]]; then
-            find . -depth -name "* *" -exec \
-            bash -c '
-                for f in "$@"; do
-                    n="${f##*/}"
-                    mv -nv "$f" "${f%/*}/${n// /_}"
-                done
-            ' dummy {} +
-        fi
-        find . -name "*.mp4" -o -name "*.mkv" \
-        | sed 's:\ :\ :g;s/^/file /' \
-        | sort -d > files.txt
-        ffmpeg -safe 0 -f concat -i files.txt -c copy "$1"
-        rm files.txt 2>&1
-        mv "$1" .. >/dev/null
-    else
-        echo " No mp4 or mkv file found..." && exit 1
-    fi
-}
-
 clear
-segments=0
-_Segmentize "$segments"
+clip=0
+_MakeClips "${clip}"
 clear
 
-if (("$segments"==1)); then
-    mv "$filename"-part1."$extension" "$filename"."$extension"
-elif (("$segments">1)); then
+if ((clip == 1)); then
+    mv "${file}" ..
+    mv -f "${filename}-part1.${extension}" "${filename}"."${extension}"
+elif ((clip > 1)); then
     printf '\n'
-    read -rn 1 -p " Join the segments into one file? [Y/n] or [Q]uit: " OPTIONS
-    case "$OPTIONS" in
-        y|Y)
-            mv "${file}" .. >/dev/null
+    read -rn 1 -p " Concatenate the ${clip} generated clips? [Y/n]: " join
+    case "${join}" in
+        [yY])
+            mv "${file}" ..
             clear
-            printf '\n'
-            echo " Set a new filename (no extension):"
-            read -r NAME
-            _Concatentate "${NAME}"."${extension}"
-            rm ./*
+            printf '\n%s\n' " Set a new filename (no extension):"
+            read -r newname
+            _ConcatClips "${newname}.${extension}"
+            printf '%s\n' " All done"
+            sleep 2
             clear
         ;;
-        *)
-            exit
-        ;;
+        *) exit 0 ;;
     esac
-
 fi
-
