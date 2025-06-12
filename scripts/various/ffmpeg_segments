@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 
 # Author: LinuxInFrench (2025) <https://github.com/archusXIV/>
-# Script name: ffmpeg_segments
+# Script name: ffmpeg_clips
 # License: GPlv2
 # In order to work properly this script acts on ONE file at a time and ONLY
 # if the current directory contains ONE file.
 # Dependencies: ffmpeg, GNU/sed
+# Don't forget to install several audio codex/plugins.
 #
 # When launched, first the duration of the current file will appear,
 # just so you know at what time to cut out your media file.
@@ -86,7 +87,11 @@ _MakeClips() {
                 "${filename}-part${clip}.${extension}" >/dev/null 2>&1
                 clear
             ;;
-            *) printf '%s\n' " Wrong option ${choice}"; continue ;;
+            *)
+                printf '%s\n' " Wrong option ${choice}"
+                sleep 2
+                continue
+            ;;
         esac
     done
 }
