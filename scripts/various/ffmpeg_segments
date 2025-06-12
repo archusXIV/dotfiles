@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Author: LinuxInFrench (2025) <https://github.com/archusXIV/>
-# Script name: ffmpeg_clips
+# Script name: ffmpeg_segments
 # License: GPlv2
 # In order to work properly this script acts on ONE file at a time and ONLY
 # if the current directory contains ONE file.
