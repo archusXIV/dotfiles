@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Author: LinuxInFrench (2025) <https://github.com/archusXIV/>
-# Script name: ffmpeg_segments
+# Script name: ffmpeg_clips
 # License: GPlv2
 # In order to work properly this script acts on ONE file at a time and ONLY
 # if the current directory contains ONE file.
@@ -43,23 +43,20 @@ _ConcatClips() {
     -i "$ffmpegInputFile" \
     -c copy "$1" >/dev/null 2>&1
     mv "$1" ..
-    rm ./*
 
 }
 
 _CheckTimeFormat() {
     [[ ! $1 =~ ^[0-9]{2}:[0-9]{2}:[0-9]{2}$ ]] && {
         ((clip--))
-        echo " Not a valid time format $1"
+        printf '%s\n' " Not a valid time format $1"
         sleep 2
         clear
     }
 }
 
 _MakeClips() {
-
     while true; do
-
         echo -e "\n Duration = ${duration}\n MAKE SURE ${PWD##*/} DIRECTORY CONTAINS ONLY ONE FILE\n"
         if ((clip == 0)); then
             read -rn 1 -p ' Would you like to cut out clips? [Y/n] or [Q]uit: ' choice
@@ -68,7 +65,7 @@ _MakeClips() {
         fi
         case "${choice}" in
             [nN]) clear; break ;;
-            [qQ]) echo " Selection aborted"; exit 0 ;;
+            [qQ]) printf '%s\n' " Selection aborted"; exit 0 ;;
             [yY])
                 ((clip++))
                 printf '\n'
@@ -79,20 +76,18 @@ _MakeClips() {
                 printf '%s\n' " ...Clip ${clip} starts at ${start}, ends at ${end}" \
                 " ...Cutting out ${filename} video clip ${clip}, please be patient."
                 ffmpeg \
-                -ss "${start}" \
                 -i "${file}" \
+                -ss "${start}" \
                 -to "${end}" \
                 -c:a aac \
                 -c:v libx264 \
-                -avoid_negative_ts make_zero \
+                -copyts \
                 "${filename}-part${clip}.${extension}" >/dev/null 2>&1
                 clear
             ;;
-            *) echo -e " Wrong option ${choice}"; continue ;;
+            *) printf '%s\n' " Wrong option ${choice}"; continue ;;
         esac
-
     done
-    
 }
 
 clear
