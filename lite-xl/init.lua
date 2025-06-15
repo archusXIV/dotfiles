@@ -10,7 +10,8 @@ local lintplus = require "plugins.lintplus"
 local lsp_snippets = require 'plugins.lsp_snippets'
 local snippets = require 'plugins.snippets'
 
-config.message_timeout = 10
+config.max_project_files = 3000
+config.message_timeout = 7
 config.max_tabs = 9
 config.indent_size = 4
 config.line_limit = 100
@@ -18,13 +19,14 @@ config.blink_period = 0.8
 config.draw_whitespace = true
 config.plugins.exterm = false
 config.plugins.linenumbers.hybrid = true
-config.plugins.themes = false
+config.plugins.fontconfig = false
 -- config.plugins.terminal = false
 
 config.plugins.autocomplete = {
-    ["min_len"]        = 3,
-    ["max_height"]     = 12,
-    ["desc_font_size"] = 14,
+    ["min_len"] = 3,
+    ["max_height"] = 12,
+    ["desc_font_size"] = 24,
+    ["max_suggestions"] = 48,
 }
 
 ---------------------- Lint+ ----------------------
@@ -49,26 +51,58 @@ style.lint = {
 -- core.reload_module("colors.gruvbox_dark")
 -- core.reload_module("colors.monochrome-dark")
 -- core.reload_module("colors.predawn")
-core.reload_module("colors.simplicity")
+-- core.reload_module("colors.simplicity")
 -- core.reload_module("colors.winter")
 ---------------------- lite -----------------------
 -- core.reload_module("colors.github")
--- core.reload_module("colors.gruvbox_light")
+core.reload_module("colors.gruvbox_light")
+-- core.reload_module("colors.monochrome-lite")
 
 ------------------------------------------ Fonts ----------------------------------------
--- customize fonts:Medium
-style.font = renderer.font.load("/usr/share/fonts/TTF/FiraCode-Regular.ttf", 15 * SCALE)
-style.code_font = renderer.font.load("/usr/share/fonts/TTF/JetBrainsMono-Regular.ttf", 18 * SCALE)
--- style.code_font = renderer.font.load("/usr/share/fonts/TTF/IBMPlexMono-Regular.ttf", 19 * SCALE)
--- style.code_font = renderer.font.load("/usr/share/fonts/TTF/VictorMonoNerdFont-Medium.ttf", 18 * SCALE)
--- style.code_font = renderer.font.load("/usr/share/fonts/TTF/CaskaydiaCoveNerdFont-Regular.ttf", 18 * SCALE)
--- style.code_font = renderer.font.load("/usr/share/fonts/TTF/FiraCode-Regular.ttf", 18 * SCALE)
-local italic = renderer.font.load("/usr/share/fonts/TTF/JetBrainsMono-Italic.ttf", 16)
-local semiBold = renderer.font.load("/usr/share/fonts/TTF/JetBrainsMono-SemiBold.ttf", 18)
-local semiBoldItalic = renderer.font.load("/usr/share/fonts/TTF/JetBrainsMono-SemiBoldItalic.ttf", 18)
+local loadFont = (renderer.font.load)
+local ttfPath = "/usr/share/fonts/TTF/"
+local guiFont  = "MesloLGMDZNerdFont"
+local guiFontSize = 15
+-- Works with:
+-- CaskaydiaCoveNerdFontMono, IBMPlexMono, JetBrainsMono, JetBrainsMonoNerdFont
+-- JetBrainsMonoNL, MesloLGMDZNerdFont, MesloLGLDZNerdFont
+local codeFont = "IBMPlexMono"
+local regularSize = 18
+local italicSize = 16
+
+-- Check if font file exists
+local function font_exists(path)
+    local file = io.open(path, "r")
+    if file then
+        file:close()
+        return true
+    end
+    return false
+end
+
+-- Get the appropriate font variant path
+local function get_font_path(font, variant, fallback)
+    local path = ttfPath .. font .. variant
+    if font_exists(path) then
+        return path
+    end
+    return ttfPath .. font .. fallback
+end
+
+local Regular = "-Regular.ttf"
+local Italic = "-Italic.ttf"
+local Bold = "-Bold.ttf"
+local BoldItalic = "-BoldItalic.ttf"
+
+local com = loadFont(ttfPath .. codeFont .. Italic, italicSize)
+local key = loadFont(get_font_path(codeFont, "-SemiBold.ttf", Bold), regularSize)
+local fun = loadFont(get_font_path(codeFont, "-SemiBoldItalic.ttf", BoldItalic), regularSize)
+
+style.font = loadFont(ttfPath .. guiFont .. Italic, guiFontSize * SCALE)
+style.code_font = loadFont(ttfPath .. codeFont .. Regular, regularSize * SCALE)
 
 style.syntax_fonts = {
-    ["comment"] = italic,
-    ["keyword"] = semiBold,
-    ["function"] = semiBoldItalic,
+    ["comment"]  = com,
+    ["keyword"]  = key,
+    ["function"] = fun,
 }
