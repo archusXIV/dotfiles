@@ -17,7 +17,7 @@ local common = require "core.common"
 config.plugins.shfmt = common.merge({
   enabled = true,
   exec = "shfmt",
-  args = "-i 4 -w",
+  args = "-i 4 -ci -w",
   config_spec = {
     name = "Shell Scripts Formatter",
     {
@@ -32,7 +32,7 @@ config.plugins.shfmt = common.merge({
       description = "Command line arguments.",
       path = "args",
       type = "string",
-      default = "-i 4 -w",
+      default = "-i 4 -ci -w",
     }
   }
 }, config.plugins.shfmt)
