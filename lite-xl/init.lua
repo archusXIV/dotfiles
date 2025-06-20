@@ -7,26 +7,24 @@ local common = require "core.common"
 local config = require "core.config"
 local style = require "core.style"
 local lintplus = require "plugins.lintplus"
-local lsp_snippets = require 'plugins.lsp_snippets'
-local snippets = require 'plugins.snippets'
 
 config.max_project_files = 3000
 config.message_timeout = 7
 config.max_tabs = 9
+
 config.indent_size = 4
 config.line_limit = 100
 config.blink_period = 0.8
 config.draw_whitespace = true
 config.plugins.exterm = false
 config.plugins.linenumbers.hybrid = true
-config.plugins.fontconfig = false
 -- config.plugins.terminal = false
 
 config.plugins.autocomplete = {
     ["min_len"] = 3,
     ["max_height"] = 12,
-    ["desc_font_size"] = 24,
-    ["max_suggestions"] = 48,
+    ["desc_font_size"] = 18,
+    ["max_suggestions"] = 36,
 }
 
 ---------------------- Lint+ ----------------------
@@ -55,20 +53,38 @@ style.lint = {
 -- core.reload_module("colors.winter")
 ---------------------- lite -----------------------
 -- core.reload_module("colors.github")
-core.reload_module("colors.gruvbox_light")
--- core.reload_module("colors.monochrome-lite")
+-- core.reload_module("colors.gruvbox_light")
+core.reload_module("colors.monochrome-lite")
 
 ------------------------------------------ Fonts ----------------------------------------
 local loadFont = (renderer.font.load)
 local ttfPath = "/usr/share/fonts/TTF/"
-local guiFont  = "MesloLGMDZNerdFont"
+
+-- Available fonts:
+-- CaskaydiaCoveNerdFontMono, Hack, IBMPlexMono,
+-- JetBrainsMono, JetBrainsMonoNerdFont, JetBrainsMonoNerdFont{Mono,Propo},
+-- JetBrainsMonoNL, JetBrainsMonoNLNerdFont{Mono,Propo},
+-- Montserrat{Alternates},
+-- MesloLGLDZNerdFont{Mono,Propo}, MesloLGLNerdFont{Mono,Propo},
+-- MesloLGMDZNerdFont{Mono,Propo}, MesloLGMNerdFont{Mono,Propo},
+-- MesloLGSDZNerdFont{Mono,Propo}, MesloLGSNerdFont{Mono,Propo}
+
+-- fonts names
+local guiFont  = "Hack"
+local codeFont = "MesloLGSDZNerdFontPropo"
+local funcFont = "IBMPlexMono"
+local keyFont  = "JetBrainsMono"
+-- style
+local Regular = "-Regular.ttf"
+local Italic = "-Italic.ttf"
+local Bold = "-Bold.ttf"
+local BoldItalic = "-BoldItalic.ttf"
+-- sizes
 local guiFontSize = 15
--- Works with:
--- CaskaydiaCoveNerdFontMono, IBMPlexMono, JetBrainsMono, JetBrainsMonoNerdFont
--- JetBrainsMonoNL, MesloLGMDZNerdFont, MesloLGLDZNerdFont
-local codeFont = "IBMPlexMono"
 local regularSize = 18
 local italicSize = 16
+local boldSize = regularSize
+local boldItalicSize = boldSize
 
 -- Check if font file exists
 local function font_exists(path)
@@ -89,14 +105,10 @@ local function get_font_path(font, variant, fallback)
     return ttfPath .. font .. fallback
 end
 
-local Regular = "-Regular.ttf"
-local Italic = "-Italic.ttf"
-local Bold = "-Bold.ttf"
-local BoldItalic = "-BoldItalic.ttf"
-
+-- com = comment, key = keyword, fun = function
 local com = loadFont(ttfPath .. codeFont .. Italic, italicSize)
-local key = loadFont(get_font_path(codeFont, "-SemiBold.ttf", Bold), regularSize)
-local fun = loadFont(get_font_path(codeFont, "-SemiBoldItalic.ttf", BoldItalic), regularSize)
+local key = loadFont(get_font_path(keyFont, "-SemiBold.ttf", Bold), boldSize)
+local fun = loadFont(get_font_path(funcFont, "-SemiBoldItalic.ttf", BoldItalic), boldItalicSize)
 
 style.font = loadFont(ttfPath .. guiFont .. Italic, guiFontSize * SCALE)
 style.code_font = loadFont(ttfPath .. codeFont .. Regular, regularSize * SCALE)
