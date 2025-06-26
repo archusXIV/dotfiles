@@ -1,6 +1,8 @@
--- put user settings here
--- this module will be loaded after everything else when the application starts
--- it will be automatically reloaded when saved
+--[[
+put user settings here
+this module will be loaded after everything else when the application starts
+it will be automatically reloaded when saved
+--]]
 
 local core = require "core"
 local common = require "core.common"
@@ -11,7 +13,6 @@ local lintplus = require "plugins.lintplus"
 config.max_project_files = 3000
 config.message_timeout = 7
 config.max_tabs = 9
-
 config.indent_size = 4
 config.line_limit = 100
 config.blink_period = 0.8
@@ -27,7 +28,7 @@ config.plugins.autocomplete = {
     ["max_suggestions"] = 36,
 }
 
----------------------- Lint+ ----------------------
+----------------------------------------- LINT+ ------------------------------------------
 lintplus.load("shellcheck")
 lintplus.setup.lint_on_doc_load()
 lintplus.setup.lint_on_doc_save()
@@ -39,8 +40,8 @@ style.lint = {
     ["error"]   = { common.color "#ff3c41" },
 }
 
--------------------- Themes -----------------------
---------------------- dark ------------------------
+--------------------------------------- THEMES -------------------------------------------
+---------------------------------------- dark --------------------------------------------
 -- core.reload_module("colors.archlabs")
 -- core.reload_module("colors.aurora")
 -- core.reload_module("colors.blacksea")
@@ -49,14 +50,15 @@ style.lint = {
 -- core.reload_module("colors.gruvbox_dark")
 -- core.reload_module("colors.monochrome-dark")
 -- core.reload_module("colors.predawn")
--- core.reload_module("colors.simplicity")
+core.reload_module("colors.simplicity")
 -- core.reload_module("colors.winter")
----------------------- lite -----------------------
+
+----------------------------------------- lite -------------------------------------------
 -- core.reload_module("colors.github")
 -- core.reload_module("colors.gruvbox_light")
-core.reload_module("colors.monochrome-lite")
+-- core.reload_module("colors.monochrome-lite")
 
------------------------------------------- Fonts ----------------------------------------
+------------------------------------------ FONTS -----------------------------------------
 local loadFont = (renderer.font.load)
 local ttfPath = "/usr/share/fonts/TTF/"
 
@@ -69,23 +71,26 @@ local ttfPath = "/usr/share/fonts/TTF/"
 -- MesloLGMDZNerdFont{Mono,Propo}, MesloLGMNerdFont{Mono,Propo},
 -- MesloLGSDZNerdFont{Mono,Propo}, MesloLGSNerdFont{Mono,Propo}
 
--- fonts names
+-------------------------------------- fonts names ---------------------------------------
 local guiFont  = "Hack"
 local codeFont = "MesloLGSDZNerdFontPropo"
 local funcFont = "IBMPlexMono"
-local keyFont  = "JetBrainsMono"
--- style
+local keyFont  = "JetBrainsMonoNerdFontPropo"
+
+----------------------------------------- styles -----------------------------------------
 local Regular = "-Regular.ttf"
 local Italic = "-Italic.ttf"
 local Bold = "-Bold.ttf"
 local BoldItalic = "-BoldItalic.ttf"
--- sizes
+
+----------------------------------------- sizes ------------------------------------------
 local guiFontSize = 15
 local regularSize = 18
 local italicSize = 16
 local boldSize = regularSize
 local boldItalicSize = boldSize
 
+--------------------------------------- Functions ----------------------------------------
 -- Check if font file exists
 local function font_exists(path)
     local file = io.open(path, "r")
@@ -105,6 +110,7 @@ local function get_font_path(font, variant, fallback)
     return ttfPath .. font .. fallback
 end
 
+-------------------------------------- Definitions ---------------------------------------
 -- com = comment, key = keyword, fun = function
 local com = loadFont(ttfPath .. codeFont .. Italic, italicSize)
 local key = loadFont(get_font_path(keyFont, "-SemiBold.ttf", Bold), boldSize)
