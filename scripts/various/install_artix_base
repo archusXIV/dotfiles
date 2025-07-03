@@ -359,7 +359,7 @@ EOF
 echo -e "\nStarting Arch Linux installation...\n"
 
 # Verify we're in the live environment
-if [[ ! -f /run/archiso/bootmnt/arch/boot/x86_64/vmlinuz-linux ]]; then
+if [[ ! -f /run/artix/bootmnt/boot/vmlinuz-x86_64 ]]; then
     echo "${r}This script must be run from the Artix Linux live environment!${c}"
     exit 1
 fi
