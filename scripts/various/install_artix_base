@@ -2,7 +2,7 @@
 
 # Author: Barret E <https://github.com/archusXIV/>
 # Creation date: 2025-07-03
-# Script name: install_artix version 1.0.0
+# Script name: install_artix_base version 1.0.0
 # License: GPLv2
 #
 # This script automates the installation of Artix Linux with the following features:
