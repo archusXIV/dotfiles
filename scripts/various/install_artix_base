@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# THIS FILE IS INCOMPLETE, DO NOT USE IT UNLESS YOU KNOW THAT YOU ARE DOING
 # Author: Barret E <https://github.com/archusXIV/>
 # Creation date: 2025-05-25
 # Script name: install_artix version 1.1.0
@@ -128,57 +129,6 @@ errorDisk() {
         "mount_home") echo "${r}Error: Failed to mount home partition${c}" ;;
     esac
     exit 1
-}
-
-partitionDisk() {
-    local is_uefi="$1"
-    local root_disk="$2"
-    local home_disk="$3"
-
-    ensureDisksPathsAreCorrect
-
-    # Verify disks exist and clear partition tables
-    for d in "$root_disk" ${home_disk:+"$home_disk"}; do
-        [[ ! -b $d ]] && errorDisk "disk_not_exist"
-        gdisk -Z "$d" || errorDisk "clear_partition"
-    done
-
-    if [[ $is_uefi -eq 0 ]]; then
-        gdisk -n 1:0:+256M -t 1:ef00 -c 1:"EFI System" "$root_disk" \
-        || errorDisk "create_efi"
-        if [[ -n $swap_size ]]; then
-            gdisk -n 2:0:+"${swap_size}"G -t 2:8200 -c 2:"Linux swap" "$root_disk" \
-            || errorDisk "create_swap"
-            gdisk -n 3:0:+"${root_size}"G -t 2:8300 -c 3:"Linux root" "$root_disk" \
-            || errorDisk "create_root"
-        else
-            gdisk -n 2:0:+"${root_size}"G -t 2:8300 -c 2:"Linux root" "$root_disk" \
-            || errorDisk "create_root"
-        fi
-    else
-        # BIOS partitioning
-        gdisk -n 1:0:+1M -t 1:ef02 -c 1:"BIOS boot partition" "$root_disk" \
-        || errorDisk "create_bios_boot"
-        gdisk -n 2:0:+"${swap_size}"G -t 2:8200 -c 2:"Linux swap" "$root_disk" \
-        || errorDisk "create_swap"
-        gdisk -n 3:0:+"${root_size}"G -t 3:8300 -c 3:"Linux root" "$root_disk" \
-        || errorDisk "create_root"
-    fi
-
-    [[ -n $home_disk ]] && {
-        if [[ -n $home_size ]]; then
-            gdisk -n 1:0:+"${home_size}"G -t 1:8300 -c 1:"Linux home" "$home_disk" \
-            || errorDisk "create_home"
-        else
-            gdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$home_disk" \
-            || errorDisk "create_home"
-        fi
-    }
-
-    echo "${g}Debug: Refreshing partition table...${c}"
-    partprobe "$root_disk"
-    [[ -n $home_disk ]] && partprobe "$home_disk"
-    sleep 2 # Give the kernel some time to process
 }
 
 setupPartitions() {
@@ -359,7 +309,7 @@ EOF
 echo -e "\nStarting Arch Linux installation...\n"
 
 # Verify we're in the live environment
-if [[ ! -f /run/archiso/bootmnt/arch/boot/x86_64/vmlinuz-linux ]]; then
+if [[ ! -f /run/artix/bootmnt/boot/vmlinuz-x86_64 ]]; then
     echo "${r}This script must be run from the Artix Linux live environment!${c}"
     exit 1
 fi
