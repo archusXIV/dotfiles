@@ -252,16 +252,16 @@ partitionDisk() {
     sleep 2 # Give the kernel some time to process
 }
 
-waitForPartition() {
-    local part="$1"
-    local timeout=10
-    local waited=0
-    while [[ ! -b "$part" && $waited -lt $timeout ]]; do
-        sleep 1
-        waited=$((waited+1))
-    done
-    [[ ! -b "$part" ]] && { echo "${r}Error: Partition $part did not appear after $timeout seconds.${c}"; exit 1; }
-}
+# waitForPartition() {
+#     local part="$1"
+#     local timeout=10
+#     local waited=0
+#     while [[ ! -b "$part" && $waited -lt $timeout ]]; do
+#         sleep 1
+#         waited=$((waited+1))
+#     done
+#     [[ ! -b "$part" ]] && { echo "${r}Error: Partition $part did not appear after $timeout seconds.${c}"; exit 1; }
+# }
 
 setupPartitions() {
     local root_disk="$1"
@@ -279,14 +279,14 @@ setupPartitions() {
         waitForPartition "${root_disk}1"
         mkfs.fat -F32 "${root_disk}1" || errorDisk "format_efi"
         if [[ -n $swap_size ]]; then
-            waitForPartition "${root_disk}3"
+            # waitForPartition "${root_disk}3"
             mkfs.ext4 "${root_disk}3" || errorDisk "format_root"
             mount "${root_disk}3" /mnt || errorDisk "mount_root"
-            waitForPartition "${root_disk}2"
+            # waitForPartition "${root_disk}2"
             mkswap "${root_disk}2" || errorDisk "create_swap"
             swapon "${root_disk}2" || errorDisk "enable_swap"
         else
-            waitForPartition "${root_disk}2"
+            # waitForPartition "${root_disk}2"
             mkfs.ext4 "${root_disk}2" || errorDisk "format_root"
             mount "${root_disk}2" /mnt || errorDisk "mount_root"
         fi
@@ -295,10 +295,10 @@ setupPartitions() {
     else
         echo "${g}Debug: Setting up BIOS partitions...${c}"
         # Note: partition 1 is BIOS boot, no formatting needed
-        waitForPartition "${root_disk}2"
+        # waitForPartition "${root_disk}2"
         mkswap "${root_disk}2" || errorDisk "create_swap"
         swapon "${root_disk}2" || errorDisk "enable_swap"
-        waitForPartition "${root_disk}3"
+        # waitForPartition "${root_disk}3"
         [[ ! -b "${root_disk}3" ]] && {
             echo "${r}Error: Partition ${root_disk}3 does not exist. Available partitions:${c}"
             lsblk "$root_disk"
@@ -314,7 +314,7 @@ setupPartitions() {
 
     [[ -n $home_disk ]] && {
         echo "${g}Debug: Setting up home partition on $home_disk${c}"
-        waitForPartition "${home_disk}1"
+        # waitForPartition "${home_disk}1"
         mkfs.ext4 "${home_disk}1" || errorDisk "format_home"
         mkdir -p /mnt/home || errorDisk "create_home_mount"
         mount "${home_disk}1" /mnt/home || errorDisk "mount_home"
