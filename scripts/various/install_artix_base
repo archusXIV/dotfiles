@@ -5,7 +5,7 @@
 # Script name: install_artix version 1.1.0
 # License: GPLv2
 #
-# This script automates the installation of Arch Linux with the following features:
+# This script automates the installation of Artix Linux with the following features:
 # - Supports both UEFI and BIOS systems.
 # - Configurable disk partitioning with option for separate /home partition.
 #   and custom root/home disk/swap* size if needed (*only for BIOS install).
