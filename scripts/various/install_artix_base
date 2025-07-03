@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# THIS FILE IS INCOMPLETE, DO NOT USE IT UNLESS YOU KNOW THAT YOU ARE DOING
 # Author: Barret E <https://github.com/archusXIV/>
 # Creation date: 2025-05-25
 # Script name: install_artix version 1.1.0
@@ -131,6 +130,129 @@ errorDisk() {
     exit 1
 }
 
+partitionDisk() {
+    local is_uefi="$1"
+    local root_disk="$2"
+    local home_disk="$3"
+
+    ensureDisksPathsAreCorrect
+
+    # Verify disks exist and clear partition tables
+    for d in "$root_disk" ${home_disk:+"$home_disk"}; do
+        [[ ! -b $d ]] && errorDisk "disk_not_exist"
+        # Create a new DOS (MBR) or GPT partition table
+        if [[ $is_uefi -eq 0 ]]; then
+            echo "g" | fdisk "$d" >/dev/null 2>&1 || errorDisk "clear_partition"
+        else
+            echo "o" | fdisk "$d" >/dev/null 2>&1 || errorDisk "clear_partition"
+        fi
+    done
+
+    if [[ $is_uefi -eq 0 ]]; then
+        # Create EFI partition
+        (
+            echo "n"  # new partition
+            echo "1"  # partition number
+            echo     # default first sector
+            echo "+256M" # partition size
+            echo "t"  # change partition type
+            echo "1"  # EFI System
+            echo "w"  # write changes
+        ) | fdisk "$root_disk" >/dev/null 2>&1 || errorDisk "create_efi"
+
+        if [[ -n $swap_size ]]; then
+            # Create swap partition
+            (
+                echo "n"  # new partition
+                echo "2"  # partition number
+                echo     # default first sector
+                echo "+${swap_size}G" # partition size
+                echo "t"  # change partition type
+                echo "2"  # partition number
+                echo "82" # Linux swap
+                echo "w"  # write changes
+            ) | fdisk "$root_disk" >/dev/null 2>&1 || errorDisk "create_swap"
+
+            # Create root partition
+            (
+                echo "n"  # new partition
+                echo "3"  # partition number
+                echo     # default first sector
+                echo "+${root_size}G" # partition size
+                echo "w"  # write changes
+            ) | fdisk "$root_disk" >/dev/null 2>&1 || errorDisk "create_root"
+        else
+            # Create root partition without swap
+            (
+                echo "n"  # new partition
+                echo "2"  # partition number
+                echo     # default first sector
+                echo "+${root_size}G" # partition size
+                echo "w"  # write changes
+            ) | fdisk "$root_disk" >/dev/null 2>&1 || errorDisk "create_root"
+        fi
+    else
+        # BIOS partitioning
+        # Create BIOS boot partition
+        (
+            echo "n"  # new partition
+            echo "1"  # partition number
+            echo     # default first sector
+            echo "+1M"  # partition size
+            echo "t"  # change partition type
+            echo "4"  # BIOS boot
+            echo "w"  # write changes
+        ) | fdisk "$root_disk" >/dev/null 2>&1 || errorDisk "create_bios_boot"
+
+        # Create swap partition
+        (
+            echo "n"  # new partition
+            echo "2"  # partition number
+            echo     # default first sector
+            echo "+${swap_size}G" # partition size
+            echo "t"  # change partition type
+            echo "2"  # partition number
+            echo "82" # Linux swap
+            echo "w"  # write changes
+        ) | fdisk "$root_disk" >/dev/null 2>&1 || errorDisk "create_swap"
+
+        # Create root partition
+        (
+            echo "n"  # new partition
+            echo "3"  # partition number
+            echo     # default first sector
+            echo "+${root_size}G" # partition size
+            echo "w"  # write changes
+        ) | fdisk "$root_disk" >/dev/null 2>&1 || errorDisk "create_root"
+    fi
+
+    # Create home partition if specified
+    [[ -n $home_disk ]] && {
+        if [[ -n $home_size ]]; then
+            (
+                echo "n"  # new partition
+                echo "1"  # partition number
+                echo     # default first sector
+                echo "+${home_size}G" # partition size
+                echo "w"  # write changes
+            ) | fdisk "$home_disk" >/dev/null 2>&1 || errorDisk "create_home"
+        else
+            (
+                echo "n"  # new partition
+                echo "1"  # partition number
+                echo     # default first sector
+                echo     # use remaining space
+                echo "w"  # write changes
+            ) | fdisk "$home_disk" >/dev/null 2>&1 || errorDisk "create_home"
+        fi
+    }
+
+    echo "${g}Debug: Refreshing partition table...${c}"
+    partprobe "$root_disk"
+    [[ -n $home_disk ]] && partprobe "$home_disk"
+    sleep 2 # Give the kernel some time to process
+}
+
 setupPartitions() {
     local root_disk="$1"
     local is_uefi="$2"
@@ -145,18 +267,22 @@ setupPartitions() {
     if [[ $is_uefi -eq 0 ]]; then
         echo "${g}Debug: Setting up UEFI partitions...${c}"
         mkfs.fat -F32 "${root_disk}1" || errorDisk "format_efi"
-        mkfs.ext4 "${root_disk}3" || errorDisk "format_root"
-        mount "${root_disk}3" /mnt || errorDisk "mount_root"
-        mkdir -p /mnt/boot/efi || errorDisk "create_efi_mount"
-        mount "${root_disk}1" /mnt/boot/efi || errorDisk "mount_efi"
-        [[ -n $swap_size ]] && {
+        if [[ -n $swap_size ]]; then
+            mkfs.ext4 "${root_disk}3" || errorDisk "format_root"
+            mount "${root_disk}3" /mnt || errorDisk "mount_root"
             mkswap "${root_disk}2" || errorDisk "create_swap"
             swapon "${root_disk}2" || errorDisk "enable_swap"
-        }
+        else
+            mkfs.ext4 "${root_disk}2" || errorDisk "format_root"
+            mount "${root_disk}2" /mnt || errorDisk "mount_root"
+        fi
+        mkdir -p /mnt/boot/efi || errorDisk "create_efi_mount"
+        mount "${root_disk}1" /mnt/boot/efi || errorDisk "mount_efi"
     else
         echo "${g}Debug: Setting up BIOS partitions...${c}"
         # Note: partition 1 is BIOS boot, no formatting needed
         mkswap "${root_disk}2" || errorDisk "create_swap"
+        swapon "${root_disk}2" || errorDisk "enable_swap"
         [[ ! -b "${root_disk}3" ]] && {
             echo "${r}Error: Partition ${root_disk}3 does not exist. Available partitions:${c}"
             lsblk "$root_disk"
@@ -168,7 +294,6 @@ setupPartitions() {
             errorDisk "format_root"
         }
         mount "${root_disk}3" /mnt || errorDisk "mount_root"
-        swapon "${root_disk}2" || errorDisk "enable_swap"
     fi
 
     [[ -n $home_disk ]] && {
@@ -309,7 +434,7 @@ EOF
 echo -e "\nStarting Arch Linux installation...\n"
 
 # Verify we're in the live environment
-if [[ ! -f /run/artix/bootmnt/boot/vmlinuz-x86_64 ]]; then
+if [[ ! -f /run/archiso/bootmnt/arch/boot/x86_64/vmlinuz-linux ]]; then
     echo "${r}This script must be run from the Artix Linux live environment!${c}"
     exit 1
 fi
