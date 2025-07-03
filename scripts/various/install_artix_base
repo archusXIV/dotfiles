@@ -28,9 +28,9 @@ if [[ $# -eq 0 ]]; then
     cat <<'USAGE'
              Artix Linux Installation Script by archusXIV
     ==============================================================
-    ${r}IMPORTANT! PARTITION TABLE LAYOUT:
+    IMPORTANT! PARTITION TABLE LAYOUT:
     UEFI MODE: EFI (SWAP) ROOT (HOME)
-    BIOS MODE: (SWAP) ROOT (HOME)${c}
+    BIOS MODE: (SWAP) ROOT (HOME)
 
     Available options:
     -c <country>        Set your actual location (default: United States)
