@@ -5,7 +5,7 @@
 # Script name: install_artix version 1.1.0
 # License: GPLv2
 #
-# This script automates the installation of Arch Linux with the following features:
+# This script automates the installation of Artix Linux with the following features:
 # - Supports both UEFI and BIOS systems.
 # - Configurable disk partitioning with option for separate /home partition.
 #   and custom root/home disk/swap* size if needed (*only for BIOS install).
@@ -28,6 +28,9 @@ if [[ $# -eq 0 ]]; then
     cat <<'USAGE'
              Artix Linux Installation Script by archusXIV
     ==============================================================
+    ${r}IMPORTANT! PARTITION TABLE LAYOUT:
+    UEFI MODE: EFI (SWAP) ROOT (HOME)
+    BIOS MODE: (SWAP) ROOT (HOME)${c}
 
     Available options:
     -c <country>        Set your actual location (default: United States)
@@ -36,30 +39,19 @@ if [[ $# -eq 0 ]]; then
     -k <kbd layout>     Set your keyboard layout (default: us)
     -l <locales>        Set system locales (default: en_US)
     -r <root disk>      Set the system disk (default: sda)
-    -R <root size>      Set the system disk size in GB (default: 30)
     -s <home disk>      Set the home disk for /home (optional: sdX)
-    -S <home size>      Set the home disk size in GB (uses remaining space if not set)
-    -x <swap size>      Set the swap size in GB for BIOS install (default: 4)
     -t <Region/Capital> Set timezone (default: UTC)
 
-    Example usage for UEFI install (no swap):
-    (root drive,root size,home drive,home size,country,keyboard,locales,timezone,hostname)
-
-    ./install_arch -r sda -R 40 -s sdb -S 100 -c France -k fr -l fr_FR -t Europe/Paris -h myartixuefi
-
-    Example usage for BIOS install (with swap size):
-    (root drive,swap size,home drive,country,keyboard,locales,timezone,hostname)
-
-    ./install_arch -r sda -x 4 -s sdb -c France -k fr -l fr_FR -t Europe/Paris -h myartixbios
+    Example usage:
+    ./install_artix -r sda -s sdb -k fr -l fr_FR -t Europe/Paris -h myartix
 
 USAGE
     exit 1
 fi
 
 # Parse command line arguments
-while getopts "c:D:h:k:l:r:R:s:S:x:t:" opt; do
+while getopts "D:h:k:l:r:s:t:" opt; do
     case $opt in
-        c) country="$OPTARG" ;;
         D)
             echo -e " \n${g}Available disks:\n${c}"
             lsblk -I 8 -d -o NAME,SIZE,MODEL
@@ -70,11 +62,8 @@ while getopts "c:D:h:k:l:r:R:s:S:x:t:" opt; do
         k) keyboard_layout="$OPTARG" ;;
         l) locale="$OPTARG" ;;
         r) root_disk="$OPTARG" ;;
-        R) root_size="$OPTARG" ;;
         s) home_disk="$OPTARG" ;;
-        S) home_size="$OPTARG" ;;
         t) timezone="$OPTARG" ;;
-        x) swap_size="$OPTARG" ;;
         \?)
             echo "${r}Invalid option -$OPTARG${c}" >&2
             exit 1
@@ -83,11 +72,8 @@ while getopts "c:D:h:k:l:r:R:s:S:x:t:" opt; do
 done
 
 # Set defaults if not given
-country=${country:-"United States"}
 root_disk=${root_disk:-sda}
-root_size=${root_size:-30}
-swap_size=${swap_size:-4}
-hostname=${hostname:-archlinux}
+hostname=${hostname:-artix}
 keyboard_layout=${keyboard_layout:-us}
 locale=${locale:-en_US}
 timezone=${timezone:-UTC}
@@ -110,15 +96,10 @@ ensureDisksPathsAreCorrect() {
 
 errorDisk() {
     case "$1" in
-        "clear_partition") echo "${r}Error: Failed to clear partition table${c}" ;;
         "create_efi") echo "${r}Error: Failed to create EFI partition${c}" ;;
-        "create_bios_boot") echo "${r}Error: Failed to create BIOS boot partition${c}" ;;
         "create_efi_mount") echo "${r}Error: Failed to create EFI mount point${c}" ;;
-        "create_root") echo "${r}Error: Failed to create root partition${c}" ;;
-        "create_home") echo "${r}Error: Failed to create home partition${c}" ;;
         "create_home_mount") echo "${r}Error: Failed to create home mount point${c}" ;;
         "create_swap") echo "${r}Error: Failed to create swap partition${c}" ;;
-        "disk_not_exist") echo "${r}Error: Disk does not exist${c}" ;;
         "enable_swap") echo "${r}Error: Failed to enable swap${c}" ;;
         "format_efi") echo "${r}Error: Failed to format EFI partition${c}" ;;
         "format_root") echo "${r}Error: Failed to format root partition${c}" ;;
@@ -128,6 +109,17 @@ errorDisk() {
         "mount_home") echo "${r}Error: Failed to mount home partition${c}" ;;
     esac
     exit 1
+}
+
+createPartitionsTable() {
+    case "$1" in
+        firstDrive)
+            cfdisk "$root_disk"
+        ;;
+        secondDrive)
+            cfdisk "$home_disk"
+        ;;
+    esac
 }
 
 setupPartitions() {
@@ -144,7 +136,7 @@ setupPartitions() {
     if [[ $is_uefi -eq 0 ]]; then
         echo "${g}Debug: Setting up UEFI partitions...${c}"
         mkfs.fat -F32 "${root_disk}1" || errorDisk "format_efi"
-        if [[ -n $swap_size ]]; then
+        if fdisk -l | grep -wq 'Linux swap'; then
             mkfs.ext4 "${root_disk}3" || errorDisk "format_root"
             mount "${root_disk}3" /mnt || errorDisk "mount_root"
             mkswap "${root_disk}2" || errorDisk "create_swap"
@@ -158,19 +150,19 @@ setupPartitions() {
     else
         echo "${g}Debug: Setting up BIOS partitions...${c}"
         # Note: partition 1 is BIOS boot, no formatting needed
-        mkswap "${root_disk}2" || errorDisk "create_swap"
-        swapon "${root_disk}2" || errorDisk "enable_swap"
-        [[ ! -b "${root_disk}3" ]] && {
-            echo "${r}Error: Partition ${root_disk}3 does not exist. Available partitions:${c}"
+        mkswap "${root_disk}1" || errorDisk "create_swap"
+        swapon "${root_disk}1" || errorDisk "enable_swap"
+        [[ ! -b "${root_disk}2" ]] && {
+            echo "${r}Error: Partition ${root_disk}2 does not exist. Available partitions:${c}"
             lsblk "$root_disk"
             exit 1
         }
-        mkfs.ext4 "${root_disk}3" 2>&1 || {
+        mkfs.ext4 "${root_disk}2" 2>&1 || {
             echo "${r}Error details for ext4 formatting:${c}"
-            mkfs.ext4 "${root_disk}3" 2>&1
+            mkfs.ext4 "${root_disk}2" 2>&1
             errorDisk "format_root"
         }
-        mount "${root_disk}3" /mnt || errorDisk "mount_root"
+        mount "${root_disk}2" /mnt || errorDisk "mount_root"
     fi
 
     [[ -n $home_disk ]] && {
@@ -184,7 +176,7 @@ setupPartitions() {
 installBaseSystem() {
     # Ensure the system clock is synchronized
     rc-service ntpd start
-    echo "${g}Updating mirrolist for ${country}${c}"
+    echo "${g}Updating mirrolist...${c}"
     rankmirrors -v -n 5 /etc/pacman.d/mirrorlist
     pacman -Syy artix-keyring --noconfirm
 
@@ -336,9 +328,18 @@ read -rp "Do you want to continue? (y/N) " confirm
 
 # Perform disks operations
 if [[ -n $home_disk ]]; then
+    echo "${g}Partitioning first drive...${c}"
+    sleep 2
+    createPartitionsTable firstDrive
+    echo "${g}Partitioning second drive...${c}"
+    sleep 2
+    createPartitionsTable secondDrive
     echo "${g}Setting up partitions...${c}"
     setupPartitions "$root_disk" "$is_uefi" "$home_disk"
 else
+    echo "${g}Partitioning first drive...${c}"
+    sleep 2
+    createPartitionsTable firstDrive
     echo "${g}Setting up partitions...${c}"
     setupPartitions "$root_disk" "$is_uefi"
 fi
