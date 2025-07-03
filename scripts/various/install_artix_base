@@ -114,10 +114,10 @@ errorDisk() {
 createPartitionsTable() {
     case "$1" in
         firstDrive)
-            cfdisk "$root_disk"
+            cfdisk /dev/"$root_disk"
         ;;
         secondDrive)
-            cfdisk "$home_disk"
+            cfdisk /dev/"$home_disk"
         ;;
     esac
 }
