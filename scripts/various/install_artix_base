@@ -32,7 +32,6 @@ if [[ $# -eq 0 ]]; then
     BIOS MODE: (SWAP), ROOT do not forget to mark it *bootable, (HOME)
 
     Available options:
-    -c <country>        Set your actual location (default: United States)
     -d all              List all present disks for decision making
     -h <name>           Set hostname (default: artix)
     -k <kbd layout>     Set your keyboard layout (default: us)
