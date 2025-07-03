@@ -130,139 +130,6 @@ errorDisk() {
     exit 1
 }
 
-partitionDisk() {
-    local is_uefi="$1"
-    local root_disk="$2"
-    local home_disk="$3"
-
-    ensureDisksPathsAreCorrect
-
-    # Verify disks exist and clear partition tables
-    for d in "$root_disk" ${home_disk:+"$home_disk"}; do
-        [[ ! -b $d ]] && errorDisk "disk_not_exist"
-        # Create a new DOS (MBR) or GPT partition table
-        if [[ $is_uefi -eq 0 ]]; then
-            echo "g" | fdisk "$d" >/dev/null 2>&1 || errorDisk "clear_partition"
-        else
-            echo "o" | fdisk "$d" >/dev/null 2>&1 || errorDisk "clear_partition"
-        fi
-    done
-
-    if [[ $is_uefi -eq 0 ]]; then
-        # Create EFI partition
-        (
-            echo "n"  # new partition
-            echo "1"  # partition number
-            echo     # default first sector
-            echo "+256M" # partition size
-            echo "t"  # change partition type
-            echo "1"  # EFI System
-            echo "w"  # write changes
-        ) | fdisk "$root_disk" >/dev/null 2>&1 || errorDisk "create_efi"
-
-        if [[ -n $swap_size ]]; then
-            # Create swap partition
-            (
-                echo "n"  # new partition
-                echo "2"  # partition number
-                echo     # default first sector
-                echo "+${swap_size}G" # partition size
-                echo "t"  # change partition type
-                echo "2"  # partition number
-                echo "82" # Linux swap
-                echo "w"  # write changes
-            ) | fdisk "$root_disk" >/dev/null 2>&1 || errorDisk "create_swap"
-
-            # Create root partition
-            (
-                echo "n"  # new partition
-                echo "3"  # partition number
-                echo     # default first sector
-                echo "+${root_size}G" # partition size
-                echo "w"  # write changes
-            ) | fdisk "$root_disk" >/dev/null 2>&1 || errorDisk "create_root"
-        else
-            # Create root partition without swap
-            (
-                echo "n"  # new partition
-                echo "2"  # partition number
-                echo     # default first sector
-                echo "+${root_size}G" # partition size
-                echo "w"  # write changes
-            ) | fdisk "$root_disk" >/dev/null 2>&1 || errorDisk "create_root"
-        fi
-    else
-        # BIOS partitioning
-        # Create BIOS boot partition
-        (
-            echo "n"  # new partition
-            echo "1"  # partition number
-            echo     # default first sector
-            echo "+1M"  # partition size
-            echo "t"  # change partition type
-            echo "4"  # BIOS boot
-            echo "w"  # write changes
-        ) | fdisk "$root_disk" >/dev/null 2>&1 || errorDisk "create_bios_boot"
-
-        # Create swap partition
-        (
-            echo "n"  # new partition
-            echo "2"  # partition number
-            echo     # default first sector
-            echo "+${swap_size}G" # partition size
-            echo "t"  # change partition type
-            echo "2"  # partition number
-            echo "82" # Linux swap
-            echo "w"  # write changes
-        ) | fdisk "$root_disk" >/dev/null 2>&1 || errorDisk "create_swap"
-
-        # Create root partition
-        (
-            echo "n"  # new partition
-            echo "3"  # partition number
-            echo     # default first sector
-            echo "+${root_size}G" # partition size
-            echo "w"  # write changes
-        ) | fdisk "$root_disk" >/dev/null 2>&1 || errorDisk "create_root"
-    fi
-
-    # Create home partition if specified
-    [[ -n $home_disk ]] && {
-        if [[ -n $home_size ]]; then
-            (
-                echo "n"  # new partition
-                echo "1"  # partition number
-                echo     # default first sector
-                echo "+${home_size}G" # partition size
-                echo "w"  # write changes
-            ) | fdisk "$home_disk" >/dev/null 2>&1 || errorDisk "create_home"
-        else
-            (
-                echo "n"  # new partition
-                echo "1"  # partition number
-                echo     # default first sector
-                echo     # use remaining space
-                echo "w"  # write changes
-            ) | fdisk "$home_disk" >/dev/null 2>&1 || errorDisk "create_home"
-        fi
-    }
-
-    echo "${g}Debug: Refreshing partition table...${c}"
-    udevadm settle
-    sleep 2 # Give the kernel some time to process
-}
-
-# waitForPartition() {
-#     local part="$1"
-#     local timeout=10
-#     local waited=0
-#     while [[ ! -b "$part" && $waited -lt $timeout ]]; do
-#         sleep 1
-#         waited=$((waited+1))
-#     done
-#     [[ ! -b "$part" ]] && { echo "${r}Error: Partition $part did not appear after $timeout seconds.${c}"; exit 1; }
-# }
-
 setupPartitions() {
     local root_disk="$1"
     local is_uefi="$2"
@@ -276,17 +143,13 @@ setupPartitions() {
 
     if [[ $is_uefi -eq 0 ]]; then
         echo "${g}Debug: Setting up UEFI partitions...${c}"
-        waitForPartition "${root_disk}1"
         mkfs.fat -F32 "${root_disk}1" || errorDisk "format_efi"
         if [[ -n $swap_size ]]; then
-            # waitForPartition "${root_disk}3"
             mkfs.ext4 "${root_disk}3" || errorDisk "format_root"
             mount "${root_disk}3" /mnt || errorDisk "mount_root"
-            # waitForPartition "${root_disk}2"
             mkswap "${root_disk}2" || errorDisk "create_swap"
             swapon "${root_disk}2" || errorDisk "enable_swap"
         else
-            # waitForPartition "${root_disk}2"
             mkfs.ext4 "${root_disk}2" || errorDisk "format_root"
             mount "${root_disk}2" /mnt || errorDisk "mount_root"
         fi
@@ -295,10 +158,8 @@ setupPartitions() {
     else
         echo "${g}Debug: Setting up BIOS partitions...${c}"
         # Note: partition 1 is BIOS boot, no formatting needed
-        # waitForPartition "${root_disk}2"
         mkswap "${root_disk}2" || errorDisk "create_swap"
         swapon "${root_disk}2" || errorDisk "enable_swap"
-        # waitForPartition "${root_disk}3"
         [[ ! -b "${root_disk}3" ]] && {
             echo "${r}Error: Partition ${root_disk}3 does not exist. Available partitions:${c}"
             lsblk "$root_disk"
@@ -314,7 +175,6 @@ setupPartitions() {
 
     [[ -n $home_disk ]] && {
         echo "${g}Debug: Setting up home partition on $home_disk${c}"
-        # waitForPartition "${home_disk}1"
         mkfs.ext4 "${home_disk}1" || errorDisk "format_home"
         mkdir -p /mnt/home || errorDisk "create_home_mount"
         mount "${home_disk}1" /mnt/home || errorDisk "mount_home"
@@ -476,13 +336,9 @@ read -rp "Do you want to continue? (y/N) " confirm
 
 # Perform disks operations
 if [[ -n $home_disk ]]; then
-    echo "${g}Partitioning disks...${c}"
-    partitionDisk "$is_uefi" "$root_disk" "$home_disk"
     echo "${g}Setting up partitions...${c}"
     setupPartitions "$root_disk" "$is_uefi" "$home_disk"
 else
-    echo "${g}Formatting disk...${c}"
-    partitionDisk "$is_uefi" "$root_disk"
     echo "${g}Setting up partitions...${c}"
     setupPartitions "$root_disk" "$is_uefi"
 fi
