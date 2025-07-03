@@ -1,14 +1,13 @@
 #!/bin/bash
 
 # Author: Barret E <https://github.com/archusXIV/>
-# Creation date: 2025-05-25
-# Script name: install_artix version 1.1.0
+# Creation date: 2025-07-03
+# Script name: install_artix version 1.0.0
 # License: GPLv2
 #
 # This script automates the installation of Artix Linux with the following features:
 # - Supports both UEFI and BIOS systems.
 # - Configurable disk partitioning with option for separate /home partition.
-#   and custom root/home disk/swap* size if needed (*only for BIOS install).
 # - Customizable keyboard layout, locale, timezone and hostname.
 # - Automatic mirror selection based on response rate and package database update.
 # - Installation of base system packages (minimal) and bootloader.
@@ -29,13 +28,13 @@ if [[ $# -eq 0 ]]; then
              Artix Linux Installation Script by archusXIV
     ==============================================================
     IMPORTANT! PARTITION TABLE LAYOUT:
-    UEFI MODE: EFI (SWAP) ROOT (HOME)
-    BIOS MODE: (SWAP) ROOT (HOME)
+    UEFI MODE: EFI, (SWAP), ROOT, (HOME)
+    BIOS MODE: (SWAP), ROOT do not forget to mark it *bootable, (HOME)
 
     Available options:
     -c <country>        Set your actual location (default: United States)
     -D all              List all present disks for decision making
-    -h <name>           Set hostname (default: archlinux)
+    -h <name>           Set hostname (default: artix)
     -k <kbd layout>     Set your keyboard layout (default: us)
     -l <locales>        Set system locales (default: en_US)
     -r <root disk>      Set the system disk (default: sda)
@@ -113,10 +112,10 @@ errorDisk() {
 
 createPartitionsTable() {
     case "$1" in
-        firstDrive)
+        --first-drive)
             cfdisk /dev/"$root_disk"
         ;;
-        secondDrive)
+        --second-drive)
             cfdisk /dev/"$home_disk"
         ;;
     esac
@@ -149,7 +148,6 @@ setupPartitions() {
         mount "${root_disk}1" /mnt/boot/efi || errorDisk "mount_efi"
     else
         echo "${g}Debug: Setting up BIOS partitions...${c}"
-        # Note: partition 1 is BIOS boot, no formatting needed
         mkswap "${root_disk}1" || errorDisk "create_swap"
         swapon "${root_disk}1" || errorDisk "enable_swap"
         [[ ! -b "${root_disk}2" ]] && {
@@ -176,7 +174,7 @@ setupPartitions() {
 installBaseSystem() {
     # Ensure the system clock is synchronized
     rc-service ntpd start
-    echo "${g}Updating mirrolist...${c}"
+    echo "${g}Ranking mirrolist...${c}"
     rankmirrors -v -n 5 /etc/pacman.d/mirrorlist
     pacman -Syy artix-keyring --noconfirm
 
@@ -236,7 +234,6 @@ mkinitcpio -P
 
 pacman -S --noconfirm networkmanager
 rc-update add NetworkManager default
-# rc-update add connmand default
 
 echo "Set the root password:"
 passwd
@@ -328,18 +325,18 @@ read -rp "Do you want to continue? (y/N) " confirm
 
 # Perform disks operations
 if [[ -n $home_disk ]]; then
-    echo "${g}Partitioning first drive...${c}"
+    echo "${g}Please setup partitions on /dev/$root_disk...${c}"
     sleep 2
-    createPartitionsTable firstDrive
-    echo "${g}Partitioning second drive...${c}"
+    createPartitionsTable --first-drive
+    echo "${g}Please setup partitions on /dev/$home_disk...${c}"
     sleep 2
-    createPartitionsTable secondDrive
+    createPartitionsTable --second-drive
     echo "${g}Setting up partitions...${c}"
     setupPartitions "$root_disk" "$is_uefi" "$home_disk"
 else
-    echo "${g}Partitioning first drive...${c}"
+    echo "${g}Please setup partitions on $root_disk...${c}"
     sleep 2
-    createPartitionsTable firstDrive
+    createPartitionsTable --first-drive
     echo "${g}Setting up partitions...${c}"
     setupPartitions "$root_disk" "$is_uefi"
 fi
@@ -354,5 +351,5 @@ echo "${g}Unmounting partitions...${c}"
 umount -R /mnt
 
 echo -e "\n${g}Installation complete!${c}"
-echo "You can now reboot into your new Arch Linux system."
+echo "You can now reboot into your new Artix Linux system."
 echo "After reboot, log in as root with the password you set."
