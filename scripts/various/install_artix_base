@@ -2,7 +2,7 @@
 
 # Author: Barret E <https://github.com/archusXIV/>
 # Creation date: 2025-07-03
-# Script name: install_artix_base version 1.0.1
+# Script name: install_artix_base version 1.0.2
 # License: GPLv2
 #
 # This script automates the installation of Artix Linux with the following features:
@@ -33,23 +33,24 @@ if [[ $# -eq 0 ]]; then
     BIOS MODE: (SWAP), ROOT do not forget to mark it *bootable, (HOME)
 
     Available options:
-    -d all              List all present disks for decision making
-    -h <name>           Set hostname (default: artix)
-    -k <kbd layout>     Set your keyboard layout (default: us)
-    -l <locales>        Set system locales (default: en_US)
-    -r <root disk>      Set the system disk (default: sda)
-    -s <home disk>      Set the home disk for /home (optional: sdX)
-    -t <Region/Capital> Set timezone (default: UTC)
+    -d all               List all present disks for decision making
+    -f <filesystem type> Set the filesystem type (ext4, btrfs, xfs, default: ext4)
+    -h <name>            Set hostname (default: artix)
+    -k <kbd layout>      Set your keyboard layout (default: us)
+    -l <locales>         Set system locales (default: en_US)
+    -r <root disk>       Set the system disk (default: sda)
+    -s <home disk>       Set the home disk for /home (optional: sdX)
+    -t <Region/Capital>  Set timezone (default: UTC)
 
     Example usage:
-    ./install_artix_base -r sda -s sdb -k fr -l fr_FR -t Europe/Paris -h myartix
+    ./install_artix_base -f btrfs -r sda -s sdb -k fr -l fr_FR -t Europe/Paris -h myartix
 
 USAGE
     exit 1
 fi
 
 # Parse command line arguments
-while getopts "d:h:k:l:r:s:t:" opt; do
+while getopts "d:f:h:k:l:r:s:t:" opt; do
     case $opt in
         d)
             echo -e " \n${g}Available disks:\n${c}"
@@ -57,6 +58,7 @@ while getopts "d:h:k:l:r:s:t:" opt; do
             echo ""
             exit 0
         ;;
+        f) fs_type="${OPTARG}" ;;
         h) hostname="$OPTARG" ;;
         k) keyboard_layout="$OPTARG" ;;
         l) locale="$OPTARG" ;;
@@ -71,10 +73,11 @@ while getopts "d:h:k:l:r:s:t:" opt; do
 done
 
 # Set defaults if not given
-root_disk=${root_disk:-sda}
+fs_type=${fs_type:-ext4}
 hostname=${hostname:-artix}
 keyboard_layout=${keyboard_layout:-us}
 locale=${locale:-en_US}
+root_disk=${root_disk:-sda}
 timezone=${timezone:-UTC}
 
 checkUefi() {
@@ -136,12 +139,12 @@ setupPartitions() {
         echo "${g}Debug: Setting up UEFI partitions...${c}"
         mkfs.fat -F32 "${root_disk}1" || errorDisk "format_efi"
         if fdisk -l | grep -wq 'Linux swap'; then
-            mkfs.ext4 "${root_disk}3" || errorDisk "format_root"
+            mkfs."${fs_type}" "${root_disk}3" || errorDisk "format_root"
             mount "${root_disk}3" /mnt || errorDisk "mount_root"
             mkswap "${root_disk}2" || errorDisk "create_swap"
             swapon "${root_disk}2" || errorDisk "enable_swap"
         else
-            mkfs.ext4 "${root_disk}2" || errorDisk "format_root"
+            mkfs."${fs_type}" "${root_disk}2" || errorDisk "format_root"
             mount "${root_disk}2" /mnt || errorDisk "mount_root"
         fi
         mkdir -p /mnt/boot/efi || errorDisk "create_efi_mount"
@@ -155,9 +158,9 @@ setupPartitions() {
             lsblk "$root_disk"
             exit 1
         }
-        mkfs.ext4 "${root_disk}2" 2>&1 || {
+        mkfs."${fs_type}" "${root_disk}2" 2>&1 || {
             echo "${r}Error details for ext4 formatting:${c}"
-            mkfs.ext4 "${root_disk}2" 2>&1
+            mkfs."${fs_type}" "${root_disk}2" 2>&1
             errorDisk "format_root"
         }
         mount "${root_disk}2" /mnt || errorDisk "mount_root"
@@ -165,7 +168,7 @@ setupPartitions() {
 
     [[ -n $home_disk ]] && {
         echo "${g}Debug: Setting up home partition on $home_disk${c}"
-        mkfs.ext4 "${home_disk}1" || errorDisk "format_home"
+        mkfs."${fs_type}" "${home_disk}1" || errorDisk "format_home"
         mkdir -p /mnt/home || errorDisk "create_home_mount"
         mount "${home_disk}1" /mnt/home || errorDisk "mount_home"
     }
@@ -180,11 +183,17 @@ installBaseSystem() {
     rankmirrors -n 10 /etc/pacman.d/mirrorlist_bkp > /etc/pacman.d/mirrorlist
     pacman -Syy
 
+    declare -a EXTRA=()
+    [[ $is_uefi -eq 0 ]] && EXTRA+=("efibootmgr")
+    [[ $fs_type == "btrfs" ]] && EXTRA+=("btrfs-progs")
+    [[ $fs_type == "xfs" ]] && EXTRA+=("xfsprogs")
+
+    # shellcheck disable=SC2068
     basestrap /mnt \
         artix-branding-base \
         base \
         base-devel \
-        connman-openrc \
+        ${EXTRA[@]} \
         elogind-openrc \
         less \
         linux \
@@ -260,7 +269,7 @@ Exec=/usr/bin/grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootl
 EOG
     pacman -S --noconfirm grub os-prober efibootmgr
 else
-    [[ -z "$root_disk" || ! -b "$root_disk" ]] && {
+    [[ -z "$root_disk" || ! -b /dev/"$root_disk" ]] && {
         echo "${r}Error: Invalid or unset system disk for BIOS bootloader installation.${c}"
         exit 1
     }
@@ -276,8 +285,14 @@ Description=INSTALLING GRUB...
 When=PostTransaction
 Exec=/usr/bin/grub-install --target=i386-pc /dev/"$root_disk"
 EOB
-    pacman -S --noconfirm grub os-prober
+
 fi
+
+    if [[ $fs_type == "btrfs" ]]; then
+        pacman -S --noconfirm grub-btrfs os-prober
+    else
+        pacman -S --noconfirm grub os-prober
+    fi
 
 # Add performance-related kernel parameters to GRUB
 [[ -f /etc/default/grub ]] && {
@@ -291,7 +306,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 exit
 EOF
     chmod +x /mnt/root/configure.sh
-    if ! artix-chroot /mnt /root/configure.sh "$root_disk"; then
+    if ! artix-chroot /mnt /root/configure.sh /dev/"$root_disk"; then
         echo "${r}Error: Configuration script failed. Retaining /mnt/root/configure.sh for debugging.${c}"
     else
         rm /mnt/root/configure.sh
