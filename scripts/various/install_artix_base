@@ -273,7 +273,7 @@ Target=grub
 [Action]
 Description=INSTALLING GRUB...
 When=PostTransaction
-Exec=/usr/bin/grub-install --target=i386-pc "$root_disk"
+Exec=/usr/bin/grub-install --target=i386-pc /dev/"$root_disk"
 EOB
     pacman -S --noconfirm grub os-prober
 fi
