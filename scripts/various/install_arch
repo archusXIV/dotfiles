@@ -30,34 +30,35 @@ if [[ $# -eq 0 ]]; then
         Do not add swap in UEFI mode, zram0 will be configured
 
     Available options:
-    -c <country>        Set your actual location (default: United States)
-    -D all              List all present disks for decision making
-    -h <name>           Set hostname (default: archlinux)
-    -k <kbd layout>     Set your keyboard layout (default: us)
-    -l <locales>        Set system locales (default: en_US)
-    -r <root disk>      Set the system disk (default: sda)
-    -R <root size>      Set the system disk size in GB (default: 30)
-    -s <home disk>      Set the home disk for /home (optional: sdX)
-    -S <home size>      Set the home disk size in GB (uses remaining space if not set)
-    -x <swap size>      Set the swap size in GB for BIOS install (default: 4)
-    -t <Region/Capital> Set timezone (default: UTC)
+    -c <country>         Set your actual location (default: United States)
+    -D all               List all present disks for decision making
+    -f <filesystem type> Set the filesystem type (ext4, btrfs, xfs, default: ext4)
+    -h <name>            Set hostname (default: archlinux)
+    -k <kbd layout>      Set your keyboard layout (default: us)
+    -l <locales>         Set system locales (default: en_US)
+    -r <root disk>       Set the system disk (default: sda)
+    -R <root size>       Set the system disk size in GB (default: 30)
+    -s <home disk>       Set the home disk for /home (optional: sdX)
+    -S <home size>       Set the home disk size in GB (uses remaining space if not set)
+    -x <swap size>       Set the swap size in GB for BIOS install (default: 4)
+    -t <Region/Capital>  Set timezone (default: UTC)
 
     Example usage for UEFI install (no swap):
     (root drive,root size,home drive,home size,country,keyboard,locales,timezone,hostname)
 
-    ./install_arch -r sda -R 40 -s sdb -S 100 -c France -k fr -l fr_FR -t Europe/Paris -h myarchuefi
+    ./install_arch -r sda -R 40 -s sdb -S 100 -f btrfs -c France -k fr -l fr_FR -t Europe/Paris -h myarchuefi
 
     Example usage for BIOS install (with swap size):
     (root drive,swap size,home drive,country,keyboard,locales,timezone,hostname)
 
-    ./install_arch -r sda -x 4 -s sdb -c France -k fr -l fr_FR -t Europe/Paris -h myarchbios
+    ./install_arch -r sda -x 4 -s sdb -f ext4 -c France -k fr -l fr_FR -t Europe/Paris -h myarchbios
 
 USAGE
     exit 1
 fi
 
 # Parse command line arguments
-while getopts "c:D:h:k:l:r:R:s:S:x:t:" opt; do
+while getopts "c:D:f:h:k:l:r:R:s:S:x:t:" opt; do
     case $opt in
         c) country="$OPTARG" ;;
         D)
@@ -66,17 +67,18 @@ while getopts "c:D:h:k:l:r:R:s:S:x:t:" opt; do
             echo ""
             exit 0
         ;;
-        h) hostname="$OPTARG" ;;
-        k) keyboard_layout="$OPTARG" ;;
-        l) locale="$OPTARG" ;;
-        r) root_disk="$OPTARG" ;;
-        R) root_size="$OPTARG" ;;
-        s) home_disk="$OPTARG" ;;
-        S) home_size="$OPTARG" ;;
-        t) timezone="$OPTARG" ;;
-        x) swap_size="$OPTARG" ;;
+        f) fs_type="${OPTARG}" ;;
+        h) hostname="${OPTARG}" ;;
+        k) keyboard_layout="${OPTARG}" ;;
+        l) locale="${OPTARG}" ;;
+        r) root_disk="${OPTARG}" ;;
+        R) root_size="${OPTARG}" ;;
+        s) home_disk="${OPTARG}" ;;
+        S) home_size="${OPTARG}" ;;
+        t) timezone="${OPTARG}" ;;
+        x) swap_size="${OPTARG}" ;;
         \?)
-            echo "${r}Invalid option -$OPTARG${c}" >&2
+            echo "${r}Invalid option -${OPTARG}${c}" >&2
             exit 1
         ;;
     esac
@@ -86,6 +88,7 @@ done
 country=${country:-"United States"}
 root_disk=${root_disk:-sda}
 root_size=${root_size:-30}
+fs_type=${fs_type:-ext4}
 swap_size=${swap_size:-4}
 hostname=${hostname:-archlinux}
 keyboard_layout=${keyboard_layout:-us}
@@ -188,7 +191,7 @@ setupPartitions() {
     if [[ $is_uefi -eq 0 ]]; then
         echo "${g}Debug: Setting up UEFI partitions...${c}"
         mkfs.fat -F32 "${root_disk}1" || errorDisk "format_efi"
-        mkfs.ext4 "${root_disk}2" || errorDisk "format_root"
+        mkfs."${fs_type}" "${root_disk}2" || errorDisk "format_root"
         mount "${root_disk}2" /mnt || errorDisk "mount_root"
         mkdir -p /mnt/boot/efi || errorDisk "create_efi_mount"
         mount "${root_disk}1" /mnt/boot/efi || errorDisk "mount_efi"
@@ -201,9 +204,9 @@ setupPartitions() {
             lsblk "$root_disk"
             exit 1
         }
-        mkfs.ext4 "${root_disk}3" 2>&1 || {
-            echo "${r}Error details for ext4 formatting:${c}"
-            mkfs.ext4 "${root_disk}3" 2>&1
+        mkfs."${fs_type}" "${root_disk}3" 2>&1 || {
+            echo "${r}Error details for filesystem formatting:${c}"
+            mkfs."${fs_type}" "${root_disk}3" 2>&1
             errorDisk "format_root"
         }
         mount "${root_disk}3" /mnt || errorDisk "mount_root"
@@ -212,7 +215,7 @@ setupPartitions() {
 
     [[ -n $home_disk ]] && {
         echo "${g}Debug: Setting up home partition on $home_disk${c}"
-        mkfs.ext4 "${home_disk}1" || errorDisk "format_home"
+        mkfs."${fs_type}" "${home_disk}1" || errorDisk "format_home"
         mkdir -p /mnt/home || errorDisk "create_home_mount"
         mount "${home_disk}1" /mnt/home || errorDisk "mount_home"
     }
@@ -236,9 +239,25 @@ installBaseSystem() {
     rankmirrors -n 10 /etc/pacman.d/mirrorlist_bkp > /etc/pacman.d/mirrorlist
     pacman -Syy
 
+    if [[ $fs_type == "btrfs" && $is_uefi -eq 0 ]]; then
+        declare -a FSPROGS=( grub-btrfs os-prober efibootmgr btrfs-progs )
+    elif [[ $fs_type == "btrfs" && $is_uefi -ne 0 ]]; then
+        declare -a FSPROGS=( grub-btrfs os-prober btrfs-progs )
+    elif [[ $fs_type == "xfs" && $is_uefi -eq 0 ]]; then
+        declare -a FSPROGS=( grub os-prober efibootmgr xfsprogs )
+    elif [[ $fs_type == "xfs" && $is_uefi -ne 0 ]]; then
+        declare -a FSPROGS=( grub os-prober xfsprogs )
+    elif [[ $is_uefi -eq 0 ]]; then
+        declare -a FSPROGS=( grub os-prober efibootmgr )
+    else
+        declare -a FSPROGS=( grub os-prober )
+    fi
+
+    # shellcheck disable=SC2068
     pacstrap -K /mnt \
         base \
         base-devel \
+        ${FSPROGS[@]} \
         less \
         linux \
         linux-firmware \
@@ -297,7 +316,15 @@ cat > /etc/systemd/system.conf.d/boot-options.conf <<EOL
 DefaultTimeoutStartSec=10s
 DefaultTimeoutStopSec=10s
 EOL
-
+    # if [[ $fs_type == "btrfs" && $is_uefi -eq 0 ]]; then
+    #     pacman -S --noconfirm grub-btrfs os-prober efibootmgr
+    # elif [[ $fs_type == "btrfs" && $is_uefi -ne 0 ]]; then
+    #     pacman -S --noconfirm grub-btrfs os-prober
+    # elif [[ $fs_type != "btrfs" && $is_uefi -eq 0 ]]; then
+    #     pacman -S --noconfirm grub os-prober efibootmgr
+    # else
+    #     pacman -S --noconfirm grub os-prober
+    # fi
 # Configure zram device and install/configure bootloader
 if [[ $is_uefi -eq 0 ]]; then
     cat > /etc/systemd/zram-generator.conf <<EOZ
@@ -306,8 +333,8 @@ zram-size = min (ram /2, ram)
 compression-algorithm = zstd
 EOZ
 
-mkdir --parents /etc/pacman.d/hooks
 # Grub stuff
+mkdir --parents /etc/pacman.d/hooks
     cat > /etc/pacman.d/hooks/update_grub.hook <<EOG
 [Trigger]
 Operation=Install
@@ -320,7 +347,6 @@ Description=INSTALLING GRUB...
 When=PostTransaction
 Exec=/usr/bin/grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=ARCH_GRUB
 EOG
-    pacman -S --noconfirm grub os-prober efibootmgr
 else
     [[ -z "$root_disk" || ! -b "$root_disk" ]] && {
         echo "${r}Error: Invalid or unset system disk for BIOS bootloader installation.${c}"
@@ -338,18 +364,14 @@ Description=INSTALLING GRUB...
 When=PostTransaction
 Exec=/usr/bin/grub-install --target=i386-pc "$root_disk"
 EOB
-    pacman -S --noconfirm grub os-prober
 fi
-
 # Add performance-related kernel parameters to GRUB
 [[ -f /etc/default/grub ]] && {
     sed -i '
         s/GRUB_CMDLINE_LINUX_DEFAULT=\".*\"/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet nowatchdog nmi_watchdog=0 raid=noautodetect\"/
     ' /etc/default/grub
 }
-
 grub-mkconfig -o /boot/grub/grub.cfg
-
 exit
 EOF
     chmod +x /mnt/root/configure.sh
@@ -358,7 +380,6 @@ EOF
     else
         rm /mnt/root/configure.sh
     fi
-
 }
 
 # We start from here
