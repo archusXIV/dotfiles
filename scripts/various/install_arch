@@ -240,17 +240,17 @@ installBaseSystem() {
     pacman -Syy
 
     if [[ $fs_type == "btrfs" && $is_uefi -eq 0 ]]; then
-        declare -a FSPROGS=( grub-btrfs os-prober efibootmgr btrfs-progs )
+        declare -a FSPROGS=( os-prober efibootmgr btrfs-progs )
     elif [[ $fs_type == "btrfs" && $is_uefi -ne 0 ]]; then
-        declare -a FSPROGS=( grub-btrfs os-prober btrfs-progs )
+        declare -a FSPROGS=( os-prober btrfs-progs )
     elif [[ $fs_type == "xfs" && $is_uefi -eq 0 ]]; then
-        declare -a FSPROGS=( grub os-prober efibootmgr xfsprogs )
+        declare -a FSPROGS=( os-prober efibootmgr xfsprogs )
     elif [[ $fs_type == "xfs" && $is_uefi -ne 0 ]]; then
-        declare -a FSPROGS=( grub os-prober xfsprogs )
+        declare -a FSPROGS=( os-prober xfsprogs )
     elif [[ $is_uefi -eq 0 ]]; then
-        declare -a FSPROGS=( grub os-prober efibootmgr )
+        declare -a FSPROGS=( os-prober efibootmgr )
     else
-        declare -a FSPROGS=( grub os-prober )
+        declare -a FSPROGS=( os-prober )
     fi
 
     # shellcheck disable=SC2068
@@ -316,15 +316,11 @@ cat > /etc/systemd/system.conf.d/boot-options.conf <<EOL
 DefaultTimeoutStartSec=10s
 DefaultTimeoutStopSec=10s
 EOL
-    # if [[ $fs_type == "btrfs" && $is_uefi -eq 0 ]]; then
-    #     pacman -S --noconfirm grub-btrfs os-prober efibootmgr
-    # elif [[ $fs_type == "btrfs" && $is_uefi -ne 0 ]]; then
-    #     pacman -S --noconfirm grub-btrfs os-prober
-    # elif [[ $fs_type != "btrfs" && $is_uefi -eq 0 ]]; then
-    #     pacman -S --noconfirm grub os-prober efibootmgr
-    # else
-    #     pacman -S --noconfirm grub os-prober
-    # fi
+    if [[ $fs_type == "btrfs" ]]; then
+        pacman -S --noconfirm grub-btrfs
+    else
+        pacman -S --noconfirm grub
+    fi
 # Configure zram device and install/configure bootloader
 if [[ $is_uefi -eq 0 ]]; then
     cat > /etc/systemd/zram-generator.conf <<EOZ
@@ -341,6 +337,7 @@ Operation=Install
 Operation=Upgrade
 Type=Package
 Target=grub
+Target=grub-btrfs
 
 [Action]
 Description=INSTALLING GRUB...
@@ -358,11 +355,12 @@ Operation=Install
 Operation=Upgrade
 Type=Package
 Target=grub
+Target=grub-btrfs
 
 [Action]
 Description=INSTALLING GRUB...
 When=PostTransaction
-Exec=/usr/bin/grub-install --target=i386-pc "$root_disk"
+Exec=/usr/bin/grub-install --target=i386-pc /dev/"$root_disk"
 EOB
 fi
 # Add performance-related kernel parameters to GRUB
