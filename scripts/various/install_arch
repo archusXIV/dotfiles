@@ -2,7 +2,7 @@
 
 # Author: Barret E <https://github.com/archusXIV/>
 # Creation date: 2025-05-25
-# Script name: install_arch version 1.1.1
+# Script name: install_arch version 1.1.2
 # License: GPLv2
 #
 # This script automates the installation of Arch Linux with the following features:
@@ -226,6 +226,7 @@ installBaseSystem() {
     timedatectl set-ntp true
     echo "${g}Updating mirrolist for ${country}${c}"
     reflector \
+        --verbose \
         --country "${country}" \
         --latest 10 \
         --age 24 \
@@ -316,11 +317,7 @@ cat > /etc/systemd/system.conf.d/boot-options.conf <<EOL
 DefaultTimeoutStartSec=10s
 DefaultTimeoutStopSec=10s
 EOL
-    if [[ $fs_type == "btrfs" ]]; then
-        pacman -S --noconfirm grub-btrfs
-    else
-        pacman -S --noconfirm grub
-    fi
+
 # Configure zram device and install/configure bootloader
 if [[ $is_uefi -eq 0 ]]; then
     cat > /etc/systemd/zram-generator.conf <<EOZ
@@ -363,6 +360,13 @@ When=PostTransaction
 Exec=/usr/bin/grub-install --target=i386-pc /dev/"$root_disk"
 EOB
 fi
+
+    if [[ $fs_type == "btrfs" ]]; then
+        pacman -S --noconfirm grub-btrfs
+    else
+        pacman -S --noconfirm grub
+    fi
+
 # Add performance-related kernel parameters to GRUB
 [[ -f /etc/default/grub ]] && {
     sed -i '
