@@ -59,25 +59,25 @@ fi
 # Parse command line arguments
 while getopts "c:D:h:k:l:r:R:s:S:x:t:" opt; do
     case $opt in
-    c) country="$OPTARG" ;;
-    D)
-        echo -e " \n${g}Available disks:\n${c}"
-        lsblk -I 8 -d -o NAME,SIZE,MODEL
-        echo ""
-        exit 0
+        c) country="$OPTARG" ;;
+        D)
+            echo -e " \n${g}Available disks:\n${c}"
+            lsblk -I 8 -d -o NAME,SIZE,MODEL
+            echo ""
+            exit 0
         ;;
-    h) hostname="$OPTARG" ;;
-    k) keyboard_layout="$OPTARG" ;;
-    l) locale="$OPTARG" ;;
-    r) root_disk="$OPTARG" ;;
-    R) root_size="$OPTARG" ;;
-    s) home_disk="$OPTARG" ;;
-    S) home_size="$OPTARG" ;;
-    t) timezone="$OPTARG" ;;
-    x) swap_size="$OPTARG" ;;
-    \?)
-        echo "${r}Invalid option -$OPTARG${c}" >&2
-        exit 1
+        h) hostname="$OPTARG" ;;
+        k) keyboard_layout="$OPTARG" ;;
+        l) locale="$OPTARG" ;;
+        r) root_disk="$OPTARG" ;;
+        R) root_size="$OPTARG" ;;
+        s) home_disk="$OPTARG" ;;
+        S) home_size="$OPTARG" ;;
+        t) timezone="$OPTARG" ;;
+        x) swap_size="$OPTARG" ;;
+        \?)
+            echo "${r}Invalid option -$OPTARG${c}" >&2
+            exit 1
         ;;
     esac
 done
@@ -110,22 +110,22 @@ ensureDisksPathsAreCorrect() {
 
 errorDisk() {
     case "$1" in
-    "clear_partition") echo "${r}Error: Failed to clear partition table${c}" ;;
-    "create_efi") echo "${r}Error: Failed to create EFI partition${c}" ;;
-    "create_bios_boot") echo "${r}Error: Failed to create BIOS boot partition${c}" ;;
-    "create_efi_mount") echo "${r}Error: Failed to create EFI mount point${c}" ;;
-    "create_root") echo "${r}Error: Failed to create root partition${c}" ;;
-    "create_home") echo "${r}Error: Failed to create home partition${c}" ;;
-    "create_home_mount") echo "${r}Error: Failed to create home mount point${c}" ;;
-    "create_swap") echo "${r}Error: Failed to create swap partition${c}" ;;
-    "disk_not_exist") echo "${r}Error: Disk does not exist${c}" ;;
-    "enable_swap") echo "${r}Error: Failed to enable swap${c}" ;;
-    "format_efi") echo "${r}Error: Failed to format EFI partition${c}" ;;
-    "format_root") echo "${r}Error: Failed to format root partition${c}" ;;
-    "format_home") echo "${r}Error: Failed to format home partition${c}" ;;
-    "mount_root") echo "${r}Error: Failed to mount root partition${c}" ;;
-    "mount_efi") echo "${r}Error: Failed to mount EFI partition${c}" ;;
-    "mount_home") echo "${r}Error: Failed to mount home partition${c}" ;;
+        "clear_partition") echo "${r}Error: Failed to clear partition table${c}" ;;
+        "create_efi") echo "${r}Error: Failed to create EFI partition${c}" ;;
+        "create_bios_boot") echo "${r}Error: Failed to create BIOS boot partition${c}" ;;
+        "create_efi_mount") echo "${r}Error: Failed to create EFI mount point${c}" ;;
+        "create_root") echo "${r}Error: Failed to create root partition${c}" ;;
+        "create_home") echo "${r}Error: Failed to create home partition${c}" ;;
+        "create_home_mount") echo "${r}Error: Failed to create home mount point${c}" ;;
+        "create_swap") echo "${r}Error: Failed to create swap partition${c}" ;;
+        "disk_not_exist") echo "${r}Error: Disk does not exist${c}" ;;
+        "enable_swap") echo "${r}Error: Failed to enable swap${c}" ;;
+        "format_efi") echo "${r}Error: Failed to format EFI partition${c}" ;;
+        "format_root") echo "${r}Error: Failed to format root partition${c}" ;;
+        "format_home") echo "${r}Error: Failed to format home partition${c}" ;;
+        "mount_root") echo "${r}Error: Failed to mount root partition${c}" ;;
+        "mount_efi") echo "${r}Error: Failed to mount EFI partition${c}" ;;
+        "mount_home") echo "${r}Error: Failed to mount home partition${c}" ;;
     esac
     exit 1
 }
@@ -241,10 +241,11 @@ installBaseSystem() {
         less \
         linux \
         linux-firmware \
+        pacman-contrib \
         reflector \
         vim \
         zram-generator
-    genfstab -U /mnt >>/mnt/etc/fstab
+    genfstab -U /mnt >> /mnt/etc/fstab
     cp -f /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
 }
 
@@ -267,6 +268,7 @@ locale-gen
 echo "LANG=${locale}.UTF-8" > /etc/locale.conf
 echo "LC_COLLATE=C" >> /etc/locale.conf
 export LANG="${locale}.UTF-8"
+export LC_COLLATE=C
 
 echo "$hostname" > /etc/hostname
 echo "127.0.1.1        $hostname.localdomain    $hostname" >> /etc/hosts
@@ -276,7 +278,7 @@ echo "FONT=sun12x22" >> /etc/vconsole.conf
 
 echo "Adding performance tweaks..."
 # Enable parallel module loading
-sed -i 's/^MODULES=()/MODULES=(sd_mod)/' /etc/mkinitcpio.conf
+sed -i 's/^MODULES=()/MODULES=(sd_mod ahci)/' /etc/mkinitcpio.conf
 sed -i 's/^#MODULES_DECOMPRESS="no"/MODULES_DECOMPRESS="yes"/' /etc/mkinitcpio.conf
 mkinitcpio -P
 
@@ -294,7 +296,6 @@ DefaultTimeoutStartSec=10s
 DefaultTimeoutStopSec=10s
 EOL
 
-mkdir --parents /etc/pacman.d/hooks
 # Configure zram device and install/configure bootloader
 if [[ $is_uefi -eq 0 ]]; then
     cat > /etc/systemd/zram-generator.conf <<EOZ
@@ -303,6 +304,7 @@ zram-size = min (ram /2, ram)
 compression-algorithm = zstd
 EOZ
 
+mkdir --parents /etc/pacman.d/hooks
 # Grub stuff
     cat > /etc/pacman.d/hooks/update_grub.hook <<EOG
 [Trigger]
