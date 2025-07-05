@@ -42,7 +42,7 @@ if [[ $# -eq 0 ]]; then
     -t <Region/Capital> Set timezone (default: UTC)
 
     Example usage:
-    ./install_artix -r sda -s sdb -k fr -l fr_FR -t Europe/Paris -h myartix
+    ./install_artix_base -r sda -s sdb -k fr -l fr_FR -t Europe/Paris -h myartix
 
 USAGE
     exit 1
