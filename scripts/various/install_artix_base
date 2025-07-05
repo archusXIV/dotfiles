@@ -2,7 +2,7 @@
 
 # Author: Barret E <https://github.com/archusXIV/>
 # Creation date: 2025-07-03
-# Script name: install_artix_base version 1.0.0
+# Script name: install_artix_base version 1.0.1
 # License: GPLv2
 #
 # This script automates the installation of Artix Linux with the following features:
@@ -176,8 +176,9 @@ installBaseSystem() {
     rc-service ntpd start
     pacman -Syy artix-keyring pacman-contrib --noconfirm
     cp -f /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist_bkp
-    echo "${g}Ranking mirrolist...be patient${c}"
+    echo " ${g}Ranking mirrolist...be patient${c}"
     rankmirrors -n 10 /etc/pacman.d/mirrorlist_bkp > /etc/pacman.d/mirrorlist
+    pacman -Syy
 
     basestrap /mnt \
         artix-branding-base \
@@ -299,7 +300,7 @@ EOF
 }
 
 # We start from here
-echo -e "\nStarting Artix Linux installation...\n"
+echo -e "\n${g}Starting Artix Linux installation...\n${c}"
 
 # Verify we're in the live environment
 if [[ ! -f /run/artix/bootmnt/boot/vmlinuz-x86_64 ]]; then
@@ -331,11 +332,13 @@ if [[ -n $home_disk ]]; then
     sleep 2
     createPartitionsTable --first-drive
     echo "${g}Please setup partitions on /dev/$home_disk...${c}"
+    sleep 2
     createPartitionsTable --second-drive
     echo "${g}Setting up partitions...${c}"
     setupPartitions "$root_disk" "$is_uefi" "$home_disk"
 else
     echo "${g}Please setup partitions on $root_disk...${c}"
+    sleep 2
     createPartitionsTable --first-drive
     echo "${g}Setting up partitions...${c}"
     setupPartitions "$root_disk" "$is_uefi"
