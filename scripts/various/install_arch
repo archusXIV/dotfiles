@@ -243,6 +243,7 @@ installBaseSystem() {
         linux \
         linux-firmware \
         pacman-contrib \
+        ranger \
         reflector \
         vim \
         zram-generator
