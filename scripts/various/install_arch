@@ -240,25 +240,16 @@ installBaseSystem() {
     rankmirrors -n 10 /etc/pacman.d/mirrorlist_bkp > /etc/pacman.d/mirrorlist
     pacman -Syy
 
-    if [[ $fs_type == "btrfs" && $is_uefi -eq 0 ]]; then
-        declare -a FSPROGS=( os-prober efibootmgr btrfs-progs )
-    elif [[ $fs_type == "btrfs" && $is_uefi -ne 0 ]]; then
-        declare -a FSPROGS=( os-prober btrfs-progs )
-    elif [[ $fs_type == "xfs" && $is_uefi -eq 0 ]]; then
-        declare -a FSPROGS=( os-prober efibootmgr xfsprogs )
-    elif [[ $fs_type == "xfs" && $is_uefi -ne 0 ]]; then
-        declare -a FSPROGS=( os-prober xfsprogs )
-    elif [[ $is_uefi -eq 0 ]]; then
-        declare -a FSPROGS=( os-prober efibootmgr )
-    else
-        declare -a FSPROGS=( os-prober )
-    fi
+    declare -a EXTRA=()
+    [[ $is_uefi -eq 0 ]] && EXTRA+=("efibootmgr")
+    [[ $fs_type == "btrfs" ]] && EXTRA+=("btrfs-progs")
+    [[ $fs_type == "xfs" ]] && EXTRA+=("xfsprogs")
 
     # shellcheck disable=SC2068
     pacstrap -K /mnt \
         base \
         base-devel \
-        ${FSPROGS[@]} \
+        ${EXTRA[@]} \
         less \
         linux \
         linux-firmware \
@@ -362,9 +353,9 @@ EOB
 fi
 
     if [[ $fs_type == "btrfs" ]]; then
-        pacman -S --noconfirm grub-btrfs
+        pacman -S --noconfirm grub-btrfs os-prober
     else
-        pacman -S --noconfirm grub
+        pacman -S --noconfirm grub os-prober
     fi
 
 # Add performance-related kernel parameters to GRUB
