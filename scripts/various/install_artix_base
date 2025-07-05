@@ -6,6 +6,7 @@
 # License: GPLv2
 #
 # This script automates the installation of Artix Linux with the following features:
+# - Important: It must be run from an Artix Linux iso image!!!
 # - Supports both UEFI and BIOS systems.
 # - Configurable disk partitioning with option for separate /home partition.
 # - Customizable keyboard layout, locale, timezone and hostname.
