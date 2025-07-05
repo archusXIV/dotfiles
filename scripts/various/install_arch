@@ -86,13 +86,13 @@ done
 
 # Set defaults if not given
 country=${country:-"United States"}
-root_disk=${root_disk:-sda}
-root_size=${root_size:-30}
 fs_type=${fs_type:-ext4}
-swap_size=${swap_size:-4}
 hostname=${hostname:-archlinux}
 keyboard_layout=${keyboard_layout:-us}
 locale=${locale:-en_US}
+root_disk=${root_disk:-sda}
+root_size=${root_size:-30}
+swap_size=${swap_size:-4}
 timezone=${timezone:-UTC}
 
 checkUefi() {
@@ -333,7 +333,7 @@ When=PostTransaction
 Exec=/usr/bin/grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=ARCH_GRUB
 EOG
 else
-    [[ -z "$root_disk" || ! -b "$root_disk" ]] && {
+    [[ -z "$root_disk" || ! -b /dev/"$root_disk" ]] && {
         echo "${r}Error: Invalid or unset system disk for BIOS bootloader installation.${c}"
         exit 1
     }
@@ -364,11 +364,12 @@ fi
         s/GRUB_CMDLINE_LINUX_DEFAULT=\".*\"/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet nowatchdog nmi_watchdog=0 raid=noautodetect\"/
     ' /etc/default/grub
 }
+
 grub-mkconfig -o /boot/grub/grub.cfg
 exit
 EOF
     chmod +x /mnt/root/configure.sh
-    if ! arch-chroot /mnt /root/configure.sh "$root_disk"; then
+    if ! arch-chroot /mnt /root/configure.sh /dev/"$root_disk"; then
         echo "${r}Error: Configuration script failed. Retaining /mnt/root/configure.sh for debugging.${c}"
     else
         rm /mnt/root/configure.sh
