@@ -261,6 +261,7 @@ Operation=Install
 Operation=Upgrade
 Type=Package
 Target=grub
+Target=grub-btrfs
 
 [Action]
 Description=INSTALLING GRUB...
@@ -279,6 +280,7 @@ Operation=Install
 Operation=Upgrade
 Type=Package
 Target=grub
+Target=grub-btrfs
 
 [Action]
 Description=INSTALLING GRUB...
