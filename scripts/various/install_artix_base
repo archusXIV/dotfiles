@@ -253,7 +253,7 @@ Target=grub
 [Action]
 Description=INSTALLING GRUB...
 When=PostTransaction
-Exec=/usr/bin/grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=ARCH_GRUB
+Exec=/usr/bin/grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=ARTIX_GRUB
 EOG
     pacman -S --noconfirm grub os-prober efibootmgr
 else
