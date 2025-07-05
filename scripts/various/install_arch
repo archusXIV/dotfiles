@@ -230,7 +230,10 @@ installBaseSystem() {
         --sort rate \
         --save /etc/pacman.d/mirrorlist
 
-    pacman -Syy archlinux-keyring --noconfirm
+    pacman -Syy archlinux-keyring pacman-contrib --noconfirm
+    cp -f /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist_bkp
+    echo "${g}Ranking mirrolist...be patient${c}"
+    rankmirrors -n 10 /etc/pacman.d/mirrorlist_bkp > /etc/pacman.d/mirrorlist
 
     pacstrap -K /mnt \
         base \
