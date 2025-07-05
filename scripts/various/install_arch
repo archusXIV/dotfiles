@@ -234,6 +234,7 @@ installBaseSystem() {
     cp -f /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist_bkp
     echo "${g}Ranking mirrolist...be patient${c}"
     rankmirrors -n 10 /etc/pacman.d/mirrorlist_bkp > /etc/pacman.d/mirrorlist
+    pacman -Syy
 
     pacstrap -K /mnt \
         base \
