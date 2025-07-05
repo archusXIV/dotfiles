@@ -174,9 +174,10 @@ setupPartitions() {
 installBaseSystem() {
     # Ensure the system clock is synchronized
     rc-service ntpd start
-    echo "${g}Ranking mirrolist...${c}"
-    rankmirrors -v -n 5 /etc/pacman.d/mirrorlist
-    pacman -Syy artix-keyring --noconfirm
+    pacman -Syy artix-keyring pacman-contrib --noconfirm
+    cp -f /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist_bkp
+    echo "${g}Ranking mirrolist...be patient${c}"
+    rankmirrors -n 10 /etc/pacman.d/mirrorlist_bkp > /etc/pacman.d/mirrorlist
 
     basestrap /mnt \
         artix-branding-base \
@@ -330,13 +331,11 @@ if [[ -n $home_disk ]]; then
     sleep 2
     createPartitionsTable --first-drive
     echo "${g}Please setup partitions on /dev/$home_disk...${c}"
-    sleep 2
     createPartitionsTable --second-drive
     echo "${g}Setting up partitions...${c}"
     setupPartitions "$root_disk" "$is_uefi" "$home_disk"
 else
     echo "${g}Please setup partitions on $root_disk...${c}"
-    sleep 2
     createPartitionsTable --first-drive
     echo "${g}Setting up partitions...${c}"
     setupPartitions "$root_disk" "$is_uefi"
