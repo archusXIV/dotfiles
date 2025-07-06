@@ -362,7 +362,7 @@ EOF
 
 }
 
-# We start from here
+# WE START FROM HERE
 echo -e "\n${g}Starting Artix Linux installation...\n${c}"
 
 # Verify we're in the live environment
@@ -389,7 +389,6 @@ read -rp "Do you want to continue? (y/N) " confirm
     exit 1
 }
 
-# WE START FROM HERE
 rc-service ntpd start
 pacman-key --init && pacman-key --populate artix
 pacman -Syy artix-keyring pacman-contrib gdisk --noconfirm
