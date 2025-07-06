@@ -45,12 +45,12 @@ if [[ $# -eq 0 ]]; then
     -x <swap size>       Set the swap size in GB for BIOS install (default: 4G)
     -t <Region/Capital>  Set timezone (default: UTC)
 
-    Example usage for UEFI install (with swap default size):
+    Example usage for UEFI install (with default swap size):
     (root drive,root size,home drive,home size,keyboard,locales,timezone,hostname)
 
     ./install_arch -r sda -R 40 -s sdb -S 100 -f btrfs -k fr -l fr_FR -t Europe/Paris -h myartixuefi
 
-    Example usage for BIOS install (with swap custom size):
+    Example usage for BIOS install (with custom swap size):
     (root drive,swap size,home drive,country,keyboard,locales,timezone,hostname)
 
     ./install_arch -r sda -x 12 -s sdb -f ext4 -k fr -l fr_FR -t Europe/Paris -h myartixbios
