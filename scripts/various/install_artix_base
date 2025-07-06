@@ -47,7 +47,7 @@ if [[ $# -eq 0 ]]; then
     Example usage for UEFI install (no swap):
     (root drive,root size,home drive,home size,country,keyboard,locales,timezone,hostname)
 
-    ./install_arch -r sda -R 40 -s sdb -S 100 -f btrfs -c France -k fr -l fr_FR -t Europe/Paris -h myarchuefi
+    ./install_arch -r sda -R 40 -s sdb -S 100 -f btrfs -k fr -l fr_FR -t Europe/Paris -h myarchuefi
 
     Example usage for BIOS install (with swap size):
     (root drive,swap size,home drive,country,keyboard,locales,timezone,hostname)
