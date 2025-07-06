@@ -29,6 +29,7 @@ if [[ $# -eq 0 ]]; then
     cat <<'USAGE'
              Artix Linux Installation Script by archusXIV
     ==============================================================
+            IMPORTANT, A SWAP WILL BE CREATED BY DEFAULT!
 
     Available options:
     -c <country>         Set your actual location (default: United States)
@@ -38,21 +39,21 @@ if [[ $# -eq 0 ]]; then
     -k <kbd layout>      Set your keyboard layout (default: us)
     -l <locales>         Set system locales (default: en_US)
     -r <root disk>       Set the system disk (default: sda)
-    -R <root size>       Set the system disk size in GB (default: 30)
+    -R <root size>       Set the system disk size in GB (default: 30G)
     -s <home disk>       Set the home disk for /home (optional: sdX)
     -S <home size>       Set the home disk size in GB (uses remaining space if not set)
-    -x <swap size>       Set the swap size in GB for BIOS install (default: 4)
+    -x <swap size>       Set the swap size in GB for BIOS install (default: 4G)
     -t <Region/Capital>  Set timezone (default: UTC)
 
-    Example usage for UEFI install (no swap):
-    (root drive,root size,home drive,home size,country,keyboard,locales,timezone,hostname)
+    Example usage for UEFI install (with swap default size):
+    (root drive,root size,home drive,home size,keyboard,locales,timezone,hostname)
 
-    ./install_arch -r sda -R 40 -s sdb -S 100 -f btrfs -k fr -l fr_FR -t Europe/Paris -h myarchuefi
+    ./install_arch -r sda -R 40 -s sdb -S 100 -f btrfs -k fr -l fr_FR -t Europe/Paris -h myartixuefi
 
-    Example usage for BIOS install (with swap size):
+    Example usage for BIOS install (with swap custom size):
     (root drive,swap size,home drive,country,keyboard,locales,timezone,hostname)
 
-    ./install_arch -r sda -x 4 -s sdb -f ext4 -c France -k fr -l fr_FR -t Europe/Paris -h myarchbios
+    ./install_arch -r sda -x 12 -s sdb -f ext4 -c France -k fr -l fr_FR -t Europe/Paris -h myartixbios
 
 USAGE
     exit 1
@@ -147,7 +148,7 @@ partitionDisk() {
         || errorDisk "create_efi"
         sgdisk -n 2:0:+"${swap_size}"G -t 2:8200 -c 2:"Linux swap" "$root_disk" \
         || errorDisk "create_swap"
-        sgdisk -n 3:0:+"${root_size}"G -t 2:8300 -c 3:"Linux root" "$root_disk" \
+        sgdisk -n 3:0:+"${root_size}"G -t 3:8300 -c 3:"Linux root" "$root_disk" \
         || errorDisk "create_root"
     else
         # BIOS partitioning
@@ -295,7 +296,7 @@ rc-update add NetworkManager default
 echo "Set the root password:"
 passwd
 
-# Configure zram device and install/configure bootloader
+# Install/configure bootloader
 if [[ $is_uefi -eq 0 ]]; then
 
 mkdir --parents /etc/pacman.d/hooks
@@ -313,7 +314,7 @@ Description=INSTALLING GRUB...
 When=PostTransaction
 Exec=/usr/bin/grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=ARTIX_GRUB
 EOG
-    pacman -S --noconfirm grub os-prober efibootmgr
+
 else
     [[ -z "$root_disk" || ! -b /dev/"$root_disk" ]] && {
         echo "${r}Error: Invalid or unset system disk for BIOS bootloader installation.${c}"
@@ -388,6 +389,7 @@ read -rp "Do you want to continue? (y/N) " confirm
     exit 1
 }
 
+# WE START FROM HERE
 rc-service ntpd start
 pacman-key --init && pacman-key --populate artix
 pacman -Syy artix-keyring pacman-contrib gdisk --noconfirm
