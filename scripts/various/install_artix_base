@@ -29,10 +29,9 @@ if [[ $# -eq 0 ]]; then
     cat <<'USAGE'
              Artix Linux Installation Script by archusXIV
     ==============================================================
-            IMPORTANT, A SWAP WILL BE CREATED BY DEFAULT!
-
+        IMPORTANT, A SWAP PARTITION WILL BE CREATED BY DEFAULT!
+    ==============================================================
     Available options:
-    -c <country>         Set your actual location (default: United States)
     -D all               List all present disks for decision making
     -f <filesystem type> Set the filesystem type (ext4, btrfs, xfs, default: ext4)
     -h <name>            Set hostname (default: archlinux)
@@ -46,12 +45,12 @@ if [[ $# -eq 0 ]]; then
     -t <Region/Capital>  Set timezone (default: UTC)
 
     Example usage for UEFI install (with default swap size):
-    (root drive,root size,home drive,home size,keyboard,locales,timezone,hostname)
+    (root drive,root size,home drive,home size,filesystem,keyboard,locales,timezone,hostname)
 
     ./install_arch -r sda -R 40 -s sdb -S 100 -f btrfs -k fr -l fr_FR -t Europe/Paris -h myartixuefi
 
     Example usage for BIOS install (with custom swap size):
-    (root drive,swap size,home drive,country,keyboard,locales,timezone,hostname)
+    (root drive,swap size,home drive,filesystem,keyboard,locales,timezone,hostname)
 
     ./install_arch -r sda -x 12 -s sdb -f ext4 -k fr -l fr_FR -t Europe/Paris -h myartixbios
 
@@ -60,9 +59,8 @@ USAGE
 fi
 
 # Parse command line arguments
-while getopts "c:D:f:h:k:l:r:R:s:S:x:t:" opt; do
+while getopts "D:f:h:k:l:r:R:s:S:x:t:" opt; do
     case $opt in
-        c) country="$OPTARG" ;;
         D)
             echo -e " \n${g}Available disks:\n${c}"
             lsblk -I 8 -d -o NAME,SIZE,MODEL
@@ -87,7 +85,6 @@ while getopts "c:D:f:h:k:l:r:R:s:S:x:t:" opt; do
 done
 
 # Set defaults if not given
-country=${country:-"United States"}
 fs_type=${fs_type:-ext4}
 hostname=${hostname:-archlinux}
 keyboard_layout=${keyboard_layout:-us}
@@ -170,9 +167,6 @@ partitionDisk() {
         fi
     }
 
-    echo "${g}Debug: Refreshing partition table...${c}"
-    partprobe "$root_disk"
-    [[ -n $home_disk ]] && partprobe "$home_disk"
     sleep 2 # Give the kernel some time to process
 }
 
