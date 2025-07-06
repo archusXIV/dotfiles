@@ -28,7 +28,7 @@ if [[ $# -eq 0 ]]; then
              Arch Linux Installation Script by archusXIV
     ==============================================================
         Do not add swap in UEFI mode, zram0 will be configured
-
+    ==============================================================
     Available options:
     -c <country>         Set your actual location (default: United States)
     -D all               List all present disks for decision making
