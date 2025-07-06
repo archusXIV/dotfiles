@@ -47,12 +47,12 @@ if [[ $# -eq 0 ]]; then
     Example usage for UEFI install (with default swap size):
     (root drive,root size,home drive,home size,filesystem,keyboard,locales,timezone,hostname)
 
-    ./install_arch -r sda -R 40 -s sdb -S 100 -f btrfs -k fr -l fr_FR -t Europe/Paris -h myartixuefi
+    ./install_artix_base -r sda -R 40 -s sdb -S 100 -f btrfs -k fr -l fr_FR -t Europe/Paris -h myartixuefi
 
     Example usage for BIOS install (with custom swap size):
     (root drive,swap size,home drive,filesystem,keyboard,locales,timezone,hostname)
 
-    ./install_arch -r sda -x 12 -s sdb -f ext4 -k fr -l fr_FR -t Europe/Paris -h myartixbios
+    ./install_artix_base -r sda -x 12 -s sdb -f ext4 -k fr -l fr_FR -t Europe/Paris -h myartixbios
 
 USAGE
     exit 1
