@@ -38,10 +38,10 @@ if [[ $# -eq 0 ]]; then
     -k <kbd layout>      Set your keyboard layout (default: us)
     -l <locales>         Set system locales (default: en_US)
     -r <root disk>       Set the system disk (default: sda)
-    -R <root size>       Set the system disk size in GB (default: 30G)
+    -R <root size>       Set the system disk size in GB (default: 30)
     -s <home disk>       Set the home disk for /home (optional: sdX)
     -S <home size>       Set the home disk size in GB (uses remaining space if not set)
-    -x <swap size>       Set the swap size in GB for BIOS install (default: 4G)
+    -x <swap size>       Set the swap size in GB (default: 4)
     -t <Region/Capital>  Set timezone (default: UTC)
 
     Example usage for UEFI install (with default swap size):
