@@ -53,7 +53,7 @@ if [[ $# -eq 0 ]]; then
     Example usage for BIOS install (with swap custom size):
     (root drive,swap size,home drive,country,keyboard,locales,timezone,hostname)
 
-    ./install_arch -r sda -x 12 -s sdb -f ext4 -c France -k fr -l fr_FR -t Europe/Paris -h myartixbios
+    ./install_arch -r sda -x 12 -s sdb -f ext4 -k fr -l fr_FR -t Europe/Paris -h myartixbios
 
 USAGE
     exit 1
