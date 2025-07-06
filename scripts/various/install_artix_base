@@ -7,7 +7,8 @@
 #
 # This script automates the installation of Artix Linux with the following features:
 # - Important: It must be run from an Artix Linux iso image!!!
-# - Supports both UEFI and BIOS systems.
+# - Supports both UEFI and BIOS systems, btrfs, xfs and ext4 file systems.
+# - For btrfs file system you will have the create your subvolumes yourself.
 # - Configurable disk partitioning with option for separate /home partition.
 # - Customizable keyboard layout, locale, timezone and hostname.
 # - Automatic mirror selection based on response rate and package database update.
