@@ -2,7 +2,7 @@
 
 # Author: Barret E <https://github.com/archusXIV/>
 # Creation date: 2025-07-03
-# Script name: install_artix_base openrc version 1.1.0
+# Script name: install_artix_base openrc version 1.1.2
 # License: GPLv2
 #
 # This script automates the installation of Artix Linux with the following features:
@@ -36,6 +36,7 @@ if [[ $# -eq 0 ]]; then
     -f <filesystem type> Set the filesystem type (ext4, btrfs, xfs, default: ext4)
     -h <name>            Set hostname (default: archlinux)
     -k <kbd layout>      Set your keyboard layout (default: us)
+    -K <kernel name>     Set the kernel name: linux, linux-hardened, linux-zen (default: linux)
     -l <locales>         Set system locales (default: en_US)
     -r <root disk>       Set the system disk (default: sda)
     -R <root size>       Set the system disk size in GB (default: 30)
@@ -59,7 +60,7 @@ USAGE
 fi
 
 # Parse command line arguments
-while getopts "D:f:h:k:l:r:R:s:S:x:t:" opt; do
+while getopts "D:f:h:k:K:l:r:R:s:S:x:t:" opt; do
     case $opt in
         D)
             echo -e " \n${g}Available disks:\n${c}"
@@ -70,6 +71,7 @@ while getopts "D:f:h:k:l:r:R:s:S:x:t:" opt; do
         f) fs_type="${OPTARG}" ;;
         h) hostname="${OPTARG}" ;;
         k) keyboard_layout="${OPTARG}" ;;
+        K) kernel_name="${OPTARG}" ;;
         l) locale="${OPTARG}" ;;
         r) root_disk="${OPTARG}" ;;
         R) root_size="${OPTARG}" ;;
@@ -87,6 +89,7 @@ done
 # Set defaults if not given
 fs_type=${fs_type:-ext4}
 hostname=${hostname:-archlinux}
+kernel_name=${kernel_name:-linux}
 keyboard_layout=${keyboard_layout:-us}
 locale=${locale:-en_US}
 root_disk=${root_disk:-sda}
@@ -187,15 +190,10 @@ setupPartitions() {
     if [[ $is_uefi -eq 0 ]]; then
         echo "${g}Debug: Setting up UEFI partitions...${c}"
         mkfs.fat -F32 "${root_disk}1" || errorDisk "format_efi"
-        if fdisk -l | grep -wq 'Linux swap'; then
-            mkfs."${fs_type}" "${root_disk}3" || errorDisk "format_root"
-            mount "${root_disk}3" /mnt || errorDisk "mount_root"
-            mkswap "${root_disk}2" || errorDisk "create_swap"
-            swapon "${root_disk}2" || errorDisk "enable_swap"
-        else
-            mkfs."${fs_type}" "${root_disk}2" || errorDisk "format_root"
-            mount "${root_disk}2" /mnt || errorDisk "mount_root"
-        fi
+        mkfs."${fs_type}" "${root_disk}3" || errorDisk "format_root"
+        mount "${root_disk}3" /mnt || errorDisk "mount_root"
+        mkswap "${root_disk}2" || errorDisk "create_swap"
+        swapon "${root_disk}2" || errorDisk "enable_swap"
         mkdir -p /mnt/boot/efi || errorDisk "create_efi_mount"
         mount "${root_disk}1" /mnt/boot/efi || errorDisk "mount_efi"
     else
@@ -225,7 +223,10 @@ setupPartitions() {
 
 installBaseSystem() {
 
-    declare -a EXTRA=()
+    declare -a EXTRA=(
+        "less" "pacman-contrib" "ranger" "vim"
+        "networkmanager" "networkmanager-openrc"
+    )
     [[ $is_uefi -eq 0 ]] && EXTRA+=("efibootmgr")
     [[ $fs_type == "btrfs" ]] && EXTRA+=("btrfs-progs")
     [[ $fs_type == "xfs" ]] && EXTRA+=("xfsprogs")
@@ -238,19 +239,15 @@ installBaseSystem() {
         dosfstools \
         ${EXTRA[@]} \
         elogind-openrc \
-        less \
-        linux \
-        linux-headers \
+        "${kernel_name}" \
+        "${kernel_name}"-headers \
         linux-firmware \
-        networkmanager \
-        networkmanager-openrc \
-        openrc \
-        pacman-contrib \
-        ranger \
-        vim
+        openrc
+
     fstabgen -U /mnt >> /mnt/etc/fstab
     cp -f /etc/pacman.conf /mnt/etc/pacman.conf
     cp -f /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
+
 }
 
 configureSystem() {
