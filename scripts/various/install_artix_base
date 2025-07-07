@@ -167,6 +167,9 @@ partitionDisk() {
         fi
     }
 
+    echo "${g}Debug: Refreshing partition table...${c}"
+    partprobe "$root_disk"
+    [[ -n $home_disk ]] && partprobe "$home_disk"
     sleep 2 # Give the kernel some time to process
 }
 
@@ -385,7 +388,7 @@ read -rp "Do you want to continue? (y/N) " confirm
 
 rc-service ntpd start
 pacman-key --init && pacman-key --populate artix
-pacman -Syy artix-keyring pacman-contrib gdisk --noconfirm
+pacman -Syy artix-keyring pacman-contrib gdisk parted --noconfirm
 cp -f /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist_bkp
 echo " ${g}Ranking mirrolist...be patient${c}"
 rankmirrors -n 10 /etc/pacman.d/mirrorlist_bkp > /etc/pacman.d/mirrorlist
