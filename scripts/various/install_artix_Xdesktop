@@ -86,9 +86,9 @@ declare -a XLIBREVIDEO=(
     "xlibre-xf86-video-intel"
     "xlibre-xf86-video-nouveau"
     "xlibre-xf86-video-qxl"
-    "xlibre-xf86-video-sysusb"
+    "xlibre-xf86-video-sisusb"
     "xlibre-xf86-video-vesa"
-    "xlibre-xf86-video-wmware"
+    "xlibre-xf86-video-vmware"
     "xlibre-xf86-video-voodoo"
 )
 
