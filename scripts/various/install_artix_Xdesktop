@@ -1,0 +1,123 @@
+#!/usr/bin/env bash
+
+# Author: Barret E <https://github.com/archusXIV/>
+# Creation date: 2025-07-07
+# Script name: install_artix_Xdesktop version 1.0.0
+# License: GPLv2
+#
+# This script automates the installation of Artix Linux Xorg/Xlibre:
+# - Important: It must be run as root!!!
+# - Safety check internet connectivity.
+
+# shellcheck disable=SC2068,SC2145
+
+[[ $(whoami) != "root" ]] && {
+    echo "This script must be run as root...exiting"
+    exit 1
+}
+
+# Some colors
+r=$'\e[31m'
+g=$'\e[32m'
+c=$'\e[0m'
+
+# Display usage information if no arguments provided
+if [[ $# -eq 0 ]]; then
+    echo ""
+    cat <<'USAGE'
+     Artix Linux Desktop Installation Script by archusXIV
+    ======================================================
+    IMPORTANT, IF YOU DO NOT WANT TO INSTALL XLIBRE SERVER
+    PLEASE USE '-x xorg', THE DEFAULT IS 'xlibre-xserver'!
+    ======================================================
+    Available options:
+    -k <kbd layout> Set your desktop keyboard layout (default: us)
+    -p <yes/no>     Enter 'yes' if your want to install extra packages,
+                    you will be prompt to enter their names,
+                    enter 'no' if you only want xorg/xlibre installed.
+    -t <terminal>   Set your terminal application name (default: alacritty)
+    -x <X server>   Set the X server (default: xlibre-xserver)
+
+    Example usage:
+    ./install_artix_Xdesktop -x xorg -k fr -p yes -t rxvt-unicode
+USAGE
+    exit 1
+fi
+
+# Parse command line arguments
+while getopts "k:p:t:x:" opt; do
+    case $opt in
+        k) keyboard_layout="${OPTARG}" ;;
+        p) extra_packages="${OPTARG}" ;;
+        t) term="${OPTARG}" ;;
+        x) xserver="${OPTARG}" ;;
+        \?)
+            echo "${r}Invalid option -${OPTARG}${c}" >&2
+            exit 1
+        ;;
+    esac
+done
+
+# Set defaults if not given
+extra_packages=${extra_packages:-no}
+keyboard_layout=${keyboard_layout:-us}
+term=${term:-alacritty}
+xserver=${xserver:-xlibre}
+
+[[ $extra_packages == "yes" ]] && {
+    read -r -p " ${g}Extra packages to install: ${c}" extra_packages
+}
+
+declare -a XLIBREINPUT=(
+    "xlibre-xf86-input-elographics"
+    "xlibre-xf86-input-evdev"
+    "xlibre-xf86-input-libinput"
+    "xlibre-xf86-input-synaptics"
+    "xlibre-xf86-input-vmmouse"
+    "xlibre-xf86-input-void"
+    "xlibre-xf86-input-wacom"
+)
+
+declare -a XLIBREVIDEO=(
+    "xlibre-xf86-video-amdgpu"
+    "xlibre-xf86-video-ati"
+    "xlibre-xf86-video-dummy"
+    "xlibre-xf86-video-fbdev"
+    "xlibre-xf86-video-intel"
+    "xlibre-xf86-video-nouveau"
+    "xlibre-xf86-video-qxl"
+    "xlibre-xf86-video-sysusb"
+    "xlibre-xf86-video-vesa"
+    "xlibre-xf86-video-wmware"
+    "xlibre-xf86-video-voodoo"
+)
+
+# Check internet connectivity
+ping -c 1 artix.org >/dev/null 2>&1 || {
+    echo "${r}No internet connection! Please connect to the internet first.${c}"
+    exit 1
+}
+
+if [[ $xserver == "xorg" ]]; then
+    pacman -Syu --noconfirm \
+        xorg xorgproto \
+        mesa ${extra_packages[@]} \
+        "${term}" --needed
+else
+    sed -i 's/#\[galaxy-gremlins\]/\[galaxy-gremlins\]/' /etc/pacman.conf
+    sed -i 's/#Include = \/etc\/pacman.d\/mirrorlist/Include = \/etc\/pacman.d\/mirrorlist/' \
+    /etc/pacman.conf
+    pacman -Syyu --noconfirm \
+        mesa \
+        xlibre \
+        ${XLIBREINPUT[@]} \
+        ${XLIBREVIDEO[@]} \
+        ${extra_packages[@]} \
+        xorg-{setxkbmap,xev,xkill,xmodmap,xprop,xinit,xrandr,xrdb,xset,xsetroot} \
+        "${term}" --needed
+fi
+
+echo " ${g}Rebooting the system...${c}"
+sleep 2
+shutdown -r now
+
