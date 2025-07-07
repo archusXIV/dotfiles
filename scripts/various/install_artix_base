@@ -46,9 +46,9 @@ if [[ $# -eq 0 ]]; then
     -t <Region/Capital>  Set timezone (default: UTC)
 
     Example usage for UEFI install (with default swap size):
-    (root drive,root size,home drive,home size,filesystem,keyboard,locales,timezone,hostname)
+    (root drive,root size,home drive,home size,filesystem,keyboard,kernel name,locales,timezone,hostname)
 
-    ./install_artix_base -r sda -R 40 -s sdb -S 100 -f btrfs -k fr -l fr_FR -t Europe/Paris -h myartixuefi
+    ./install_artix_base -r sda -R 40 -s sdb -S 100 -f btrfs -k fr -K linux-zen -l fr_FR -t Europe/Paris -h myartixuefi
 
     Example usage for BIOS install (with custom swap size):
     (root drive,swap size,home drive,filesystem,keyboard,locales,timezone,hostname)
