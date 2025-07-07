@@ -6,12 +6,13 @@
 # License: GPLv2
 #
 # This script automates the installation of Arch Linux with the following features:
-# - Supports both UEFI and BIOS systems.
+# - Supports both UEFI and BIOS systems, btrfs, xfs and ext4 file systems.
+# - For btrfs file system you will have the create your subvolumes yourself.
 # - Configurable disk partitioning with option for separate /home partition.
 #   and custom root/home disk/swap* size if needed (*only for BIOS install).
 # - Customizable keyboard layout, locale, timezone and hostname.
 # - Automatic mirror selection based on response rate and package database update.
-# - Installation of base system packages (minimal) and bootloader.
+# - Installation of base system packages (minimal) and bootloader (grub).
 # - Network configuration via NetworkManager.
 # - Root password setup during installation.
 # - Safety checks for live environment and internet connectivity.
@@ -30,11 +31,12 @@ if [[ $# -eq 0 ]]; then
         Do not add swap in UEFI mode, zram0 will be configured
     ==============================================================
     Available options:
-    -c <country>         Set your actual location (default: United States)
+    -c <country>         Set your actual location (default: "United States")
     -D all               List all present disks for decision making
     -f <filesystem type> Set the filesystem type (ext4, btrfs, xfs, default: ext4)
     -h <name>            Set hostname (default: archlinux)
     -k <kbd layout>      Set your keyboard layout (default: us)
+    -K <kernel name>     Set the kernel name: linux, linux-hardened, linux-zen (default: linux)
     -l <locales>         Set system locales (default: en_US)
     -r <root disk>       Set the system disk (default: sda)
     -R <root size>       Set the system disk size in GB (default: 30)
@@ -46,7 +48,7 @@ if [[ $# -eq 0 ]]; then
     Example usage for UEFI install (no swap):
     (root drive,root size,home drive,home size,country,keyboard,locales,timezone,hostname)
 
-    ./install_arch -r sda -R 40 -s sdb -S 100 -f btrfs -c France -k fr -l fr_FR -t Europe/Paris -h myarchuefi
+    ./install_arch -r sda -R 40 -s sdb -S 100 -f btrfs -K linux-zen -c France -k fr -l fr_FR -t Europe/Paris -h myarchuefi
 
     Example usage for BIOS install (with swap size):
     (root drive,swap size,home drive,country,keyboard,locales,timezone,hostname)
@@ -58,7 +60,7 @@ USAGE
 fi
 
 # Parse command line arguments
-while getopts "c:D:f:h:k:l:r:R:s:S:x:t:" opt; do
+while getopts "c:D:f:h:k:K:l:r:R:s:S:x:t:" opt; do
     case $opt in
         c) country="$OPTARG" ;;
         D)
@@ -70,6 +72,7 @@ while getopts "c:D:f:h:k:l:r:R:s:S:x:t:" opt; do
         f) fs_type="${OPTARG}" ;;
         h) hostname="${OPTARG}" ;;
         k) keyboard_layout="${OPTARG}" ;;
+        K) kernel_name="${OPTARG}" ;;
         l) locale="${OPTARG}" ;;
         r) root_disk="${OPTARG}" ;;
         R) root_size="${OPTARG}" ;;
@@ -88,6 +91,7 @@ done
 country=${country:-"United States"}
 fs_type=${fs_type:-ext4}
 hostname=${hostname:-archlinux}
+kernel_name=${kernel_name:-linux}
 keyboard_layout=${keyboard_layout:-us}
 locale=${locale:-en_US}
 root_disk=${root_disk:-sda}
@@ -234,13 +238,17 @@ installBaseSystem() {
         --sort rate \
         --save /etc/pacman.d/mirrorlist
 
+    pacman-key --init && pacman-key --populate archlinux
     pacman -Syy archlinux-keyring pacman-contrib --noconfirm
     cp -f /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist_bkp
     echo "${g}Ranking mirrolist...be patient${c}"
     rankmirrors -n 10 /etc/pacman.d/mirrorlist_bkp > /etc/pacman.d/mirrorlist
-    pacman -Syy
 
-    declare -a EXTRA=()
+    declare -a EXTRA=(
+        "less" "pacman-contrib" "networkmanager"
+        "ranger" "reflector" "vim" "zram-generator"
+    )
+
     [[ $is_uefi -eq 0 ]] && EXTRA+=("efibootmgr")
     [[ $fs_type == "btrfs" ]] && EXTRA+=("btrfs-progs")
     [[ $fs_type == "xfs" ]] && EXTRA+=("xfsprogs")
@@ -249,15 +257,11 @@ installBaseSystem() {
     pacstrap -K /mnt \
         base \
         base-devel \
+        dosfstools \
         ${EXTRA[@]} \
-        less \
-        linux \
-        linux-firmware \
-        pacman-contrib \
-        ranger \
-        reflector \
-        vim \
-        zram-generator
+        "${kernel_name}" \
+        "${kernel_name}"-headers \
+        linux-firmware
     genfstab -U /mnt >> /mnt/etc/fstab
     cp -f /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
 }
@@ -295,7 +299,6 @@ sed -i 's/^MODULES=()/MODULES=(sd_mod ahci)/' /etc/mkinitcpio.conf
 sed -i 's/^#MODULES_DECOMPRESS="no"/MODULES_DECOMPRESS="yes"/' /etc/mkinitcpio.conf
 mkinitcpio -P
 
-pacman -S --noconfirm networkmanager
 systemctl enable NetworkManager
 
 echo "Set the root password:"
