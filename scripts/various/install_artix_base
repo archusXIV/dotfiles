@@ -227,6 +227,7 @@ installBaseSystem() {
         "less" "pacman-contrib" "ranger" "vim"
         "networkmanager" "networkmanager-openrc"
     )
+
     [[ $is_uefi -eq 0 ]] && EXTRA+=("efibootmgr")
     [[ $fs_type == "btrfs" ]] && EXTRA+=("btrfs-progs")
     [[ $fs_type == "xfs" ]] && EXTRA+=("xfsprogs")
@@ -344,7 +345,9 @@ fi
 }
 
 grub-mkconfig -o /boot/grub/grub.cfg
-
+echo "Downloading X desktop installation script in /root."
+curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/refs/heads/main/scripts/various/install_artix_Xdesktop" -O
+chmod +x install_artix_Xdesktop
 exit
 EOF
     chmod +x /mnt/root/configure.sh
@@ -408,10 +411,6 @@ installBaseSystem
 
 echo "${g}Configuring system...${c}"
 configureSystem "$is_uefi" "$root_disk"
-echo "${g}Downloading X desktop installation script in /root.${c}"
-artix-chroot /mnt/root && \
-curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/refs/heads/main/scripts/various/install_artix_Xdesktop" -O
-chmod +x install_artix_Xdesktop
 
 echo "${g}Unmounting partitions...${c}"
 umount -R /mnt
