@@ -37,7 +37,6 @@ if [[ $# -eq 0 ]]; then
     PLEASE USE '-x xorg', THE DEFAULT IS 'xlibre-xserver'!
     ======================================================
     Available options:
-    -k <kbd layout> Set your desktop keyboard layout (default: us)
     -p <yes/no>     Enter 'yes' if your want to install extra packages,
                     you will be prompt to enter their names,
                     enter 'no' if you only want xorg/xlibre installed.
@@ -51,9 +50,8 @@ USAGE
 fi
 
 # Parse command line arguments
-while getopts "k:p:t:x:" opt; do
+while getopts "p:t:x:" opt; do
     case $opt in
-        k) keyboard_layout="${OPTARG}" ;;
         p) extra_packages="${OPTARG}" ;;
         t) term="${OPTARG}" ;;
         x) xserver="${OPTARG}" ;;
@@ -66,7 +64,6 @@ done
 
 # Set defaults if not given
 extra_packages=${extra_packages:-no}
-keyboard_layout=${keyboard_layout:-us}
 term=${term:-alacritty}
 xserver=${xserver:-xlibre}
 
