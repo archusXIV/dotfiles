@@ -7,7 +7,7 @@
 #
 # This script automates the installation of Artix Linux Xorg/Xlibre:
 # - Important: It must be run as root!!!
-# - Safety check internet connectivity.
+# - Safety check root account and internet connectivity.
 
 # shellcheck disable=SC2068,SC2145
 # Some colors
@@ -31,7 +31,7 @@ ping -c 1 artix.org >/dev/null 2>&1 || {
 if [[ $# -eq 0 ]]; then
     echo ""
     cat <<'USAGE'
-     Artix Linux Desktop Installation Script by archusXIV
+     Artix Linux Xserver Installation Script by archusXIV
     ======================================================
     IMPORTANT, IF YOU DO NOT WANT TO INSTALL XLIBRE SERVER
     PLEASE USE '-x xorg', THE DEFAULT IS 'xlibre-xserver'!
@@ -74,6 +74,7 @@ xserver=${xserver:-xlibre}
 echo ""
 read -rp " ${g}Do you want to add a user now? [Y/n]: ${c}" create_user
 read -rp " ${g}Enter a user name: ${c}" user_name
+
 case "${create_user}" in
     [yY])
         useradd -m -G wheel,audio,video,storage -s /bin/bash "${user_name}"
@@ -89,31 +90,10 @@ case "${create_user}" in
     ;;
 esac
 
-declare -a XLIBREINPUT=(
-    "xlibre-xf86-input-elographics"
-    "xlibre-xf86-input-evdev"
-    "xlibre-xf86-input-libinput"
-    "xlibre-xf86-input-synaptics"
-    "xlibre-xf86-input-vmmouse"
-    "xlibre-xf86-input-void"
-    "xlibre-xf86-input-wacom"
-)
-
-declare -a XLIBREVIDEO=(
-    "xlibre-xf86-video-amdgpu"
-    "xlibre-xf86-video-ati"
-    "xlibre-xf86-video-dummy"
-    "xlibre-xf86-video-fbdev"
-    "xlibre-xf86-video-intel"
-    "xlibre-xf86-video-nouveau"
-    "xlibre-xf86-video-qxl"
-    "xlibre-xf86-video-vesa"
-    "xlibre-xf86-video-vmware"
-)
-
 if [[ $xserver == "xorg" ]]; then
     pacman -Syu --noconfirm \
-        xorg xorgproto \
+        xorg \
+        xorgproto \
         mesa ${extra_packages[@]} \
         "${term}" --needed
 else
@@ -123,13 +103,12 @@ else
     pacman -Syyu --noconfirm \
         mesa \
         xlibre \
-        ${XLIBREINPUT[@]} \
-        ${XLIBREVIDEO[@]} \
-        ${extra_packages[@]} \
+        xlibre-xf86-input-{elographics,evdev,libinput,synaptics,vmmouse,void,wacom} \
+        xlibre-xf86-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,qxl,vesa,vmware} \
         xorg-{setxkbmap,xev,xkill,xmodmap,xprop,xinit,xrandr,xrdb,xset,xsetroot} \
-        "${term}" --needed
+        ${extra_packages[@]} "${term}" --needed
 fi
 
 echo " ${g}Rebooting the system...${c}"
-sleep 2
+read -r -t 2
 shutdown -r now
