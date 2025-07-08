@@ -41,10 +41,10 @@ if [[ $# -eq 0 ]]; then
                     you will be prompt to enter their names,
                     enter 'no' if you only want xorg/xlibre installed.
     -t <terminal>   Set your terminal application name (default: alacritty)
-    -x <X server>   Set the X server (default: xlibre-xserver)
+    -x <X server>   Set the X server (default: xlibre)
 
     Example usage:
-    ./install_artix_Xdesktop -x xorg -k fr -p yes -t rxvt-unicode
+    ./install_artix_Xdesktop -x xorg -p yes -t rxvt-unicode
 USAGE
     exit 1
 fi
