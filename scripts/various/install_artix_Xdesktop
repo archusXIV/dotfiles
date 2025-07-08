@@ -82,7 +82,8 @@ case "${create_user}" in
         passwd "${user_name}"
         echo " ${g}${user_name} account created.${c}"
         echo " ${g}Do not forget to give ${user_name} sudo privileges.${c}"
-        read -r -t 5
+        read -r -t 3
+        EDITOR=vim visudo
     ;;
     *)
         echo " ${r}No user account created.${c}"
