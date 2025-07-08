@@ -34,7 +34,7 @@ if [[ $# -eq 0 ]]; then
      Artix Linux Xserver Installation Script by archusXIV
     ======================================================
     IMPORTANT, IF YOU DO NOT WANT TO INSTALL XLIBRE SERVER
-    PLEASE USE '-x xorg', THE DEFAULT IS 'xlibre-xserver'!
+    PLEASE USE '-x xorg', THE DEFAULT IS 'xlibre'!
     ======================================================
     Available options:
     -p <yes/no>     Enter 'yes' if your want to install extra packages,
@@ -81,7 +81,7 @@ case "${create_user}" in
         echo " ${g}Enter ${user_name} a password: ${c}"
         passwd "${user_name}"
         echo " ${g}${user_name} account created.${c}"
-        echo " ${g}Do not forget to give ${user_name} sudo privileges.${c}"
+        echo " ${g}Give ${user_name} sudo privileges.${c}"
         read -r -t 3
         EDITOR=vim visudo
     ;;
@@ -92,22 +92,21 @@ case "${create_user}" in
 esac
 
 if [[ $xserver == "xorg" ]]; then
-    pacman -Syu --noconfirm \
-        xorg \
-        xorgproto \
-        mesa ${extra_packages[@]} \
-        "${term}" --needed
+    pacman -Syu \
+    xorg \
+    xorgproto \
+    mesa ${extra_packages[@]} \
+    "${term}" --noconfirm --needed
 else
     sed -i 's/^#\[galaxy-gremlins\]/\[galaxy-gremlins\]/' /etc/pacman.conf
     sed -i '/\[galaxy-gremlins\]$/{n;s/^#Include = \/etc\/pacman.d\/mirrorlist/Include = \/etc\/pacman.d\/mirrorlist/}' \
     /etc/pacman.conf
-    pacman -Syyu --noconfirm \
-        mesa \
-        xlibre \
-        xlibre-xf86-input-{elographics,evdev,libinput,synaptics,vmmouse,void,wacom} \
-        xlibre-xf86-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,qxl,vesa,vmware} \
-        xorg-{setxkbmap,xev,xkill,xmodmap,xprop,xinit,xrandr,xrdb,xset,xsetroot} \
-        ${extra_packages[@]} "${term}" --needed
+    pacman -Syyu \
+    xlibre \
+    xlibre-xf86-input-{elographics,evdev,libinput,synaptics,vmmouse,void,wacom} \
+    xlibre-xf86-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,qxl,vesa,vmware} \
+    xorg-{setxkbmap,xev,xkill,xmodmap,xprop,xinit,xrandr,xrdb,xset,xsetroot} \
+    ${extra_packages[@]} "${term}" mesa --noconfirm --needed
 fi
 
 echo " ${g}Rebooting the system...${c}"
