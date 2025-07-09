@@ -83,6 +83,7 @@ case "${create_user}" in
         echo " ${g}${user_name} account created.${c}"
         echo " ${g}Give ${user_name} sudo privileges now.${c}"
         read -r -t 3
+	EDITOR=vim visudo
     ;;
     *)
         echo " ${r}No user account created.${c}"
@@ -99,9 +100,10 @@ if [[ $xserver == "xorg" ]]; then
 else
     # here we have to switch user to execute yay for xlibre installation
 	if [[ -n $user_name ]]; then
-		su "${user_name}"
+		# Instead of switching shells, run a command as the user:
+        su - "${user_name}" -c "
 		sudo pacman -Sy git --noconfirm
-		cd /home/"${user_name}" && {
+		cd /home/${user_name} && {
 		    git clone https://aur.archlinux.org/yay-bin && {
 		        cd yay-bin/ && makepkg -si
     	        yay -S xlibre-server-bootstrap
@@ -109,11 +111,11 @@ else
 		        yay -S xlibre-server xlibre-server-common
     	        yay -S xlibre-input-{elographics,evdev,synaptics,vmmouse,void,wacom} \
     	        xlibre-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,qxl,vesa,vmware} \
-		        mesa ${extra_packages[@]} "${term}" \
+		        mesa ${extra_packages[@]} ${term} \
     	        xorg-{setxkbmap,xev,xkill,xmodmap,xprop,xinit,xrandr,xrdb,xset,xsetroot}
 		        sudo reboot
             }
-        }
+        }"
 	fi
 fi
 
