@@ -73,7 +73,7 @@ xserver=${xserver:-xlibre}
 
 [[ $extra_packages == "yes" ]] && {
     echo -e " ${r}Do not use braces like i3{lock,status}!!!${c}\n"
-    read -rap " ${g}Extra packages to install: ${c}" extra_packages
+    read -rp " ${g}Extra packages to install: ${c}" extra_packages
 }
 
 echo ""
