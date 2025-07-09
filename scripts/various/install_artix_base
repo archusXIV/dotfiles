@@ -345,8 +345,8 @@ fi
 }
 
 grub-mkconfig -o /boot/grub/grub.cfg
-cd /root || exit 1
-echo "Downloading X desktop installation script in /root."
+cd /home || exit 1
+echo "Downloading X desktop installation script in /home."
 curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/refs/heads/main/scripts/various/install_artix_Xdesktop" -O
 chmod +x install_artix_Xdesktop
 exit
