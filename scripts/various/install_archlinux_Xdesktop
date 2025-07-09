@@ -9,4 +9,114 @@
 # - Important: It must be run as root!!!
 # - Safety check root account and internet connectivity.
 
-UNDER CONSTRUCTION
+# shellcheck disable=SC2068,SC2145
+# Some colors
+r=$'\e[31m'
+g=$'\e[32m'
+c=$'\e[0m'
+
+# Checking root account
+[[ $(whoami) != "root" ]] && {
+    echo "${r}This script must be run as root...exiting${c}"
+    exit 1
+}
+
+# Checking internet connectivity
+ping -c 1 archlinux.org >/dev/null 2>&1 || {
+    echo "${r}No internet connection! Please connect to the internet first.${c}"
+    exit 1
+}
+
+# Display usage information if no arguments provided
+if [[ $# -eq 0 ]]; then
+    echo ""
+    cat <<'USAGE'
+     Arch Linux Xserver Installation Script by archusXIV*
+    ======================================================
+    IMPORTANT, IF YOU DO NOT WANT TO INSTALL XLIBRE SERVER
+    PLEASE USE '-x xorg', THE DEFAULT IS 'xlibre-xserver'!
+    ======================================================
+    Available options:
+    -p <yes/no>     Enter 'yes' if your want to install extra packages,
+                    you will be prompt to enter their names,
+                    enter 'no' if you only want xorg/xlibre installed.
+    -t <terminal>   Set your terminal application name (default: alacritty)
+    -x <X server>   Set the X server (default: xlibre)
+
+    Example usage:
+    ./install_archlinux_Xdesktop -x xorg -p yes -t rxvt-unicode
+USAGE
+    exit 1
+fi
+
+# Parse command line arguments
+while getopts "p:t:x:" opt; do
+    case $opt in
+        p) extra_packages="${OPTARG}" ;;
+        t) term="${OPTARG}" ;;
+        x) xserver="${OPTARG}" ;;
+        \?)
+            echo "${r}Invalid option -${OPTARG}${c}" >&2
+            exit 1
+        ;;
+    esac
+done
+
+# Set defaults if not given
+extra_packages=${extra_packages:-no}
+term=${term:-alacritty}
+xserver=${xserver:-xlibre}
+
+[[ $extra_packages == "yes" ]] && {
+    read -rp " ${g}Extra packages to install: ${c}" extra_packages
+}
+
+echo ""
+read -rp " ${g}Do you want to add a user now? [Y/n]: ${c}" create_user
+read -rp " ${g}Enter a user name: ${c}" user_name
+
+case "${create_user}" in
+    [yY])
+        useradd -m -G wheel,audio,video,storage -s /bin/bash "${user_name}"
+        echo " ${g}Enter ${user_name} a password: ${c}"
+        passwd "${user_name}"
+        echo " ${g}${user_name} account created.${c}"
+        echo " ${g}Give ${user_name} sudo privileges now.${c}"
+        read -r -t 3
+    ;;
+    *)
+        echo " ${r}No user account created.${c}"
+        read -r -t 3
+    ;;
+esac
+
+if [[ $xserver == "xorg" ]]; then
+    pacman -Syu \
+    xorg \
+    xorgproto \
+    mesa ${extra_packages[@]} \
+    "${term}" --noconfirm --needed
+else
+    # here we have to switch user to execute yay for xlibre installation
+	if [[ -n $user_name ]]; then
+		su "${user_name}"
+		sudo pacman -Sy git --noconfirm
+		cd /home/"${user_name}" && {
+		    git clone https://aur.archlinux.org/yay-bin && {
+		        cd yay-bin/ && makepkg -si
+    	        yay -S xlibre-server-bootstrap
+		        yay -S xlibre-input-libinput
+		        yay -S xlibre-server xlibre-server-common
+    	        yay -S xlibre-input-{elographics,evdev,synaptics,vmmouse,void,wacom} \
+    	        xlibre-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,qxl,vesa,vmware} \
+		        mesa ${extra_packages[@]} "${term}" \
+    	        xorg-{setxkbmap,xev,xkill,xmodmap,xprop,xinit,xrandr,xrdb,xset,xsetroot}
+		        sudo reboot
+            }
+        }
+	fi
+fi
+
+echo " ${g}Rebooting the system...${c}"
+read -r -t 2
+reboot
