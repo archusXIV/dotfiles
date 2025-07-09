@@ -16,6 +16,7 @@
 # - Network configuration via NetworkManager.
 # - Root password setup during installation.
 # - Safety checks for live environment and internet connectivity.
+# - It will also download another script in /home to create a user account and to install xorg/xlibre
 
 # shellcheck disable=SC2015
 # Some colors
