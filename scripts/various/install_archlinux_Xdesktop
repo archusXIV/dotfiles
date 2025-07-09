@@ -74,10 +74,10 @@ xserver=${xserver:-xlibre}
 
 echo ""
 read -rp " ${g}Do you want to add a user now? [Y/n]: ${c}" create_user
-read -rp " ${g}Enter a user name: ${c}" user_name
 
 case "${create_user}" in
     [yY])
+        read -rp " ${g}Enter a user name: ${c}" user_name
         useradd -m -G wheel,audio,video,storage -s /bin/bash "${user_name}"
         echo " ${g}Enter ${user_name} a password: ${c}"
         passwd "${user_name}"
@@ -99,9 +99,8 @@ if [[ $xserver == "xorg" ]]; then
     mesa ${extra_packages[@]} \
     "${term}" --noconfirm --needed
 else
-    # here we have to switch user to execute yay for xlibre installation
 	if [[ -n $user_name ]]; then
-		# Instead of switching shells, run a command as the user:
+	# Instead of switching shells, run a command as the user:
         su - "${user_name}" -c "
 		    sudo pacman -Sy git --noconfirm
 		    cd /home/${user_name} && {
