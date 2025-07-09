@@ -34,7 +34,7 @@ if [[ $# -eq 0 ]]; then
      Arch Linux Xserver Installation Script by archusXIV*
     ======================================================
     IMPORTANT, IF YOU DO NOT WANT TO INSTALL XLIBRE SERVER
-    PLEASE USE '-x xorg', THE DEFAULT IS 'xlibre-xserver'!
+    PLEASE USE '-x xorg', THE DEFAULT IS 'xlibre'!
     ======================================================
     Available options:
     -p <yes/no>     Enter 'yes' if your want to install extra packages,
