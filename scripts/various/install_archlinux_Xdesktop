@@ -5,7 +5,7 @@
 # Script name: install_archlinux_Xdesktop version 1.0.1
 # License: GPLv2
 #
-# This script automates the installation of Artix Linux Xorg/Xlibre:
+# This script automates the installation of Arch Linux Xorg/Xlibre:
 # - Important: It must be run as root!!!
 # - Safety check root account and internet connectivity.
 
