@@ -74,10 +74,10 @@ xserver=${xserver:-xlibre}
 
 echo ""
 read -rp " ${g}Do you want to add a user now? [Y/n]: ${c}" create_user
-read -rp " ${g}Enter a user name: ${c}" user_name
 
 case "${create_user}" in
     [yY])
+        read -rp " ${g}Enter a user name: ${c}" user_name
         useradd -m -G wheel,audio,video,storage -s /bin/bash "${user_name}"
         echo " ${g}Enter ${user_name} a password: ${c}"
         passwd "${user_name}"
