@@ -369,6 +369,10 @@ fi
 }
 
 grub-mkconfig -o /boot/grub/grub.cfg
+echo "Downloading X desktop installation script in /home."
+cd /home || exit 1
+curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/refs/heads/main/scripts/various/install_archlinux_Xdesktop" -O
+chmod +x install_archlinux_Xdesktop
 exit
 EOF
     chmod +x /mnt/root/configure.sh
