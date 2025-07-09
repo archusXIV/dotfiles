@@ -6,7 +6,8 @@
 # License: GPLv2
 #
 # This script automates the installation of Artix Linux Xorg/Xlibre:
-# - Important: It must be run as root!!!
+# - Important:
+# - It must be run as root!!! on a fresh install of Artix Linux base.
 # - Safety check root account and internet connectivity.
 
 # shellcheck disable=SC2068,SC2145
@@ -37,11 +38,12 @@ if [[ $# -eq 0 ]]; then
     PLEASE USE '-x xorg', THE DEFAULT IS 'xlibre'!
     ======================================================
     Available options:
-    -p <yes/no>     Enter 'yes' if your want to install extra packages,
-                    you will be prompt to enter their names,
-                    enter 'no' if you only want xorg/xlibre installed.
-    -t <terminal>   Set your terminal application name (default: alacritty)
-    -x <X server>   Set the X server (default: xlibre)
+    -e <editor>   Set your editor to give sudo privileges in /etc/sudoers (default: vim)
+    -p <yes/no>   Enter 'yes' if your want to install extra packages,
+                  you will be prompt to enter their names,
+                  enter 'no' if you only want xorg/xlibre installed.
+    -t <terminal> Set your terminal application name (default: alacritty)
+    -x <X server> Set the X server (default: xlibre)
 
     Example usage:
     ./install_artix_Xdesktop -x xorg -p yes -t rxvt-unicode
@@ -50,8 +52,9 @@ USAGE
 fi
 
 # Parse command line arguments
-while getopts "p:t:x:" opt; do
+while getopts "e:p:t:x:" opt; do
     case $opt in
+        e) editor="${OPTARG}" ;;
         p) extra_packages="${OPTARG}" ;;
         t) term="${OPTARG}" ;;
         x) xserver="${OPTARG}" ;;
@@ -63,6 +66,7 @@ while getopts "p:t:x:" opt; do
 done
 
 # Set defaults if not given
+editor=${editor:-vim}
 extra_packages=${extra_packages:-no}
 term=${term:-alacritty}
 xserver=${xserver:-xlibre}
@@ -84,7 +88,11 @@ case "${create_user}" in
         echo " ${g}${user_name} account created.${c}"
         echo " ${g}Give ${user_name} sudo privileges.${c}"
         read -r -t 3
-        EDITOR=vim visudo
+        command -v "${editor}" > /dev/null || {
+            echo "${r}Please install ${editor} to continue.${c}"
+            exit 1
+        }
+        EDITOR="${editor}" visudo
     ;;
     *)
         echo " ${r}No user account created.${c}"
@@ -99,6 +107,7 @@ if [[ $xserver == "xorg" ]]; then
     mesa ${extra_packages[@]} \
     "${term}" --noconfirm --needed
 else
+    # Uncomment the galaxy-gremlins section in pacman.conf for xlibre installation
     sed -i 's/^#\[galaxy-gremlins\]/\[galaxy-gremlins\]/' /etc/pacman.conf
     sed -i '/\[galaxy-gremlins\]$/{n;s/^#Include = \/etc\/pacman.d\/mirrorlist/Include = \/etc\/pacman.d\/mirrorlist/}' \
     /etc/pacman.conf
