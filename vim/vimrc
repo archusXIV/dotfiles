@@ -1,11 +1,9 @@
-" Sane vim defaults for Arch linux
-" Arch defaults
 runtime! archlinux.vim
 
-"   system clipboard (requires +clipboard)
+" System clipboard (requires +clipboard)
 set clipboard^=unnamed,unnamedplus
 
-" additional settings
+" Additional settings
 set undodir=$XDG_DATA_HOME/vim/undo
 set directory=$XDG_DATA_HOME/vim/swap
 set backupdir=$XDG_DATA_HOME/vim/backup
@@ -13,12 +11,14 @@ set viewdir=$XDG_DATA_HOME/vim/view
 set viminfo+='1000,n$XDG_DATA_HOME/vim/viminfo
 set runtimepath=$XDG_CONFIG_HOME/vim,$VIMRUNTIME,$XDG_CONFIG_HOME/vim/after,$XDG_CONFIG_HOME/vim/colors
 set showmatch                               " when a bracket is inserted, briefly jump to the matching line
-set incsearch smartcase ignorecase hlsearch " increamental search, find as you type word
+set incsearch smartcase ignorecase hlsearch " incremental search, find as you type word
 set cursorline                              " highlight the cursor line
-set cursorcolumn                            " highlight the column line
+set scrolloff=10
+set complete+=kspell                        " autocompletion with spellcheck
+set foldmethod=manual
 set modeline                                " enable vim modelines
 set number                                  " enable line numbers
-set relativenumber                          " above & below actual position, lines start at 1 etc...
+set relativenumber                          " relative line numbers
 set confirm                                 " ask confirmation like save before quit.
 set wildmenu                                " Tab completion menu when using command mode
 set expandtab                               " Tab key inserts spaces not tabs
@@ -27,22 +27,28 @@ set shiftwidth=4                            " amount of spaces for indentation
 set shortmess+=aAcIws                       " Hide or shorten certain messages
 set splitbelow splitright                   " split on the right instead of below
 set rtp+=/usr/lib/python3.13/site-packages/powerline/bindings/vim
-set wildmode=longest,list,full " Enable autocompletion ctrl+n to activate
+set wildmode=longest,list,full              " Enable autocompletion ctrl+n to activate
 
-let g:netrw_banner=0
-let g:netrw_altv=1
-let g:netrw_liststyle=3
-let g:netrw_browse_split=4
-let g:netrw_list_hide=netrw_gitignore#Hide()
-let g:netrw_list_hide.=',\(^\|\s\s\)\zs\.\S+'
+let g:netrw_banner = 0
+let g:netrw_altv = 1
+let g:netrw_liststyle = 3
+let g:netrw_browse_split = 4
+
+" NERDTree config
+let g:NERDTreeChDirMode     = 2
+let g:NERDTreeIgnore        = ['\~$', '\.swp$', '\.o$', '\.hi$']
+let g:NERDTreeSortOrder     = ['^__\.py$', '\/$', '*', '\~$']
+let g:NERDTreeShowBookmarks = 1
+let g:NERDTreeMinimalUI     = 1
+nnoremap <silent> <F9> :NERDTreeToggle<CR>
+
 let g:powerline_pycmd="py3"
 let g:indentLine_color_term = 21
-let g:indentLine_color_tty_light = 7 "
-let g:indentLine_color_dark = 1 "
+let g:indentLine_color_tty_light = 7
+let g:indentLine_color_dark = 1
 let g:indentLine_char_list = ['|', '¦', '┆', '┊']
 
 " ------ leader mapping ------
-
 let g:mapleader = "\<Space>"
 
 " ------ enable additional features ------
@@ -50,118 +56,126 @@ let g:mapleader = "\<Space>"
 " enable mouse
 set mouse=a
 if has('mouse_sgr')
-    " sgr mouse is better but not every term supports it
     set ttymouse=sgr
 endif
 
-" syntax highlighting
-syntax enable
-
+syntax on
 set linebreak breakindent
 set list listchars=tab:>>,trail:~
 
 " COLORSCHEMES
-" jinx - midnight, night, or day
-" codeschool
-" archlinux
-" seti
-" tokyonight
-" nord
-" xcodedark
-" bubblegum-256-dark
-" atom-dark
-" tender
-" jellybeans
-" OceanicNext
-" gruvbox-material
-" habamax
-" koehler
-" lunaperche
-
 try
-    colorscheme jellybeans
-
+    colorscheme OceanicNext
 catch
     colorscheme slate
-
 endtry
 
-" Always show statusline
+augroup CustomCursorLine
+    au!
+    au VimEnter * :hi CursorLine cterm=underline
+augroup END
+
 set laststatus=2
-
-" Use 256 colours (Use this setting only if your terminal supports 256 colours)
-set t_Co=256
-
-syntax on
+set termguicolors
 let g:rehash256 = 1
-
-" Uncomment to prevent non-normal modes showing in powerline and below powerline.
 set noshowmode
 
 " Plugins
 call plug#begin()
-" The default plugin directory will be as follows:
-"   - Vim (Linux/macOS): '~/.vim/plugged'
-"   - Vim (Windows): '~/vimfiles/plugged'
-"   - Neovim (Linux/macOS/Windows): stdpath('data') . '/plugged'
-" You can specify a custom plugin directory by passing it as the argument
-"   - e.g. `call plug#begin('~/.vim/plugged')`
-"   - Avoid using standard Vim directory names like 'plugin'
-" AirLine Stuff
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
-
-" LSP server
 Plug 'prabirshrestha/vim-lsp'
 Plug 'mattn/vim-lsp-settings'
-
-" Autocomplet
-
-" Shorthand notation; fetches https://github.com/junegunn/vim-easy-align
+" Asyncomplete and its sources
+Plug 'prabirshrestha/asyncomplete.vim'
+Plug 'prabirshrestha/asyncomplete-lsp.vim'
+Plug 'prabirshrestha/asyncomplete-buffer.vim'
+Plug 'prabirshrestha/asyncomplete-file.vim'
+Plug 'prabirshrestha/asyncomplete-ultisnips.vim'
+Plug 'prabirshrestha/asyncomplete-tags.vim'
 Plug 'junegunn/vim-easy-align'
-
-" On-demand loading
 Plug 'preservim/nerdtree', { 'on': 'NERDTreeToggle' }
-
-" Initialize plugin system
-" - Automatically executes `filetype plugin indent on` and `syntax enable`.
 call plug#end()
 
-""""" Bash-Language-Server """""
+" Asyncomplete Setup
+let g:asyncomplete_auto_popup = 1
+let g:asyncomplete_auto_completeopt = 1
+set completeopt=menuone,noinsert,noselect,preview
+
+" Only register sources if they are loaded
+if exists('g:asyncomplete_buffer_loaded')
+    au User asyncomplete_setup call asyncomplete#register_source(asyncomplete#sources#buffer#get_source_options({
+        \ 'name': 'buffer',
+        \ 'allowlist': ['*'],
+        \ 'priority': 10,
+        \ 'completor': function('asyncomplete#sources#buffer#completor')
+        \ }))
+endif
+
+if exists('g:asyncomplete_file_loaded')
+    au User asyncomplete_setup call asyncomplete#register_source(asyncomplete#sources#file#get_source_options({
+        \ 'name': 'file',
+        \ 'allowlist': ['*'],
+        \ 'priority': 10,
+        \ 'completor': function('asyncomplete#sources#file#completor')
+        \ }))
+endif
+
+" Bash Language Server
 if executable('bash-language-server')
     augroup LspBash
         autocmd!
         autocmd User lsp_setup call lsp#register_server({
             \ 'name': 'bash-language-server',
             \ 'cmd': {server_info->[&shell, &shellcmdflag, 'bash-language-server start']},
-            \ 'allowlist': ['sh'],
+            \ 'allowlist': ['sh', 'bash'],
             \ })
     augroup END
 endif
 
-""""" AirLine stuff """""
+function! s:on_lsp_buffer_enabled() abort
+    setlocal omnifunc=lsp#complete
+    setlocal signcolumn=yes
+    if exists('+tagfunc') | setlocal tagfunc=lsp#tagfunc | endif
+    nmap <buffer> gd <plug>(lsp-definition)
+    nmap <buffer> gs <plug>(lsp-document-symbol-search)
+    nmap <buffer> gS <plug>(lsp-workspace-symbol-search)
+    nmap <buffer> gr <plug>(lsp-references)
+    nmap <buffer> gi <plug>(lsp-implementation)
+    nmap <buffer> gt <plug>(lsp-type-definition)
+    nmap <buffer> <leader>rn <plug>(lsp-rename)
+    nmap <buffer> [g <plug>(lsp-previous-diagnostic)
+    nmap <buffer> ]g <plug>(lsp-next-diagnostic)
+    nmap <buffer> K <plug>(lsp-hover)
+    nnoremap <buffer> <expr><c-f> lsp#scroll(+4)
+    nnoremap <buffer> <expr><c-d> lsp#scroll(-4)
+    let g:lsp_format_sync_timeout = 1000
+    autocmd! BufWritePre *.sh call execute('LspDocumentFormatSync')
+endfunction
+
+" AirLine config
 let g:airline_powerline_fonts = 1
 let g:airline#extensions#tabline#enabled = 1
-let g:airline_theme='jellybeans'
-" powerline symbols
+let g:airline_theme='base16_oceanicnext'
 if !exists('g:airline_symbols')
-  let g:airline_symbols = {}
+    let g:airline_symbols = {}
+    let g:airline_left_sep = ''
+    let g:airline_left_alt_sep = ''
+    let g:airline_right_sep = ''
+    let g:airline_right_alt_sep = ''
+    let g:airline_symbols.branch = ''
+    let g:airline_symbols.readonly = ''
+    let g:airline_symbols.linenr = '☰'
+    let g:airline_symbols.maxlinenr = ''
+    let g:airline_symbols.dirty='⚡'
 endif
-let g:airline_left_sep = ''
-let g:airline_left_alt_sep = ''
-let g:airline_right_sep = ''
-let g:airline_right_alt_sep = ''
-let g:airline_symbols.branch = ''
-let g:airline_symbols.readonly = ''
-let g:airline_symbols.linenr = '☰'
-let g:airline_symbols.maxlinenr = ''
-let g:airline_symbols.dirty='⚡'
-""""" END AirLine """""
 
-" Enable Omnicomplete features
 set omnifunc=syntaxcomplete#Complete
+inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"
+inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
+inoremap <expr> <cr>    pumvisible() ? asyncomplete#close_popup() : "\<cr>"
+imap <c-space> <Plug>(asyncomplete_force_refresh)
 
-" Autodetect filetypes & indentation
 filetype plugin indent on
 
 function! s:check_back_space() abort
@@ -169,22 +183,27 @@ function! s:check_back_space() abort
     return !col || getline('.')[col - 1]  =~ '\s'
 endfunction
 
+function! StripTrailingWhitespace()
+    let _p = getpos(".")
+    let _s = (@/ != '') ? @/ : ''
+    %s/\s\+$//e
+    let @/ = _s
+    nohlsearch
+    call setpos('.', _p)
+endfunction
+
 if $TERM !=? 'linux'
     set termguicolors
-
-    " true colors in terminals (neovim doesn't need this)
     if !has('nvim') && !($TERM =~? 'xterm' || &term =~? 'xterm')
         let $TERM = 'xterm-256color'
         let &term = 'xterm-256color'
     endif
-
     if has('multi_byte') && $TERM !=? 'linux'
         set listchars=tab:»»,trail:•
         set fillchars=vert:┃ showbreak=↪
     endif
 endif
 
-" change cursor shape for different editing modes, neovim does this by default
 if !has('nvim')
     if exists('$TMUX')
         let &t_SI = "\<Esc>Ptmux;\<Esc>\e[5 q\<Esc>\\"
@@ -198,7 +217,7 @@ if !has('nvim')
 endif
 
 " ------ commands ------
-
+nnoremap <expr> <F2> &foldlevel ? 'zM' : 'zR'
 command! D Explore
 command! R call <SID>ranger()
 command! Q call <SID>quitbuffer()
@@ -206,82 +225,52 @@ command! -nargs=1 B :call <SID>bufferselect("<args>")
 command! W execute 'silent w !sudo tee % >/dev/null' | edit!
 
 " ----- Basic keymaps -----
-" open ranger as a file chooser using the function below
 nnoremap <leader>r :call <SID>ranger()<CR>
-
-" match string to switch buffer
+" fix mixed indentation
+map <F7> gg=G<C-o><C-o>
 nnoremap <Leader>b :let b:buf = input('Match: ')<Bar>call <SID>bufferselect(b:buf)<CR>
-
-" change windows with ctrl+(hjkl)
 nnoremap <C-j> <C-W><C-j>
 nnoremap <C-k> <C-W><C-k>
 nnoremap <C-l> <C-W><C-l>
 nnoremap <C-h> <C-W><C-h>
-
-" alt defaults
 nnoremap 0 ^
 nnoremap Y y$
 nnoremap n nzzzv
 nnoremap N Nzzzv
 nnoremap <Tab> ==1j
-
-" re-visual text after changing indent
 vnoremap > >gv
 vnoremap < <gv
-
-" toggle line numbers, nn (no number)
 nnoremap <silent> <Leader>nn :set number!
-
-" gj/k but preserve numbered jumps ie: 12j or 45k
 nmap <buffer><silent><expr>j v:count ? 'j' : 'gj'
 nmap <buffer><silent><expr>k v:count ? 'k' : 'gk'
-
-" open a terminal in $PWD
 nnoremap <silent> <Leader>tt :terminal<CR>
-
-" tab control
 nnoremap <silent> <M-j> :tabmove -1<CR>
 nnoremap <silent> <M-k> :tabmove +1<CR>
 nnoremap <silent> <Leader>te :tabnew<CR>
 nnoremap <silent> <Leader>tn :tabnext<CR>
 nnoremap <silent> <Leader>tf :tabfirst<CR>
 nnoremap <silent> <Leader>tp :tabprevious<CR>
-
-" close current buffer and/or tab
 nnoremap <silent> <Leader>q :B<CR>:silent tabclose<CR>gT
 nnoremap <silent> <Leader>tl :execute "tabn ".g:lasttab<CR>
-
-" open a new tab in the current directory with netrw
 nnoremap <silent> <Leader>- :tabedit <C-R>=expand("%:p:h")<CR><CR>
-
-" split the window vertically and horizontally
 nnoremap _ <C-W>s<C-W><Down>
 nnoremap <Bar> <C-W>v<C-W><Right>
 
-
 " ------ autocmd ------
-
 let g:lasttab = 1
 augroup save_last_tab
     autocmd!
     autocmd TabLeave * let g:lasttab = tabpagenr()
 augroup END
-
-" Reload changes if file changed outside of vim requires autoread
 augroup load_changed_file
     autocmd!
     autocmd FocusGained,BufEnter * if mode() !=? 'c' | checktime | endif
     autocmd FileChangedShellPost * echo "Changes loaded from source file"
 augroup END
-
-" when quitting a file, save the cursor position
 augroup save_cursor_position
     autocmd!
     autocmd BufReadPost * call setpos(".", getpos("'\""))
 augroup END
-
-" when not running in a console or a terminal that doesn't support 256 colors
-" enable cursorline in the currently active window and disable it in inactive ones
 if $DISPLAY !=? '' && &t_Co == 256
     augroup cursorline
         autocmd!
@@ -291,18 +280,17 @@ if $DISPLAY !=? '' && &t_Co == 256
 endif
 
 " ------ adv maps ------
+nnoremap <silent> <Leader>ss :call StripTrailingWhitespace()<CR>
+vnoremap <Leader>sw :<C-u>call VisualGlobalReplace()<CR>
 
-
-" strip trailing whitespace, ss (strip space)
-nnoremap <silent> <Leader>ss
-    \ :let b:_p = getpos(".") <Bar>
-    \  let b:_s = (@/ != '') ? @/ : '' <Bar>
-    \  %s/\s\+$//e <Bar>
-    \  let @/ = b:_s <Bar>
-    \  nohlsearch <Bar>
-    \  unlet b:_s <Bar>
-    \  call setpos('.', b:_p) <Bar>
-    \  unlet b:_p <CR>
+function! VisualGlobalReplace()
+    normal! "hy
+    let sub = input('global replacement: ')
+    if sub !=? ''
+        let rep = substitute(getreg('h'), '/', '\\/', 'g')
+        execute '%s/'.rep.'/'.sub.'/g'
+    endif
+endfunction
 
 " global replace
 vnoremap <Leader>sw "hy
@@ -312,14 +300,7 @@ vnoremap <Leader>sw "hy
     \   execute '%s/'.b:rep."/".b:sub.'/g' <Bar>
     \   unlet b:sub b:rep <Bar>
     \ endif <CR>
-nnoremap <Leader>sw
-    \ :let b:sub = input('global replacement: ') <Bar>
-    \ if b:sub !=? '' <Bar>
-    \   execute "%s/<C-r><C-w>/".b:sub.'/g' <Bar>
-    \   unlet b:sub <Bar>
-    \ endif <CR>
 
-" prompt before each replace
 vnoremap <Leader>cw "hy
     \ :let b:sub = input('interactive replacement: ') <Bar>
     \ if b:sub !=? '' <Bar>
@@ -328,39 +309,7 @@ vnoremap <Leader>cw "hy
     \   unlet b:sub b:rep <Bar>
     \ endif <CR>
 
-nnoremap <Leader>cw
-    \ :let b:sub = input('interactive replacement: ') <Bar>
-    \ if b:sub !=? '' <Bar>
-    \   execute "%s/<C-r><C-w>/".b:sub.'/gc' <Bar>
-    \   unlet b:sub <Bar>
-    \ endif <CR>
-
-" highlight long lines, ll (long lines)
-let w:longlines = matchadd('ColorColumn', '\%'.&textwidth.'v', &textwidth)
-nnoremap <silent> <Leader>ll
-    \ :if exists('w:longlines') <Bar>
-    \   silent! call matchdelete(w:longlines) <Bar>
-    \   echo 'Long line highlighting disabled'
-    \   <Bar> unlet w:longlines <Bar>
-    \ elseif &textwidth > 0 <Bar>
-    \   let w:longlines = matchadd('ColorColumn', '\%'.&textwidth.'v', &textwidth) <Bar>
-    \   echo 'Long line highlighting enabled'
-    \ <Bar> else <Bar>
-    \   let w:longlines = matchadd('ColorColumn', '\%80v', 81) <Bar>
-    \   echo 'Long line highlighting enabled'
-    \ <Bar> endif <CR>
-
-" local keyword jump
-nnoremap <Leader>fw
-    \ [I:let b:jump = input('Go To: ') <Bar>
-    \ if b:jump !=? '' <Bar>
-    \   execute "normal! ".b:jump."[\t" <Bar>
-    \   unlet b:jump <Bar>
-    \ endif <CR>
-
-
 " quit the current buffer and switch to the next
-" without this vim will leave you on an empty buffer after quiting the current
 function! <SID>quitbuffer() abort
     let l:bf = bufnr('%')
     let l:pb = bufnr('#')
@@ -377,14 +326,11 @@ function! <SID>quitbuffer() abort
     endif
 endfunction
 
-" switch active buffer based on pattern matching
-" if more than one match is found then list the matches to choose from
 function! <SID>bufferselect(pattern) abort
     let l:bufcount = bufnr('$')
     let l:currbufnr = 1
     let l:nummatches = 0
     let l:matchingbufnr = 0
-    " walk the buffer count
     while l:currbufnr <= l:bufcount
         if (bufexists(l:currbufnr))
             let l:currbufname = bufname(l:currbufnr)
@@ -396,12 +342,9 @@ function! <SID>bufferselect(pattern) abort
         endif
         let l:currbufnr += 1
     endwhile
-
-    " only one match
     if (l:nummatches == 1)
         execute ':buffer '.l:matchingbufnr
     elseif (l:nummatches > 1)
-        " more than one match
         let l:desiredbufnr = input('Enter buffer number: ')
         if (strlen(l:desiredbufnr) != 0)
             execute ':buffer '.l:desiredbufnr
@@ -411,7 +354,6 @@ function! <SID>bufferselect(pattern) abort
     endif
 endfunction
 
-" open ranger as a file chooser
 function! <SID>ranger()
     let l:temp = tempname()
     execute 'silent !xterm -e ranger --choosefiles='.shellescape(l:temp).' $PWD'
@@ -431,9 +373,10 @@ function! <SID>ranger()
     redraw!
 endfunction
 
-" Trims trailing whitespace
 function! TrimWhitespace()
   let l:save = winsaveview()
   %s/\s\+$//e
   call winrestview(l:save)
 endfunction
+
+autocmd BufWritePre * %s/\s\+$//e

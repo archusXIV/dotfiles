@@ -62,6 +62,7 @@ function! s:UI._dumpHelp()
         let help .= "\"\n\" ----------------------------\n"
         let help .= "\" Bookmark table mappings~\n"
         let help .= "\" double-click,\n"
+        let help .= '" '. g:NERDTreeMapJumpBookmarks .": jump to bookmark table\n"
         let help .= '" '. g:NERDTreeMapActivateNode .": open bookmark\n"
         let help .= '" '. g:NERDTreeMapPreview .": preview file\n"
         let help .= '" '. g:NERDTreeMapPreview .": find dir in tree\n"
@@ -103,6 +104,7 @@ function! s:UI._dumpHelp()
         let help .= '" '. g:NERDTreeMapToggleFilters .': file filters (' . (self.isIgnoreFilterEnabled() ? 'on' : 'off') . ")\n"
         let help .= '" '. g:NERDTreeMapToggleFiles .': files (' . (self.getShowFiles() ? 'on' : 'off') . ")\n"
         let help .= '" '. g:NERDTreeMapToggleBookmarks .': bookmarks (' . (self.getShowBookmarks() ? 'on' : 'off') . ")\n"
+        let help .= '" '. g:NERDTreeMapToggleFileLines .': files lines (' . (self.getShowFileLines() ? 'on' : 'off') . ")\n"
 
         " add quickhelp entries for each custom key map
         let help .= "\"\n\" ----------------------------\n"
@@ -147,6 +149,7 @@ function! s:UI.New(nerdtree)
     let newObj._showFiles = g:NERDTreeShowFiles
     let newObj._showHidden = g:NERDTreeShowHidden
     let newObj._showBookmarks = g:NERDTreeShowBookmarks
+    let newObj._showFileLines = g:NERDTreeFileLines
 
     return newObj
 endfunction
@@ -282,6 +285,11 @@ endfunction
 " FUNCTION: s:UI.getShowHidden() {{{1
 function! s:UI.getShowHidden()
     return self._showHidden
+endfunction
+
+" FUNCTION: s:UI.getShowFileLines() {{{1
+function! s:UI.getShowFileLines()
+    return self._showFileLines
 endfunction
 
 " FUNCTION: s:UI._indentLevelFor(line) {{{1
@@ -475,10 +483,10 @@ function! s:UI.toggleIgnoreFilter()
     call self.centerView()
 endfunction
 
-" FUNCTION: s:UI.toggleShowBookmarks() {{{1
-" Toggle the visibility of the Bookmark table.
-function! s:UI.toggleShowBookmarks()
-    let self._showBookmarks = !self._showBookmarks
+" FUNCTION: s:UI.setShowBookmarks() {{{1
+" Sets the visibility of the Bookmark table.
+function! s:UI.setShowBookmarks(value)
+    let self._showBookmarks = a:value
 
     if self.getShowBookmarks()
         call self.nerdtree.render()
@@ -494,6 +502,12 @@ function! s:UI.toggleShowBookmarks()
     endif
 
     call self.centerView()
+endfunction
+
+" FUNCTION: s:UI.toggleShowBookmarks() {{{1
+" Toggle the visibility of the Bookmark table.
+function! s:UI.toggleShowBookmarks()
+    call self.setShowBookmarks(!self._showBookmarks)
 endfunction
 
 " FUNCTION: s:UI.toggleShowFiles() {{{1
@@ -512,10 +526,22 @@ function! s:UI.toggleShowHidden()
     call self.centerView()
 endfunction
 
+" FUNCTION: s:UI.toggleShowFileLines() {{{1
+" toggles the display of file lines
+function! s:UI.toggleShowFileLines()
+    let self._showFileLines = !self._showFileLines
+    call self.nerdtree.root.refresh()
+    call self.renderViewSavingPosition()
+    call self.centerView()
+endfunction
+
 " FUNCTION: s:UI.toggleZoom() {{{1
 " zoom (maximize/minimize) the NERDTree window
 function! s:UI.toggleZoom()
     if exists('b:NERDTreeZoomed') && b:NERDTreeZoomed
+        setlocal nowinfixwidth
+        wincmd =
+        setlocal winfixwidth
         call nerdtree#exec('silent vertical resize '. g:NERDTreeWinSize, 1)
         let b:NERDTreeZoomed = 0
     else
