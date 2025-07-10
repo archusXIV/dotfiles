@@ -140,7 +140,7 @@
     },
     {
         "key": "ctrl+j",
-        "command": "workbench.action.terminal.focus",
+        "command": "workbench.action.terminal.focus"
     },
     {
         "key": "ctrl+k",

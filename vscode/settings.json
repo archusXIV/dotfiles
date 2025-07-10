@@ -140,7 +140,7 @@
         "editorBracketMatch.background": "#1e1f29",
         "editorBracketHighlight.unexpectedBracket.foreground": "#db6165",
         "editorStickyScroll.background": "#2d4f67",
-        "editorStickyScrollHover.background": "#2a317c",
+        "editorStickyScrollHover.background": "#2a317c"
     },
     "workbench.settings.applyToAllProfiles": [
         "workbench.colorCustomizations"
