@@ -1,69 +1,75 @@
-#!/bin/bash
-# ~/.config/mpm/mpmrc (version 2.3-0)
+#!/usr/bin/env bash
+# ~/.config/mpm/mpmrc (version 2.4-6)
 
-########################################################
-#'##::::'##:'########::'##::::'##:'########:::'######::#
-# ###::'###: ##.... ##: ###::'###: ##.... ##:'##... ##:#
-# ####'####: ##:::: ##: ####'####: ##:::: ##: ##:::..::#
-# ## ### ##: ########:: ## ### ##: ########:: ##:::::::#
-# ##. #: ##: ##.....::: ##. #: ##: ##.. ##::: ##:::::::#
-# ##:.:: ##: ##:::::::: ##:.:: ##: ##::. ##:: ##::: ##:#
-# ##:::: ##: ##:::::::: ##:::: ##: ##:::. ##:. ######::#
-#..:::::..::..:::::::::..:::::..::..:::::..:::......:::#
-####### MPV-PLAYLISTS-MANAGER CONFIGURATION FILE #######
-######### THE PLACE FOR YOUR PERSONAL SETTINGS #########
-#~~~~~ change the values, not the variables names ~~~~~#
-# To launch mpm faster add 'source ~/.config/mpm/mpmrc' in your .bashrc
+############################################################
+############################################################
+###'##::::'##:'########::'##::::'##:'########:::'######::###
+### ###::'###: ##.... ##: ###::'###: ##.... ##:'##... ##:###
+### ####'####: ##:::: ##: ####'####: ##:::: ##: ##:::..::###
+### ## ### ##: ########:: ## ### ##: ########:: ##:::::::###
+### ##. #: ##: ##.....::: ##. #: ##: ##.. ##::: ##:::::::###
+### ##:.:: ##: ##:::::::: ##:.:: ##: ##::. ##:: ##::: ##:###
+### ##:::: ##: ##:::::::: ##:::: ##: ##:::. ##:. ######::###
+###..:::::..::..:::::::::..:::::..::..:::::..:::......:::###
+######### MPV-PLAYLISTS-MANAGER CONFIGURATION FILE #########
+########### THE PLACE FOR YOUR PERSONAL SETTINGS ###########
+#####~~~ change the values, not the variables names ~~~#####
+############################################################
 
-# shellcheck disable=SC2034,SC2016,SC2154
+# shellcheck disable=SC2034,SC2016
 # : "${XDG_DATA_HOME:-$HOME/.local/share}"
-
 check_updates=no
 width=124
 height=32
 copy_width=124
-copy_height=16
+copy_height=17
+schedule_delay=15
 
-######################### THEMES #########################
+########################## THEMES ##########################
 mainThemes=(
     default archlabs blacksea c64 dracula embers gotham
     gruvbox jellybeans kasugano monokai nord pistachio retro
-    simplicity solarized TokyoNight vacuous zenburn zorange
+    simplicity solarized TokyoNight vacuous yatheme zenburn zorange
 )
-THEME=simplicity
 
-####################### SYSTEM TOOLS ######################
+THEME=nord
+
+####################### SYSTEM TOOLS #######################
 MPMEDITOR=${VISUAL:-vim}
 FILEMANAGER=ranger
 clipboardCmd=( xclip -out )
 use_somabox=yes
 
-##################### MPM DIRECTORIES #####################
+###################### MPM DIRECTORIES ######################
 main_dir=${MPM_DIR:-$HOME/.local/share/mpm}
-playlists_dir="$main_dir/playlists"
-titles_dir="$main_dir/titles"
+# playlists_dir="$main_dir/playlists"
+playlists_dir="$main_dir/htpl"
+schedules_dir="$main_dir/schedules"
+# titles_dir="$main_dir/titles"
+titles_dir="$main_dir/httl"
 tmp_dir="$main_dir/tmp"
 MUSIC_DIR=${MUZ:-$HOME/Documents/Music}
 VIDEO_DIR=${VID:-$HOME/Documents/Videos}
+# VIDEO_DIR="/run/media/archangel/docs/Videos/"
 audios_dir="$MUSIC_DIR/mpm_audios"
-videos_dir="$VIDEO_DIR/mpm_videos"
 radios_dir="$MUSIC_DIR/mpd_playlists"
+videos_dir="$VID/mpm_videos"
 
-################### DEFAULT TASKS ANSWERS ##################
+################### DEFAULT TASKS ANSWERS ###################
 keep_none_empty_playlist=yes
 direct_download=yes
 remove_video_ids=yes
-quit_after_task=yes
+quit_after_task=no
 
-################### GNU PARALLEL OPTIONS ###################
+################### GNU PARALLEL OPTIONS ####################
 use_parallel=yes
 use_parallel_downloads=yes
-# parallel_animation="progress"
-parallel_animation=spinners
+parallel_animation="progress"
+# parallel_animation=spinners
 parallel_threads="$(nproc)"
 parallel_conversion=yes
 
-################## YT{FZF} FUNCTIONALITY ###################
+################### YT{FZF} FUNCTIONALITY ###################
 use_fzf=yes
 fzf_preview=mediainfo
 # fzf_preview=exiftool
@@ -86,8 +92,8 @@ ytfzfOptions_X=(
 )
 
 ############ FFMPEG SPECIFICS (audio conversion) ############
-automatic_audio_conversion=yes
-default_conversion_format=
+automatic_audio_conversion=no
+default_conversion_format=mp3
 
 ffmpegAacCodecOptions=( -acodec aac -ar 48000 -ab 320k )
 ffmpegFlacCodecOptions=( -af aformat=s32:48000 )
@@ -97,12 +103,14 @@ ffmpegWavCodecOptions=( -acodec pcm_s32le -ar 48000 )
 
 ####################### MPVC SETTINGS #######################
 use_mpvc=yes
-# mpvc_tui=ncmpvc
+#mpvc_tui=ncmpvc
 mpvc_tui=native
-# mpvc_tui=
-
-nativeThemes=( default c64 dark gruvbox molokai nord seoul256 )
-native_tui_colors=default
+#mpvc_tui=
+nativeThemes=(
+    default c64 dark gruvbox molokai nord
+    retro seoul256 solarized yatheme
+)
+native_tui_colors=nord
 mpvc_tui_cheatsheet="/usr/local/share/doc/mpm/ncmpvc_cheatsheet"
 
 ####################### MPV SPECIFICS #######################
@@ -113,14 +121,16 @@ mpvGenOptions_ID=( --idle=no )
 mpvGenOptions_CF=( --no-config )
 mpvGenOptions_RP=( --no-resume-playback )
 mpvGenOptions_MS=( --term-playing-msg='[Title]: ${media-title}' )
+mpvGenOptions_UC=( --cookies=no )
 
 mpvGenOptions_X=(
     "${mpvGenOptions_AO[@]}"
     "${mpvGenOptions_CA[@]}"
     "${mpvGenOptions_SK[@]}"
     "${mpvGenOptions_ID[@]}"
-    "${mpvGenOptions_CF[@]}"
     "${mpvGenOptions_RP[@]}"
+    "${mpvGenOptions_CF[@]}"
+    "${mpvGenOptions_UC[@]}"
 )
 
 mpvAudioFormatOptions=( --ytdl-format='bestaudio/best' )
@@ -138,13 +148,14 @@ mpvVideoOptions_X=(
     "${mpvVideoOptions_DB[@]}"
 )
 
-####################### YT-DLP PRESETS #######################
+###################### YT-DLP PRESETS ######################
 ytdlPreset_BR=( --break-on-existing )
+ytdlPreset_BC=( --cookies-from-browser=brave )
 ytdlPreset_DN=( --downloader m3u8:native )
-ytdlPreset_MF=( --merge-output-format mp4 )
-ytdlPreset_DW=( --no-warnings --ignore-errors )
 ytdlPreset_DP=( --progress )
+ytdlPreset_DW=( --no-warnings --ignore-errors )
 ytdlPreset_FS=( --compat-options filename-sanitization )
+ytdlPreset_MF=( --merge-output-format mp4 )
 ytdlPreset_NR=( 50 )
 
 ytdlPreset_NC=(
