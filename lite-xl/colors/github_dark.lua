@@ -3,12 +3,12 @@ local common = require "core.common"
 
 -- GitHub color palette
 -- Ported by Andrey Proskurin (proskur1n)
-local bg = { common.color "#0d1117" }
-local bg2 = { common.color "#262b40" }
-local fg = { common.color "#adbac7" }
-local fgdim = { common.color "#768390" }
-local red = { common.color "#f47067" }
-local blue = { common.color "#6cb6ff" }
+local bg     = { common.color "#24292e" }
+local bg2    = { common.color "#262b40" }
+local fg     = { common.color "#adbac7" }
+local fgdim  = { common.color "#768390" }
+local red    = { common.color "#f47067" }
+local blue   = { common.color "#6cb6ff" }
 local purple = { common.color "#dcbdfb" }
 
 style.background = bg

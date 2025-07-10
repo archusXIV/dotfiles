@@ -12,12 +12,12 @@ config.plugins.rainbowparen = common.merge({
   parens = 5
 }, config.plugins.rainbowparen)
 
-style.syntax.paren_unbalanced = style.syntax.paren_unbalanced or { common.color "#DC0408" }
-style.syntax.paren1  =  style.syntax.paren1 or { common.color "#e36466"}
-style.syntax.paren2  =  style.syntax.paren2 or { common.color "#e39f4b"}
-style.syntax.paren3  =  style.syntax.paren3 or { common.color "#e3bf6a"}
-style.syntax.paren4  =  style.syntax.paren4 or { common.color "#5aa5e6"}
-style.syntax.paren5  =  style.syntax.paren5 or { common.color "#4f85b5"}
+style.syntax.paren_unbalanced = style.syntax.paren_unbalanced or { common.color "#cc241d" }
+style.syntax.paren1  =  style.syntax.paren1 or { common.color "#8f3f71"}
+style.syntax.paren2  =  style.syntax.paren2 or { common.color "#076678"}
+style.syntax.paren3  =  style.syntax.paren3 or { common.color "#b57614"}
+style.syntax.paren4  =  style.syntax.paren4 or { common.color "#79740e"}
+style.syntax.paren5  =  style.syntax.paren5 or { common.color "#427b58"}
 
 local tokenize = tokenizer.tokenize
 local extract_subsyntaxes = tokenizer.extract_subsyntaxes
@@ -38,7 +38,7 @@ function tokenizer.extract_subsyntaxes(base_syntax, state)
   return extract_subsyntaxes(base_syntax, state.istate)
 end
 
-function tokenizer.tokenize(syntax, text, state)
+function tokenizer.tokenize(syntax, text, state, resume)
   if not config.plugins.rainbowparen.enabled then
     return tokenize(syntax, text, state)
   end

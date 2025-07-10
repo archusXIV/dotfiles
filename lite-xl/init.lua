@@ -1,4 +1,5 @@
 --[[
+lite-xl version 2.1.8-2
 put user settings here
 this module will be loaded after everything else when the application starts
 it will be automatically reloaded when saved
@@ -50,12 +51,13 @@ style.lint = {
 -- core.reload_module("colors.gruvbox_dark")
 -- core.reload_module("colors.monochrome-dark")
 -- core.reload_module("colors.predawn")
-core.reload_module("colors.simplicity")
+-- core.reload_module("colors.simplicity")
 -- core.reload_module("colors.winter")
 
 ----------------------------------------- lite -------------------------------------------
 -- core.reload_module("colors.github")
 -- core.reload_module("colors.gruvbox_light")
+core.reload_module("colors.yousai-lite")
 -- core.reload_module("colors.monochrome-lite")
 
 ------------------------------------------ FONTS -----------------------------------------
@@ -78,16 +80,16 @@ local funcFont = "IBMPlexMono"
 local keyFont  = "JetBrainsMonoNerdFontPropo"
 
 ----------------------------------------- styles -----------------------------------------
-local Regular = "-Regular.ttf"
-local Italic = "-Italic.ttf"
-local Bold = "-Bold.ttf"
+local Regular    = "-Regular.ttf"
+local Italic     = "-Italic.ttf"
+local Bold       = "-Bold.ttf"
 local BoldItalic = "-BoldItalic.ttf"
 
 ----------------------------------------- sizes ------------------------------------------
-local guiFontSize = 15
-local regularSize = 18
-local italicSize = 16
-local boldSize = regularSize
+local guiFontSize    = 14
+local regularSize    = 18
+local italicSize     = 16
+local boldSize       = regularSize
 local boldItalicSize = boldSize
 
 --------------------------------------- Functions ----------------------------------------
@@ -124,3 +126,4 @@ style.syntax_fonts = {
     ["keyword"]  = key,
     ["function"] = fun,
 }
+

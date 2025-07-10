@@ -2,9 +2,9 @@ local style = require "core.style"
 local common = require "core.common"
 local config = require "core.config"
 
-style.background = { common.color "#2E3440" }
-style.background2 = { common.color "#2E3440" }
-style.background3 = { common.color "#3B4252" }
+style.background = { common.color "#3b4252" } -- Editor background
+style.background2 = { common.color "#2e3440" } --
+style.background3 = { common.color "#434c5e" } --
 style.text = { common.color "#D8DEE9" }
 style.caret = { common.color "#D8DEE9" }
 style.accent = { common.color "#88C0D0" }

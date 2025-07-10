@@ -185,6 +185,9 @@ shift + {pageup,pagedown}
 # doc create-cursor-{previous,next}-line
 ctrl + shift + {up,down}
 
+# doc zoom in/reset zoom
+ctrl + {equal,@}
+
 # exterm open-terminal
 f7
 
@@ -209,6 +212,6 @@ ctrl + d
 # doc move-to-{previous,next}-char dialog {previous,next}-entry
 left,right
 
-# command select-{previous,next} doc move-to-{previous,next}-line
-up,down
+# shell format the current document.
+alt + shift + s
 

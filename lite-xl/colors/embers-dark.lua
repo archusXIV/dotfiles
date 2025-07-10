@@ -7,9 +7,9 @@ local common = require "core.common"
 style.background         = { common.color "#1E1F29" } -- 1E1F29
 style.background2        = { common.color "#252633" }
 style.background3        = { common.color "#1E1F29" }
-style.text               = { common.color "#998C82" }
+style.text               = { common.color "#576d82" }
 style.caret              = { common.color "#dbd6d1" }
-style.accent             = { common.color "#dbd6d1" } -- Text in autocomplete and command, col(>80) in satusbar
+style.accent             = { common.color "#998C82" } -- Text in autocomplete and command, col(>80) in satusbar
 style.dim                = { common.color "#576d82" } -- Text of nonactive tabs, prefix in log
 style.divider            = { common.color "#16130f" }
 style.selection          = { common.color "#264F78" }
@@ -36,5 +36,6 @@ style.syntax["function"] = { common.color "#787D57" }
 
 -- PLUGINS
 style.bracketmatch_color = { common.color "#cc6677" } -- bracketmatch underline
-style.guide              = { common.color "#16130f" } -- indentguide
+style.guide              = { common.color "#252633" } -- indentguide
 style.guide_width        = 1                          -- indentguide
+

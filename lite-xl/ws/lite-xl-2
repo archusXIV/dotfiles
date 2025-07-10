@@ -1,0 +1,1 @@
+return { path = "/home/archangel/.config/lite-xl", documents = {["views"]={[1]={["scroll"]={["y"]=50.0,["x"]=0},["type"]="doc",["selection"]={[1]=16,[2]=22,[3]=16,[4]=22},["active"]=true,["filename"]="init.lua",["text"]=false}},["active_view"]=1,["type"]="leaf"}, directories = {} }

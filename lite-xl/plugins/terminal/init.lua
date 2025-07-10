@@ -40,13 +40,14 @@ config.plugins.terminal = common.merge({
   -- the amount of lines you can emit before we start cutting them off
   scrollback_limit = 10000,
   -- the default height of the console drawer
-  drawer_height = 300,
+  drawer_height = 500,
   -- the default console font. non-monsospace is unsupported
   font = style.code_font,
   -- padding around the edges of the terminal
   padding = { x = 0, y = 0 },
   -- default background color if not explicitly set by the shell
-  background = style.background or { common.color "#000000" },
+  -- background = style.background or { common.color "#000000" },
+  background = { common.color "#292a38" },
   -- default text color if not explicitly by the shell
   text = style.syntax and style.syntax.normal or { common.color "#FFFFFF" },
   -- show bold text in bright colors

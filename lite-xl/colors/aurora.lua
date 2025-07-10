@@ -2,7 +2,7 @@
 local style = require "core.style"
 local common = require "core.common"
 
--- Application style --
+-- UI COLORS
 style.background         = { common.color "#292a47" }
 style.background2        = { common.color "#21232e" }
 style.background3        = { common.color "#21232e" }
@@ -28,7 +28,7 @@ style.warn               = { common.color "#e3b71d" }
 style.error              = { common.color "#ff3c41" }
 style.modified           = { common.color "#3b7aba" }
 
--- Syntax --
+-- CODE COLORS
 style.syntax             = {}
 style.syntax["normal"]   = { common.color "#c8c3ff" }
 style.syntax["symbol"]   = { common.color "#c8c3ff" }
@@ -42,3 +42,4 @@ style.syntax["string2"]  = { common.color "#8E9FEB" }
 style.syntax["string3"]  = { common.color "#8E9FEB" }
 style.syntax["operator"] = { common.color "#9f93d9" }
 style.syntax["function"] = { common.color "#4f70b3" }
+
