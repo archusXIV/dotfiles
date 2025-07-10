@@ -19,10 +19,10 @@ _WindowRules() {
         [$term:ripper]="1" [$term:pulsemixer]="1"
         [feh]="2" [Zathura]="2" [qv4l2]="2"
         [$term:ranger]="3" [$term:sudoranger]="3"
-        [code-oss]="4" [Geany]="4" [lite-xl]="4"
-        [VirtualBox]="5" [Org.gnome.Boxes]="5" [mpv:gl]="5"
+        [code]="4" [Cursor]="4" [Geany]="4" [lite-xl]="4"
+        [VirtualBox]="5" [Org.gnome.Boxes]="5" [mpv:mpvk]="5"
         [$term:htop]="6" [$term:jnettop]="6" [$term:top]="6"
-        [Chromium]="7" [firefox]="7"
+        [Brave-browser]="7" [firefox]="7"
         [file-roller]="8" [filezilla]="8" [Pcmanfm]="8"
         [obs]="9" [SimpleScreenRecorder]="9"
     )

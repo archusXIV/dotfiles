@@ -4,7 +4,7 @@
 # shellcheck source=/dev/null
 _Main() {
 
-    source ~/.config/bspwm/_WindowRules
+    . ~/.config/bspwm/_WindowRules
 
     ######### MONITORS & DESKTOPS SETTINGS #########
     # $MONITOR{1,2,3} are environment variables.
@@ -111,7 +111,7 @@ _Paddings() {
 _Rules() { bspc rule --add "$@"; }
 
 case "$1" in
-    -c) source ~/.config/bspwm/_WindowRules
+    -c) . ~/.config/bspwm/_WindowRules
         _WindowRules
         _Colors
         notify-send 'window rules reloaded'
@@ -119,4 +119,4 @@ case "$1" in
     ;;
 esac
 
-_Main "${@}" > "$XDG_CONFIG_HOME"/bspwm/bspwm.log
+Main "${@}" > "$XDG_CONFIG_HOME"/bspwm/bspwm.log
