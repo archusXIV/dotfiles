@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 
+# shellcheck disable=SC2009
 declare -a proc=( "sxhkd" "sxhkd-watcher" "sxhkd-listener" )
 
 # Terminate existing sxhkd scripts instances
 if [[ -n $(pidof sxhkd) ]]; then
     for i in "${proc[@]}"; do
-        kill -15 "$(ps -ef \
-        | grep "$i" \
-        | awk 'NR==1 {print $2}')" >/dev/null 2>&1
+        kill -15 "$(
+            ps -ef \
+            | grep "$i" \
+            | awk 'NR==1 {print $2}'
+        )" >/dev/null 2>&1
         # Wait until the processes has been shut down
         while pidof -x "$i" >/dev/null; do
             sleep 0.2

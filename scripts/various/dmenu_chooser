@@ -1,7 +1,6 @@
 #!/bin/bash
 
 rc="$HOME/.config/dmenu/dmenurc"
-WM_NAME=$(wmctrl -m | awk '/Name/{print $2}')
 
 [[ -f $rc ]] && source "$rc"
 
@@ -13,11 +12,11 @@ choice=$(printf "apps\\narchwiki\\nautoscript\\nconfig\\nfind\\nkeys\\npower\\ns
 case "$choice" in
     apps)       dmenu_run -b $DMENU_OPTIONS
     ;;
-    archwiki)   browser=${BROWSER:-firefox}
+    archwiki)   browser=${BROWSER:-brave}
                 pgrep -x dmenu && exit
-                
+
                 choice=$(echo "" | dmenu -b -i $DMENU_OPTIONS -p "Search ArchWiki:") || exit 1
-                
+
                 if [ "$choice" = ""  ]; then
                     $browser "https://wiki.archlinux.org/"
                 else
@@ -52,12 +51,12 @@ case "$choice" in
                 _autoscript "$selected"
     ;;
     config  )   confDir="$HOME/.config/"
-                
+
                 dirOptions=$(cd ${confDir} && ls -d */ | cut -d " " -f 1)
                 dirChoice=$(echo "${dirOptions[@]}" | dmenu -b -i $DMENU_OPTIONS -p 'Config directories: ')
                 fileOptions=$(cd ${confDir}${dirChoice} && ls -Ap | cut -d " " -f 1 | grep -v / )
                 fileChoice=$(echo "${fileOptions[@]}" | dmenu -b -i -l 20 $DMENU_OPTIONS -p 'Edit this file: ')
-                    
+
                 if [ -z "$dirChoice" ]; then
                     exit 0
                 else
@@ -141,12 +140,12 @@ case "$choice" in
                     *)                  notify-send 'No screenshot taken!'
                     ;;
                 esac
-    ;;	
+    ;;
     themes)     xres_file="$RESOURCES_FILE"
 
                 [[ ! -f "$xres_file" ]] && echo "$xres_file: no such file or directory" && exit 1
 
-                selected="$(ls "$HOME"/.config/xfiles/themes \
+                selected="$(command ls "$HOME"/.config/xfiles/themes \
                 | dmenu -b -i -l 20 $DMENU_OPTIONS \
                 -p "The actual theme is $(grep themes "$xres_file" | sed 's,.*/,,;s/"//')")"
 

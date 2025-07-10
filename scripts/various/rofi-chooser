@@ -14,7 +14,7 @@ _autoscript_menu() {
         local script_file
 
         script_file="$SCRIPTDIR/$1"
- 
+
         if [[ -f $script_file ]]; then
             $EDITOR "$script_file" &
         else
@@ -70,7 +70,7 @@ _rofi_configs() {
     confDir="$HOME/.config/"
 
     dirOptions=$(cd ${confDir} && ls -d */ | cut -d " " -f 1)
-    dirChoice=$(echo -e "${dirOptions[@]}\nquit" \
+    dirChoice=$(echo -e "${dirOptions[*]}\nquit" \
         | rofi -normal-window -dmenu -i -width 20 -hide-scrollbar \
         -line-padding 4 -padding 20 -lines 5 -p 'Config directories ')
     fileOptions=$(cd ${confDir}${dirChoice} && ls -Ap | cut -d " " -f 1 | grep -v / )
