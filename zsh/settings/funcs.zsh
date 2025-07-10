@@ -3,13 +3,93 @@
 # shell helper functions
 ####### better ls and cd #########
 unalias ls >/dev/null 2>&1
-ls() { command ls -al --color=auto -F "$@"; }
+ls() { command ls -Ahl --color=auto -F "$@"; }
 
 unalias cd >/dev/null 2>&1
-cd() { builtin cd "$@" && command ls -al --color=auto -F; }
-..() { builtin cd .. && command ls -al --color=auto -F; }
-...() { builtin cd ../.. && command ls -al --color=auto -F; }
-....() { builtin cd ../../.. && command ls -al --color=auto -F; }
+cd() { builtin cd "$@" && command ls -ahl --color=auto -F; }
+..() { builtin cd .. && command ls -ahl --color=auto -F; }
+...() { builtin cd ../.. && command ls -ahl --color=auto -F; }
+....() { builtin cd ../../.. && command ls -ahl --color=auto -F; }
+
+bins() {
+    cd "$HOME"/.local/bin/ || exit 1
+    find . -maxdepth 3 -type f \
+        | sort -d \
+        | fzf \
+        --no-multi \
+        --reverse \
+        --border rounded \
+        --border-label="| ${PWD##*/} |" \
+        --border-label-pos='-95:top' \
+        --preview='(bat --color=always {})' \
+        --preview-window="60%" \
+        --bind "enter:become(vim {})"
+    cd "$OLDPWD" || exit 1
+}
+
+confs() {
+    cd "$HOME"/.config/ || exit 1
+    find . -maxdepth 3 -type f \
+        | sort -d \
+        | fzf \
+        --no-multi \
+        --reverse \
+        --border rounded \
+        --border-label="| ${PWD##*/} |" \
+        --border-label-pos='-94:top' \
+        --preview='(cat {})' \
+        --preview-window="60%" \
+        --bind "enter:become(vim {})"
+    cd "$OLDPWD" || exit 1
+}
+
+# search a string within a bunch of files in the current directory: grep_this <string>
+grep_this() {
+    rg --color=always --line-number --no-heading --smart-case "${*:-}" \
+		| sort -d \
+        | fzf \
+        --ansi \
+        --reverse \
+        --color "hl:-1:underline,hl+:-1:underline:reverse" \
+        --delimiter : \
+        --preview 'bat --color=always {1} --highlight-line {2} ' \
+        --preview-window 'up,65%,border-bottom,+{2}+3/3,~3' \
+        --bind 'enter:become(vim {1} +{2})'
+}
+
+upgrade_cursor() {
+    cd "$HOME"/Documents/Downloads || return 1
+    find . -maxdepth 1 -type f -name "Cursor-*" -exec mv {} cursor.AppImage \; && \
+    sudo chown root:root cursor.AppImage && \
+    sudo chmod +x cursor.AppImage && \
+    sudo mv -f cursor.AppImage /usr/local/bin/cursor.AppImage
+}
+
+sync_mpm() {
+    rsync -aprq "$HOME"/Documents/projects/mpv-playlists-manager/* \
+        "$HOME"/Documents/mpv-playlists-manager/ && \
+    rsync -aprq "$HOME"/.local/bin/mpv-playlists-manager/* \
+        "$HOME"/Documents/projects/mpv-playlists-manager/
+}
+
+sed_bash() {
+    local list file
+    #cd "$HOME"/Documents/projects/mpv-playlists-manager/lib/ || exit 1
+    cd "$HOME"/.local/bin/mpv-playlists-manager/lib/ || exit 1
+    mapfile -t list < <(find . -maxdepth 1 -type f -name "_*")
+    case "$1" in
+        --bash)
+            for file in "${list[@]}"; do
+                sed -i 's/#!\/bin\/bash/#!\/usr\/bin\/env bash/' "$file"
+            done
+        ;;
+        --check)
+            for file in "${list[@]}"; do
+                sed -i 's/# shellcheck disable=SC2148/#!\/usr\/bin\/env bash/' "$file"
+            done
+        ;;
+    esac
+}
 
 # create directories and autocd into the leaf,
 # if $1 already exist then cd into it & list content
@@ -24,7 +104,7 @@ mkcd()
     else
         printf '`%s'\'' already exists: cd-ing.\n' "$1"
     fi
-    builtin cd "$1" && command ls -al --color=auto -F
+    builtin cd "$1" && command ls -ahl --color=auto -F
 }
 
 # man
@@ -39,14 +119,11 @@ mano()
     command man "$@"
 }
 
-# remove a directory/file and refresh viewport
-rmd() { rm -rf "$@" && ls -a --color=auto -F; }
-
 por()
 {
     local orphans
     orphans="$(pacman -Qtdq 2>/dev/null)"
-    [[ -z $orphans ]] && printf "System has no orphaned packages\n" || sudo pacman -Rdd $orphans
+    [[ -z $orphans ]] && printf "System has no orphaned packages\n" || sudo pacman -Rns $orphans
 }
 
 # find all webm files that are in the current directory/sub-folders and extract the audio to mp3 format.
@@ -63,9 +140,21 @@ flac_to_mp3()
     done
 }
 
+ffmpeg_volume()
+{
+    ffmpeg -i "$1" -vcodec copy -filter:a "volume="$2"dB" "$3"
+}
+
 mktar() { tar cvzf "${1%%/}.tar.gz"  "${1%%/}/"; }
 
 mkzip() { zip -r "${1%%/}.zip" "$@"; }
+
+keys()
+{
+    sudo pacman-key --init
+    sudo pacman-key --populate archlinux
+    sudo pacman-key --refresh-keys
+}
 
 pcun() { sudo pacman -Rs "$@" && sudo paccache -ruk0; }
 
@@ -83,14 +172,14 @@ pss() {
     select pkg in $(pacman -Ssq "$1"); do sudo pacman -S $pkg; break; done
 }
 
-rename() {
+rename_all() {
   find . -depth -name "* *" -exec \
    bash -c '
       for f in "$@"; do
           n="${f##*/}"
           mv -nv "$f" "${f%/*}/${n// /_}"
       done
-   ' dummy {} +
+   ' dummy {}
 }
 
 renger()
@@ -179,4 +268,3 @@ gsed () {
         egrep --exclude-dir=.git -lRZ "$1" $3 | xargs -0 -l sed -i -e "s/$1/$2/g"
     fi
 }
-

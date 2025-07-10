@@ -2,47 +2,57 @@
 # ~/.zshenv
 
 # Setting our path
-[ -d "$HOME"/bin ] && PATH="$HOME/bin:$PATH"
 [ -d "$HOME"/.local/bin ] && PATH="$HOME/.local/bin:$PATH"
 [ -d /usr/sbin ] && PATH="$PATH:/usr/sbin"
 [ -d /sbin ] && PATH="$PATH:/sbin"
 
 if [ -n "$(pidof nvidia-persistenced)" ]; then
-    export MONITOR1="DVI-D-0"
+    export MONITOR1="DP-0"
     export MONITOR2="HDMI-0"
-    export MONITOR3="DP-0"
+    export MONITOR3="DVI-D-0"
 else
-    export MONITOR1="DVI-D-1"
-    export MONITOR2="HDMI-1"
-    export MONITOR3="DP-1"
+    export MONITOR1="DisplayPort-2"
+    export MONITOR2="HDMI-A-0"
+    export MONITOR3="DVI-D-0"
 fi
 
 # Desktop & directories.
 export XDG_CACHE_HOME="$HOME/.cache"
 export XDG_CONFIG_HOME="$HOME/.config"
 export XDG_DATA_HOME="$HOME/.local/share"
-export XDG_RUNTIME_DIR="/run/user/1000/"
-export BUILDIR="$HOME/makepkg"
+export XDG_RUNTIME_DIR="/run/user/1000"
+export XDG_STATE_HOME="$HOME/.local/state"
+export BUILDIR="${XDG_CACHE_HOME:-$HOME/.cache}/makepkg"
 export CUDA_CACHE_PATH="${XDG_CACHE_HOME:-$HOME/.cache}/nvidia"
 export GNUPGHOME="${XDG_DATA_HOME:-$HOME/.local/share}/gnupg"
+export MPM_DIR="$XDG_DATA_HOME/mpm"
 export PASSWORD_STORE_DIR="$XDG_DATA_HOME"/pass
 export SCRIPTDIR="$HOME/.local/bin"
 export ZDOTDIR="${XDG_CONFIG_HOME:-$HOME/.config}/zsh"
+export DOX="$HOME/Documents"
+export MUZ="$DOX/Music"
+export VID="$DOX/Videos"
+export PIX="$DOX/Pictures"
+export DWN="$DOX/Downloads"
+export VSCODE_PORTABLE="$XDG_DATA_HOME"/vscode
 
 # Default programs.
-export BROWSER="firefox"
+export BROWSER="brave"
 export EDITOR="lite-xl"
 export FILEMNGR="pcmanfm"
-export MANPAGER="/bin/sh -c \"col -b | vim --not-a-term -c 'set ft=man ts=8 nomod nolist noma' -\""
+export MANPAGER="less -R --use-color -Dd+r -Du+b"
+#export MANPAGER="/bin/sh -c \"col -b | vim --not-a-term -c 'set ft=man ts=8 nomod nolist noma' -\""
 export MIXER="pulsemixer"
 export PAGER="less"
 export READER="zathura"
-export TERMINAL="alacritty"
+export TERMINAL="urxvtc"
 export VIDEORECORDER="simplescreenrecorder"
 export VIRTMNGR="VirtualBox"
 export VISUAL="vim"
 
 # Configs & files.
+export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR"/keyring/ssh
+export DKSOCK="/tmp/$(command ls /tmp | awk '/dk__/{print $0}')"
 export BSPWM_SOCKET="$XDG_RUNTIME_DIR"/bspwm_0_0-socket
 export DKRC="$XDG_CONFIG_HOME"/dk/dkrc
 export GTK_RC_FILES="$XDG_CONFIG_HOME"/gtk-1.0/gtkrc
@@ -53,12 +63,18 @@ export LANG="en_US.UTF-8"
 export LESSHISTFILE="-"
 export MANWIDTH=100
 export MBSYNCRC="$XDG_CONFIG_HOME"/isync/mbsyncrc
-export MODMAP="$XDG_CONFIG_HOME"/xfiles/Xmodmap
+export MODMAP="$XDG_CONFIG_HOME"/X11/Xmodmap
+export MPMRC="$XDG_CONFIG_HOME"/mpm/mpmrc
+export MPVSOCKET="/tmp/mpvsocket"
+export MYVIMRC="$XDG_CONFIG_HOME"/vim/vimrc
 export NANORC_FILE="$XDG_CONFIG_HOME"/nano/nanorc
 export NOTMUCH_CONFIG="$XDG_CONFIG_HOME"/notmuch/notmuchrc
+export QT_QPA_PLATFORMTHEME="qt5ct"
 export RESOURCES_FILE="$HOME"/.Xresources
 export RXVT_SOCKET="$XDG_RUNTIME_DIR"/urxvtd-socket
-export SXHKD_FIFO="$XDG_RUNTIME_DIR="/sxhkd.fifo
-export VIMINIT=":source $XDG_CONFIG_HOME"/vim/vimrc
+export SXHKD_FIFO="$XDG_RUNTIME_DIR"/sxhkd.fifo
+export VIMINIT=":source $MYVIMRC"
 export XAUTHORITY="$XDG_RUNTIME_DIR"/Xauthority
 export XCURSOR_PATH="${XCURSOR_PATH}:~/.local/share/icons"
+export XINITRC="$XDG_CONFIG_HOME"/X11/xinitrc
+export W3M_DIR="$XDG_CONFIG_HOME/w3m"
