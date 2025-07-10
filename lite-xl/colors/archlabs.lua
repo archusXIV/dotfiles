@@ -1,4 +1,4 @@
--- ArchLabs colorscheme for lite-xl, Author: Barret E <archus@protonmail>
+-- ArchLabs colorscheme for lite-xl, Author: Barret E <archus@protonmail.com>
 local style = require "core.style"
 local common = require "core.common"
 
