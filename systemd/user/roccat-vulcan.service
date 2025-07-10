@@ -1,0 +1,12 @@
+[Unit]
+Description=Roccat Vulcan LED Control
+
+[Service]
+Type=simple
+Restart=always
+StartLimitBurst=10
+ExecStart=/usr/bin/roccat-vulcan
+ExecStop=/usr/bin/roccat-vulcan -c 6:85,0,170 -w 5
+
+[Install]
+WantedBy=default.target
