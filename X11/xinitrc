@@ -1,0 +1,40 @@
+#!/bin/sh
+
+# shellcheck source=/dev/null
+# this file is run when calling startx
+# default arch init scripts
+if [ -d /etc/X11/xinit/xinitrc.d ]; then
+    for f in /etc/X11/xinit/xinitrc.d/*.sh; do
+        [ -x "$f" ] && . "$f"
+    done
+    unset f
+fi
+
+# shadow.service will fail if this folder does not exist
+MAIL="/var/spool/mail"
+
+if [ ! -e "$MAIL" ]; then
+    sudo mkdir -p "$MAIL" >/dev/null 2>&1
+    sudo systemctl restart shadow.timer
+fi
+
+dbus-update-activation-environment --systemd --all
+systemctl --user import-environment DISPLAY XAUTHORITY
+systemctl --user start Xsession.target
+sudo systemctl restart dnsmasq.service
+
+# These guys are environment variables.
+[ -f "$MODMAP" ] && xmodmap "$MODMAP"
+[ -f "$HOME/.Xresources" ] && xrdb -merge ~/.Xresources
+
+# user init script and settings.
+autostart &
+
+# launch the session, commands below these lines will be ignored
+# Starting Xsession according on tty.
+# refers to $HOME/.config/zsh/.zlogin
+case $(tty | cut -b9-) in
+    (1) exec dk ;;
+    (2) exec bspwm ;;
+    (3) exec i3 ;;
+esac
