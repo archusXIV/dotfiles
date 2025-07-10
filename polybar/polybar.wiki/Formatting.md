@@ -1,9 +1,16 @@
+This page describes how text and individual components can be configured.
 
-Make sure you read the [Configuration wiki page](https://github.com/polybar/polybar/wiki/Configuration).
+Make sure you read the [Configuration wiki
+page](https://github.com/polybar/polybar/wiki/Configuration) for the basic
+syntax for writing config files.
 
 ## Formats
 
-Most modules define a `format-NAME` field, which lets you configure the output format of the module. Formats contain [labels](#label), [progress bars](#progressbar), [ramps](#ramp), etc and labels in turn contain [tokens](#tokens). Formats are what ultimately decide the output of a module.
+The look of a module is primarily decided by its "format".
+Modules define formats in the form of config settings called `format` and/or
+`format-NAME` which different format names.
+The module generally chooses a format to be displayed depending on its current
+state.
 
 For example, the mpd module defines the following formats that will be used depending on connection state
 
@@ -12,6 +19,11 @@ For example, the mpd module defines the following formats that will be used depe
 format-online = ...
 format-offline = ...
 ```
+
+Formats contain [labels](#label), [progress bars](#progressbar),
+[ramps](#ramp), and [animations](#animation).
+These can be arranged in the format by surrounding the name of the label, progress bar, etc. in angle brackets (`<...>`).
+For example, `format-connected = <label-connected>` defines the format named "connected" to contain the label named `label-connected`.
 
 All formats can be configured using the following parameters:
 ```dosini
@@ -44,15 +56,21 @@ format-NAME-offset = N{pt,px}
 ```
 _TODO: Improve section_
 
+
 ## Tokens
 
-Tokens can be used in many labels to display dynamic values set by the module. For example in the [`internal/date`](https://github.com/polybar/polybar/wiki/Module:-date) module, `%time%` will be replaced with the formatted time string.
+Tokens can be used in many labels to display dynamic values set by the module.
+For example in the [`internal/date`](https://github.com/polybar/polybar/wiki/Module:-date) module, `%time%` will be replaced with the formatted time string.
 
 ```dosini
 label = %token%
 
 ; Set value min width
-; If the min-width begins with a `0`, the string will be zero-padded
+; By default, the text is padded to the left, if the min-width is negative, it
+; will be right-padded.
+; If the min-width begins with a `0`, the string will be zero-padded (only for
+; left-padding).
+; Changed in version 3.7.0: Negative min-width causes right padding
 label = %token:3%
 
 ; Set value max width
@@ -67,15 +85,17 @@ label = %token:0:10:---%
 
 ## Content types
 
-There are different ways to display a value or values from a module, these are Content Types. 
+This section describes the building blocks that can be used in a module's format.
 
 ### Label
 
 A label is simply text. You may include a token which represents a value. 
 
-NAME represents the name of the label.
+Labels are the most basic building blocks of modules; formats can contain
+labels directly, but many other configuration options are also labels and thus
+inherit all the same configuration settings.
+For example, each level of a [ramp](#ramp) is in itself a label.
 
-_TODO: Improve section_
 ```dosini
 label-NAME = foobar
 ;label-NAME-foreground = #aarrggbb
@@ -111,26 +131,13 @@ label-NAME-alignment = center
 label-NAME-ellipsis = false
 ```
 
-### Progressbar
 _TODO: Improve section_
-```dosini
-bar-NAME-format = %fill%%indicator%%empty%
-bar-NAME-width = 10
 
-bar-NAME-gradient = true
-bar-NAME-foreground-0 = #00ff00
-bar-NAME-foreground-1 = #ff9900
-bar-NAME-foreground-2 = #ff0000
-
-; The fill, indicator and empty icon can be configured like any <label>
-bar-NAME-fill = x
-bar-NAME-indicator = x
-bar-NAME-empty = x
-```
 
 ### Ramp
 
-Ramps are used to display different things depending on some value reported by the module (e.g. volume):
+Ramps are used to display different things depending on some value reported by the module (e.g. volume).
+Each level of the ramp is responsible for a range of values.
 
 ```dosini
 ramp-NAME-0 = A
@@ -180,8 +187,57 @@ range. The second element has weight `9` and the third has the default weight
 `1`. This means for the first 90% of the ramp range the second element is used
 and for the remaining 10%, the third element is used.
 
-### Animation
+
+### Progressbar
+
+Like ramps, progress bars are also controlled by some value in the module (e.g. cpu load).
+They are made up of three parts: a filled part, an indicator, and an empty part.
+
+The contents of these are controlled by the three labels `bar-NAME-fill`,
+`bar-NAME-indicator`, and `bar-NAME-empty`.
+
+**Note:** The width (`bar-NAME-width`) defines how often the filled and empty
+part are duplicated, not the final width.
+If the labels are not the same size, you may run into unexpected proportions in
+the progress bar.
+
+```dosini
+bar-NAME-format = %fill%%indicator%%empty%
+bar-NAME-width = 10
+
+; Defines the text color of the filled part.
+; If the gradient is enabled, the filled part's color is a gradient using the listed colors.
+; Otherwise the entire filled part will have the same color, based on the current value.
+bar-NAME-gradient = true
+bar-NAME-foreground-0 = #00ff00
+bar-NAME-foreground-1 = #ff9900
+bar-NAME-foreground-2 = #ff0000
+
+; The fill, indicator and empty icon can be configured like any <label>
+bar-NAME-fill = x
+bar-NAME-indicator = x
+bar-NAME-empty = x
+```
+
 _TODO: Improve section_
+
+
+### Animation
+
+Animations are basically just labels that change their value in a defined
+frequency.
+
+```dosini
+; Each animation step is itself a label
+animation-NAME-0 = A
+animation-NAME-1 = B
+animation-NAME-2 = C
+; Framerate in milliseconds
+animation-NAME-framerate = 1000
+```
+
+_TODO: Improve section_
+
 
 ## Sizes & Spacing
 
@@ -330,7 +386,7 @@ The following values for `<button-index>` are allowed:
 * `7`: double middle click
 * `8`: double right click
 
-**Note:** Double click actions may not work reliably.
+**Note:** Double click actions are only triggered if they occur within the `double-click-interval` specified in the [bar section](https://github.com/polybar/polybar/wiki/Configuration#bar-settings).
 
 #### Nested Actions #### 
 

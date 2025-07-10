@@ -19,6 +19,8 @@ format-padding = 4
 
 ; Available tokens:
 ;   %title%
+;   %instance% (first part of the WM_CLASS atom, new in version 3.7.0)
+;   %class%    (second part of the WM_CLASS atom, new in version 3.7.0)
 ; Default: %title%
 label = %title%
 label-maxlen = 50

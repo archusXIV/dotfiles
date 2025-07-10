@@ -50,7 +50,7 @@ Usage: polybar [OPTION]... [BAR]
   -p, --png=FILE               Save png snapshot to FILE after running for 3 seconds
 ```
 
-*Also see [`man 1 polybar`](https://polybar.readthedocs.io/en/stable/man/polybar.1.html).*
+*Also see [`man 1 polybar`](https://polybar.readthedocs.io/man/polybar.1.html).*
 
 By default, polybar will load the config file from
 `~/.config/polybar/config.ini`, `/etc/xdg/polybar/config.ini`, or

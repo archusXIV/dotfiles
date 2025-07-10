@@ -1,0 +1,1751 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                         ;
+;     MODULES IN ALPHABETICAL ORDER       ;
+;                                         ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+[module/alsa]
+type = internal/alsa
+
+; Soundcard to be used
+; Usually in the format hw:# where # is the card number
+; You can find the different card numbers in `/proc/asound/cards`
+master-soundcard = default
+speaker-soundcard = default
+headphone-soundcard = default
+
+; Name of the master, speaker and headphone mixers
+; Use the following command to list available mixer controls:
+; $ amixer scontrols | sed -nr "s/.*'([[:alnum:]]+)'.*/\1/p"
+; If master, speaker or headphone-soundcard isn't the default,
+; use `amixer -c # scontrols` instead where # is the number
+; of the master, speaker or headphone soundcard respectively
+;
+; Default: Master
+master-mixer = Master
+
+; Optionally define speaker and headphone mixers
+; Default: none
+speaker-mixer = Speaker
+; Default: none
+headphone-mixer = Headphone
+
+; NOTE: This is required if headphone_mixer is defined
+; Use the following command to list available device controls
+; $ amixer controls | sed -r "/CARD/\!d; s/.*=([0-9]+).*name='([^']+)'.*/printf '%3.0f: %s\n' '\1' '\2'/e" | sort
+; You may also need to use `amixer -c # controls` as above for the mixer names
+; Default: none
+headphone-id = 9
+
+; Use volume mapping (similar to amixer -M and alsamixer), where the increase in volume is linear to the ear
+; Default: false
+mapped = true
+
+; Interval for volume increase/decrease (in percent points)
+; Default: 5
+interval = 5
+
+; Available tags:
+;   <label-volume> (default)
+;   <ramp-volume>
+;   <bar-volume>
+format-volume = <ramp-volume> <label-volume>
+
+; Available tags:
+;   <label-muted> (default)
+;   <ramp-volume>
+;   <bar-volume>
+;format-muted = <label-muted>
+
+; Available tokens:
+;   %percentage% (default)
+;label-volume = %percentage%%
+
+; Available tokens:
+;   %percentage% (default)
+label-muted = 🔇 muted
+label-muted-foreground = #66
+
+; Only applies if <ramp-volume> is used
+ramp-volume-0 = 🔈
+ramp-volume-1 = 🔉
+ramp-volume-2 = 🔊
+
+; If defined, it will replace <ramp-volume> when
+; headphones are plugged in to `headphone_control_numid`
+; If undefined, <ramp-volume> will be used for both
+; Only applies if <ramp-volume> is used
+ramp-headphones-0 = 
+ramp-headphones-1 = 
+
+[module/arrow1]
+; grey to Blue
+type = custom/text
+content = "%{T2} %{T-}"
+content-font = 2
+content-foreground = #A77AC4
+content-background = #292d3e
+
+[module/arrow2]
+; grey to Blue
+type = custom/text
+content = "%{T2} %{T-}"
+content-font = 2
+content-foreground = #7197E7
+content-background = #A77AC4
+
+[module/arrow3]
+; grey to Blue
+type = custom/text
+content = "%{T2} %{T-}"
+content-font = 2
+content-foreground = #A77AC4
+content-background = #7197E7
+
+[module/arch-updates]
+type = custom/script
+label-padding = 0
+label = %output%
+format = <label>
+;format-prefix = " "
+;format-prefix-foreground = ${colors.foreground}
+label-foreground = ${colors.urgent}
+exec = ~/bin/updates-arch.sh
+interval = 3600
+click-left = pamac-manager --updates &
+format-padding =1
+
+[module/arch-aur-ipc]
+type = custom/ipc
+;interval = 3600
+hook-0 = ~/bin/arch-aur.sh
+initial = 1
+format-padding =1
+format = <output>
+format-prefix = " "
+format-prefix-foreground = ${colors.foreground}
+label-foreground = ${colors.urgent}
+format-foreground = ${colors.urgent}
+
+[module/aur-updates]
+type = custom/script
+exec = trizen -Syu --aur | wc -l
+interval = 7200
+label = %output%
+format-foreground = ${colors.foreground}
+format-background = ${colors.background}
+;format-prefix = "  "
+format-prefix-foreground = #FFBB00
+format-underline = #FFBB00
+
+[module/backlight]
+;https://github.com/jaagr/polybar/wiki/Module:-backlight
+
+type = internal/backlight
+
+; Use the following command to list available cards:
+; $ ls -1 /sys/class/backlight/
+card = intel_backlight
+
+; Available tags:
+;   <label> (default)
+;   <ramp>
+;   <bar>
+format = <label>
+format-foreground = ${colors.foreground}
+format-background = ${colors.background}
+
+; Available tokens:
+;   %percentage% (default)
+label = %percentage%%
+
+; Only applies if <ramp> is used
+ramp-0 = 🌕
+ramp-1 = 🌔
+ramp-2 = 🌓
+ramp-3 = 🌒
+ramp-4 = 🌑
+
+; Only applies if <bar> is used
+bar-width = 10
+bar-indicator = |
+bar-fill = ─
+bar-empty = ─
+
+[module/aur-ipc]
+type = custom/ipc
+hook-0 = wc - l "$XDG_CACHE_HOME"/aur.list | awk '{print $1}'
+hook-1 = sleep 10s && polybar-msg hook aur-ipc 1 >/dev/null 2>&1 &
+initial = 2
+format-padding = 1
+format = <output>
+format-foreground = ${colors.yellow}
+format-prefix = "/ "
+format-prefix-foreground = ${colors.yellow}
+
+[module/backlight-acpi]
+inherit = module/xbacklight
+type = internal/backlight
+card = intel_backlight
+format-foreground = ${colors.foreground}
+format-background = ${colors.background}
+format-prefix-foreground = #7D49B6
+format-prefix-underline = #7D49B6
+format-underline = #7D49B6
+
+[module/battery]
+;https://github.com/jaagr/polybar/wiki/Module:-battery
+type = internal/battery
+battery = BAT0
+adapter = AC0
+full-at = 100
+
+format-charging = <animation-charging> <label-charging>
+label-charging =  %percentage%%
+format-charging-foreground = ${colors.foreground}
+format-charging-background = ${colors.background}
+format-charging-underline = #a3c725
+
+format-discharging = <ramp-capacity> <label-discharging>
+label-discharging =  %percentage%%
+format-discharging-underline = #c7ae25
+format-discharging-foreground = ${colors.foreground}
+format-discharging-background = ${colors.background}
+
+format-full-prefix = " "
+format-full-prefix-foreground = #a3c725
+format-full-underline = #a3c725
+format-foreground = ${colors.foreground}
+format-background = ${colors.background}
+
+ramp-capacity-0 = 
+ramp-capacity-1 = 
+ramp-capacity-2 = 
+ramp-capacity-3 = 
+ramp-capacity-4 = 
+ramp-capacity-foreground = #c7ae25
+
+animation-charging-0 = 
+animation-charging-1 = 
+animation-charging-2 = 
+animation-charging-3 = 
+animation-charging-4 = 
+animation-charging-foreground = #a3c725
+animation-charging-framerate = 750
+
+[module/bspwm]
+type = internal/bspwm
+pin-workspaces = true
+inline-mode = false
+enable-click = true
+enable-scroll = false
+reverse-scroll = false
+fuzzy-match = false
+;label-separator = "/"
+;label-separator-foreground = ${colors.red}
+; ws-icon-[0-9]+ = label;icon
+; Note that the label needs to correspond with the bspwm workspace name
+ws-icon-default =
+ws-icon-0 = 1;
+ws-icon-1 = 2;
+ws-icon-2 = 3;
+ws-icon-3 = 4;
+ws-icon-4 = 5;
+ws-icon-5 = 6;
+ws-icon-6 = 7;
+ws-icon-7 = 8;
+ws-icon-8 = 9;
+ws-icon-9 = 10;
+format = <label-state> <label-mode>
+label-monitor = %name%
+label-mode-padding = 1
+label-focused = %name%
+label-focused-padding = 1
+label-focused-overline = ${colors.ylw2}
+label-focused-underline = ${colors.mag2}
+label-focused-foreground = ${colors.ylw2}
+label-occupied = %icon%
+label-occupied-padding = 1
+label-occupied-foreground = ${colors.mag2}
+label-occupied-underline = ${colors.mag2}
+label-urgent = %icon%
+label-urgent-padding = 1
+label-urgent-foreground = ${colors.mag2}
+label-urgent-underline = ${colors.mag2}
+label-empty = %icon%
+label-empty-padding = 1
+label-empty-foreground = ${colors.foreground}
+label-empty-underline = ${colors.mag2}
+label-dimmed = %icon%
+label-dimmed-padding = 1
+label-dimmed-focused
+label-dimmed-occupied-foreground = ${colors.mag2}
+label-dimmed-empty-foreground = ${colors.foreground}
+;label-dimmed-urgent
+label-dimmed-foreground = ${colors.mag2}
+label-dimmed-underline = ${colors.mag2}
+; The following labels will be used to indicate the layout/mode
+; for the focused workspace. Requires <label-mode>
+label-monocle = "  "
+label-monocle-foreground = ${colors.ylw2}
+label-tiled = "  "
+label-tiled-foreground = ${colors.ylw2}
+;label-fullscreen = F
+;label-fullscreen-foreground = ${colors.red}
+label-floating = "  "
+label-floating-foreground = ${colors.cyn}
+label-pseudotiled = "  "
+label-pseudotiled-foreground = ${colors.cyn}
+label-locked = "  "
+label-locked-foreground = ${colors.cyn}
+label-sticky = "  "
+label-sticky-foreground = ${colors.red}
+label-private = "  "
+label-private-foreground = ${colors.red}
+label-marked = "  "
+label-marked-foreground = ${colors.red}
+
+[module/bsp3_layout-ipc]
+type = custom/ipc
+hook-0 = echo "tiled"
+hook-1 = bsp-layout get $(bspc query -D -d .focused.local) | sed 's/-/tiled/'
+initial = 1
+format = <output>
+format-padding = 1
+format-foreground = ${xresources.mag}
+
+[module/caps_lock]
+type = internal/xkeyboard
+format-padding = 1
+format = <label-indicator>
+label-indicator-on = %icon%
+label-indicator-off = %icon%
+indicator-icon-0 = caps lock;;
+label-indicator-on-capslock = %icon%
+label-indicator-off-capslock = %icon%
+label-indicator-off-capslock-foreground = ${xresources.grn2}
+label-indicator-on-capslock-foreground = ${colors.border}
+
+[module/cava1]
+type = custom/script
+tail = true
+exec = python ~/.config/polybar/scripts/modules/cava.py
+
+[module/cava2]
+type = custom/script
+exec-if = pgrep -x cava
+exec = ~/.config/polybar/scripts/cava_visualizer.py -colors "#FFFFFF" "#FF0000"
+
+[module/clock]
+type = internal/date
+format = <label>
+interval = 5
+time = %R
+format-prefix = ""
+label = %{A1:gsimplecal & disown:}%time%%{A}
+label-foreground = ${colors.purple}
+label-padding = 1
+format-padding = 1
+
+[module/command-ipc]
+type = custom/ipc
+format = <output>
+format-padding = 1
+hook-0 = echo ""
+hook-1 = cat "$XDG_RUNTIME_DIR"/keys.txt | sed 's/C//;s/BBegin//;s/EEnd//;s/chain//'
+initial = 1
+
+[module/compton]
+;https://github.com/jaagr/polybar/wiki/User-contributed-modules#compton
+type = custom/script
+exec = ~/.config/polybar/scripts/compton.sh
+click-left = ~/.config/polybar/scripts/compton-toggle.sh
+interval = 5
+format-foreground = ${colors.foreground}
+format-background = ${colors.background}
+;format-underline = #00AF02
+
+[module/coretemp]
+type = custom/script
+exec = perl ~/bin/cpu_temp.pl
+interval = 5
+warn-temperature = 80
+format-padding = 1
+label = %output%
+label-foreground = ${colors.moderate}
+format = <label>
+
+[module/coretemp2]
+type = custom/script
+;exec = cpu_temp.pl --chip k10temp-pci-00c3
+exec = sensors | grep 'Tdie' | awk '{print $2}' | sed 's/+//'
+;interval = 5
+tail = true
+format-padding = 1
+label = -  %output%
+label-foreground = ${xresources.foreground}
+format = <label>
+
+[module/coreuse]
+type = internal/cpu
+interval = 3
+format-padding = 1
+format = <label>
+;format-prefix = " "
+format-prefix = " "
+format-prefix-foreground = ${xresources.ylw}
+label = %percentage%%
+label-foreground = ${xresources.foreground}
+
+[module/coreuse2]
+type = internal/cpu
+interval = 3
+format-padding = 1
+format = <label>
+;<ramp-coreload>
+format-prefix = ""
+format-prefix-foreground = ${colors.foreground}
+label = %percentage:2%%
+label-foreground = ${colors.purple}
+;ramp-coreload-0 = ▂
+;ramp-coreload-1 = ▃
+;ramp-coreload-2 = ▄
+;ramp-coreload-3 = ▅
+;ramp-coreload-4 = ▆
+;ramp-coreload-5 = ▇
+;ramp-coreload-0-foreground = ${colors.blue}
+;ramp-coreload-1-foreground = ${colors.blue}
+;ramp-coreload-2-foreground = ${colors.moderate}
+;ramp-coreload-3-foreground = ${colors.moderate}
+;ramp-coreload-4-foreground = ${colors.urgent}
+;ramp-coreload-5-foreground = ${colors.urgent}
+
+[module/cpu1]
+;https://github.com/jaagr/polybar/wiki/Module:-cpu
+type = internal/cpu
+; Seconds to sleep between updates
+; Default: 1
+interval = 1
+format-foreground = ${colors.foreground}
+format-background = ${colors.background}
+;   
+format-prefix = " "
+format-prefix-foreground = #cd1f3f
+format-underline = #cd1f3f
+
+; Available tags:
+;   <label> (default)
+;   <bar-load>
+;   <ramp-load>
+;   <ramp-coreload>
+format = <label> <ramp-coreload>
+
+format-padding = 2
+
+; Available tokens:
+;   %percentage% (default) - total cpu load
+;   %percentage-cores% - load percentage for each core
+;   %percentage-core[1-9]% - load percentage for specific core
+label-font = 3
+label = Cpu %percentage:3%%
+ramp-coreload-0 = ▁
+ramp-coreload-0-font = 3
+ramp-coreload-0-foreground = #aaff77
+ramp-coreload-1 = ▂
+ramp-coreload-1-font = 3
+ramp-coreload-1-foreground = #aaff77
+ramp-coreload-2 = ▃
+ramp-coreload-2-font = 3
+ramp-coreload-2-foreground = #aaff77
+ramp-coreload-3 = ▄
+ramp-coreload-3-font = 3
+ramp-coreload-3-foreground = #aaff77
+ramp-coreload-4 = ▅
+ramp-coreload-4-font = 3
+ramp-coreload-4-foreground = #fba922
+ramp-coreload-5 = ▆
+ramp-coreload-5-font = 3
+ramp-coreload-5-foreground = #fba922
+ramp-coreload-6 = ▇
+ramp-coreload-6-font = 3
+ramp-coreload-6-foreground = #ff5555
+ramp-coreload-7 = █
+ramp-coreload-7-font = 3
+ramp-coreload-7-foreground = #ff5555
+
+[module/cpu2]
+;https://github.com/jaagr/polybar/wiki/Module:-cpu
+type = internal/cpu
+; Seconds to sleep between updates
+; Default: 1
+interval = 1
+format-foreground = ${colors.foreground}
+format-background = ${colors.background}
+format-prefix = "  "
+format-prefix-foreground = #cd1f3f
+format-underline = #cd1f3f
+
+label-font = 3
+
+; Available tags:
+;   <label> (default)
+;   <bar-load>
+;   <ramp-load>
+;   <ramp-coreload>
+format = <label>
+
+format-padding = 2
+
+; Available tokens:
+;   %percentage% (default) - total cpu load
+;   %percentage-cores% - load percentage for each core
+;   %percentage-core[1-9]% - load percentage for specific core
+label = Cpu %percentage:3%%
+
+[module/date-alt]
+;https://github.com/jaagr/polybar/wiki/Module:-date
+type = internal/date
+; Seconds to sleep between updates
+interval = 5
+; See "http://en.cppreference.com/w/cpp/io/manip/put_time" for details on how to format the date string
+; NOTE: if you want to use syntax tags here you need to use %%{...}
+date = " %Y-%m-%d%"
+date-alt = " %d-%m-%Y"
+time = %H:%M
+time-alt = %H:%M
+format-prefix = " "
+format-prefix-foreground = #c1941a
+format-underline = #c1941a
+format-foreground = ${colors.foreground}
+format-background = ${colors.background}
+label = %date% %time%
+
+[module/date]
+type = internal/date
+format = <label>
+interval = 5
+date = "%a %b %d, %Y"
+format-prefix = ""
+label = %{A1:gsimplecal & disown:}%date%%{A}
+label-foreground = ${colors.purple}
+label-padding = 1
+format-padding = 1
+
+[module/date-clock]
+type = internal/date
+interval = 60
+format = <label>
+label = %{A1:gsimplecal & disown:}%time%%{A}
+label-foreground = ${colors.moderate}
+date = " %a %b %d, %Y"
+date-alt = " %a %b %d"
+time = %H:%M
+time-alt = %R
+format-prefix = ""
+format-prefix-foreground = ${colors.foreground}
+label-padding = 1
+format-padding = 1
+
+[module/cmus-ipc]
+type = custom/ipc
+hook-0 = cat $HOME/.config/cmus/cmus_output
+hook-1 = echo ""
+initial = 2
+format = <output>
+format-maxlen = 0
+format-foreground = ${xresources.foreground}
+;format-prefix = " "
+;format-prefix-foreground = ${xresources.mag}
+format-padding = 1
+
+[module/disks]
+type = custom/script
+exec = ~/bin/disk_usage.sh
+interval = 5
+format = <label>
+format-prefix = " "
+format-prefix-foreground = ${colors.foreground}
+label = %output%
+label-padding = 1
+label-foreground = ${colors.moderate}
+
+[module/disks2]
+type = custom/script
+exec = df -h | awk '/sda2/{print $5}'
+interval = 3600
+format = <label>
+format-prefix = " "
+format-prefix-foreground = ${xresources.mag}
+label = %output%
+label-padding = 1
+label-foreground = ${xresources.foreground}
+
+[module/nm-applet]
+type = custom/text
+format-prefix = "   "
+format-foreground = ${xresources.ylw}
+format-padding = 1
+click-left = nm-connection-editor &
+
+[module/eth]
+type = internal/network
+interface = enp46s0
+interval = 3.0
+format-connected = <label-connected>
+format-connected-prefix = "  "
+format-connected-prefix-foreground = #b6a49b
+label-connected = %downspeed:9%
+format-disconnected = <label-disconnected>
+label-disconnected = not connected
+label-disconnected-foreground = #66ffffff
+format-padding = 1
+
+[module/ewmh]
+type = internal/xworkspaces
+pin-workspaces = false
+enable-click = true
+enable-scroll = true
+reverse-scroll = true
+icon-0 = 1;
+icon-1 = 2;
+icon-2 = 3;
+icon-3 = 4;
+icon-4 = 5;
+icon-5 = 6;
+icon-6 = 7;
+icon-7 = 8;
+icon-8 = 9;
+icon-9 = 10;
+format = <label-state>
+label-monitor = %name%
+label-active = %icon%
+label-active-foreground = ${colors.light-orange}
+;label-active-background = ${colors.light-orange}
+label-active-overline= ${colors.light-orange}
+label-active-padding = 2
+
+label-occupied = %name%
+label-occupied-foreground = ${colors.foreground}
+label-occupied-overline = ${colors.foreground}
+label-occupied-padding = 2
+
+label-urgent = %name%
+label-urgent-foreground = ${colors.urgent}
+;label-urgent-background = ${colors.urgent}
+label-urgent-underline = ${colors.urgent}
+label-urgent-padding = 2
+
+label-empty = %name%
+label-empty-foreground = ${colors.trim}
+label-empty-padding = 2
+;format-foreground = ${colors.foreground}
+;format-background = ${colors.background}
+
+[module/fan2]
+type = custom/script
+exec = sensors | grep 'fan2' | awk '{print $2}'
+tail = true
+label = %output%
+format-padding = 1
+format = <label>
+format-prefix = " "
+format-prefix-foreground = ${xresources.mag}
+
+[module/fan2-ipc]
+type = custom/ipc
+hook-0 = cat "$XDG_RUNTIME_DIR"/fan2.txt
+initial = 1
+format-padding = 1
+format = <output>
+format-prefix = " "
+format-prefix-foreground = ${xresources.mag}
+
+[module/filesystem1]
+;https://github.com/jaagr/polybar/wiki/Module:-filesystem
+type = internal/fs
+; Mountpoints to display
+mount-0 = /
+;mount-1 = /home
+;mount-2 = /var
+; Seconds to sleep between updates
+; Default: 30
+interval = 30
+; Display fixed precision values
+; Default: false
+fixed-values = false
+; Spacing between entries
+; Default: 2
+spacing = 4
+; Available tags:
+;   <label-mounted> (default)
+;   <bar-free>
+;   <bar-used>
+;   <ramp-capacity>
+format-mounted = <label-mounted>
+format-mounted-foreground = ${colors.foreground}
+format-mounted-background = ${colors.background}
+format-mounted-underline = #fe0000
+; Available tokens:
+;   %mountpoint%
+;   %type%
+;   %fsname%
+;   %percentage_free%
+;   %percentage_used%
+;   %total%
+;   %free%
+;   %used%
+; Default: %mountpoint% %percentage_free%%
+label-mounted = %mountpoint% : %used% used of %total%
+; Available tokens:
+;   %mountpoint%
+; Default: %mountpoint% is not mounted
+label-unmounted = %mountpoint% not mounted
+format-unmounted-foreground = ${colors.foreground}
+format-unmounted-background = ${colors.background}
+;format-unmounted-underline = ${colors.alert}
+
+[module/filesystem2]
+type = internal/fs
+format-mounted = <label-mounted>
+label-mounted = %mountpoint% : %percentage_free%%
+mount-0 = /
+mount-1 = /home
+interval = 3600
+fixed-values = true
+spacing = 2
+label-mounted-foreground = ${colors.moderate}
+
+[module/free]
+type = custom/script
+interval = 600
+format = <label>
+format-prefix = ""
+label-padding = 1
+label-foreground = ${colors.urgent}
+exec = python2 ~/bin/imap-free.py
+click-left = firefox https://webmail.free.fr/ >/dev/null 2>&1 &
+format-padding = 1
+
+[module/gmail]
+type = custom/script
+interval = 1200
+format = <label>
+format-prefix = ""
+label-padding = 1
+label-foreground = ${colors.moderate}
+exec = python2 ~/bin/imap-gmail.py
+click-left = firefox https://www.google.com/intl/fr/gmail/about/ >/dev/null 2>&1 &
+format-padding = 1
+
+[module/gputemp]
+type = custom/script
+label = %output%
+;exec = nvidia-smi --format=nounits,csv,noheader --query-gpu=temperature.gpu | xargs echo
+exec = ~/bin/gputemp.sh
+tail = true
+format = <label>
+format-prefix = " "
+label-foreground = ${colors.yellow}
+label-prefix-foreground = ${colors.foreground}
+format-padding = 1
+
+[module/hardware]
+type = custom/script
+exec = hardware_stats
+tail = true
+format-padding = 1
+label = %output%
+label-foreground = ${xresources.foreground}
+format = <label>
+
+[module/hotkeys]
+type = custom/ipc
+hook-0 = echo  "  %{F#A6E074}"
+hook-1 = cat "${XDG_RUNTIME_DIR}/sxhkd-chain.txt"
+initial = 1
+format = <output>
+format-padding = 1
+click-left = polybar-msg hook hotkeys 1
+
+[module/i3]
+type = internal/i3
+pin-workspaces = false
+strip-wsnumbers = true
+index-sort = true
+enable-click = true
+fuzzy-match = false
+ws-icon-default =
+ws-icon-0 = 1;
+ws-icon-1 = 2;
+ws-icon-2 = 3;
+ws-icon-3 = 4;
+ws-icon-4 = 5;
+ws-icon-5 = 6;
+ws-icon-6 = 7;
+ws-icon-7 = 8;
+ws-icon-8 = 9;
+ws-icon-9 = 10;
+format = <label-state> <label-mode>
+label-mode = %mode%
+label-mode-overline = ${colors.mag2}
+label-mode-underline = ${colors.mag2}
+label-mode-padding = 1
+label-focused = %index%
+label-focused-padding = 1
+label-focused-overline = ${colors.ylw2}
+label-focused-underline = ${colors.mag2}
+label-focused-foreground = ${colors.ylw2}
+label-unfocused = %icon%
+label-unfocused-padding = 1
+;label-unfocused-overline = ${colors.mag2}
+label-unfocused-underline = ${colors.mag2}
+label-unfocused-foreground = ${colors.mag2}
+label-visible = %icon%
+label-visible-padding = 1
+;label-visible-overline = ${colors.mag2}
+label-visible-underline = ${colors.mag2}
+label-visible-foreground = ${colors.foreground}
+label-urgent = %icon%
+label-urgent-padding = 1
+label-urgent-overline = ${colors.red}
+label-urgent-underline = ${colors.red}
+label-urgent-foreground = ${colors.red}
+
+[module/kernel]
+type = custom/script
+exec = uname -r
+tail = false
+label = %output%
+label-padding = 1
+format = <label>
+label-foreground = ${xresources.foreground}
+format-prefix-foreground = ${xresources.mag}
+format-prefix = "  "
+
+[module/load-average]
+type = custom/script
+exec = uptime | grep -ohe 'load average[s:][: ].*' | awk '{ print $3" "$4" "$5"," }' | sed 's/,//g'
+interval = 100
+
+;HOW TO SET IT MINIMAL 10 CHARACTERS - HIDDEN BEHIND SYSTEM ICONS
+;label = %output%
+label = %output:10%
+
+format-foreground = ${colors.foreground}
+format-background = ${colors.background}
+format-prefix = "  "
+format-prefix-foreground = #62FF00
+format-underline = #62FF00
+
+[module/logout]
+type = custom/text
+click-left = session-logout || pkill -15 -t tty"$XDG_VTNR" Xorg
+content =  
+content-foreground = ${colors.urgent}
+content-padding = 1
+
+[module/memory]
+type = internal/memory
+interval = 5
+format = <label>
+format-prefix = " "
+format-prefix-foreground = ${xresources.ylw}
+label-padding = 1
+label =%percentage_used%%
+label-foreground = ${xresources.foreground}
+
+[module/memory1]
+type = internal/memory
+interval = 1
+; Available tokens:
+;   %percentage_used% (default)
+;   %percentage_free%
+;   %gb_used%
+;   %gb_free%
+;   %gb_total%
+;   %mb_used%
+;   %mb_free%
+;   %mb_total%
+label = %percentage_used%%
+;label = %gb_used%/%gb_free%
+bar-used-indicator =
+bar-used-width = 10
+bar-used-foreground-0 = #3384d0
+bar-used-fill = 
+bar-used-empty = 
+bar-used-empty-foreground = #ffffff
+
+format = <label> <bar-used>
+format-prefix = "  "
+format-prefix-foreground = #3384d0
+format-underline = #3384d0
+format-foreground = ${colors.foreground}
+format-background = ${colors.background}
+
+[module/menu]
+type = custom/menu
+format-spacing = 1
+label-open = "    "
+label-open-foreground = ${xresources.blu}
+label-close = "    "
+label-close-foreground = ${colors.urgent}
+label-separator = " | "
+# Top level
+menu-0-0 = "  "
+menu-0-0-exec = menu-open-1
+menu-0-0-foreground = ${xresources.blu}
+menu-0-1 = "  "
+menu-0-1-foreground = ${xresources.blu}
+menu-0-1-exec = menu-open-2
+menu-0-2 = "    |"
+menu-0-2-foreground = ${xresources.blu}
+menu-0-2-exec = menu-open-3
+# 1
+menu-1-0 = "  "
+menu-1-0-exec = menu-open-0
+menu-1-0-foreground = ${xresources.blu}
+menu-1-1 = "  "
+menu-1-1-foreground = ${xresources.blu}
+menu-1-1-exec = firefox &
+menu-1-2 = "  "
+menu-1-2-foreground = ${xresources.blu}
+menu-1-2-exec = urxvtc -name URxvt &
+menu-1-3 = "  "
+menu-1-3-foreground = ${xresources.blu}
+menu-1-3-exec = pcmanfm &
+menu-1-4 = "   |"
+menu-1-4-foreground = ${xresources.blu}
+menu-1-4-exec = virtualbox &
+# 2
+menu-2-0 = "  "
+menu-2-0-exec = menu-open-0
+menu-2-0-foreground = ${xresources.blu}
+menu-2-1 = "  "
+menu-2-1-foreground = ${xresources.blu}
+menu-2-1-exec = lxappearance &
+menu-2-2 = "    |"
+menu-2-2-foreground = ${xresources.blu}
+menu-2-2-exec = pavucontrol &
+# 3
+menu-3-0 = "  "
+menu-3-0-exec = menu-open-0
+menu-3-0-foreground = ${xresources.red2}
+menu-3-1 = "   "
+menu-3-1-foreground = ${xresources.red2}
+menu-3-1-exec = i3lock -c 6d5782 &
+menu-3-2 = "   "
+menu-3-2-foreground = ${xresources.red2}
+menu-3-2-exec = bspc_quit
+menu-3-3 = "   "
+menu-3-3-foreground = ${xresources.red2}
+menu-3-3-exec = systemctl -i reboot
+menu-3-4 = "      |"
+menu-3-4-foreground = ${xresources.red2}
+menu-3-4-exec = systemctl -i poweroff
+
+[module/monocle-ipc]
+type = custom/ipc
+hook-0 = echo ""
+hook-1 = wmctrl -lx | awk '{print $2}' | grep -w '^3' -c
+initial = 1
+format-padding = 1
+format = <output>
+format-foreground = ${colors.yellow}
+;click-left = 
+
+[module/mpd]
+type = internal/mpd
+format-online = <label-song> | <label-time>
+format-offline = <label-offline>
+format-padding = 2
+label-padding = 1
+label-offline = mpd is off
+label-song = %title%
+label-song-foreground = ${xresources.foreground}
+label-time = %elapsed% / %total%
+label-time-foreground = ${xresources.foreground}
+
+[module/mpd1]
+type = internal/mpd
+format-online = <icon-prev> <icon-stop> <toggle> <icon-next>
+format-offline = <label-offline>
+bar-progress-format = %{+o +u}%fill%%{-o -u}%indicator%%{+o +u}%empty%%{-u -o}
+label-offline = mpd is off
+;format-online-prefix = " "
+icon-play = 
+icon-pause = 
+icon-stop = 
+icon-prev = 
+icon-next = 
+icon-random = 
+icon-repeat = 
+toggle-on-foreground =
+toggle-off-foreground = #55
+bar-progress-width = 35
+bar-progress-indicator = █
+bar-progress-fill = █
+bar-progress-empty = ▒
+bar-progress-empty-font = 2
+bar-progress-indicator-font = 2
+bar-progress-fill-font = 2
+bar-progress-fill-foreground = #bb
+bar-progress-empty-foreground = #44
+bar-progress-indicator-foreground = #A85659
+
+[module/mpd2]
+type = internal/mpd
+format-online = <bar-progress>  <icon-prev> <icon-stop> <toggle> <icon-next>  <label-song>
+format-offline = <label-offline>
+bar-progress-format = %{+o +u}%fill%%{-o -u}%indicator%%{+o +u}%empty%%{-u -o}
+label-offline = mpd is off
+format-online-prefix = " "
+icon-play = 
+icon-pause = 
+icon-stop = 
+icon-prev = 
+icon-next = 
+toggle-on-foreground =
+toggle-off-foreground = #55
+bar-progress-width = 35
+bar-progress-indicator = 
+bar-progress-fill = █
+bar-progress-empty = ▒
+bar-progress-empty-font = 2
+bar-progress-indicator-font = 2
+bar-progress-fill-font = 2
+bar-progress-fill-foreground = #bb
+bar-progress-fill-background = ${colors.background}
+bar-progress-empty-foreground = ${colors.foreground}
+bar-progress-indicator-foreground = #A85659
+
+[module/mpd_command]
+type = custom/text
+content = 
+content-padding = 1
+click-left = mpd_command
+
+[module/mpd-conky]
+type = custom/script
+exec = conky -c ~/.config/conky/mpd-conkyrc
+label = %output%
+label-maxlen = 0
+format-prefix = " "
+format-prefix-foreground = ${colors.grn2}
+tail = true
+format = <label>
+label-foreground = ${colors.border}
+click-left = mpc play &
+click-right = mpc stop &
+format-padding = 1
+
+[module/mpd-example]
+type = internal/mpd
+
+; Host where mpd is running (either ip or domain name)
+; Can also be the full path to a unix socket where mpd is running.
+host = 127.0.0.1
+port = 6600
+password = mysecretpassword
+
+; Seconds to sleep between progressbar/song timer sync
+; Default: 1
+;interval = 2
+
+; Additional formatting
+
+; Available tags:
+;   <label-song> (default)
+;   <label-time>
+;   <bar-progress>
+;   <toggle> - gets replaced with <icon-(pause|play)>
+;   <toggle-stop> - gets replaced with <icon-(stop|play)>
+;   <icon-random>
+;   <icon-repeat>
+;   <icon-repeatone> (deprecated)
+;   <icon-single> - Toggle playing only a single song. Replaces <icon-repeatone>
+;   <icon-consume>
+;   <icon-prev>
+;   <icon-stop>
+;   <icon-play>
+;   <icon-pause>
+;   <icon-next>
+;   <icon-seekb>
+;   <icon-seekf>
+
+;format-playing = ${self.format-online}
+;format-paused = ${self.format-online}
+;format-stopped = ${self.format-online}
+
+; Available tags:
+;   <label-offline>
+;format-offline = <label-offline>
+
+; Available tokens:
+;   %artist%
+;   %album-artist%
+;   %album%
+;   %date%
+;   %title%
+; Default: %artist% - %title%
+;label-song = 𝄞 %artist% - %title%
+
+; Available tokens:
+;   %elapsed%
+;   %total%
+; Default: %elapsed% / %total%
+;label-time = %elapsed% / %total%
+
+; Available tokens:
+;   None
+;label-offline = 🎜 mpd is offline
+
+; Only applies if <icon-X> is used
+icon-play = 
+icon-pause = 
+icon-stop = 
+icon-prev = 
+icon-next = 
+icon-random = 
+icon-repeat = 
+icon-seekb = ⏪
+icon-seekf = ⏩
+icon-repeatone = 🔂
+icon-single = 🔂
+icon-consume = ✀
+
+; Used to display the state of random/repeat/repeatone/single
+; Only applies if <icon-[random|repeat|repeatone|single]> is used
+toggle-on-foreground = #ff
+toggle-off-foreground = #55
+
+; Only applies if <bar-progress> is used
+bar-progress-width = 45
+bar-progress-indicator = |
+bar-progress-fill = ─
+bar-progress-empty = ─
+
+[module/mpd-volume]
+type = custom/script
+interval = 2
+format = "<label> "
+label-foreground = ${colors.light-orange}
+format-prefix = " Vol: "
+format-prefix-foreground = ${colors.foreground}
+exec = echo "$(mpc volume | awk '{print $2}')"
+
+[module/mpv]
+type = custom/script
+exec = ~/.config/polybar/scripts/mpv-polybar
+tail = true
+label = %output%
+label-maxlen = 0
+label-padding = 1
+label-foreground = ${xresources.foreground}
+format = <label>
+format-prefix = " "
+format-prefix-foreground = ${xresources.mag}
+format-padding = 1
+
+[module/mpv-ipc]
+type = custom/ipc
+hook-0 = echo ""
+hook-1 = cat "$XDG_RUNTIME_DIR"/mpv.txt
+initial = 1
+;format-maxlen = 0
+format-padding = 1
+format = <output>
+format-prefix = "   "
+format-prefix-foreground = ${xresources.ylw}
+format-foreground = ${xresources.blu}
+click-left = "#mpv-ipc.hook.0"
+
+[module/myclock]
+type = custom/ipc
+hook-0 = cat "${XDG_RUNTIME_DIR}"/time.txt
+initial = 1
+format = <output>
+format-foreground = ${xresources.foreground}
+format-prefix ="  "
+format-prefix-foreground = ${xresources.mag}
+format-padding = 1
+
+[module/my-text-label]
+type = custom/text
+content = 
+content-padding = 1
+click-left = mpd_command
+
+[module/netstats]
+type = custom/script
+exec = netstats
+label = %output%
+;label-maxlen = 70
+format-prefix = " "
+format-prefix-foreground = ${colors.grn2}
+tail = true
+format = <label>
+label-foreground = ${colors.foreground}
+click-left = nm-connection-editor &
+format-padding = 1
+
+[module/network]
+type = custom/script
+exec = check-network
+click-right = networkmanager_dmenu &
+click-left = nm-connection-editor &
+label-padding = 1
+tail = true
+
+[module/networkspeed]
+type = custom/script
+exec = conky -c ~/.config/conky/net-conkyrc
+;exec = watch -t -n 1 netstats &
+label = %output%
+;label-maxlen = 70
+format-prefix = " "
+format-prefix-foreground = ${xresources.grn2}
+tail = true
+format = <label>
+label-foreground = ${xresources.foreground}
+click-left = nm-connection-editor &
+format-padding = 1
+
+[module/networkspeeddown]
+;https://github.com/jaagr/polybar/wiki/Module:-network
+type = internal/network
+interface = enp0s31f6
+label-connected = "%downspeed:7%"
+format-connected = <label-connected>
+format-connected-prefix = ""
+format-connected-prefix-foreground = #3EC13F
+format-connected-foreground = ${colors.foreground}
+format-connected-background = ${colors.background}
+;format-connected-underline = #62FF00
+
+[module/networkspeedup]
+;https://github.com/jaagr/polybar/wiki/Module:-network
+type = internal/network
+;interface = wlp3s0
+;interface = enp14s0
+interface = enp0s31f6
+;interface = enp4s0
+label-connected = "%upspeed:7%"
+format-connected = <label-connected>
+format-connected-prefix = ""
+format-connected-prefix-foreground = #FE522C
+format-connected-foreground = ${colors.foreground}
+format-connected-background = ${colors.background}
+;format-connected-underline = #62FF00
+
+[module/wired-network]
+type = internal/network
+interface = enp7s0
+format-connected = <label-connected>
+format-connected-foreground = ${colors.foreground}
+format-disconnected = " No network "
+;label-connected =  %local_ip%
+label-connected = Net: %upspeed:5%  %downspeed:5%
+
+[module/nouveau]
+type = custom/script
+label = %output%
+exec =perl ~/bin/nouveau_temp.pl
+tail = true
+format = <label>
+format-prefix = " "
+label-foreground = ${colors.yellow}
+label-prefix-foreground = ${colors.foreground}
+format-padding = 1
+
+[module/nvidia]
+type = custom/script
+exec = nvidia_stats
+label = %output%
+tail = true
+format = <label>
+format-prefix = " "
+format-prefix-foreground = ${xresources.mag}
+label-foreground = ${xresources.foreground}
+format-padding = 1
+
+[module/pacman-updates]
+type = custom/script
+;exec = pacman -Qu | wc -l
+exec = checkupdates | wc -l
+interval = 1000
+label = Repo: %output%
+format-foreground = ${colors.foreground}
+format-background = ${colors.background}
+format-prefix = "  "
+format-prefix-foreground = #FFBB00
+format-underline = #FFBB00
+
+[module/player]
+; can be used also with ncmpcpp via '$HOME/bin/mpd_status'
+type = custom/ipc
+hook-0 = cat $HOME/.config/cmus/cmus_output
+initial = 1
+format = <output>
+format-foreground = ${colors.foreground}
+format-prefix = " "
+format-prefix-foreground = ${colors.foreground}
+format-padding = 1
+; alternate between players
+click-right = cmus-remote -s && mpc play
+click-left = mpc stop && cmus-remote -p
+
+[module/pkg]
+type = custom/script
+exec = updates.sh
+exec-if = "ping -q -w 2 -c 1 176.34.135.167 > /dev/null"
+label-padding = 1
+label = %output%
+click-left = pamac-manager --updates &
+;click-right = pamac-manager &
+tail = true
+
+[module/popup-calendar]
+type = custom/script
+exec = popup-calendar
+interval = 5
+click-left = popup-calendar --popup &
+
+[module/pulseaudio]
+type = internal/pulseaudio
+;we use command line to get the right sink, whatever machine we are on.
+sink = $(pacmd list-sinks | grep '.analog-stereo>' | sed 's/name//;s/://;s/^ *[[:space:]]//;s/<//;s/>//')
+;sink = alsa_output.pci-0000_0a_00.4.analog-stereo
+use-ui-max = true
+interval = 1
+format-volume = <ramp-volume> <label-volume>
+format-volume-padding = 2
+label-muted   = "  %percentage:1%% "
+label-muted-foreground = ${colors.muted}
+label-volume-foreground = ${colors.yellow}
+label-volume = %{A3:pavucontrol & disown:}%percentage:1%% %{A}
+; Only applies if <ramp-volume> is used
+ramp-volume-0-foreground = ${xresources.red2}
+ramp-volume-1-foreground = ${xresources.red2}
+ramp-volume-2-foreground = ${xresources.blu}
+ramp-volume-3-foreground = ${xresources.blu}
+ramp-volume-4-foreground = ${xresources.grn2}
+ramp-volume-5-foreground = ${xresources.grn2}
+ramp-volume-6-foreground = ${xresources.ylw2}
+ramp-volume-7-foreground = ${xresources.ylw2}
+ramp-volume-0 = " "
+ramp-volume-1 = " "
+ramp-volume-2 = " "
+ramp-volume-3 = " "
+ramp-volume-4 = " "
+ramp-volume-5 = " "
+ramp-volume-6 = " "
+ramp-volume-7 = " "
+;click-right = urxvtc -name pulsemixer -e pulsemixer
+
+[module/pulseaudio-microphone]
+type = custom/script
+exec = pulseaudio_microphone
+tail = true
+click-left = ~/polybar-scripts/pulseaudio-microphone.sh --toggle &
+
+[module/radar-ipc]
+type = custom/ipc
+hook-0 = cat $HOME/.config/polybar/radar.log
+initial = 1
+label-padding = 1
+label = %output%
+label-maxlen = 0
+format-foreground = ${colors.border}
+format-prefix = "radar: "
+format-prefix-foreground = ${xres.grn2}
+format-padding = 1
+
+[module/recording-ipc]
+type = custom/ipc
+hook-0 = cat $XDG_RUNTIME_DIR/recordingicon
+hook-1 = echo ""
+initial = 2
+format-padding = 3
+format = <output>
+format-foreground = ${colors.yellow}
+click-left = dmenu-record &
+
+[module/search]
+type = custom/script
+format = <label>
+label = %output%
+label-padding = 1
+exec = echo ""
+click-left = "/home/archangel/bin/search.sh"
+format-padding = 1
+
+[module/separator]
+; alternative separator
+type = custom/text
+content = 
+content-foreground = ${colors.foreground}
+content-background =  ${colors.background}
+format-foreground = ${colors.foreground}
+format-background = ${colors.background}
+
+[module/temperature]
+type = internal/temperature
+interval = 3
+thermal-zone = 2
+warn-temperature = 70
+format-prefix = " "
+format-prefix-foreground = ${xresources.foreground}
+format-padding = 1
+label = %temperature-c%
+label-foreground = ${xresources.ylw}
+format = <ramp> <label>
+ramp-0 = ""
+ramp-1 = ""
+ramp-2 = ""
+ramp-3 = ""
+ramp-4 = ""
+ramp-0-foreground = ${xresources.grn}
+ramp-1-foreground = ${xresources.grn}
+ramp-2-foreground = ${xresources.blu}
+ramp-3-foreground = ${xresources.cyn}
+ramp-4-foreground = ${xresources.ylw}
+format-warn = <label-warn>
+label-warn =  %temperature-c%
+label-warn-padding = 1
+label-warn-foreground = ${xresources.red}
+
+[module/temperature1]
+;https://github.com/jaagr/polybar/wiki/Module:-temperature
+type = internal/temperature
+; Thermal zone to use
+; To list all the zone types, run
+; $ for i in /sys/class/thermal/thermal_zone*; do echo "$i: $(<$i/type)"; done
+; Default: 0
+thermal-zone = 0
+
+; Full path of temperature sysfs path
+; Use `sensors` to find preferred temperature source, then run
+; $ for i in /sys/class/hwmon/hwmon*/temp*_input; do echo "$(<$(dirname $i)/name): $(cat ${i%_*}_label 2>/dev/null || echo $(basename ${i%_*})) $(readlink -f $i)"; done
+; to find path to desired file
+; Default reverts to thermal zone setting
+hwmon-path = /sys/devices/platform/coretemp.0/hwmon/hwmon1/temp1_input
+
+warn-temperature = 70
+format = <ramp> <label>
+format-foreground = ${colors.foreground}
+format-background = ${colors.background}
+format-underline = #c72581
+format-warn = <ramp> <label-warn>
+format-warn-underline = #c7254f
+label = %temperature%
+label-warn =  %temperature%
+label-warn-foreground = #c7254f
+
+ramp-0 = 
+ramp-1 = 
+ramp-2 = 
+ramp-3 = 
+ramp-4 = 
+ramp-foreground =${colors.foreground}
+
+[module/time]
+type = internal/date
+interval = 60
+label = %date% %time%
+label-foreground = ${colors.foreground}
+date =
+date-alt = " %a %b %d, %Y -"
+time = %H:%M
+time-alt = %H:%M:%S
+;format-prefix =" "
+format-prefix =" "
+format-prefix-foreground = ${colors.grn}
+format-padding = 1
+
+[module/info-trash]
+type = custom/script
+exec = info-trash --info
+format-padding = 1
+format-prefix = " "
+format-prefix-foreground = ${xres.grn2}
+interval = 60
+click-left = info-trash --clean &
+
+[module/volume]
+;https://github.com/jaagr/polybar/wiki/Module:-volume
+type = internal/volume
+format-volume = "<label-volume>  <bar-volume>"
+
+label-volume = " "
+label-volume-foreground = #40ad4b
+label-muted = muted
+
+bar-volume-width = 10
+bar-volume-foreground-0 = #40ad4b
+bar-volume-foreground-1 = #40ad4b
+bar-volume-foreground-2 = #40ad4b
+bar-volume-foreground-3 = #40ad4b
+bar-volume-foreground-4 = #40ad4b
+bar-volume-foreground-5 = #40ad4b
+bar-volume-foreground-6 = #40ad4b
+bar-volume-gradient = false
+bar-volume-indicator = 
+bar-volume-indicator-font = 2
+bar-volume-fill = 
+bar-volume-fill-font = 2
+bar-volume-empty = 
+bar-volume-empty-font = 2
+bar-volume-empty-foreground = ${colors.foreground}
+format-volume-foreground = ${colors.foreground}
+format-volume-background = ${colors.background}
+format-muted-prefix = "  "
+format-muted-prefix-foreground = "#ff0000"
+format-muted-foreground = ${colors.foreground}
+format-muted-background = ${colors.background}
+
+[module/volume-bar]
+type = internal/volume
+bar-volume-font = 2
+bar-volume-width = 20
+format-volume = <label-volume><bar-volume>
+label-volume = "  "
+label-muted = "   mute"
+label-volume-foreground = #B6C2E7
+format-muted-foreground = #E76BB4
+bar-volume-foreground-0 = #92A3F7
+bar-volume-foreground-1 = #92A3F7
+bar-volume-foreground-2 = #6BB3E7
+bar-volume-foreground-3 = #6BB3E7
+bar-volume-foreground-4 = #6BB3E7
+bar-volume-foreground-5 = #6BE7D8
+bar-volume-foreground-6 = #6BE7D8
+bar-volume-gradient = true
+bar-volume-indicator = |
+bar-volume-fill = •
+bar-volume-empty = ·
+bar-volume-empty-foreground = #666666
+
+[module/vu-meters-output]
+type = custom/script
+tail = true
+format = "<label> "
+label-foreground = ${xresources.background}
+format-prefix = " : "
+format-prefix-foreground = ${xresources.blu}
+exec = vu_meter_output.py
+
+[module/weather-current]
+type = custom/script
+exec = python3 ~/.config/polybar/scripts/weather-current.py
+;exec = curl -Ss 'https://wttr.in?0&T&Q' | cut -c 16- | head -2 | xargs echo
+;exec = curl wttr.in/Le-Perreux-sur-Marne?format=3
+interval = 3600
+format = <label>
+format-padding = 1
+label-foreground = ${colors.grn2}
+
+[module/openweathermap]
+type = custom/script
+exec = ~/bin/weather.sh
+interval = 1800
+label-font = 3
+label-foreground = ${colors.yellow}
+format = <label>
+format-padding = 1
+
+[module/windows]
+type = custom/script
+exec = polybar-windows
+format = <label>
+label = %output%
+label-padding = 1
+interval = 1
+tail = true
+
+[module/wired-network1]
+type = internal/network
+interface = enp3s0
+format-connected = <label-connected>
+format-disconnected = <label-disconnected>
+label-connected =  %local_ip%
+format-connected-foreground = ${colors.purple}
+
+[module/wired-network2]
+;https://github.com/jaagr/polybar/wiki/Module:-network
+type = internal/network
+interface = enp46s0
+interval = 3.0
+
+; Available tokens:
+;   %ifname%    [wireless+wired]
+;   %local_ip%  [wireless+wired]
+;   %essid%     [wireless]
+;   %signal%    [wireless]
+;   %upspeed%   [wireless+wired]
+;   %downspeed% [wireless+wired]
+;   %linkspeed% [wired]
+; Default: %ifname% %local_ip%
+label-connected =  %ifname%
+label-disconnected = %ifname% disconnected
+
+format-connected-foreground = ${colors.foreground}
+format-connected-background = ${colors.background}
+format-connected-underline = #55aa55
+format-connected-prefix = " "
+format-connected-prefix-foreground = #55aa55
+format-connected-prefix-background = ${colors.background}
+
+format-disconnected = <label-disconnected>
+format-disconnected-underline = ${colors.alert}
+label-disconnected-foreground = ${colors.foreground}
+
+[module/wireless-network]
+;https://github.com/jaagr/polybar/wiki/Module:-network
+type = internal/network
+interface = wlp3s0
+interval = 3.0
+label-connected = %essid%
+
+format-connected = <label-connected>
+;format-connected = <ramp-signal> <label-connected>
+format-connected-foreground = ${colors.foreground}
+format-connected-background = ${colors.background}
+format-connected-prefix = "  "
+format-connected-prefix-foreground = #7e52c6
+format-connected-prefix-background = ${colors.background}
+format-connected-underline = #7e52c6
+
+label-disconnected = %ifname% disconnected
+label-disconnected-foreground = ${colors.alert}
+label-disconnected-background = ${colors.background}
+
+format-disconnected = <label-disconnected>
+format-disconnected-foreground = ${colors.alert}
+format-disconnected-background = ${colors.background}
+format-disconnected-prefix = "  "
+format-disconnected-prefix-foreground = ${colors.alert}
+format-disconnected-prefix-background = ${colors.background}
+format-disconnected-underline =${colors.alert}
+
+ramp-signal-0 = ▁
+ramp-signal-1 = ▂
+ramp-signal-2 = ▃
+ramp-signal-3 = ▄
+ramp-signal-4 = ▅
+ramp-signal-5 = ▆
+ramp-signal-6 = ▇
+ramp-signal-7 = █
+ramp-signal-foreground = #7e52c6
+
+[module/workspaces]
+type = internal/xworkspaces
+pin-workspaces = false
+enable-click = true
+enable-scroll = true
+format-padding = 0
+ws-icon-default =
+ws-icon-0 = 1;
+ws-icon-1 = 2;
+ws-icon-2 = 3;
+ws-icon-3 = 4;
+ws-icon-4 = 5;
+ws-icon-5 = 6;
+ws-icon-6 = 7;
+ws-icon-7 = 8;
+ws-icon-8 = 9;
+ws-icon-9 = 10;
+format = <label-state>
+label-active = %icon% %name%
+label-occupied = %icon% %name%
+label-urgent = %icon% %name%
+label-empty = %icon% %name%
+label-occupied-padding = 1
+label-empty-padding = 1
+label-urgent-padding = 1
+label-active-padding = 1
+label-active-foreground = ${colors.blue}
+label-active-underline = ${colors.blue}
+label-occupied-underline = ${colors.moderate}
+label-urgent-foreground = ${colors.urgent}
+label-urgent-underline = ${colors.urgent}
+label-empty-foreground = ${colors.foreground}
+
+[module/updates]
+type = custom/script
+exec = ~/bin/update-timer
+interval = 3590
+format-prefix = " "
+format-prefix-foreground = ${colors.foreground}
+
+[module/uptime]
+;https://github.com/jaagr/polybar/wiki/User-contributed-modules#uptime
+type = custom/script
+exec = uptime | awk -F, '{sub(".*up ",x,$1);print $1}'
+interval = 100
+label = Uptime : %output%
+
+format-foreground = ${colors.foreground}
+format-background = ${colors.background}
+format-prefix = " "
+format-prefix-foreground = #C15D3E
+format-underline = #C15D3E
+
+[module/xkeyboard]
+;https://github.com/jaagr/polybar/wiki/Module:-xkeyboard
+type = internal/xkeyboard
+blacklist-0 = num lock
+
+format-prefix = " "
+format-prefix-foreground = ${colors.foreground}
+format-prefix-background = ${colors.background}
+format-prefix-underline = #3ecfb2
+format-foreground = ${colors.foreground}
+format-background = ${colors.background}
+
+label-layout = %layout%
+label-layout-underline = #3ecfb2
+label-indicator-padding = 2
+label-indicator-margin = 1
+label-indicator-background = ${colors.background}
+label-indicator-underline = ${colors.foreground}
+
+[module/xwindow]
+;https://github.com/jaagr/polybar/wiki/Module:-xwindow
+type = internal/xwindow
+; Available tags:
+;   <label> (default)
+format = <label>
+format-background = #f00
+format-foreground = #000
+format-padding = 4
+
+; Available tokens:
+;   %title%
+; Default: %title%
+label = %title%
+label-maxlen = 50
+
+; Used instead of label when there is no window title
+; Available tokens:
+;   None
+label-empty = Empty
+label-empty-foreground = #707880
+
+[module/xset_repeat-ipc]
+type = custom/ipc
+hook-0 = echo "%{F#A6E074}%{F-}"
+hook-1 = echo "%{F#FF4747}%{F-}"
+initial = 1
+format-padding = 1
+format = <output>
+click-left = xset_repeat --disable & disown
+click-right = xset_repeat --enable & disown
+
+[module/yt-ipc]
+type = custom/ipc
+hook-0 = echo ""
+hook-1 = cat "$XDG_RUNTIME_DIR"/youtube.txt
+initial = 1
+format_padding = 1
+format = <output>
+format-foreground = ${xresources.foreground}

@@ -1,11 +1,15 @@
 This module executes the defined script and displays its output. You can find community-curated script modules in the [polybar-scripts](https://github.com/polybar/polybar-scripts) repository.
 
 **NOTES**:  
-The module will wait for the `exec` script to finish until updating its contents. If you are launching an application, make sure you are sending it to the background by appending `&` after the line that executes the application.  
-If your script is using an infinite loop in combination with `tail = true`, the `exec-if` condition is only checked until it evaluates to true for the first time, because it is only checked before running the `exec` command and since the `exec` command never returns (because of the infinite loop), `exec-if` is never evaluated again, once the `exec` command is running. So if the `exec-if` condition at some point, while the infinite loop is running, would evaluate to false the script will not suddenly stop running and the module will not disappear.
-
-To be displayed on the bar, the script's output has to be newline terminated (as most commands do).
-If you want that your module disappear from the bar in some cases, your output has to be created with `echo ""` Otherwise an outdated output is still on the bar. See [#504](https://github.com/polybar/polybar/issues/504).
+- The module will wait for the `exec` script to finish until updating its contents. If you are launching an application, make sure you are sending it to the background by appending `&` after the line that executes the application.  
+- If your script is using an infinite loop in combination with `tail = true`, the `exec-if` condition is only checked until it evaluates to true for the first time, because it is only checked before running the `exec` command and since the `exec` command never returns (because of the infinite loop), `exec-if` is never evaluated again, once the `exec` command is running. So if the `exec-if` condition at some point, while the infinite loop is running, would evaluate to false the script will not suddenly stop running and the module will not disappear.
+- To be displayed on the bar, the script's output has to be newline terminated (as most commands do).
+- If you want the module to disappear from the bar in some cases, your script
+must produce a single empty line of output and a zero exit code.
+Otherwise an outdated output is still on the bar.
+See [`#504`](https://github.com/polybar/polybar/issues/504) and
+[`#2861`](https://github.com/polybar/polybar/pull/2861).
+- When using python scripts, the python runtime will not always immediately flush the output so that polybar can read it (see [`#793`](https://github.com/polybar/polybar/issues/793) for example). For `tail = true` scripts, this may result in the output only updating kind of randomly instead of at every print. This can be solved by running python in unbuffered mode (`python -u`)
 
 ### Basic settings
 ```ini
@@ -31,6 +35,18 @@ tail = true
 ; Seconds to sleep between updates
 ; Default: 5 (0 if `tail = true`)
 interval = 90
+
+; Interval used when the `exec` command returns with a non-zero exit code 
+; If not defined, interval is used instead
+; New in version 3.7.0
+; Default: (same as interval)
+interval-fail = 300
+
+; Seconds to sleep between `exec-if` invocations
+; If not defined, interval is used instead
+; New in version 3.7.0
+; Default: (same as interval)
+interval-if = 180
 
 ; Set environment variables in the 'exec' script
 ; New in version 3.6.0

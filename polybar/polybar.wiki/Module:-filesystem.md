@@ -9,6 +9,7 @@ This module shows information about mounted filesystems.
 type = internal/fs
 
 ; Mountpoints to display
+; Default: / (new in version 3.7.0)
 mount-0 = /
 mount-1 = /home
 mount-2 = /var
@@ -82,7 +83,7 @@ label-unmounted-foreground = #55
 ;   %used%
 ; Default: %mountpoint% %percentage_free%%
 ; New in version 3.6.0
-label-warn = %mountpoint%: WARNING
+; label-warn = %mountpoint%: WARNING
 ```
 
 If you want different customization per mountpoint, we suggest creating

@@ -1,12 +1,13 @@
 This module uses the i3 ipc to display information about workspaces and active mode.
 
-**NOTE**: Requires the project to be built with i3 support; Check for `+i3` in `polybar -vvv`
+**NOTE**: Requires the project to be built with i3 support; Check for `+i3` in `polybar -vvv`.
+The module also requires the `i3` executable to be on the `PATH`.
 
 ### Accessible workspace cycling
 
 You are able to define fallback click handlers for the whole bar window. Using those you could cycle your workspaces by scrolling anywhere on the bar (except existing areas setup for the same button). You should probably disable scrolling for the module (`enable-scroll = false`) if you are using this method.
 
-The i3 module supports the `next` and `prev` [actions](https://polybar.readthedocs.io/en/stable/user/actions.html) and will send the correct commands to i3 to change the current workspace. 
+The i3 module supports the `next` and `prev` [actions](https://polybar.readthedocs.io/user/actions.html) and will send the correct commands to i3 to change the current workspace. 
 
 **Note:** You will need to have an i3 module in your bar for this to work.
 
@@ -66,10 +67,10 @@ wrapping-scroll = false
 ; Default: true
 reverse-scroll = false
 
-; Use fuzzy (partial) matching on labels when assigning 
-; icons to workspaces
+; Use fuzzy (partial) matching for wc-icon.
 ; Example: code;♚ will apply the icon to all workspaces 
-; containing 'code' in the label
+; containing 'code' in the name
+; Changed in version 3.7.0: Selects longest string match instead of the first match.
 ; Default: false
 fuzzy-match = true
 ```

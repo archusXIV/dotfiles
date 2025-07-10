@@ -1,4 +1,4 @@
-This module lets you define hooks to be triggered when a matching ipc [action](https://polybar.readthedocs.io/en/stable/user/actions.html#custom-ipc) is received.
+This module lets you define hooks to be triggered when a matching ipc [action](https://polybar.readthedocs.io/user/actions.html#custom-ipc) is received.
 The hook will execute its defined shell command and the output from it will be printed as the module content.
 
 ```sh
@@ -31,10 +31,23 @@ initial = 2
 ### Additional formatting
 ```ini
 ; Available tags:
-;   <output> (default)
+;   <output>
+;   <label> (default, new in version 3.7.0)
 format = <output>
 format-foreground = #f00
 format-background = #fff
+
+; Format the output of individual hooks (replace i with the number of the hook)
+; Available tags:
+;   <label> (default)
+; New in version 3.7.0
+format-i = <label>
+
+; 
+; Available tokens:
+;   %output% (Output produced by the current hook)
+; New in version 3.7.0
+label = %output%
 
 ; Mouse actions
 ; Available tokens:
@@ -58,6 +71,9 @@ type = custom/ipc
 hook-0 = echo foobar
 hook-1 = date +%s
 hook-2 = whoami
+format = <label>
+format-1 = <label>
+format-1-background = #ff0000
 initial = 1
 click-left = "#demo.hook.0"
 click-right = "#demo.hook.1"

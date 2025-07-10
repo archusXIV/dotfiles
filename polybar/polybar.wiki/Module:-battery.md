@@ -32,6 +32,11 @@ poll-interval = 5
 ```
 
 ### Additional formatting
+
+> [!NOTE]
+> The battery icons used in the examples below come from the [Font Awesome
+> 6](https://fontawesome.com), namely the `Font Awesome 6 Free Solid` font.
+
 ```ini
 ; see "man date" for details on how to format the time string
 ; NOTE: if you want to use syntax tags here you need to use %%{...}

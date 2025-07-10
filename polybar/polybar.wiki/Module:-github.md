@@ -16,8 +16,8 @@ token = ${file:/path/to/file/containing/github/access.token}
 token = ${env:GITHUB_ACCESS_TOKEN}
 
 ; The github user for the token
-; If not specified, this module uses the deprecated method of accessing your
-; notifications, which may stop working at some point.
+; Effectively required; otherwise the module uses a deprecated method of fetching
+; notifications, which has stopped working
 user = github_user
 
 ; Whether empty notifications should be displayed or not

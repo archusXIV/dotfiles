@@ -22,7 +22,7 @@ Here is a quick rundown of packages polybar needs to build and run correctly.
 See further below for more details and concrete package names for different
 distros.
 
-A compiler with C++14 support ([clang-3.4+](https://llvm.org/releases/download.html), [gcc-5.1+](https://gcc.gnu.org/releases.html)), [cmake 3.5+](https://cmake.org/download/), [git](https://git-scm.com/downloads)
+A compiler with C++17 support ([clang-7+](https://llvm.org/releases/download.html), [gcc-8+](https://gcc.gnu.org/releases.html)), [cmake 3.5+](https://cmake.org/download/), [git](https://git-scm.com/downloads)
 - `pkg-config`
 - `libuv`
 - `cairo`
@@ -52,8 +52,8 @@ The following dependencies are only needed during compilation, you can remove th
 
 | Build Dependency | apt-get | Fedora | openSUSE |
 | ---------- | ------- | ------ | -------- |
-| gcc >= 5.1 | `build-essential` | `gcc-c++` | `gcc` |
-| clang >= 3.4 | `clang-5.0` or <br /> `clang-6.0` or <br /> `clang-7.0` | `clang` | `clang` |
+| gcc/g++ >= 8 | `g++` | `gcc-c++` | `gcc` |
+| clang >= 7 | `clang` | `clang` | `clang` |
 | git<sup>1</sup> | `git` | `git` | `git` |
 | cmake >= 3.5 | `cmake`  <br />`cmake-data` | `cmake` <br />`@development-tools` | `cmake` |
 | pkg-config | `pkg-config` | - | - |
@@ -75,7 +75,7 @@ These are the hard dependencies, you cannot build or run polybar without them:
 
 | Dependency | apt-get | Fedora | openSUSE |
 | ---------- | ------- | ------ | -------- |
-| [libuv](https://github.com/libuv/libuv) >= 1.3 | `libuv1-dev` | `libuv` | `libuv-devel` |
+| [libuv](https://github.com/libuv/libuv) >= 1.3 | `libuv1-dev` | `libuv-devel` | `libuv-devel` |
 | cairo | `libcairo2-dev` | `cairo-devel` | `cairo-devel` |
 | libxcb | `libxcb1-dev` <br />`libxcb-util0-dev` <br />`libxcb-randr0-dev` <br />`libxcb-composite0-dev` | `xcb-util-devel` <br />`libxcb-devel` | `xcb-util-devel` <br />`libxcb-devel` |
 | xcb-proto | `python3-xcbgen`<sup>1</sup>  <br />`xcb-proto` | `xcb-proto` | `xcb-proto-devel` |
@@ -91,7 +91,7 @@ apt install build-essential git cmake cmake-data pkg-config python3-sphinx pytho
 
 All above dependencies paste-friendly for dnf:
 ```bash
-sudo dnf install -y cairo-devel libuv xcb-util-devel libxcb-devel xcb-proto xcb-util-image-devel xcb-util-wm-devel
+sudo dnf install -y cairo-devel libuv-devel xcb-util-devel libxcb-devel xcb-proto xcb-util-image-devel xcb-util-wm-devel
 ```
 
 ### Optional Dependencies
@@ -105,11 +105,11 @@ These dependencies enable optional features in polybar, if they are installed du
 | xcb-util-cursor | `cursor-click` <br />`cursor-scroll` | `libxcb-cursor-dev` | `xcb-util-cursor-devel` | `xcb-util-cursor-devel` |
 | alsa-lib | `internal/alsa` | `libasound2-dev` | `alsa-lib-devel` | `alsa-devel` |
 | libpulse | `internal/pulseaudio` | `libpulse-dev` | `pulseaudio-libs-devel` | `libpulse-devel` |
-| i3-wm | `internal/i3` | `i3-wm`  | `i3` | `i3-devel` or <br />`i3-gaps-devel` |
+| i3-wm | `internal/i3` | `i3-wm`  | `i3-devel` | `i3-devel` |
 | jsoncpp | `internal/i3` | `libjsoncpp-dev` | `jsoncpp-devel` | `jsoncpp-devel` |
 | libmpdclient | `internal/mpd` | `libmpdclient-dev` | `libmpdclient-devel` | `libmpdclient-devel` |
 | libcurl | `internal/github` | `libcurl4-openssl-dev` <br /> (or `libcurlpp-dev`) | `libcurl-devel` | `libcurl-devel` |
-| wireless_tools (deprecated)<sup>1</sup> | `internal/network` | `libiw-dev` | `wireless-tools-devel` | `wireless-tools` <br />`libiw-devel` |
+| wireless_tools (deprecated)<sup>1</sup> | `internal/network` | `libiw-dev` | - | `wireless-tools` <br />`libiw-devel` |
 | libnl-genl<sup>1<sup> | `internal/network` | `libnl-genl-3-dev` | `libnl3-devel` | `libnl3-devel` |
 
 <sup>1</sup> You only need to install either `libnl-genl` or `wireless-tools`. If `libnl-genl` is installed it will be preferred over `wireless-tools` even if both are installed.
@@ -121,7 +121,7 @@ apt install libxcb-xkb-dev libxcb-xrm-dev libxcb-cursor-dev libasound2-dev libpu
 
 All above dependencies paste-friendly for dnf:
 ```bash
-sudo dnf install -y xcb-util-xrm-devel xcb-util-cursor-devel alsa-lib-devel pulseaudio-libs-devel i3-wm jsoncpp-devel libmpdclient-devel libcurl-devel wireless-tools-devel libnl3-devel
+sudo dnf install -y xcb-util-xrm-devel xcb-util-cursor-devel alsa-lib-devel pulseaudio-libs-devel i3-devel jsoncpp-devel libmpdclient-devel libcurl-devel libnl3-devel
 ```
 
 **Note:** If you have enabled any optional feature during installation, the dependencies for that feature need to remain installed, otherwise polybar may not start.
@@ -164,7 +164,7 @@ mkdir build
 cd build
 cmake ..
 make -j$(nproc)
-# Optional. This will install the polybar executable in /usr/local/bin
+# Optional. This will install the polybar executable in /usr/bin
 sudo make install
 ```
 

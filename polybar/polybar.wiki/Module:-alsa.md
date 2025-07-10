@@ -1,7 +1,8 @@
 This module shows volume and mute state for ALSA mixers. 
 Most of the module functionality should work as long as you are using an alsa backend.
 
-**Do not use this module if you are using pulseaudio ❗️**
+> [!IMPORTANT]
+> **Do not use this module if you are using pulseaudio**
 
 If you use `pulseaudio` use the
 [`internal/pulseaudio`](https://github.com/polybar/polybar/wiki/Module:-pulseaudio)
@@ -87,8 +88,8 @@ ramp-volume-2 = 🔊
 ; headphones are plugged in to `headphone_control_numid`
 ; If undefined, <ramp-volume> will be used for both
 ; Only applies if <ramp-volume> is used
-ramp-headphones-0 = 
-ramp-headphones-1 = 
+ramp-headphones-0 = 🎧
+ramp-headphones-1 = 🎧
 
 ; Right and Middle click
 ; New in version 3.6.0

@@ -15,6 +15,13 @@ interval = 0.5
 ; Default: 0
 thermal-zone = 0
 
+; Select thermal zone by name
+; The name has to match the contents of /sys/class/thermal/thermal_zone*/type
+; for the desired thermal zone.
+; New in version 3.7.0
+; Default: ""
+zone-type = x86_pkg_temp
+
 ; Full path of temperature sysfs path
 ; Use `sensors` to find preferred temperature source, then run
 ; $ for i in /sys/class/hwmon/hwmon*/temp*_input; do echo "$(<$(dirname $i)/name): $(cat ${i%_*}_label 2>/dev/null || echo $(basename ${i%_*})) $(readlink -f $i)"; done
@@ -51,12 +58,14 @@ format-warn = <ramp> <label-warn>
 ;   %temperature% (deprecated)
 ;   %temperature-c%   (default, temperature in °C)
 ;   %temperature-f%   (temperature in °F)
+;   %temperature-k%   (temperature in Kelvin, new in version 3.7.0)
 label = TEMP %temperature-c%
 
 ; Available tokens:
 ;   %temperature% (deprecated)
 ;   %temperature-c%   (default, temperature in °C)
 ;   %temperature-f%   (temperature in °F)
+;   %temperature-k%   (temperature in Kelvin, new in version 3.7.0)
 label-warn = TEMP %temperature-c%
 label-warn-foreground = #f00
 

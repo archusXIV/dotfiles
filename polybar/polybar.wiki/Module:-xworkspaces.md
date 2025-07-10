@@ -16,6 +16,8 @@ Not all atoms are required, but functionality may be limited if some of them are
 * `_NET_DESKTOP_NAMES`: `%name%`
 * `_NET_DESKTOP_VIEWPORT`: `pin-workspaces = true`
 
+In addition, for `label-occupied`, the `_NET_WM_DESKTOP` atom needs to be set on all windows.
+
 You can check which atoms your window manager supports by running `xprop -root _NET_SUPPORTED`.
 
 ### Basic settings
@@ -30,6 +32,13 @@ type = internal/xworkspaces
 ;
 ; Default: false
 pin-workspaces = true
+
+; Groups workspaces by monitor. If set to false, workspaces are not grouped and
+; appear in the order provided by the WM
+; If set to false, cannot be used together with label-monitor
+; New in version 3.7.0
+; Default: true
+group-by-monitor = false
 
 ; Create click handler used to focus desktop
 ; Default: true
@@ -48,10 +57,11 @@ reverse-scroll = true
 ### Additional formatting
 ```ini
 ; icon-[0-9]+ = <desktop-name>;<icon>
+; Map desktop names to some icon. The icon is then available in the %icon% token
 ; NOTE: The desktop name needs to match the name configured by the WM
-; You can get a list of the defined desktops using:
+; You can get a list of the defined desktop names using:
 ; $ xprop -root _NET_DESKTOP_NAMES
-; Note: Neither <desktop-name> nor <icon> can contain a semicolon (;)
+; NOTE: Neither <desktop-name> nor <icon> can contain a semicolon (;)
 icon-0 = code;♚
 icon-1 = office;♛
 icon-2 = graphics;♜
@@ -65,11 +75,13 @@ icon-default = ♟
 ; Default: <label-state>
 format = <label-state>
 
+; Cannot be used if group-by-monitor is false
 ; Available tokens:
 ;   %name%
 ; Default: %name%
 label-monitor = %name%
 
+; Used for the currently selected workspaces
 ; Available tokens:
 ;   %name%
 ;   %icon%
@@ -82,6 +94,7 @@ label-active-background = #3f3f3f
 label-active-underline = #fba922
 label-active-padding = 4
 
+; Used for workspaces at least one window
 ; Available tokens:
 ;   %name%
 ;   %icon%
@@ -91,6 +104,8 @@ label-active-padding = 4
 label-occupied = %icon%
 label-occupied-underline = #555555
 
+; Used for workspaces containing a window that is demanding attention (has the
+; urgent bit set)
 ; Available tokens:
 ;   %name%
 ;   %icon%
@@ -103,6 +118,7 @@ label-urgent-background = #bd2c40
 label-urgent-underline = #9b0a20
 label-urgent-padding = 4
 
+; Used for workspaces without windows
 ; Available tokens:
 ;   %name%
 ;   %icon%

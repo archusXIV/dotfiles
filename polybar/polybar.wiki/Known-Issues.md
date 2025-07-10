@@ -2,6 +2,7 @@ This page lists some of the issues one can encounter when using polybar. Either 
 
 # Contents
 - [Running Polybar](#running-polybar)
+  * [Label `maxlen` truncates formatting tags](#label-maxlen-truncates-formatting-tags)
   * [`Failed to get root pixmap, default to black (is there a wallpaper?)`](#failed-to-get-root-pixmap-default-to-black-is-there-a-wallpaper)
   * [`Cannot find root pixmap, try a different tool to set the desktop background`](#cannot-find-root-pixmap-try-a-different-tool-to-set-the-desktop-background)
   * [Huge Emojis](#huge-emojis)
@@ -16,6 +17,29 @@ This page lists some of the issues one can encounter when using polybar. Either 
 
 
 # Running Polybar
+
+## Label `maxlen` truncates formatting tags
+
+**Problem:** Labels with a `maxlen` property will count formatting tokens when determining where to truncate the label. For example:
+
+```dosini
+label = %{F#ff0000}some text
+label-maxlen = 5
+```
+
+Will result in just `%{F#f` being shown. This can also lead to `X unclosed
+action blocks` errors when `%{A...}` action blocks are used.
+
+The same problem also occurs if the `%output%` token in the `custom/script` or `custom/ipc` module is given a maximum length and the contents of the token contains formatting tags.
+
+**Workaround:** Try not to put formatting tags in labels with `maxlen`. Instead, try any/multiple of the following:
+
+- Use the label's built-in [formatting](./Formatting) properties if possible
+- Use the token's built-in max-width property (`%token:0:<max width>%`) to truncate specific values instead of `maxlen`.
+- Put the formatting tags in the `format` settings if possible (e.g. `format = %{A1:...}<label>%{A1}` instead of `label = %{A1:...}...${A1}`)
+- If the formatting tags only appear at the beginning of the label, you can extend the `maxlen` property by the known number of characters in the formatting tags.
+
+This issue is tracked in [`#531`](https://github.com/polybar/polybar/issues/531).
 
 ## `Failed to get root pixmap, default to black (is there a wallpaper?)`
 Polybar prints this warning when there is no wallpaper set and `pseudo-transparency = true` is set. Polybar will still 

@@ -1,9 +1,10 @@
-The parameters below are using the default values unless stated otherwise. If the key is undefined (commented out) or its value is empty, it means there is no default value for the given parameter.
+The parameters on **this page** are using the default values unless stated otherwise.
+If the key is undefined (commented out) or its value is empty, it means there is no default value for the given parameter.
 
-## Syntax and Domain Specific Language
+## Configuration Syntax
 The configuration uses the [INI file
 format](https://en.wikipedia.org/wiki/INI_file), the full specification can be
-found [here](https://polybar.readthedocs.io/en/stable/man/polybar.5.html).
+found [here](https://polybar.readthedocs.io/man/polybar.5.html).
 
 ```dosini
 [section/name]
@@ -124,9 +125,7 @@ format-foreground = ${colors.white}
 ```
 
 ### Using the same module for multiple bars
-If you are using the same module for more than one bar, there's a neat 
-way to make bar specific changes to the module configuration. 
-Define some custom parameters, for both bars, and then reference them from the module. For example:
+If you are using the same module for more than one bar, there's a neat way to make bar specific changes to the module configuration. Define some custom parameters, for both bars, and then reference them from the module. For example:
 ```dosini
 [bar/top]
 myscript-background = #f00
@@ -147,9 +146,13 @@ Each bar you want to display needs a so called "bar section".
 The bar section is defined as a config section that begins with `bar/` and is
 followed by the name of the bar.
 
+Configuring the tray through the bar section is deprecated in favor of the new
+[tray module](https://polybar.readthedocs.io/user/modules/tray.html).
+
 ***Note*** For configuring multiple monitors automatically see https://github.com/polybar/polybar/issues/763
 
 ```dosini
+; Defines a bar called 'mybar'
 [bar/mybar]
 ; Use either of the following command to list available outputs:
 ; $ polybar -M | cut -d ':' -f 1
@@ -186,7 +189,7 @@ bottom = false
 fixed-center = true
 
 ; Width and height of the bar window.
-; Supports any percentage with offset.
+; Supports any percentage with offset or an extent value.
 ; For 'width', the percentage is relative to the monitor width and for 'height'
 ; relative to the monitor height
 width =
@@ -291,6 +294,7 @@ wm-name =
 ; Expects a valid libc locale, for example: sv_SE.UTF-8
 locale = 
 
+; @deprecated in favor of new tray module since version 3.7.0
 ; Position of the system tray window
 ; If empty or undefined, tray support will be disabled
 ; NOTE: A center aligned tray will cover center aligned modules
@@ -302,10 +306,12 @@ locale =
 ;   none
 tray-position =
 
+; @deprecated in favor of new tray module since version 3.7.0
 ; If true, the bar will not shift its
 ; contents when the tray changes
 tray-detached = false
 
+; @deprecated in favor of new tray module since version 3.7.0
 ; Tray icon max size
 tray-maxsize = 16
 
@@ -315,12 +321,14 @@ tray-maxsize = 16
 ; background color is defined using `tray-background`
 tray-transparent = false
 
+; @deprecated in favor of new tray module since version 3.7.0
 ; Background color for the tray container 
 ; ARGB color (e.g. #f00, #ff992a, #ddff1023)
 ; By default the tray container will use the bar
 ; background color.
 tray-background = ${root.background}
 
+; @deprecated in favor of new tray module since version 3.7.0
 ; Foreground color for the tray icons
 ; This only gives a hint to the tray icon for its color, it will probably only
 ; work for GTK3 icons (if at all) because it targets a non-standard part of the
@@ -329,6 +337,7 @@ tray-background = ${root.background}
 ; New in version 3.6.0
 tray-foreground = ${root.foreground}
 
+; @deprecated in favor of new tray module since version 3.7.0
 ; Offset the tray in the x and/or y direction
 ; Supports any percentage with offset
 ; Percentages are relative to the monitor width or height for detached trays
@@ -336,9 +345,11 @@ tray-foreground = ${root.foreground}
 tray-offset-x = 0
 tray-offset-y = 0
 
+; @deprecated in favor of new tray module since version 3.7.0
 ; Pad the sides of each tray icon
 tray-padding = 0
 
+; @deprecated in favor of new tray module since version 3.7.0
 ; Scale factor for tray clients
 tray-scale = 1.0
 
@@ -349,12 +360,26 @@ tray-scale = 1.0
 ; on top of fullscreen window's
 ;
 ; Currently supported values:
-;   generic (Moves the bar window above the first window in the window stack.
-;            Works in xmonad, may not work on other WMs)
+;   generic (Tries the ewmh strategy and falls back
+;            to the bottom strategy.
+;            This is a best-effort strategy and may change and be tweaked in
+;            the future, the individual strategies are available on their own)
 ;           (New in version 3.6.0)
-;   bspwm
+;           (Changed in version 3.7.0: Tries the ewmh strategy instead of just
+;            the bottom strategy)
+;   bspwm   (Moves the bar window above all bspwm root windows)
+;   bottom  (Moves the bar window above the first window in the window stack.
+;            Works in xmonad, may not work on other WMs
+;            New in version 3.7.0)
+;   ewmh    (Moves the bar above the window specified in _NET_SUPPORTING_WM_CHECK,
+;            if it is set
+;            New in version 3.7.0)
 ;   i3 (requires `override-redirect = true`)
 ; wm-restack =
+
+; Whether polybar defines struts (_NET_WM_STRUT_PARTIAL and _NET_WM_STRUT)
+; New in version 3.7.0
+enable-struts = true
 
 ; Set a DPI values used when rendering text
 ; This only affects scalable fonts
@@ -394,6 +419,11 @@ cursor-scroll =
 
 
 ## Global WM settings
+
+Tells the window manager to add extra space below (with `margin-bottom` for top
+bars) or above (with `margin-top` for bottom bars) the bar window.
+Whether these settings do anything, heavily depends on your window manager.
+
 ```dosini
 [global/wm]
 ; Adjust the _NET_WM_STRUT_PARTIAL top value
@@ -417,7 +447,7 @@ throttle-output-for = 10
 ; @deprecated The setting is ignored since 3.5.0
 throttle-input-for = 30
 
-; Reload upon receiving XCB_RANDR_SCREEN_CHANGE_NOTIFY events
+; Reload when the screen configuration changes (XCB_RANDR_SCREEN_CHANGE_NOTIFY event)
 screenchange-reload = false
 
 ; Compositing operators
@@ -448,11 +478,13 @@ pseudo-transparency = false
 A module is defined as a config section that begins with `module/` and is
 followed by the name of the module (this can be different from the module type).
 
+For a module to show up on your bar, you need to place it by adding its name to the `modules-left`, `modules-center`, or `modules-right` settings in the bar section.
+
 ```dosini
 ; Defines a module named 'mymodule'
 [module/mymodule]
 ; The type of this module
-; The wiki pages for the individual modules show the correct value for that module.
+; The wiki pages for the individual modules show the correct values for each module.
 type = ...
 
 ; Hide the module by default

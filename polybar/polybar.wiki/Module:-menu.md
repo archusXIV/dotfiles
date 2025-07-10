@@ -5,12 +5,12 @@ changed.
 In particular, if you use `menu-open-*` or `menu-close` in your menu module, you
 should update the module to use the new action names.
 A guide for this can be found
-[here](https://polybar.readthedocs.io/en/stable/user/actions.html#deprecated-action-names).
+[here](https://polybar.readthedocs.io/user/actions.html#deprecated-action-names).
 
 ### Basic settings
 
 The menu module uses
-[actions](https://polybar.readthedocs.io/en/stable/user/actions.html) for
+[actions](https://polybar.readthedocs.io/user/actions.html) for
 opening and closing menu levels. 
 For example to open level N, the action is `open.N`, to close the menu, the
 action is called `close`. Please read the link above to learn how to construct

@@ -33,9 +33,10 @@ interface-type = wireless
 ; Default: 1
 interval = 3.0
 
-; Test connectivity every Nth update
+; NOTE: Experimental (might change or be removed in the future)
+; Test connectivity every Nth update by pinging 8.8.8.8
+; In case the ping fails 'format-packetloss' is used until the next ping
 ; A value of 0 disables the feature
-; NOTE: Experimental (needs more testing)
 ; Default: 0
 ;ping-interval = 3
 
@@ -73,6 +74,7 @@ format-connected = <ramp-signal> <label-connected>
 ;   <label-disconnected> (default)
 format-disconnected = <label-disconnected>
 
+; Used when connected, but ping fails (see ping-interval)
 ; Available tags:
 ;   <label-connected> (default)
 ;   <label-packetloss>
@@ -93,11 +95,11 @@ format-packetloss = <animation-packetloss> <label-connected>
 
 ; Default: %ifname% %local_ip%
 label-connected = %essid% %downspeed:9%
-label-connected-foreground = #eefafafa
+label-connected-foreground = #eefafa
 
 ; Default: (none)
 label-disconnected = not connected
-label-disconnected-foreground = #66ffffff
+label-disconnected-foreground = #66ffff
 
 ; Default: (none)
 ;label-packetloss = %essid%

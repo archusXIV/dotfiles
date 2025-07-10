@@ -1,5 +1,13 @@
 Make sure you read the [Configuration wiki page](/polybar/polybar/wiki/Configuration) on how to define the list of fonts to use.
 
+> [!NOTE]
+> The example configurations on the wiki occasionally use font icons. For
+> maximum compatibility, we tried to make sure that all icons are either emojis
+> or covered by [Unifont](https://unifoundry.com/unifont/index.html).
+>
+> For emojis, we recommend the [Noto Color Emoji](https://github.com/googlefonts/noto-emoji) font.
+> For Unifont, you need the base `Unifont` font as well as the `Unifont Upper` and `Unifont CSUR` variants.
+
 ## Fonts
 If you don't explicitly set the font-index for a tag, the bar will iterate the font list and pick the first one that is able to draw the character. [Read more on the wiki page about Formatting](https://github.com/polybar/polybar/wiki/Formatting) and about what tags allow you to define a specific font index.
 
@@ -125,6 +133,9 @@ Icons can be provided in the form of text characters. Popular icon fonts include
 - [Material icons](https://material.io/icons/) - Apache 2.0
 - [IcoMoon](https://icomoon.io/app/#/select/library) - Custom/Mixed Licenses
 - [Nerd Patched Fonts](https://github.com/ryanoasis/nerd-fonts) - Mixed Licenses
+
+Some issues around rendering issues with Nerd Fonts are described
+[here](https://polybar.readthedocs.io/user/fonts/nerd-fonts.html).
 
 Most icon fonts make use of the Private Use Area unicode block and can conflict. 
 After defining a font as explained above, [formatting tags](https://github.com/polybar/polybar/wiki/Formatting#format-tags) can be used. 

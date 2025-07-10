@@ -4,15 +4,24 @@ This module shows the defined content string.
 ```ini
 [module/my-text-label]
 type = custom/text
-content = Some random label
 ```
 
 ### Additional formatting
 ```ini
-; "content" has the same properties as "format-NAME"
-content-background = #000
-content-foreground = #fff
-content-padding = 4
+; @deprecated Use format and/or label to define the module text
+; content = Some random label
+
+; Available tags:
+;   <label> (default)
+; New in version 3.7.0
+format = <label>
+format-background = #000
+format-foreground = #fff
+format-padding = 4
+
+; No tokens available
+; New in version 3.7.0
+label = Some random label
 
 ; "click-(left|middle|right)" will be executed using "/bin/sh -c $COMMAND"
 click-left = notify-send left

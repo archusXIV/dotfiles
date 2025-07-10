@@ -7,7 +7,7 @@ See the [Configuration wiki page](https://github.com/polybar/polybar/wiki/Config
 
 You are able to define fallback click handlers for the whole bar window. Using those you could cycle your desktops by scrolling anywhere on the bar (except existing areas setup for the same button). You should probably disable scrolling for the module (`enable-scroll = false`) if you are using this method.
 
-The bspwm module supports the `next` and `prev` [actions](https://polybar.readthedocs.io/en/stable/user/actions.html) and will send the correct commands to bspwm to change the current workspace. 
+The bspwm module supports the `next` and `prev` [actions](https://polybar.readthedocs.io/user/actions.html) and will send the correct commands to bspwm to change the current workspace. 
 
 ```dosini
 [bar/mybar]
