@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Windows rules
+# Dkwm Windows rules
 # open window(s) on a specific workspace (assigned monitor)
 
 _WindowsRules() {
@@ -13,27 +13,38 @@ _WindowsRules() {
         focus=true float=true
     done < "$HOME"/.config/dk/FloatingApps
 
-    # add windows classes/instances in those lists ================================================#
+    # Add windows classes/instances in this list ==================================================#
     dkcmd rule class="^(URxvt|xterm|xterm-256color|alacritty)$"              terminal=true
     dkcmd rule class="^URxvt$" instance="^(cmus|ncmpcpp|pulsemixer|ripper)$" ws=1 focus=true
     dkcmd rule class="^(feh|Zathura)$"                                       ws=2 focus=true
     dkcmd rule class="^URxvt$" instance="^(ranger|sudoranger|youtube)$"      ws=3 focus=true
-    dkcmd rule class="^(code|Geany|lite-xl)$"                                ws=4 focus=true
+    dkcmd rule class="^(code|Cursor|Geany|com.lite_xl.LiteXL)$"              ws=4 focus=true
     dkcmd rule class="^(virt-manager|VirtualBox|Org.gnome.Boxes)$"           ws=5 focus=true
-    dkcmd rule class="^mpv$" instance="^gl$"                                 ws=5 focus=true
+    dkcmd rule class="^mpv$" instance="^mpvk$"                               ws=5 focus=true
     dkcmd rule class="^URxvt$" instance="^(btop|htop|jnettop|newsboat)$"     ws=6 focus=true
-    dkcmd rule class="^(Chromium|firefox)$"                                  ws=7 focus=true
-    dkcmd rule class="^(file-roller|filezilla|Pcmanfm)$"                     ws=8 focus=true
+    dkcmd rule class="^(Brave-browser|Chromium|firefox)$"                    ws=7 focus=true
+    dkcmd rule class="^(file-roller|filezilla|Pcmanfm|Worker)$"              ws=8 focus=true
     dkcmd rule class="^(obs|SimpleScreenRecorder)$"                          ws=9 focus=true
 
     # Other rules ================================================ attributs ======================#
-    dkcmd rule class="^Five-or-more$"                             focus=true float=true w=434 h=488
-    dkcmd rule instance="^(aur-cli|Browser|floaterm|pacman-cli)$" focus=true float=true
-    dkcmd rule class="^URxvt$" instance="^somabox$"               focus=true float=true
+    dkcmd rule class="^Org.gnome.five-or-more$"                   focus=true float=true w=434 h=488
     dkcmd rule class="^URxvt$" instance="^liteterm$"              ws=4 focus=true float=true
     dkcmd rule class="^URxvt$" instance="^(bashterm|mpm)$"        focus=true float=true w=1260 h=738
     dkcmd rule class="^Screenkey$"                                ignore_cfg=true ignore_msg=true
     dkcmd rule title="^Event Tester$"                             no_absorb=true
+
+    declare -a insts=(
+        aur-cli
+        Browser
+        cal
+        floaterm
+        pacman-cli
+        somabox
+    )
+
+    for inst in "${insts[@]}"; do
+        dkcmd rule instance="^${inst}$" focus=true float=true
+    done
 
     dkcmd rule apply '*'
 }

@@ -7,9 +7,15 @@ export DKSOCK="/tmp/$(command ls /tmp | awk '/dk__/{print $0}')"
 # let's include our windows rules
 . "$HOME"/.config/dk/_WindowsRules
 
+# xrandr --listactivemonitors | awk '$0 !~ /Monitor/{print $NF}'
+# export MONITOR1='DisplayPort-2'
+# export MONITOR2='HDMI-A-0'
+# export MONITOR3='DVI-D-0'
+
 _Has() { command -v "$1" >/dev/null; }
 
 if _Has xrdb && [[ -e $HOME/.Xresources ]]; then
+    xrdb -load "$HOME"/.Xresources
     blk=$(xrdb -query | awk '/color8:/{print $NF}')
     grn=$(xrdb -query | awk '/color2:/{print $NF}')
     red=$(xrdb -query | awk '/color1:/{print $NF}')
@@ -21,13 +27,13 @@ fi
 
 # workspaces/gaps/padding/split ratio/layouts/borders settings
 # -----------------------------------
-dkcmd set numws=10
+dkcmd set numws=9
 
 dkcmd set ws=_ apply layout=rtile master=1 stack=3 \
-pad {l,r,t,b}=6 gap=5 msplit=0.67 ssplit=0.5
+pad {l,r,t,b}=6 gap=5 msplit=0.70 ssplit=0.5
 
 dkcmd set ws=1 layout=grid pad {l,r,t,b}=25 gap=50
-dkcmd set ws=4 layout=tstack msplit=0.80
+dkcmd set ws=4 layout=tstack msplit=0.85
 
 dkcmd set static_ws=true \
     ws=1 name='1:G' mon="$MONITOR1" \
@@ -38,8 +44,7 @@ dkcmd set static_ws=true \
     ws=6 name='6:R' mon="$MONITOR2" \
     ws=7 name='7:R' mon="$MONITOR3" \
     ws=8 name='8:R' mon="$MONITOR3" \
-    ws=9 name='9:R' mon="$MONITOR3" \
-    ws=10 name='10:R' mon="$MONITOR3"
+    ws=9 name='9:R' mon="$MONITOR3"
 
 dkcmd set {obey_motif,focus_open,tile_tohead}=true
 dkcmd set {focus_{mouse,urgent},obey_motif,tile_hints,smart_{border,gap}}=false
@@ -56,6 +61,7 @@ _WindowsRules
 _Has polybar && polybar_start
 _Has sxhkd && sxhkd_start
 sleep 1
-dkcmd status type=full num=1 | dkcmd -p > "$XDG_CONFIG_HOME"/dk/dk_status.log
+dkcmd status type=full num=1 | dkcmd -p > "$XDG_CONFIG_HOME"/dk/dk_status.json
+dkcmd ws view 4
 
 exit 0

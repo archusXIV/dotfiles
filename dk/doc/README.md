@@ -1,16 +1,16 @@
-## dk
+![](dk.png)
 
 A list based tiling window manager in the vein of dwm, bspwm, and xmonad.
 
 Some basics:
 
-- Fully scriptable.
-- Dynamic workspaces.
-- More dynamic tile layout.
-- Gaps, fancy borders, extra layouts and more.
-- Better support for mouse and floating windows.
+- Heavily scriptable and tinker friendly.
+- Dynamic workspaces, any workspace on any monitor.
+- More dynamic tile layout with multiple stacks and window resizing.
+- Gaps, double borders, additional layouts, padding and more.
+- Better support for mouse and floating windows, resize tiles with mouse.
 - Startup script for configuration and running programs.
-- Status info is output to a file for use in bars or scripts.
+- Status info can be output to a file or piped for use in bars or scripts.
 - No built-in extras *(bar, font drawing, or key bindings)*.
 - Sane support for
 [icccm](https://www.x.org/releases/X11R7.6/doc/xorg-docs/specs/ICCCM/icccm.html#client_to_window_manager_communication),
@@ -27,9 +27,14 @@ Arch
 xcb-proto xcb-util xcb-util-wm xcb-util-cursor xcb-util-keysyms
 ```
 
+Void
+```
+libxcb-devel xcb-proto xcb-util-devel xcb-util-wm-devel xcb-util-cursor-devel xcb-util-keysyms-devel
+```
+
 Debian/Ubuntu
 ```
-build-essential libxcb-randr0-dev libxcb-util-dev libxcb-icccm4-dev libxcb-cursor-dev libxcb-keysyms1-dev
+libxcb-randr0-dev libxcb-util-dev libxcb-icccm4-dev libxcb-cursor-dev libxcb-keysyms1-dev
 ```
 
 Other systems should have packages with similar names.
@@ -156,7 +161,6 @@ dkcmd COMMAND
 
 - `quit` exit dk.
 - `restart` re-execute dk.
-- `reload` re-execute dkrc.
 
 #### Ws and Mon
 `mon` and `ws` operate on monitors and workspaces respectively.
@@ -276,9 +280,17 @@ rule MATCH float=true stick=true
 ```
 ---
 
-`ignore` (boolean) determine if the window should ignore configure request events.
+`ignore_cfg` (boolean) determine if the window should ignore configure request  
+events (size or location changes).
 ```
-rule MATCH ignore=true
+rule MATCH ignore_cfg=true
+```
+---
+
+`ignore_msg` (boolean) determine if the window should ignore client message  
+window activation events (grabbing focus).
+```
+rule MATCH ignore_msg=true
 ```
 ---
 
@@ -360,33 +372,39 @@ set tile_tohead=true
 ```
 ---
 
-`smart_gap` (boolean) remove gaps on workspaces with only one tiled window.
+`smart_gap` (boolean) whether gaps are disabled on workspaces with only one tiled window.
 ```
 set smart_gap=true
 ```
 ---
 
-`smart_border` (boolean) remove borders on workspaces with only one tiled window.
+`smart_border` (boolean) whether borders are disabled on workspaces with only one tiled window.
 ```
 set smart_border=true
 ```
 ---
 
-`focus_urgent` (boolean) focus windows that request it through client messages.
+`focus_urgent` (boolean) focus windows that request it.
 ```
 set focus_urgent=true
 ```
 ---
 
-`focus_open` (boolean) disable focus-on-open.
+`focus_open` (boolean) whether windows are focused when opened.
 ```
 set focus_open=false
 ```
 ---
 
-`focus_mouse` (boolean) disable focus-follows-mouse.
+`focus_mouse` (boolean) whether window focus follows the mouse.
 ```
 set focus_mouse=false
+```
+---
+
+`obey_motif` (boolean) whether to obey motif hints for borders.
+```
+set obey_motif=false
 ```
 ---
 
@@ -598,20 +616,29 @@ status num=1 [TYPE] [FILE]  # output once
 
 ### Todo
 
-- Simplification.
+- Simplification and code quality improvement.
+- See ISSSUE.md for current problems and possible additions.
+- `grep -n 'TODO' src/*` will give some code I'm not happy with.
 
 
 ### Contributing
 
-I'm very open to contributions or ideas.
+I'm very open to contributions or ideas, please feel free to email me or open 
+an issue/PR. For myself I have various builds that can help finding issues or 
+provide some insight. These include:
 
 
-To enable internal stderr debug output
+stderr debug output
 ```
 make debug
 ```
 
-To leave debug symbols in *(for gdb, valgrind, etc.)*.
+debug output and function calls
+```
+make fdebug
+```
+
+don't strip debug symbols *(for gdb, valgrind, etc.)*.
 ```
 make nostrip
 ```
@@ -621,9 +648,13 @@ make nostrip
 
 See the LICENSE file for a list of authors/contributors.
 
+Huge thanks to Kjetil Molteberg *(@badkarma)* for the logo.
+
 Non contributors that I owe a huge thanks to:
-[dwm](https://dmw.suckless.org), [bspwm](https://github.com/baskerville/bspwm),
-[xmonad](https://xmonad.org), [evilwm](http://www.6809.org.uk/evilwm/),
-[monsterwm-xcb](https://github.com/Cloudef/monsterwm-xcb),
-[4wm](https://github.com/dct2012/4wm), and [frankenwm](https://github.com/sulami/FrankenWM).
+- [dwm](https://dmw.suckless.org)
+- [bspwm](https://github.com/baskerville/bspwm)
+- [xmonad](https://xmonad.org)
+- [evilwm](http://www.6809.org.uk/evilwm/)
+- [monsterwm-xcb](https://github.com/Cloudef/monsterwm-xcb)
+- [frankenwm](https://github.com/sulami/FrankenWM).
 
