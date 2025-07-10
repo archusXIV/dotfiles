@@ -76,17 +76,6 @@ grep_this() {
         --bind 'enter:become(vim {1} +{2})'
 }
 
-#upgrade_cursor() {
-#    cd "$HOME"/Documents/Downloads || return 1
-#    local crsr
-#    crsr="cursor.AppImage"
-#    find . -maxdepth 1 -type f -name "Cursor-*" -exec mv {} "$crsr" \; && {
-#        sudo chown root:root "$crsr"
-#        sudo chmod +x  "$crsr"
-#        sudo mv -f "$crsr" /usr/local/bin/"$crsr"
-#    }
-#}
-
 sync_mpm() {
     rsync -aprq ~/Documents/projects/mpv-playlists-manager/* \
         ~/Documents/mpv-playlists-manager/ && \
