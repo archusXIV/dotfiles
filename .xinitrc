@@ -2,6 +2,7 @@
 
 # this file is run when calling startx
 # default arch init scripts
+# shellcheck source=/dev/null
 if [ -d /etc/X11/xinit/xinitrc.d ]; then
     for f in /etc/X11/xinit/xinitrc.d/*.sh; do
         [ -x "$f" ] && . "$f"
@@ -23,17 +24,18 @@ systemctl --user import-environment DISPLAY
 systemctl --user start Xsession.target &
 
 # These guys are environment variables.
+MODMAP="$HOME/.config/xfiles/Xmodmap"
 if [ -f "$MODMAP" ]; then
     xmodmap "$MODMAP"
 else
-    xmodmap -pke > ~/.config/xfiles/Xmodmap
-    xmodmap ~/.config/xfiles/Xmodmap
+    xmodmap -pke > "$MODMAP"
+    xmodmap "$MODMAP"
 fi
 
-[ -f "$RESOURCES_FILE" ] && xrdb -load "$RESOURCES_FILE"
+[ -f "$HOME"/.Xresources ] && xrdb -load "$HOME"/.Xresources
 
 # more stuff (personal scripts).
-nvidia-settings -l
+# nvidia-settings -l
 xset s off -dpms
 xset r rate 350 70
 setxkbmap -option caps:swapescape
