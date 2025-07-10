@@ -88,8 +88,11 @@ case "${create_user}" in
         echo " ${g}${user_name} account created.${c}"
         echo " ${g}Give ${user_name} sudo privileges.${c}"
         read -r -t 3
-        command -v "${editor}" > /dev/null || {
-            echo "${r}Please install ${editor} to continue.${c}"
+        command -v "${editor}" >/dev/null || {
+            echo "${r}Please install ${editor} to continue."
+            echo " Removing ${user_name}...${c}"
+            userdel -r "${user_name}"
+            groupdel "${user_name}" >/dev/null 2>&1
             exit 1
         }
         EDITOR="${editor}" visudo
