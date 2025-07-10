@@ -1,6 +1,7 @@
 # Ivaylo Kuzev <ivkuzev@gmail.com>, 2014
-# Xresources like colorscheme for https://github.com/hut/ranger.
-# Use the 16 colors of your ~/.Xresources file.
+# Zenburn like colorscheme for https://github.com/hut/ranger .
+
+# default colorscheme.
 # Copyright (C) 2009-2013  Roman Zimbelmann <hut@lepus.uberspace.de>
 # This software is distributed under the terms of the GNU GPL version 3.
 

@@ -63,8 +63,7 @@ handle_extension() {
             ## Avoid password prompt by providing empty password
             7z l -p -- "${FILE_PATH}" && exit 5
             exit 1;;
-        ## M3U
-        m3u)
+        m3u|txt)
             cat "${FILE_PATH}" && exit 5
             exit 1;;
         ## PDF
@@ -149,9 +148,9 @@ handle_image() {
             exit 7;;
         ## Video
         video/*)
-             # Thumbnail
-             ffmpegthumbnailer -i "${FILE_PATH}" -o "${IMAGE_CACHE_PATH}" -s 0 && exit 6
-             exit 1;;
+            # Thumbnail
+            ffmpegthumbnailer -i "${FILE_PATH}" -o "${IMAGE_CACHE_PATH}" -s 0 && exit 6
+            exit 1;;
         application/font*|application/*opentype)
             preview_png="/tmp/$(basename "${IMAGE_CACHE_PATH%.*}").png"
             if fontimage -o "${preview_png}" \
@@ -233,8 +232,8 @@ handle_mime() {
             exit 1;;
         ## Video and audio
         video/* | audio/*)
-            mediainfo "${FILE_PATH}" && exit 5
-            exiftool "${FILE_PATH}" && exit 5
+            mediainfo "${FILE_PATH}" || exiftool "${FILE_PATH}" && exit 5
+            # exiftool "${FILE_PATH}" && exit 5
             exit 1;;
     esac
 }
