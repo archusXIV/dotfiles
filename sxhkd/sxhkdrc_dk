@@ -1,7 +1,7 @@
 ######################################################################
 # THIS FILE IS THE DK WINDOWS, DESKTOP, MONITORS & LAYOUTS SHORTCUTS #
 ######################################################################
-# Reload dk config, reload rules, quit dk.
+# Reload dk config, restart dk, quit dk.
 ctrl + alt + {c,r,q}
     { \
     "$HOME"/.config/dk/dkrc; notify-send 'rules reloaded', \
@@ -13,10 +13,10 @@ ctrl + alt + {c,r,q}
 ##########################  WINDOWS MANAGEMENT  ######################
 ######################################################################
 # close/close all unfocused/close all, kill focused window.
-super + {_,ctrl +,alt +,shift +} End
+super + {_,ctrl,alt,shift} + End
     {\
-    dkcmd win kill, \
-    closethemall --unfocused, \
+    dk_close, \
+    closethemall --nonfocused, \
     closethemall --all, \
     xkill -id "$(xdo id $1)" \
     }
@@ -29,8 +29,8 @@ super + a
 super + {_,alt + }{Left,Right}
     dkcmd {win focus,ws} {prev,next}
 # or
-super + {_,alt + }{h,l}
-    dkcmd {win focus,ws} {prev,next}
+#super + {_,alt + }{h,l}
+#    dkcmd {win focus,ws} {prev,next}
 
 # focus next, 2nd, 3rd, 4th or whatever windows from the focused one.
 super + shift + {KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,KP_Home,KP_Up,KP_Prior,KP_Insert}
@@ -67,6 +67,10 @@ alt + l ; {a,d,g,n,r,s,t,w}
 # toggle static/dynamic mode (false resets ws orders).
 alt + m ; {d,f,s}
     dk_change_layouts {dynamic,false,static}
+
+# swap workspaces
+super + s ; {KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,KP_Home,KP_Up,KP_Prior,KP_Insert}
+    dk_swap_ws {1-9,10}
 
 # toggle between monocle/last layout.
 super + m

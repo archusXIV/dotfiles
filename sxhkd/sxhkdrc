@@ -21,17 +21,21 @@ Menu ; {d,l,r}
 # scratchpad custom script
 super + shift + {h,u,r}
     {\
-    scratchpad -h, \
-    scratchpad -u, \
-    scratchpad -r \
+    scratchpad --hide, \
+    scratchpad --unhide, \
+    scratchpad --rofi \
     }
+
+# center focused floating window
+super + c
+    center_floatwin
 
 # applications bindings
 # terminal emulators
 super + {_,shift +,ctrl + }Return
     {\
     xterm, \
-    urxvtc -name bashterm -geometry 124x30 -e bash, \
+    urxvtc -name bashterm -geometry 124x30 -e bash; center_floatwin, \
     xterm -e bash \
     }
 
@@ -50,12 +54,12 @@ super + u ; {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}
 # gui applications
 super + g ; {c,e,f,g,o,p,s,v,w}
     {\
-    chromium, \
+    code, \
     $EDITOR, \
     $FILEMNGR, \
     geany, \
     obs, \
-    code, \
+    cursor.AppImage, \
     pavucontrol, \
     $VIRTMNGR, \
     $BROWSER \
@@ -80,10 +84,13 @@ ctrl + {_,shift + }{KP_End,KP_Down,KP_Next,KP_Left}
 
 # volume/mic
 {_,alt + }XF86Audio{Lower,Raise}Volume
-    volume_control --{sink,source} --{down,up}
+    volume_control {sink,source} --{down,up}
 
 {_,alt + }XF86AudioMute
-    volume_control --{sink,source} --toggle
+    volume_control {sink,source} --toggle
+
+alt + {KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,KP_Home,KP_Up,KP_Prior,KP_Insert}
+    volume_control sink --set {10,20,30,40,50,60,70,80,90,100}
 
 # player control
 XF86Audio{Prev,Play,Next}
@@ -99,6 +106,6 @@ ctrl + XF86Audio{Lower,Raise}Volume
 
 # equalize volume {left/right,last position}
 super + alt + {equal,l}
-    volume_control --sink --{equalize,last}
+    volume_control sink --{equalize,last}
 
 # vim:ft=sxhkdrc

@@ -1,74 +1,19 @@
-# reload config, restart, quit dk.
+# Reload config, restart, quit dk
 ctrl + alt + {c,r,q}
 
-# reload sxhkd configuration files.
-alt + Caps_Lock (Escape)
+# close/close all unfocused/close all, kill focused window
+super + {_,ctrl,alt,shift} + End
 
-# invoke the session managemnt menu.
-ctrl + alt + Delete
-
-# dmenu/rofi
-Menu ; {d,r} (chain)
-
-# scratchpad hide/show/rofi
-super + shift + {h,u,r}
-
-# terminals: xterm, bashterm & xfce4-terminal (zsh)
-super + {_,shift + ,ctrl + }Return
-
-# ranger instances
-super + r ; {a,m,r,s,v} (chain)
-
-# URxvt applications
-super + u ; {a,c,d,e,h,j,m,n,p,r,s,t,v,x} (chain)
-
-# open sxhkdrc_<wm> in vim (s stands for main config)
-super + k ; {b,d,i,s}
-
-# gui applications
-super + g ; {e,f,g,v,w} (chain)
-
-# script to launch rofi-record, obs/ssr.
-super + shift + v ; {a,o,v,k} (chain)
-
-# toggle/restart polybar(s)
-ctrl + {_,shift + }{KP_End,KP_Down,KP_Next,KP_Left}
-
-# controls the webcam rectangle position on the screen.
-alt + shift + {Left,Down,Up,Right}
-
-# output/input volume
-XF86Audio{Lower,Raise}Volume {_,alt + }
-
-# output/input mute
-XF86AudioMute {_,alt + }
-
-# player control
-XF86Audio{Prev,{Play,Pause},Next}
-
-# player stop
-alt + F10
-
-# equalize volume {left/right,last position}
-super + alt + {equal,l}
-
-# close/close all unfocused/close all, kill focused window.
-super + {_,ctrl +,alt +,shift +} End
-
-# focus master in the current workspace.
+# focus master in the current workspace
 super + a
 
 # focus window/workspace previous/next
 super + {_,alt + }{Left,Right}
 
-# focus window/workspace previous/next
-super + {_,alt + }{h,l}
-
-# focus next, 1rst, 2nd, or whatever windows from the focused one.
+# focus next, 2nd, 3rd or whatever windows from the focused one
 super + shift + {1-9,10}
-    dkcmd win focus +{1-9,10}
 
-# swap tiled window in/out of master, cycle tiled windows in place
+# swap tiled window in/out of master, cycle tiled windows
 super + {space,Tab}
 
 # focus monitor next/previous
@@ -84,21 +29,24 @@ super + {_,alt +,ctrl +} {1-9,10}
 super + {_,shift + }less
 
 # send/send & follow all windows of the current ws to ws n°
-super + shift + s ; {_,alt + }{1-9,10}
+super + shift + s ; {_,alt + } {1-9,10}
 
 # change active workspace layout.
 alt + l ; {a,d,g,n,r,s,t,w}
 
-# toggle static/dynamic mode (false resets ws orders).
+# toggle static/dynamic mode (false resets ws orders)
 alt + m ; {d,f,s}
 
-# toggle between monocle/last layout.
+# swap workspaces
+super + s ; {1-9,10}
+
+# toggle between monocle/last layout
 super + m
 
 # toggle floating, sticky
 super + alt + {s,space}
 
-# toggle fullscreen/fake fullscreen (enable manipulating fullscreen window)
+# toggle fullscreen/fake fullscreen
 {_,alt +} F11
 
 # move the active window up/down the stack
@@ -107,14 +55,11 @@ super + ctrl + {KP_Add,KP_Subtract}
 # resize/move (floating) window using custom script
 alt + {_,ctrl + }{Left,Up,Down,Right}
 
-# resize/move (floating) window using custom script
-alt + {_,ctrl + }{h,k,j,l}
-
 # change number of windows in master or first stack
 super + {_,shift + }{KP_Add,KP_Subtract}
 
 # change gap width
 alt + {KP_Add,KP_Subtract}
 
-# change border widths
+# change border widths (width,outer_width)
 alt + ctrl + {_,shift + }{equal,minus}

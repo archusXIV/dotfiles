@@ -1,26 +1,56 @@
 # Reload, restart, quit i3.
-super + alt + {c,r,q}
+ctrl + alt + {c,r,q}
 
 # reload sxhkd configuration files.
-alt + Escape
+alt + Caps_Lock
 
-# launch default $TERMINAL,urxvtc -name floaterm
-alt + {_,shift +} Return
+# Invoke the session managemnt menu.
+ctrl + alt + Delete
 
-# dmenu-chooser, rofi-chooser
+# dmenu/rofi
 Menu ; {d,r}
 
-# most used gui applications.
+# scratchpad hide/show/rofi
+alt + shift + {h,u,r}
+
+# terminal emulators $TERMINAL, URxvt
+alt + {_,shift +}Return
+
+# ranger stuff
+alt + r ; {a,m,r,s,v}
+
+# URxvt applications
+alt + u ; {a,c,d,e,h,j,m,n,p,r,s,t,v,x,y}
+
+# open sxhkdrc_<wm> in vim (s stands for main config)
+alt + k ; {b,d,i,s}
+
+# gui applications $EDITOR, $FILEMNGR, geany, $VIRTMNGR, $BROWSER
 alt + g ; {e,f,g,v,w}
 
-# URxvt myplayer_audio, cmus, mpm, mutt, htop, jnettop, ncmpcpp, mixer, etc...
-alt + u ; {a,c,d,e,h,j,m,n,p,r,s,x,y}
-
-# qv4l2, pavucontrol, qvidcap.
+# audio-video applications qv4l2, pavucontrol, qvidcap
 alt + v ; {g,p,q}
 
-# Ranger, ranger as root
-alt + x ; {r,s}
+# script to launch rofi-record, obs/ssr.
+alt + shift + v ; {a,o,v,k}
+
+# toggle/restart polybar(s)
+ctrl + {_,shift + }{KP_End,KP_Down,KP_Next,KP_Left}
+
+# controls the webcam rectangle position on the screen.
+alt + shift + {Left,Down,Up,Right}
+
+# output/input volume
+XF86Audio{Lower,Raise}Volume {_,alt + }
+
+# on the fly output/input volume
+alt + {_,shift + }{1-9,0}
+
+# output/input mute
+XF86AudioMute {_,alt + }
+
+# mediacontrol --{prev,stop,toggle,next} (cmus,mpd,mpv)
+alt + {F9,F10,F11,F12}
 
 # Focus the given direction.
 super + {Up,down,Left,Right}
@@ -37,9 +67,6 @@ super + alt + {Left,Right}
 # Swap containers.
 super + shift + {Up,down,Left,Right}
 
-# Scratchpad hide/unhide & rofi_scratchpad
-alt + shift + {h,u,r}
-
 # Mode swap (between workspaces/outputs)
 super + shift + s
 
@@ -55,11 +82,11 @@ ctrl + {Left,Up,Down,Right}
 # Move floating container in the center of the screen
 super + c
 
-# Close/kill current window
-super + {_,ctrl + }q
+# Close/close all/kill current window
+super + {_,alt +,ctrl + }q
 
-# Close all windows with the same WM_CLASS.
-super + alt + ctrl + c
+# close all windows in the present desktop.
+super + alt + ctrl + k
 
 # Set splitting direction
 super + {v,h}

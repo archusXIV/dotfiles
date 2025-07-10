@@ -1,15 +1,16 @@
-#
-# Defines keymap for sxhkd
-#
-# Restart/quit i3.
-super + alt + {r,q}
+########################################################################
+# THIS FILE IS THE I3WM WINDOWS, DESKTOP, MONITORS & LAYOUTS SHORTCUTS #
+########################################################################
+# Reload, restart, quit i3.
+ctrl + alt + {c,r,q}
     { \
-    i3-msg restart, \
+    i3-msg reload; notify-send 'config reloaded', \
+    I3-msg restart, \
     prompt "Do you really want to quit i3 ?" "Xexit" \
     }
 
-# Focus
-super + {Up,down,Left,Right}
+# Focus the given direction.
+super + {Up,Down,Left,Right}
     { \
     i3-msg focus up, \
     i3-msg focus down, \
@@ -17,16 +18,20 @@ super + {Up,down,Left,Right}
     i3-msg focus right || i3-msg focus output right \
     }
 
+# Focus family
+super + shift + {p,x}
+    i3-msg focus {parent,child}
+
 # Focus workspace {1-9,10} or send (focused node) to the given desktop (using numpad).
 super + {_,alt + }{KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,KP_Home,KP_Up,KP_Prior,KP_Insert}
-    i3-msg {focus workspace,move container to workspace} {1-9,10}
+    i3-msg {workspace,move container to workspace} {1-9,10}
 
-# Switch to next or previous workspace
+# Switch to next or previous existing workspace
 super + alt + {Left,Right}
     i3-msg workspace {prev,next}
 
 # Swap
-super + shift + {Up,down,Left,Right}
+super + shift + {Up,Down,Left,Right}
     { \
     i3-msg move up, \
     i3-msg move down, \
@@ -34,7 +39,13 @@ super + shift + {Up,down,Left,Right}
     i3-msg move right \
     }
 
-## Actions on windows
+# Mode swap (between workspaces/outputs)
+super + s
+    i3-msg mark "swapee"; i3-msg mode "swap"
+
+# Mode resize
+super + r
+    i3-msg mode "resize"
 
 # Toggle fullscreen/floating state
 super + alt + {f,s}
@@ -44,7 +55,7 @@ super + alt + {f,s}
     }
 
 # Move floating window
-super + shift + {Left,Up,Down,Right}
+ctrl + {Left,Up,Down,Right}
     { \
     i3-msg move left 5px, \
     i3-msg move up 5px, \
@@ -56,53 +67,47 @@ super + shift + {Left,Up,Down,Right}
 super + c
     i3-msg move position center
 
-# Close/kill current window
-super + {_,ctrl + }q
-    { \
-    xdo close, \
+# Close/kill current window (like xkill)
+super + {_,alt +,ctrl + }q
+    {\
+    i3-msg kill, \
+    closethemall, \
     xdo kill \
     }
-
-# Close all windows with the same WM_CLASS in the present desktop.
-super + alt + ctrl + c
-    xdo close -c
 
 # Set splitting area
 super + {v,h}
     i3-msg split{v,h}; notify-send 'container splited'
 
-# Cycle between windows
-super + {_,shift + }n
-    i3-msg focus{up,down}
-
 ## Actions on workspaces
 
 # layout toggle
 alt + Tab
-    i3-msg layout toggle tabbed stacking splitv splith
+i3-msg layout toggle tabbed stacking splitv splith
 
-# Cycle non-empty between workspaces and outputs
-super + alt + {left,right}
-    i3-msg {workspace,output} {prev,next}_on_output
+# switch between the current and the previously focused workspace.
+super + {_,ctrl +}b
+    i3-msg {\
+    workspace back_and_forth, \
+    move container to workspace back_and_forth \
+    }
 
-# Cycle between all workspaces and outputs
-super + shift + {_,ctrl + }w{left,right}
-    i3-msg {workspace,output} {prev,next}
+# Cycle between all occupied workspaces and outputs
+ctrl + alt + {Left,Right}
+    i3-msg workspace {prev,next}
 
 # Move the whole workspace to the next output
-super + ctl + {Right,Left}
+super + ctrl + {Right,Left}
     i3-msg move workspace to output {right,left}
 
-# Cursor actions
-
 # Move cursor
-super + ctrl + m : {_,shift + ,shift + super + }{h,j,k,l}
-    m={20,100,200} {x=-1 y=0,x=0 y=1,x=0 y=-1,x=1 y=0}; \
-    xdotool mousemove_relative -- $(( m*x )) $(( m*y ))
+#super + ctrl + m : {_,shift + ,shift + super + }{h,j,k,l}
+#    m={20,100,200} {x=-1 y=0,x=0 y=1,x=0 y=-1,x=1 y=0}; \
+#    xdotool mousemove_relative -- $(( m*x )) $(( m*y ))
 
 # Move cursor to monitor corners
-super + ctrl + m : super + {h,j,k,l}
-    xdotool mousemove {$x $y,$x $dy,$dx $y,$dx $dy}
+#super + ctrl + m : super + {h,j,k,l}
+#    xdotool mousemove {$x $y,$x $dy,$dx $y,$dx $dy}
 
 # Simulate mouse button click
 super + ctrl + m : {_,shift + ,ctrl + }space

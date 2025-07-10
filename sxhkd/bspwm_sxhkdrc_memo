@@ -16,11 +16,11 @@ alt + {_,shift +,ctrl + }Return
 # ranger stuff
 alt + r ; {a,m,r,s,v}
 
-# URxvt applications (use super to recall)
+# URxvt applications
 alt + u ; {a,b,c,d,e,h,j,m,n,p,r,s,t,v,x,y}
 
-# gui applications (use super to recall)
-alt + g ; {c,e,f,g,o,p,v,w}
+# gui applications
+alt + g ; {b,c,e,f,g,o,p,v,w}
 
 # disactivate/activate the keyboard repetition
 shift + {_,ctrl + }
