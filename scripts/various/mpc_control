@@ -1,5 +1,7 @@
 #!/bin/bash
 
+mpc random off
+
 current=$(mpc --format %position% current)
 last=$(mpc playlist | wc -l)
 first=$((last / last))

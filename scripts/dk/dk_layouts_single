@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # define layouts array
 # mimic dwm style layout symbols
@@ -25,9 +25,9 @@ typeset -A layouts=(
 #[tstack]="󱒉"
 #)
 
-dkcmd status type=layout num=1 | jq '.[]' | sed 's/"//g'
+layout=$(dkcmd status num=1 | grep '^L' | sed 's/^L//')
 layout="${layouts[$layout]}"
 
-echo $layout
+echo "$layout"
 
 exit 0;

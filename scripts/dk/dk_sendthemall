@@ -1,17 +1,24 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# dependency: xdo
-# send/follow all windows of the current ws to ws n°
+# send/follow all windows from the focused workspace to another one.
 # options: dk_sendthemall -s (send) <workspace>
 #          dk_sendthemall -f (follow) <workspace>
-
-_SendThemAllTo() {
-    for win in $(xdo id -d); do
-        dkcmd ws send "$2"
-    done
-}
-
+#
+# sxhkd shortcut:
+# send/follow all windows of the current ws to ws n°($2)
+# super + shift + s ; {_,alt + }{1-9,0}
+#     dk_sendthemall -{s,f} {1-9,10}
+settings
 case "$1" in
-    -s) _SendThemAllTo ;;
-    -f) _SendThemAllTo && dkcmd ws "$2" ;;
+    -s)
+        for win in $(xdo id -d); do
+            dkcmd ws send "$win" "$2"
+        done
+    ;;
+    -f)
+        for win in $(xdo id -d); do
+            dkcmd ws send "$win" "$2"
+        done
+        dkcmd ws "$2"
+    ;;
 esac

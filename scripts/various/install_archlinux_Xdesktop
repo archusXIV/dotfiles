@@ -49,7 +49,7 @@ if [[ $# -eq 0 ]]; then
     Example usage:
     ./install_archlinux_Xdesktop -e vim -x xorg -p yes -t rxvt-unicode
 USAGE
-    exit 1
+exit 1
 fi
 
 # Parse command line arguments
@@ -62,7 +62,7 @@ while getopts "e:p:t:x:" opt; do
         \?)
             echo "${r}Invalid option -${OPTARG}${c}" >&2
             exit 1
-        ;;
+            ;;
     esac
 done
 
@@ -91,45 +91,45 @@ case "${add_account}" in
         read -r -t 3
         command -v "${editor}" >/dev/null || {
             echo "${r}Please install ${editor} to continue."
-            echo " Removing ${user_name}...${c}"
-            userdel -r "${user_name}"
-            groupdel "${user_name}" >/dev/null 2>&1
-            exit 1
-        }
-        EDITOR="${editor}" visudo
-    ;;
-    *)
-        echo " ${r}No user account created.${c}"
-        read -r -t 3
-    ;;
-esac
+                    echo " Removing ${user_name}...${c}"
+                    userdel -r "${user_name}"
+                    groupdel "${user_name}" >/dev/null 2>&1
+                    exit 1
+                }
+            EDITOR="${editor}" visudo
+            ;;
+        *)
+            echo " ${r}No user account created.${c}"
+            read -r -t 3
+            ;;
+    esac
 
-if [[ $xserver == "xorg" ]]; then
-    pacman -Syu \
-    xorg \
-    xorgproto \
-    mesa ${extra_packages[@]} \
-    "${term}" --noconfirm --needed
-elif [[ -n $user_name && $xserver != "xorg" ]]; then
-	# Instead of switching shells, run a command as the user:
-    su - "${user_name}" -c "
-	    sudo pacman -Sy git --noconfirm
-	    cd /home/${user_name} && {
-	        git clone https://aur.archlinux.org/yay-bin && {
-	            cd yay-bin/ && makepkg -si && \
+    if [[ $xserver == "xorg" ]]; then
+        pacman -Syu \
+            xorg \
+            xorgproto \
+            mesa ${extra_packages[@]} \
+            "${term}" --noconfirm --needed
+    elif [[ -n $user_name && $xserver != "xorg" ]]; then
+        # Instead of switching shells, run a command as the user:
+        su - "${user_name}" -c "
+        sudo pacman -Sy git --noconfirm
+        cd /home/${user_name} && {
+            git clone https://aur.archlinux.org/yay-bin && {
+                cd yay-bin/ && makepkg -si && \
                 yay -S xlibre-server-bootstrap
-	            yay -S xlibre-input-libinput
-	            yay -S xlibre-server xlibre-server-common
-                yay -S xlibre-input-{elographics,evdev,synaptics,vmmouse,void,wacom} \
-                xlibre-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,qxl,vesa,vmware} \
-	            mesa ${extra_packages[@]} ${term} \
-                xorg-{setxkbmap,xev,xkill,xmodmap,xprop,xinit,xrandr,xrdb,xset,xsetroot}
-	            sudo reboot
-            }
-        }
-    "
-fi
+        yay -S xlibre-input-libinput
+        yay -S xlibre-server xlibre-server-common
+        yay -S xlibre-input-{elographics,evdev,synaptics,vmmouse,void,wacom} \
+            xlibre-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,qxl,vesa,vmware} \
+            mesa ${extra_packages[@]} ${term} \
+            xorg-{setxkbmap,xev,xkill,xmodmap,xprop,xinit,xrandr,xrdb,xset,xsetroot}
+        sudo reboot
+    }
+}
+"
+    fi
 
-echo " ${g}Rebooting the system...${c}"
-read -r -t 2
-reboot
+    echo " ${g}Rebooting the system...${c}"
+    read -r -t 2
+    reboot

@@ -1,5 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
+# Volume control:
 # Author: Barret E (2022) <archus@protonmail.com>
 # https://github.com/archusXIV/dotfiles
 # Simple script to control pulseaudio volume/microphone.
@@ -11,99 +12,134 @@
 #        volume_control sink --set "value" (onthefly_preset)
 #        volume_control source --set "value" (onthefly_preset)
 
-[[ -z $(pidof polybar) ]] && exit 1
+# Make sure we have polybar running
+! pgrep -x polybar >/dev/null && exit 1
 
 # change default presets values to your liking.
 sink_preset=5
 source_preset=1
-# not this one.
 onthefly_preset="$3"
+default_source_vol="80%"
 
-DEFAULT_SINK=$(pactl get-default-sink)
-DEFAULT_SOURCE=$(pactl get-default-source)
-
-# Are we muted?
-GET_SINK_MUTE=$(pactl get-sink-mute "${DEFAULT_SINK}")
-GET_SOURCE_MUTE=$(pactl get-source-mute "${DEFAULT_SOURCE}")
-
-# finding proper pid for proper bar-2
-WDMNGR=$(awk '/Name/{print $2}' < <(wmctrl -m))
-BARPID=$(pgrep --full "$WDMNGR"-bar-2)
-
-# sending message to polybar
-_hook_sink_on() {
-    polybar-msg -p "$BARPID" action \
-    "#volume-ipc.hook.1" >/dev/null 2>&1
+_polybarHook() {
+    local type state module
+    type=$1
+    state=$2
+    if [[ $type == "sink" ]]; then
+        module="volume-ipc"
+    else
+        module="mic-ipc"
+    fi
+    polybar-msg action "#${module}.hook.${state}" >/dev/null 2>&1
 }
 
-_hook_source_on() {
-    polybar-msg -p "$BARPID" action \
-    "#mic-ipc.hook.1" >/dev/null 2>&1
+_notifyVolume() {
+    notify-send "\
+    Main pulseaudio volume $(pactl get-sink-volume @DEFAULT_SINK@ \
+    | awk '{if(NR!=2) {print $5}}')\
+    "
 }
 
-# if polybar is hidden by eg: mpv in fullscreen; then get a notification anyway.
-_notify_volume() {
-    notify-send "Main pulseaudio volume \
-    $(pactl get-sink-volume "${DEFAULT_SINK}" \
-    | awk '{if(NR!=2) {print $5}}')"
+_keyboardMuteKey() {
+    # variables used if g810-led package is installed.
+    local profile_rules profile_udev profiles_dir muteKeyOff muteKeyOn state key_state
+
+    profile_rules="/etc/udev/rules.d/g810-led.rules"
+    profile_udev=$(grep -e 'profile_' "$profile_rules" | sed 's,.*/,,;s/"//')
+    profiles_dir="/etc/g810-led/profiles"
+    muteKeyOff=$(awk '/^var color3/{print $NF}' "$profiles_dir"/"$profile_udev")
+    muteKeyOn=$(awk '/^var color1/{print $NF}' "$profiles_dir"/"$profile_udev")
+    state=$1
+    key_state=
+
+    [[ $state == "on" ]] && key_state="$muteKeyOn" || key_state="$muteKeyOff"
+
+    if [[ -s "$XDG_RUNTIME_DIR"/scratchpad_hidden.list ]]; then
+        g815-led -k mute "$key_state"
+        g815-led -fx breathing logo fb4934 5
+        [[ $state == "on" ]] && notify-send 'Volume muted'
+    else
+        g815-led -k mute "$key_state"
+        [[ $state == "on" ]] && notify-send 'Volume muted'
+    fi
 }
 
+# Helper function to handle volume changes
+_handleVolume() {
+    local device action preset default_device
+
+    device=$1    # sink or source
+    action=$2    # up, down, toggle, set
+    preset=$3    # volume change preset
+    default_device="DEFAULT_${device^^}"
+
+    __setVolume() { pactl set-"${device}"-volume "@${default_device}@" "$1"; }
+    __getVolume() { pactl get-"${device}"-mute "@${default_device}@"; }
+    __toggleMute() { pactl set-"${device}"-mute "@${default_device}@" toggle; }
+
+    case "$action" in
+        up)
+            if __getVolume | grep -q "yes"; then
+                __toggleMute
+                [[ $device == "source" ]] && __setVolume "$default_source_vol"
+                [[ $device == "sink" ]] && { _keyboardMuteKey off; _notifyVolume; }
+                _polybarHook "${device}" 1
+            else
+                __setVolume "+${preset}%"
+                [[ $device == "sink" ]] && { _keyboardMuteKey off; _notifyVolume; }
+                _polybarHook "${device}" 1
+            fi
+        ;;
+        down)
+            __setVolume "-${preset}%"
+            [[ $device == "sink" ]] && _notifyVolume
+            _polybarHook "${device}" 1
+        ;;
+        toggle)
+            if __getVolume | grep -q "yes"; then
+                __toggleMute
+                [[ $device == "source" ]] && __setVolume "$default_source_vol"
+                [[ $device == "sink" ]] && { _keyboardMuteKey off; _notifyVolume; }
+                _polybarHook "${device}" 1
+            else
+                __toggleMute
+                [[ $device == "source" ]] && __setVolume 0%
+                [[ $device == "sink" ]] && _keyboardMuteKey on
+                _polybarHook "${device}" 0
+            fi
+        ;;
+        set)
+            __setVolume "${onthefly_preset}%"
+            _polybarHook "${device}" 1
+        ;;
+    esac
+}
+
+# Main case statement
 case "$1" in
-    sink)   case "$2" in
-                --up)   # In case sound is muted we toggle mute.
-                        if [[ ${GET_SINK_MUTE} == 'Mute: yes' ]]; then
-                            pactl set-sink-mute "${DEFAULT_SINK}" toggle
-                            _hook_sink_on
-                            _notify_volume
-                        else
-                            pactl set-sink-volume "${DEFAULT_SINK}" +${sink_preset}%
-                            _hook_sink_on
-                            _notify_volume
-                        fi
-                ;;
-                --down) pactl set-sink-volume "${DEFAULT_SINK}" -${sink_preset}%
-                        _hook_sink_on
-                        _notify_volume
-                ;;
-                --toggle)   if [[ ${GET_SINK_MUTE} == 'Mute: yes' ]]; then
-                                pactl set-sink-mute "${DEFAULT_SINK}" toggle
-                                _hook_sink_on
-                            else
-                                pactl set-sink-mute "${DEFAULT_SINK}" toggle
-                                polybar-msg hook volume-ipc 1 >/dev/null 2>&1
-                            fi
-                ;;
-                --set )     pactl set-sink-volume "${DEFAULT_SINK}" "${onthefly_preset}"%
-                            _hook_sink_on
-                ;;
-            esac
+    sink)
+        case "$2" in
+            --up|--down|--toggle)
+                _handleVolume "sink" "${2#--}" "$sink_preset"
+            ;;
+            --equalize)
+                amixer -D pulse set Master 40%,40% >/dev/null 2>&1
+                _polybarHook "sink" 1
+            ;;
+            --last)
+                amixer -D pulse set Master 40%,22% >/dev/null 2>&1
+                _polybarHook "sink" 1
+            ;;
+            --set)
+                _handleVolume "sink" "set" "$onthefly_preset"
+            ;;
+        esac
     ;;
-    source) case "$2" in
-                        # Same as above.
-                --up)   if [[ ${GET_SOURCE_MUTE} == 'Mute: yes' ]]; then
-                            pactl set-source-mute "${DEFAULT_SOURCE}" toggle
-                            pactl set-source-volume "${DEFAULT_SOURCE}" 80%
-                            _hook_source_on
-                        else
-                            pactl set-source-volume "${DEFAULT_SOURCE}" +${source_preset}%
-                            _hook_source_on
-                        fi
-                ;;
-                --down) pactl set-source-volume "${DEFAULT_SOURCE}" -${source_preset}%
-                        _hook_source_on
-                ;;
-                --toggle)   if [[ ${GET_SOURCE_MUTE} == 'Mute: yes' ]]; then
-                                pactl set-source-mute "${DEFAULT_SOURCE}" toggle
-                                pactl set-source-volume "${DEFAULT_SOURCE}" 80%
-                                _hook_source_on
-                            else
-                                pactl set-source-mute "${DEFAULT_SOURCE}" toggle
-                                pactl set-source-volume "${DEFAULT_SOURCE}" 0%
-                                polybar-msg hook mic-ipc 1 >/dev/null 2>&1
-                            fi
-                ;;
-                --set )     pactl set-source-volume "${DEFAULT_SOURCE}" "${onthefly_preset}"%
-                            _hook_source_on
-            esac
+    source)
+        case "$2" in
+            --up|--down|--toggle|--set)
+                _handleVolume "source" "${2#--}" "$source_preset"
+            ;;
+        esac
     ;;
 esac

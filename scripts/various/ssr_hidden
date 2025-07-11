@@ -1,11 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Author: Barret E 2024 <archus@protonmail.com>
 # simple script to run simplescreenrecorder in hidden mode
 # for the entered time & @screen. (see _usage function)
+# input-profiles directory contains {all,center,left,right}.conf files.
 
 ssr_fifo="$XDG_RUNTIME_DIR/ssr.fifo"
-# input-profiles directory contains {all,center,left,right}.conf files.
 configs_path="$XDG_CONFIG_HOME/simplescreenrecorder/input-profiles"
 
 _close() {
@@ -13,13 +13,15 @@ _close() {
     rm "$ssr_fifo"
     amixer set Capture,0 0%,0% mute nocap
     polybar-msg action "#mic-ipc.hook.0"
+    clear
 } >/dev/null 2>&1
 
 _usage() {
     echo -e "\n Usage:   ${0##*/} -d duration -p profile"
     echo "             duration = hh:mm:ss"
-    echo " Example: ${0##*/} -d 00:15:30 -p {all,center,left,right}"
-    echo -e " or:      ${0##*/} -d 15:30 -p {all,center,left,right}\n"
+    echo " Example: ${0##*/} -d 00:15:30 -p {profile1,profile2,etc...}"
+    echo -e " or:      ${0##*/} -d 15:30 -p {profile1,profile2,etc...}\n"
+    echo " Profile(s) should be in $configs_path"
     [[ -p "$ssr_fifo" ]] && _close
     exit 1
 }
@@ -44,25 +46,25 @@ _timeConversion() {
         read -r hours minutes seconds <<< "$convertString"
         totalSeconds=$(((hours * 3600) + (minutes * 60 + seconds)))
     else
-        _usage
+        printf '\n%s\n' " Wrong duration syntax..."
+        _close; _usage
     fi
     unset IFS
 }
 
-# getting user input according to _usage function
+# getting user input according to _usage function.
 while getopts d:p: opt; do
     case "${opt}" in
         d) duration=${OPTARG} ;;
         p)
             profile=${OPTARG}
             if [[ -z $(find "$configs_path" -name "$profile.*") ]]; then
-                printf '%s\n' " profile $profile does not exist!"
-                _close
-                exit 1
+                printf '\n%s\n' " profile $profile does not exist!"
+                _close; _usage
             fi
         ;;
         *) _usage ;;
-     esac
+    esac
 done
 
 _timeConversion "$duration"
@@ -83,4 +85,4 @@ echo "record-start" >&4; sleep "$totalSeconds"
 echo "record-save" >&4; sleep 1
 echo "quit" >&4; exec 4>&-
 
-_close; clear; exit
+_close; exit

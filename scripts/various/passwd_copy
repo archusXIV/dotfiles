@@ -3,18 +3,18 @@
 # This script will copy your username and password
 # (from a text file) in the clipboard so you can paste them somewhere.
 # Account: username password
-# Script to use as a single user computer of course.
+
 list="$HOME/Documents/.admin/pass/pass.txt"
 
+cd "$HOME"/Documents/.admin/pass || exit 1
+
 _copy() {
-    cat "$list" \
-    | grep "$selected" \
-    | awk '{print $2" "$3}' \
-    | xclip -sel clip
+    grep "$selected" "$list" | awk '{print $2" "$3}' | xclip -sel clip
 }
 
 selected=$(
-    awk '{print $1}' $list | rofi \
+    awk '{print $1}' "$list" \
+    | rofi \
     -normal-window \
     -dmenu \
     -columns 2 \
@@ -23,10 +23,10 @@ selected=$(
     -line-padding 2 \
     -padding 20 \
     -lines 10 \
-    -p "Choose an account "
+    -p "Choose an account: "
 )
 
 [[ -z $selected ]] && exit 0
 
 _copy "$selected"
-
+notify-send 'password copied'

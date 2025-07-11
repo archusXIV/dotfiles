@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# If we close the last window on a ws then focus the last ws
+# otherwise focus the last window next to the just closed one.
+
+[[ -S $DKSOCK ]] && {
+    dkcmd win kill
+    if ! dkcmd win focus last; then
+        dkcmd ws last || dkcmd mon last
+    else
+        dkcmd win focus last
+    fi
+}

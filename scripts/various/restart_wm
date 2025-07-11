@@ -6,7 +6,7 @@ WinId() { wmctrl -lx | awk '{print $1}'; }
 
 case "$1" in
     restartmsg)
-		for wd in $(WinId); do
+        for wd in $(WinId); do
             [[ $WmName == bspwm ]] && xdo close "$wd"
             [[ $WmName == i3 ]] && xdo close "$wd"
             [[ $WmName == dk ]] && dkcmd win "$wd" kill

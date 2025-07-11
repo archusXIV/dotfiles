@@ -19,7 +19,6 @@ VERSION="v2.3"
 num=50
 player="mpv"
 tmp_dir="$HOME/.cache"
-playlist="$tmp_dir/ytsearch.m3u"
 MPVSOCKET="/tmp/mpvsocket"
 
 for pkg in fzf jq yt-dlp; do

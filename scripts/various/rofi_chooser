@@ -1,0 +1,172 @@
+#!/bin/bash
+
+# shellcheck disable=SC2012
+WM_NAME=$(wmctrl -m | awk '/Name/{print $2}')
+choice=$(printf "applications\\nautoscript\\nconfigs\\nfind\\nfonts\\nkeybindings\\npass\\nrecord\\nthemes\\nwindow" \
+        | rofi -normal-window -dmenu -i -p 'Rofi scripts' -no-show-icons -width 500 -lines 10 -location 0)
+
+[[ -z $choice ]] && exit 0
+
+_autoscript_menu() {
+    [[ -z ${SCRIPTDIR+x} ]] && exit 1
+
+    _autoscript() (
+
+        local script_file
+
+        script_file="$SCRIPTDIR/$1"
+
+        if [[ -f $script_file ]]; then
+            $EDITOR "$script_file" &
+        else
+            echo "#!/usr/bin/env bash" > "$script_file"
+            chmod +x "$script_file"
+            $EDITOR "$script_file" &
+        fi
+    )
+
+    selected=$(find "$HOME"/.local/bin -maxdepth 1 -type f \
+        | sed 's,.*/,,' | sort | rofi -i \
+        -normal-window \
+        -dmenu \
+        -width 30 \
+        -hide-scrollbar \
+        -line-padding  \
+        -padding 20 \
+        -lines 10 \
+        -p "edit/create a script ")
+
+    [[ -z $selected ]] && exit
+
+    _autoscript "$selected"
+}
+
+_passwd_copy() {
+    local list selected
+    list="$HOME/Documents/.admin/pass/pass.txt"
+
+    selected=$(
+        awk '{print $1}' "$list" \
+        | rofi -i \
+            -normal-window \
+            -dmenu \
+            -columns 2 \
+            -width 30 \
+            -hide-scrollbar \
+            -line-padding 2 \
+            -padding 20 \
+            -lines 10 \
+            -p "Choose an account "
+    )
+
+    [[ -z $selected ]] && exit
+
+    grep "$selected" "$list" | awk '{print $2" "$3}' | xclip -sel clip
+
+}
+
+_rofi_configs() {
+    local confDir dirOptions dirChoice fileOptions fileChoice
+
+    confDir="$HOME/.config/"
+
+    dirOptions=$(cd "${confDir}" && ls -d ./* | cut -d " " -f 1)
+    dirChoice=$(echo -e "${dirOptions[*]}\nquit" \
+        | rofi -normal-window -dmenu -i -width 20 -hide-scrollbar \
+        -line-padding 4 -padding 20 -lines 5 -p 'Config directories ')
+    fileOptions=$(cd "${confDir}""${dirChoice}" && ls -Ap | cut -d " " -f 1 | grep -v / )
+    fileChoice=$(echo -e "${fileOptions[@]}" \
+        | rofi -normal-window -dmenu -i -width 20 -hide-scrollbar \
+        -line-padding 4 -padding 20 -lines 4 -p 'Edit this file: ')
+
+    if [[ -z $dirChoice ]]; then
+        exit 0
+    else
+        [[ -z $fileChoice ]] && exit 0
+        exec geany "${confDir}""${dirChoice}""${fileChoice}"
+        exit
+    fi
+}
+
+_theme_selector() {
+    local xres_file selected
+    xres_file="${RESOURCES_FILE:-$HOME/.Xresources}"
+
+    selected="$(
+        ls "$XDG_CONFIG_HOME"/xfiles/themes \
+        | rofi -i -normal-window \
+        -dmenu -width 40 \
+        -hide-scrollbar \
+        -line-padding  \
+        -padding 20 \
+        -lines 10 \
+        -columns 4 \
+        -p "The actual theme is $(grep themes "$xres_file" | sed 's,.*/,,;s/"//')"
+    )"
+
+    [[ ! -f $xres_file ]] && echo "$xres_file: no such file or directory" && exit 1
+    [[ ! -f "$HOME"/.config/xfiles/themes/$selected ]] && exit 1
+
+    sed -i --follow-symlinks \
+        "/\#include \"\.config\/xfiles\/themes\//c\\#include \"\.config\/xfiles\/themes\/$selected\"" \
+        "$xres_file"
+
+    sleep 1s
+
+    xrdb -load "$xres_file" \
+    && restart_wm reloadmsg \
+    && Terminal_theme_changer \
+    && killall conky \
+    && polybar_start \
+    && sxhkd_start \
+    && xre2rasi \
+    && notify-send 'theme changed'
+    exit 0
+}
+
+case "$choice" in
+    applications)
+        rofi -i -normal-window -modi run,drun \
+        -show drun -line-padding 4 -columns 2 \
+        -padding 50 -hide-scrollbar
+    ;;
+    autoscript)
+        _autoscript_menu
+    ;;
+    configs)
+        _rofi_configs
+    ;;
+    find)
+        if [[ $(systemctl status plocate-updatedb.timer \
+            | awk '/Active:/{print $3}') = '(waiting)' ]]; then
+            locate / | rofi -normal-window -threads 0 \
+            -width 50 -dmenu -i -p "locate in system" | xargs -r -0 xdg-open
+        else
+            sudo updatedb
+            locate / | rofi -normal-window -threads 0 \
+            -width 50 -dmenu -i -p "locate in system" | xargs -r -0 xdg-open
+        fi
+    ;;
+    fonts)
+        fontawesomemenu -f "$HOME"/Documents/theming/fa4-icon-list.txt; exit
+    ;;
+    keybindings)
+        awk '/^[a-zA-Z]/ && last {print $0,"\t",last} \
+        {last=""} /^#/{last=$0}' ~/.config/sxhkd/"$WM_NAME"_sxhkdrc_memo \
+        | column -t -s $'\t' | rofi -normal-window -dmenu -no-show-icons \
+        -width 1200 -location 0 -i -p "$WM_NAME keybindings memo"
+        exit 0
+    ;;
+    pass)
+        _passwd_copy
+    ;;
+    record)
+        rofi-record &
+    ;;
+    themes)
+        _theme_selector
+    ;;
+    window)
+        rofi -modi window -show window -location 0 -width 850 &
+    ;;
+esac

@@ -1,17 +1,23 @@
 #!/usr/bin/env sh
 #
 # Listen on sxhkd events to:
-# - indicate when in a chord chain
+# - indicate when in a chord chain and the last command.
+#export SXHKD_FIFO="$XDG_RUNTIME_DIR/sxhkd.fifo"
 
-fifo="$XDG_RUNTIME_DIR/sxhkd.fifo"
-keys="$XDG_RUNTIME_DIR/keys.txt"
+exec 3< "$SXHKD_FIFO"
 
-exec 3< "${fifo}"
 while read -r line <&3; do
+
     case "$line" in
-        B*) hook=1 ;;
-        E*) hook=2 ;;
+        B*) hook=0 ;;
+        E*) hook=1 ;;
     esac
-    polybar-msg action "#sxhkd-ipc.hook.${hook}"
+
+    polybar-msg -p \
+    $(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-1) \
+    action "#sxhkd-ipc.hook.${hook}" >/dev/null 2>&1
+
 done
+
 exec 3<&-
+

@@ -1,0 +1,81 @@
+#!/bin/bash
+
+# shellcheck disable=SC2016
+color_off=$'\e[0m';
+red=$'\e[0;31m';
+green=$'\e[0;32m';
+
+declare -a dependencies=( "fzf" "vim" "yay" )
+
+for package in "${dependencies[@]}"; do
+    [[ -z $(command -v "$package") ]] && {
+        echo " ${red}Missing dependency...$package"
+        notify-send "aur_cli missing dependency...$package"
+        exit 127
+    }
+done
+
+_Menu() {
+    # clear
+    while [[ -n $(pacman -Qm) ]]; do
+        clear
+        echo ""
+        echo -e "                              ${green}Installed packages: $(pacman -Qm | wc -l). ${red}Aur packages updates ($(grep "" -c "$XDG_RUNTIME_DIR"/aur.list))${color_off}\n"
+        echo -e "                                          ::aur helper options::"
+        echo -e "                        ::To select multiple packages in listing views, press Tab:: "
+        echo -e "                       ┌───────────────────────────────────────────────────────────┐"
+        echo -e "                       │    1) Search & Install          4) Update aur packages    │"
+        echo -e "                       │    2) Uninstall package(s)      5) Edit pacman.conf       │"
+        echo -e "                       │    3) View installed packages   6) Edit makepkg.conf      │"
+        echo -e "                       │    x) Exit                                                │"
+        echo -e "                       └───────────────────────────────────────────────────────────┘"
+        echo -e "                                             ${green}Select an item${color_off}"
+        echo ""
+        read -rsn 1 option
+        case "$option" in
+            1)  _AurInstall ;;
+            2)  _AurUninstall ;;
+            3)  _AurPackagesList ;;
+            4)  _AurUpdate ;;
+            5)  sudo vim /etc/pacman.conf ;;
+            6)  sudo vim /etc/makepkg.conf ;;
+            x|X) clear && exit 0 ;;
+        esac
+    done
+}
+
+_AurUpdate() { yay -Sua && sleep 2; }
+
+_AurPackagesList() {
+    pacman -Qm | awk '{print $1}' \
+        | fzf \
+        --preview 'yay -Qila {}' \
+        --layout=reverse \
+        --preview-window="right:65%" \
+        --bind 'enter:execute(yay -Qila {} | less)'
+}
+
+_AurUninstall() {
+    pacman -Qm | awk '{print $1}' \
+        | fzf \
+        --multi \
+        --preview 'yay -Qila {}' \
+        --layout=reverse \
+        --preview-window="right:65%" \
+        | xargs -ro yay -Rdd
+        _Menu
+}
+
+_AurInstall() {
+    yay -Slq \
+        | fzf \
+        --multi \
+        --preview \
+        'cat <(yay -Si {1}) <(yay -Fl | awk "{print \$2}")' \
+        --layout=reverse \
+        --preview-window="right:65%" \
+        --bind 'enter:execute(yay -S {})'
+}
+
+_Menu "${@}"
+

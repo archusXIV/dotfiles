@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 
 # Author: LinuxInFrench (2025) <https://github.com/archusXIV/>
+# Script name: ffmpeg_concat v1.0.2
+# License: GPlv2
 #
 # Simple script to concatenate mp4 or mkv video files.
 # First create a new directory, move your media files in it,
 # cd in that directory, then run this script: ffmpeg_concat mymediafile.{mp4,mkv}.
 # If files names contain whitespaces they will be replace with underscores,
 # because ffmpeg will try to treat each term (word) of the filename.
-# Usage: ffmpeg_concat <filename>.{mp4,mkv}
-
+# Usage: ffmpeg_concat <output_filename>.{mp4,mkv}
+#
 # NOTA BENE:
 # mv -n (do not overwrite an existing file)
 # files.txt example:
@@ -17,10 +19,10 @@
 
 cd "$HOME"/Documents/Videos/concat || exit 1
 
-mpFourFiles=(*.mp4)
-mkvFiles=(*.mkv)
 ffmpegInputFile="./files.txt"
-filesWithSpaces=(* *)
+declare -a mpFourFiles=(*.mp4)
+declare -a mkvFiles=(*.mkv)
+declare -a filesWithSpaces=(* *)
 
 if ((${#mpFourFiles[@]} >= 2 || ${#mkvFiles[@]} >= 2)); then
 
@@ -35,9 +37,14 @@ if ((${#mpFourFiles[@]} >= 2 || ${#mkvFiles[@]} >= 2)); then
 
     find . -name "*.mp4" -o -name "*.mkv" \
     | sed ':\ :\ :g;s/^/file /' | sort -d > "$ffmpegInputFile"
-    ffmpeg -safe 0 -f concat -i "$ffmpegInputFile" -c copy "$1"
+    ffmpeg \
+    -safe 0 \
+    -f concat \
+    -i "$ffmpegInputFile" \
+    -c copy "$1" >/dev/null 2>&1
     mv "$1" ..
     rm ./*
 else
     echo "No mp4 or mkv file found..." && exit 1
 fi
+

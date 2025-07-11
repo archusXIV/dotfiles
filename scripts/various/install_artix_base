@@ -5,12 +5,15 @@
 # Script name: install_artix_base openrc version 1.1.2
 # License: GPLv2
 #
-# This script automates the installation of Artix Linux with the following features:
+# This script automates the installation of Artix Linux Openrc with the following features:
 # - Important: It must be run from an Artix Linux iso image!!!
 # - Supports both UEFI and BIOS systems, btrfs, xfs and ext4 file systems.
 # - For btrfs file system you will have the create your subvolumes yourself.
 # - Configurable disk partitioning with option for separate /home partition using cfdisk.
 # - Customizable keyboard layout, locale, timezone and hostname.
+# - Customizable kernel name (linux, linux-hardened, linux-zen).
+# - Customizable disks and swap size.
+# - First edit /etc/pacman.conf to uncomment the parallel downloads.
 # - Automatic mirror selection based on response rate and package database update.
 # - Installation of base system packages (minimal) and bootloader (grub).
 # - Network configuration via NetworkManager.
@@ -43,8 +46,8 @@ if [[ $# -eq 0 ]]; then
     -R <root size>       Set the system disk size in GB (default: 30)
     -s <home disk>       Set the home disk for /home (optional: sdX)
     -S <home size>       Set the home disk size in GB (uses remaining space if not set)
-    -x <swap size>       Set the swap size in GB (default: 4)
-    -t <Region/Capital>  Set timezone (default: UTC)
+    -t <Region/Capital>  Set your timezone (default: UTC)
+    -x <swap size>       Set the swap size in GB (default: 8)
 
     Example usage for UEFI install (with default swap size):
     (root drive,root size,home drive,home size,filesystem,keyboard,kernel name,locales,timezone,hostname)
@@ -95,7 +98,7 @@ keyboard_layout=${keyboard_layout:-us}
 locale=${locale:-en_US}
 root_disk=${root_disk:-sda}
 root_size=${root_size:-30}
-swap_size=${swap_size:-4}
+swap_size=${swap_size:-8}
 timezone=${timezone:-UTC}
 
 checkUefi() {
@@ -225,7 +228,7 @@ setupPartitions() {
 installBaseSystem() {
 
     declare -a EXTRA=(
-        "less" "pacman-contrib" "ranger" "vim"
+        "git" "less" "pacman-contrib" "ranger" "vim"
         "networkmanager" "networkmanager-openrc"
     )
 
@@ -346,8 +349,8 @@ fi
 }
 
 grub-mkconfig -o /boot/grub/grub.cfg
-cd /home || exit 1
 echo "Downloading X desktop installation script in /home."
+cd /home || exit 1
 curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/refs/heads/main/scripts/various/install_artix_Xdesktop" -O
 chmod +x install_artix_Xdesktop
 exit

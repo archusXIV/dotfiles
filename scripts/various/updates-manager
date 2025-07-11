@@ -4,7 +4,7 @@
 # https://github.com/archusXIV/dotfiles
 #
 # Yet Another Updates Manager Script for Arch Linux based systems.
-
+# We need sudo privileges without password prompt for this script to work
 : "${XDG_RUNTIME_DIR:-/run/user/1000}"
 
 ARCH="$XDG_RUNTIME_DIR/archlinux.list"
@@ -12,15 +12,14 @@ AUR="$XDG_RUNTIME_DIR/aur.list"
 ARCHAUR="$XDG_RUNTIME_DIR/combined.list"
 MIRR="/etc/pacman.d/mirrorlist"
 BCKP="$MIRR"_bckp
-LOCK_FILE="/tmp/updates-manager.lock"
+LOCK_FILE="$XDG_RUNTIME_DIR/updates-manager.lock"
 
 # Colors
 nc=$'\e[0m'
 r=$'\e[0;31m'
 g=$'\e[0;32m'
 
-declare -a DEPS=( "checkupdates" "reflector" "yay" "wmctrl" )
-declare -a missing=()
+declare -a DEPS=( "checkupdates" "reflector" "yay" )
 
 _Error() {
     printf '%s\n' " ${r}ERROR: $1${nc}" >&2
@@ -35,12 +34,9 @@ _Cleanup() {
 _CheckDependencies() {
 
     for dep in "${DEPS[@]}"; do
-        command -v "$dep" >/dev/null 2>&1 || missing+=("$dep")
+        command -v "$dep" >/dev/null 2>&1 || \
+        _Error "Missing dependency: ${dep}" 127
     done
-
-    if ((${#missing[@]} > 0)); then
-        _Error "Missing dependencies: ${missing[*]}" 127
-    fi
 
 }
 
@@ -57,13 +53,8 @@ _CheckForUpdates() {
 }
 
 _PolybarHook() {
-    # Determine running WM and bar PID only when needed
-    local WM BARPID
-    WM=$(wmctrl -m | awk '/Name:/{print $2}')
-    BARPID=$(pgrep --full "$WM"-bar-2)
-
-    if command -v polybar >/dev/null; then
-        polybar-msg -p "$BARPID" action "#updates-ipc.hook.0" >/dev/null 2>&1
+    if pgrep -x polybar >/dev/null; then
+        polybar-msg action "#updates-ipc.hook.0" >/dev/null 2>&1
         notify-send "Available update(s): $(wc -l < "$ARCHAUR")"
     else
         notify-send "Available update(s): $(wc -l < "$ARCHAUR")"
@@ -89,14 +80,15 @@ _CheckUpdates() {
 
     local country
     while true; do
-        # Check network with timeout
-        if ! timeout 5 ping -c 1 archlinux.org >/dev/null 2>&1; then
+        # Check network
+        if [[ -z $(ping -c 1 archlinux.org 2>/dev/null) ]]; then
             notify-send -u critical 'archlinux.org unreachable'
             _Cleanup 1
         fi
 
-        country=$(timeout 5 curl --fail -s https://ipapi.co/country) ||
-            _Error "Could not determine country" 1
+        country=$(curl --fail -s https://ipapi.co/country)
+        [[ -z $country ]] && _Error "Could not determine country" 1
+        sudo cp -f "$MIRR" "$BCKP"
 
         sudo reflector \
             --country "$country" \
@@ -109,7 +101,7 @@ _CheckUpdates() {
         _CheckForUpdates
         _PolybarHook
 
-        sleep 3588s
+        sleep 3592s
     done &
 }
 
@@ -159,11 +151,10 @@ _Snapshot() {
         if [[ $OLDER_SNAPSHOT_INDEX == '0' ]]; then
             sudo timeshift --delete --snapshot "$OLDER_SNAPSHOT_NAME"
             sudo timeshift --create --skip-grub --comment "Before updates"
-            sleep 2
         else
             sudo timeshift --create --skip-grub --comment "Before updates"
-            sleep 2
         fi
+        sleep 2
         sudo umount -R /mnt
     else
         notify-send -u critical " ${g}Timeshift is not installed...${nc}"
@@ -174,6 +165,8 @@ _Snapshot() {
 
 _Installation() {
     sudo cp -f "$MIRR" "$BCKP"
+    echo "${g}Ranking mirrolist...be patient${nc}"
+    rankmirrors -n 10 "$BCKP" | sudo tee "$MIRR"
     sudo pacman -Syu --noconfirm
     sudo grub-mkconfig -o /boot/grub/grub.cfg
 }
@@ -255,10 +248,11 @@ _List() {
         }
 
         # first AUR packages update
-        if (( $(grep "" -c "$AUR") > 0 )); then
+        mapfile -t AUR_PACKAGES < "$AUR"
+        if (( ${#AUR_PACKAGES[@]} > 0 )); then
             yay -Sua
             rm -rf "$HOME"/.ccache
-            if (( $(grep "" -c "$AUR") == "${#TOTALUPDATES[@]}" )); then
+            if (( ${#AUR_PACKAGES[@]} == ${#TOTALUPDATES[@]} )); then
                 sed -i '1,$d' {"$AUR","$ARCHAUR"}
                 _PolybarHook
                 return 0
@@ -266,7 +260,10 @@ _List() {
         fi
 
         # then Arch...
-        (( $(grep "" -c "$ARCH") > 0 )) && _CheckReboot
+        mapfile -t ARCH_PACKAGES < "$ARCH"
+        if (( ${#ARCH_PACKAGES[@]} > 0 )); then
+            _CheckReboot
+        fi
 
     fi
 

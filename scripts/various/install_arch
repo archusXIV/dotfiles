@@ -37,7 +37,7 @@ if [[ $# -eq 0 ]]; then
     -f <filesystem type> Set the filesystem type (ext4, btrfs, xfs, default: ext4)
     -h <name>            Set hostname (default: archlinux)
     -k <kbd layout>      Set your keyboard layout (default: us)
-    -K <kernel name>     Set the kernel name: linux, linux-hardened, linux-zen (default: linux)
+    -K <kernel name>     Choose a kernel: linux, linux-hardened, linux-zen (default: linux)
     -l <locales>         Set system locales (default: en_US)
     -r <root disk>       Set the system disk (default: sda)
     -R <root size>       Set the system disk size in GB (default: 30)
@@ -246,7 +246,7 @@ installBaseSystem() {
     rankmirrors -n 10 /etc/pacman.d/mirrorlist_bkp > /etc/pacman.d/mirrorlist
 
     declare -a EXTRA=(
-        "less" "pacman-contrib" "networkmanager"
+        "git" "less" "pacman-contrib" "networkmanager"
         "ranger" "reflector" "vim" "zram-generator"
     )
 

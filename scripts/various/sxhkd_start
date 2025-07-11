@@ -1,36 +1,27 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC2009
-declare -a proc=( "sxhkd" "sxhkd-watcher" "sxhkd-listener" )
-
 # Terminate existing sxhkd scripts instances
-if [[ -n $(pidof sxhkd) ]]; then
-    for i in "${proc[@]}"; do
-        kill -15 "$(
-            ps -ef \
-            | grep "$i" \
-            | awk 'NR==1 {print $2}'
-        )" >/dev/null 2>&1
+if pgrep -x sxhkd >/dev/null; then
+
+    for i in sxhkd sxhkd_watcher; do
+        kill -15 "$(pgrep -x "$i")" >/dev/null 2>&1
         # Wait until the processes has been shut down
-        while pidof -x "$i" >/dev/null; do
-            sleep 0.2
-            break
+        while pgrep -x "$i" >/dev/null; do
+            sleep 0.5
         done
     done
+
 fi
 
-[[ -e $SXHKD_FIFO ]] && rm -f "$SXHKD_FIFO"
-sleep 0.5
-
+[[ -p $SXHKD_FIFO ]] && rm -f "$SXHKD_FIFO"
 WM_NAME=$(awk '/Name/{print $2}' < <(wmctrl -m))
 
 # Launch sxhkd, with the -s option for the listener script.
 mkfifo "$SXHKD_FIFO"
-sxhkd -t 5 \
--s "$SXHKD_FIFO" \
--c "$XDG_CONFIG_HOME"/sxhkd/sxhkdrc{,_$WM_NAME} &
-sxhkd-watcher &
+sxhkd -t 5 -s "$SXHKD_FIFO" \
+-c "$XDG_CONFIG_HOME"/sxhkd/sxhkdrc{,_"$WM_NAME"} &
+sxhkd_watcher &
 notify-send 'hotkeys daemon ready'
-rm -f "$HOME"/1 >/dev/null
+rm -f "$HOME"/1 2>/dev/null
 
 exit

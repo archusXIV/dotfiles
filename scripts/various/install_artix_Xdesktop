@@ -5,7 +5,7 @@
 # Script name: install_artix_Xdesktop version 1.0.1
 # License: GPLv2
 #
-# This script automates the installation of Artix Linux Xorg/Xlibre:
+# This script automates the installation of Artix Linux Openrc Xorg/Xlibre:
 # - Important:
 # - It must be run as root!!! on a fresh install of Artix Linux base.
 # - Safety check root account and internet connectivity.
@@ -72,7 +72,7 @@ term=${term:-alacritty}
 xserver=${xserver:-xlibre}
 
 [[ $extra_packages == "yes" ]] && {
-    echo -e " ${r}Do not use braces like i3{lock,status}!!!${c}\n"
+    echo -e " ${r}Do not use braces like in i3{lock,status}!!!${c}\n"
     read -rp " ${g}Extra packages to install: ${c}" extra_packages
 }
 
@@ -83,7 +83,7 @@ case "${create_user}" in
     [yY])
         read -rp " ${g}Enter a user name: ${c}" user_name
         useradd -m -G wheel,audio,video,storage -s /bin/bash "${user_name}"
-        echo " ${g}Enter ${user_name} a password: ${c}"
+        echo " ${g}Enter a password for ${user_name}: ${c}"
         passwd "${user_name}"
         echo " ${g}${user_name} account created.${c}"
         echo " ${g}Give ${user_name} sudo privileges.${c}"

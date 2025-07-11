@@ -1,0 +1,176 @@
+#!/usr/bin/env bash
+#
+# Script name: mpmsw version 1.1.0
+# Author: Barret E <archus@protonmail>
+# Licensed under the GPLv2
+# Github: https://github.com/archusXIV/mpv-playlists-manager
+# Youtube channel: https://www.youtube.com/@mpv-playlists-manager-mv8sh
+#
+# Please verify the schedules directory @ line 36, by default:
+# ~/.local/share/mpv-playlists-manager/schedules
+# This script is designed as a companion for mpv-playlists-manager
+# and it checks if the current date and time match any of the scheduled times
+# in schedules.txt, if a match is found yt-dlp downloads the audio/videos
+# from the corresponding m3u file (make sure that the URLs provide audio files).
+#
+# Change the yt-dlp format options @ line 41 & 42 if you will:
+# change browser variable @ line 38, eg: browser=brave
+# Run it in your terminal, (it will stay attached): mpmsw
+
+# shellcheck disable=SC2164,SC2317,SC2001
+# Do not rename this file, it is handled by mpm.
+trap '_Cleanup; echo " Caught Ctrl+C"; exit 0' SIGINT
+trap _Cleanup SIGTERM
+trap _ReloadSchedules SIGRTMIN+15
+
+for dep in awk sed yt-dlp; do
+    command -v "$dep" >/dev/null || {
+        echo " $dep is not installed...exiting"
+        exit 127
+    }
+done
+
+############################# BEGIN PREFERENCES #############################
+# Edit your directories and yt-dlp options here.
+: "${XDG_DATA_HOME:-$HOME/.local/share}"
+schedules_dir="$XDG_DATA_HOME/mpm/schedules"
+schedulesFile="$schedules_dir/schedules.txt"
+browser=brave
+# yt-dlp cookies & format options here
+ytdlpCookyCmd=( --cookies-from-browser="${browser}" )
+ytdlpAudioCmd=( --format bestaudio/best )
+ytdlpVideoCmd=( --format bestvideo+bestaudio/best --merge-output-format mp4 )
+############################## End PREFERENCES ##############################
+
+if [[ -d $schedules_dir ]]; then
+    command cd "$schedules_dir"
+    [[ ! -f $schedulesFile ]] && {
+        printf '%s\n' " No scheduled downloads found."
+        exit 1
+    }
+else
+    printf '%s\n' " Schedule directory does not exist." \
+        " Please check your mpmrc file or edit this script."
+    exit 1
+fi
+
+_LoadSchedules() {
+    # sorting our list and creating needed arrays,
+    # also used when we have remove schedules on the fly.
+    sort -t'|' -k1 "$schedulesFile" -o "$schedulesFile"
+    sed 's/.*| //g' "$schedulesFile" > LISTS.txt
+    sed 's/ |.*$//g' "$schedulesFile" > TIMES.txt
+    awk '/audio|video/{print $5}' "$schedulesFile" > TYPES.txt
+    cat {LISTS,TIMES,TYPES}.txt > LINES.txt
+
+    # Clear existing arrays before reloading
+    LISTS=() TIMES=() TYPES=()
+
+    mapfile -t LINES < LINES.txt
+    for line in "${LINES[@]}"; do
+        [[ $line =~ .m3u$ ]] && {
+            LISTS+=("$line")
+            # removing the header of playlist for yt-dlp --batch-file option
+            sed -i '/#EXTM3U/d' "$line"
+        }
+        [[ $line =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2} ]] && TIMES+=("$line")
+        [[ $line =~ audio|video ]] && TYPES+=("$line")
+    done
+    if [[ $reload ]]; then
+        printf '%s\n' " Schedules reloaded." \
+        " Now tracking ${#LISTS[@]} scheduled downloads."
+    fi
+}
+
+_ReloadSchedules() {
+    local reload
+    reload=true
+    printf '\n%s\n' " Reloading schedules..."
+    _LoadSchedules
+}
+
+_Cleanup() {
+
+    rm {LINES,LISTS,TIMES,TYPES}.txt >/dev/null 2>&1
+    if [[ ! -f $schedulesFile ]]; then
+        # ... we cancelled the last remaining schedule via mpm.
+        printf '%s\n' " Scheduled download cancelled."
+    elif [[ ! -s $schedulesFile ]]; then
+        rm "$schedulesFile"
+        sed -i '1s/^/#EXTM3U\n/' "${LISTS[@]}" >/dev/null 2>&1
+        printf '%s\n' " Scheduled downloads cancelled or finished."
+
+    fi
+
+    mapfile \
+        -t downloadedFiles < <(
+            find . -maxdepth 1 -type f \
+            -regextype egrep -regex '.*(\[|\]).*' \
+            | sed 's,./,,'
+    )
+
+    for file in "${downloadedFiles[@]}"; do
+        mv "$file" \
+        "$(echo "$file" | sed -e 's/ \[.*\]//')"
+    done 2>/dev/null
+
+    unset file downloadedFiles
+    exit 0
+
+}
+
+# Load schedules initially
+_LoadSchedules
+
+# when scheduled time from playlists occurs, the download will start
+index=0
+while true; do
+    if [[ ! ${TIMES[${index}]} =~ ^$(date -d 'today' '+%Y-%m-%d') ]]; then
+        read -rp " Next schedule is not for today. Do you want to continue waiting? [y/N]: "
+        if [[ ${REPLY,,} != "y" ]]; then
+            printf '%s\n' " Exiting..."
+            break
+        else
+            printf '%s\n' " Continuing with 1 hour sleep intervals..."
+            sleep 3600
+            continue
+        fi
+    elif [[ ${TIMES[${index}]} == $(date '+%Y-%m-%d @ %H:%M') ]]; then
+        printf '%s\n' \
+        " $(date '+%H:%M') - Downloading ${TYPES[${index}]} from ${LISTS[${index}]}"
+        if [[ ${TYPES[${index}]} == audio ]]; then
+            {
+                yt-dlp \
+                    "${ytdlpAudioCmd[@]}" \
+                    --batch-file "${LISTS[${index}]}" || \
+                yt-dlp \
+                    "${ytdlpCookyCmd[@]}" "${ytdlpAudioCmd[@]}" \
+                    --batch-file "${LISTS[${index}]}"
+            } >/dev/null 2>&1
+        else
+            {
+                yt-dlp \
+                    "${ytdlpVideoCmd[@]}" \
+                    --batch-file "${LISTS[${index}]}" || \
+                yt-dlp \
+                    "${ytdlpCookyCmd[@]}" "${ytdlpVideoCmd[@]}" \
+                    --batch-file "${LISTS[${index}]}"
+            } >/dev/null 2>&1
+        fi
+        sed -i "/${LISTS[${index}]}/d" "$schedulesFile"
+        rm {"${LISTS[${index}]}","${LISTS[${index}]}.titles"}
+        ((index++))
+        # Exit if we have no more schedules
+        ((index == ${#LISTS[@]})) && {
+            printf '%s\n' " No more scheduled downloads."
+            break
+        }
+
+    fi
+    # Use 5 seconds intervals for a balance between responsiveness and resource usage
+    for _ in {1..12}; do
+        sleep 5
+    done
+done
+
+_Cleanup

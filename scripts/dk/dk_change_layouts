@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Author: Barret E <archus@protonmail.com>
 # 2024-06-14
@@ -13,6 +13,7 @@
 #    as we change layouts (1:G,2:R,3:T etc...)
 #    Uppercase letters meaning:
 #    A=dwindle,D=dyntile,G=grid,M=mono,N=none,R=rtile,S=spiral,T=tile,W=tstack
+#    See my dkrc to understand: https://github.com/archusXIV/dotfiles/blob/main/dk/dkrc
 
 # shellcheck disable=SC2049,SC2076
 DKRC="$HOME/.config/dk/dkrc"
@@ -40,7 +41,7 @@ currentModeStatic=$(
             gsub(/"/,"")
             sub(/static_ws:/,"")
             print $2
-    }'
+        }'
 )
 
 _SetNewFocusedName() {
@@ -102,7 +103,7 @@ _ToggleMode() {
 
 _GetMode() {
 
-    if [[ $currentModeStatic = false ]]; then
+    if [[ $currentModeStatic == false ]]; then
 
         if grep -qF 'static_ws=true' "$DKRC"; then
 
@@ -152,7 +153,7 @@ _ToggleMono() {
         dkcmd win focus last 2>/dev/null
         _SetLayout "$(cat "$FWSL"_"$focusedWsNum")"
 
-        if [[ $(cat "$FWSL"_"$focusedWsNum") = tstack ]]; then
+        if [[ $(cat "$FWSL"_"$focusedWsNum") == tstack ]]; then
             SYMBOL="W"
         else
             SYMBOL=$(
@@ -183,3 +184,4 @@ case "$1" in
     static   ) _ToggleMode --static ;;
     dynamic  ) _ToggleMode --dynamic ;;
 esac
+

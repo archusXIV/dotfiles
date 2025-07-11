@@ -1,19 +1,23 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # move/resize window, signed (+/-) for relative changes
-# -m=move -r=resize ($1) direction ($2)
+# move/resize ($1) direction ($2)
 # change size to whatever you like.
 
 size=20 ver="" hor=""
 
 case "$1" in
-    --move)   ver="y" hor="x" ;;
-    --resize) ver="h" hor="w" ;;
+    --move)
+        ver="y" hor="x"
+    ;;
+    --resize)
+        ver="h" hor="w"
+    ;;
 esac
 
 case "$2" in
-	Left)  dkcmd win resize "$hor"=-"$size" ;;
-	Right) dkcmd win resize "$hor"=+"$size" ;;
-	Up)    dkcmd win resize "$ver"=-"$size" ;;
-	Down)  dkcmd win resize "$ver"=+"$size" ;;
+    Left ) dkcmd win resize "$hor"=-"$size" ;;
+    Right) dkcmd win resize "$hor"=+"$size" ;;
+    Up   ) dkcmd win resize "$ver"=-"$size" ;;
+    Down ) dkcmd win resize "$ver"=+"$size" ;;
 esac

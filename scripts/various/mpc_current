@@ -1,0 +1,5 @@
+#!/bin/sh
+
+mpc --format "[[%artist% - ]%title%]|[%file%]" current \
+| awk -F '/' '{ sub(".mp3|.flac|.ogg|.wav|.m4a",""); print $NF; exit }'
+

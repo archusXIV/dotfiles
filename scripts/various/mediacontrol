@@ -46,9 +46,10 @@ _whoisplaying() {
 }
 
 # SUGGESTION
-#    Now you can define keybindings in your window manager config,
-#    sxhkd: XF86Audio{Play,Pause}
-#   mediacontrol --toggle
+# Now you can define keybindings in your window manager config,
+# sxhkd:
+# XF86Audio{Play,Pause}
+#     mediacontrol --toggle
 
 player=$(_whoisplaying)
 

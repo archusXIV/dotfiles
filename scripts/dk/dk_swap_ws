@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+# sxhkdrc:
+# super + s ; {workspace number}
+#    dk_swap_ws {1-9,10}
+
+dkcmd set static_ws=false
+dkcmd ws view "$1"
+dkcmd set static_ws=true

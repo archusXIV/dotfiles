@@ -1,24 +1,18 @@
 #!/bin/bash
 
-declare -a session=(
-    "at-spi-dbus-bus"
-    "dbus"
-    "dunst"
-    "gnome-keyring-daemon.service"
-    "polkit-gnome.service"
-    "powerline-daemon.service"
-    "gvfs-daemon"
-    "mpd"
-    "pulseaudio"
-)
-
-for service in "${session[@]}"; do
-    systemctl --user stop "$service"
-done
-
 systemctl --user stop Xsession.target
 
-#[[ -S /tmp/dk__0_0.socket ]] && rm -f /tmp/dk__0_0.socket
+declare -A wm=(
+    [dk]="dkcmd exit"
+    [bspwm]="bspc quit"
+    [i3]="i3-msg exit"
+)
+
+rm -f /tmp/dk__* 2>/dev/null
 rm -f /tmp/{serverauth,polybar_mqueue}.*
-# powerline-daemon --kill
+
+for x in "${!wm[@]}"; do
+    pidof "${x}" >/dev/null && "${wm[${x}]}"
+done
+
 pkill -9 -u "$USER"

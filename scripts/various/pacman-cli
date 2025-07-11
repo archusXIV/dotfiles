@@ -3,7 +3,7 @@
 # Author: Barret E (2021) <archus@protonmail.com>
 # https://github.com/archusXIV/dotfiles
 # Dependencies: fzf, pacdiff, reflector, vim, pacman or/and updates-manager.
-# https://github.com/archusXIV/dotfiles/blob/main/scripts/various/updates-manager
+# https://github.com/archusXIV/dotfiles/blob/main/scripts/various/updates-viewer
 #
 # This script shows a menu to let you choose over severals pacman tools and options.
 # In order to install or remove packages it uses fzf utility on the fancy side.
@@ -185,3 +185,4 @@ _Reflector() {
 }
 
 _Menu "${@}"
+

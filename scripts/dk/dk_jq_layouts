@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+# print workspace layouts
+# dkcmd status type=layout num=1 | jq -r '.[]'
+
+case "$1" in
+    -a)
+        # print all workspaces layouts
+        dkcmd status type=ws num=1 \
+        | jq -r '.workspaces | .[] | [.layout] | .[]'
+    ;;
+    -f)
+        # print focused workspace number
+        dkcmd status type=ws num=1 \
+        | jq -r '.workspaces | .[] | select(.focused==true) | .layout'
+    ;;
+esac
