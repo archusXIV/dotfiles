@@ -248,9 +248,7 @@ installBaseSystem() {
         "${kernel_name}"-headers \
         linux-firmware \
         openrc \
-        openrc-system \
-        ranger \
-        vim
+        openrc-system
 
     fstabgen -U /mnt >> /mnt/etc/fstab
     cp -f /etc/pacman.conf /mnt/etc/pacman.conf
