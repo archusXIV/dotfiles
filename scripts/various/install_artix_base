@@ -31,7 +31,7 @@ c=$'\e[0m'
 if [[ $# -eq 0 ]]; then
     echo ""
     cat <<'USAGE'
-             Artix Linux Installation Script by archusXIV
+         Artix Linux Openrc Installation Script by archusXIV
     ==============================================================
         IMPORTANT, A SWAP PARTITION WILL BE CREATED BY DEFAULT!
     ==============================================================
