@@ -177,9 +177,9 @@ partitionDisk() {
     echo "${g}Debug: Refreshing partition table...${c}"
     # partprobe "$root_disk"
     # [[ -n $home_disk ]] && partprobe "$home_disk"
-    blockdev --rereadpt "$root_disk"
+    blockdev --rereadpt /dev/"$root_disk"
     sleep 2
-    [[ -n $home_disk ]] && blockdev --rereadpt "$home_disk"
+    [[ -n $home_disk ]] && blockdev --rereadpt /dev/"$home_disk"
     sleep 2 # Give the kernel some time to process
 }
 
