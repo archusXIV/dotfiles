@@ -78,6 +78,13 @@ else
     extra_packages+=("htop")
 fi
 
+for pkg in "${extra_packages[@]}"; do
+    pacman -Ss "${pkg}" >/dev/null || {
+        echo "${r}${pkg} not found...exiting.${c}"
+        exit 1
+    }
+done
+
 echo ""
 read -rp " ${g}Do you want to add a user now? [Y/n]: ${c}" create_user
 
