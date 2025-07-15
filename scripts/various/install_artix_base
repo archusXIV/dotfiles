@@ -425,5 +425,5 @@ echo "${g}Unmounting partitions...${c}"
 umount -R /mnt
 
 echo -e "\n${g}Installation complete!${c}"
-echo "You can now reboot into your new Arch Linux system."
+echo "You can now reboot into your new Artix Linux system."
 echo "After reboot, log in as root with the password you set."
