@@ -72,10 +72,12 @@ extra_packages=${extra_packages:-no}
 term=${term:-alacritty}
 xserver=${xserver:-xlibre}
 
-[[ $extra_packages == "yes" ]] && {
-    echo -e " ${r}Do not use braces like i3{lock,status}${c}\n"
+if [[ $extra_packages == "yes" ]]; then
+    echo -e " ${r}Do not use braces like in i3{lock,status}!!!${c}\n"
     read -rp " ${g}Extra packages to install: ${c}" extra_packages
-}
+else
+    extra_packages+=("htop")
+fi
 
 echo ""
 read -rp " ${g}Do you want to add a user account now? [Y/n]: ${c}" add_account
