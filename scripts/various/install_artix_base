@@ -179,7 +179,7 @@ partitionDisk() {
     # [[ -n $home_disk ]] && partprobe "$home_disk"
     blockdev --rereadpt "$root_disk"
     sleep 2
-    [[ -n $home_disk ]] && blockdev --rereadpt "$root_disk"
+    [[ -n $home_disk ]] && blockdev --rereadpt "$home_disk"
     sleep 2 # Give the kernel some time to process
 }
 
