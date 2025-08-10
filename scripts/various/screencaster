@@ -1,0 +1,217 @@
+#!/usr/bin/env bash
+
+# Author: Barret E <archus@protonmail.com>
+# Script name: screencaster
+# License: GPlv2
+#
+# This script records the chosen screen with both video and audio
+# using ffmpeg on a Xorg session.
+# It requires command line arguments like:
+# screencaster -m HDMI-A-0 -a alsa_output.pci-0000_0a_00.4.analog-stereo.monitor
+# If -m or -a is not provided, we will be prompt to set those required parameters.
+# See the _Usage function for more options/info.
+
+# shellcheck disable=SC2140
+reset
+declare -a dependencies=(
+    ffmpeg
+    pulseaudio
+    awk
+    xrandr
+)
+
+for dependency in "${dependencies[@]}"; do
+    command -v "${dependency}" >/dev/null || {
+        printf '%s\n' " $dependency isn't installed, exiting."
+        exit 127
+    }
+done
+
+now=$(date +%Y-%m-%d_%H:%M:%S)
+
+_Usage() {
+    printf '%s\n' \
+    " Usage: ${0##*/} [OPTION] [ARG]" \
+    " -a <audio source>  See down below available sources (required!)" \
+    " -b <yes/no>        Activate polybar mic/volume modules (default:no)" \
+    " -d <audio delay>   If needed, to sync audio/video in milliseconds (default:0)" \
+    " -D <add decibells> Number of decibells to add for the final result (default:1)" \
+    " -m <monitor name>  example: HDMI-A-0 (required!)" \
+    " -o <filename>      Output file (default:$HOME/screencast_$now.mkv)" \
+    " -p <preset ratio>  Set the video quality (default:veryfast)" \
+    " -r <resolution>    Set the screen resolution (default:1920x1080)" \
+    " -v <volume>        Set the audio source level (in percentage) using pactl (default:80)"
+    echo -e "\n Currently available audio sources:\n"
+    pactl list sources short | awk '{print "  "$2}'
+    exit 1
+}
+
+[[ $# -eq 0 ]] && _Usage
+# Parsing arguments
+while getopts "a:b:d:D:m:o:p:r:v:" opt; do
+    case $opt in
+        a) audio_source="${OPTARG}" ;;
+        b) bar="${OPTARG}" ;;
+        d) audio_delay="${OPTARG}" ;;
+        D) num="${OPTARG}" ;;
+        m) monitor="${OPTARG}" ;;
+        o) output_file="${OPTARG}" ;;
+        p) preset="${OPTARG}";;
+        r) resolution="${OPTARG}" ;;
+        v) volume="${OPTARG}" ;;
+        *) _Usage ;;
+    esac
+done
+
+shift $((OPTIND - 1))
+
+# Default values
+audio_delay=${audio_delay:-0}
+bar=${bar:-no}
+num=${num:-1}
+output_file=${output_file:-"$HOME"/screencast_"$now".mkv}
+preset=${preset:-veryfast}
+resolution=${resolution:-"1920x1080"}
+volume=${volume:-80}
+
+# Giving a menu for monitor choice if not provided
+[[ -z $monitor ]] && {
+    printf '\n'
+    PS3=""$'\n'" Select a monitor: "
+    select m in $(xrandr --listactivemonitors | awk '$0 !~ /Monitor/{print $NF}'); do
+        if [[ -n ${m+x} ]]; then
+            monitor="$m"
+            break
+        else
+            _Usage
+        fi
+    done
+}
+
+# ...and for audio source device
+[[ -z $audio_source ]] && {
+    printf '\n'
+    PS3=""$'\n'" Select an audio source: "
+    select a in $(pactl list sources short | awk '{print "  "$2}'); do
+        if [[ -n ${a+x} ]]; then
+            audio_source="$a"
+            break
+        else
+            _Usage
+        fi
+    done
+}
+
+_BarActions() {
+    case "$1" in
+        on)
+            if [[ $input == "on" ]]; then
+                polybar-msg action "#mic-ipc.hook.1"
+                polybar-msg action "#volume-ipc.hook.0"
+            elif [[ $output == "on" ]]; then
+                polybar-msg action "#mic-ipc.hook.0"
+                polybar-msg action "#volume-ipc.hook.1"
+            fi
+        ;;
+        off)
+            polybar-msg action "#mic-ipc.hook.0"
+            polybar-msg action "#volume-ipc.hook.1"
+        ;;
+    esac
+
+} >/dev/null 2>&1
+
+_GetInputMute() { pactl get-source-mute @DEFAULT_SOURCE@; }
+_GetOutputMute() { pactl get-sink-mute @DEFAULT_SINK@; }
+_SetInputMute() { pactl set-source-mute @DEFAULT_SOURCE@ "$1"; }
+_SetOutputMute() { pactl set-sink-mute @DEFAULT_SINK@ "$1"; }
+_SetInputVolume() { pactl set-source-volume @DEFAULT_SOURCE@ "$1"; }
+_SetOutputVolume() { pactl set-sink-volume @DEFAULT_SINK@ "$1"; }
+# Getting the current volume level so we can restore it when stopping the recording
+read -r currentvolume < <(
+        pactl get-sink-volume @DEFAULT_SINK@ \
+        | awk '{if(NR!=2) {print $5}}'
+    )
+
+_SetVolume() {
+    case "$1" in
+        on)
+            if [[ $audio_source =~ input ]]; then
+                _GetInputMute | grep -q 'yes' && _SetInputMute false
+                _GetOutputMute | grep -q 'no' && {
+                    _SetOutputVolume 0%
+                    _SetOutputMute true
+                }
+                _SetInputVolume "$volume"%
+                input=on
+                [[ $bar == "yes" ]] && _BarActions on
+            elif [[ $audio_source =~ output ]]; then
+                _GetOutputMute | grep -q 'yes' && _SetOutputMute false
+                _GetInputMute | grep -q 'no' && {
+                    _SetInputVolume 0%
+                    _SetInputMute true
+                }
+                _SetOutputVolume "$volume"%
+                output=on
+                [[ $bar == "yes" ]] && _BarActions on
+            fi
+            gsettings set org.gnome.desktop.sound event-sounds false
+            ;;
+        off)
+            [[ $input == "on" ]] && {
+                _SetInputVolume 0%
+                _SetInputMute true
+                _SetOutputMute false
+                _SetOutputVolume "${currentvolume}"
+                [[ $bar == "yes" ]] && _BarActions off
+            }
+            [[ $output == "on" ]] && {
+                _SetOutputVolume "${currentvolume}"
+                _SetOutputMute false
+                [[ $bar == "yes" ]] && _BarActions off
+            }
+            gsettings set org.gnome.desktop.sound event-sounds true
+        ;;
+    esac
+}
+
+[[ -n $volume ]] && _SetVolume on
+# Get monitor position (xrandr output)
+monitor_position=$(
+    xrandr | awk -v m="$monitor" '$0 ~ m {split($3, a, "[+]"); print a[2] "," a[3]}'
+)
+
+if [[ -z $monitor_position ]]; then
+    echo "Could not determine monitor position for $monitor"
+    exit 1
+fi
+
+x=${monitor_position%,*}
+y=${monitor_position#*,}
+
+# FFT-based denoiser filter in dB
+# denoiser="afftdn=nf=-20"
+# cutfreq="highpass=200,lowpass=4000"
+compressor="acompressor=threshold=-21dB:ratio=9:attack=200:release=1000"
+
+ffmpeg \
+    -y \
+    -thread_queue_size 512 \
+    -video_size "$resolution" \
+    -framerate 30 \
+    -f x11grab -i :0.0+"$x","$y" \
+    -thread_queue_size 512 \
+    -f pulse -i "$audio_source" \
+    -af "adelay=${audio_delay}|${audio_delay}",volume="$num"dB,"$compressor" \
+    -c:v libx264 \
+    -preset "$preset" \
+    -crf 23 \
+    -c:a aac \
+    -b:a 128k \
+    -async 1 \
+    -fps_mode cfr \
+    "$output_file"
+
+[[ -n $volume ]] && _SetVolume off
+reset
+exit 0

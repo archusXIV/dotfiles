@@ -5,84 +5,132 @@
 # for the entered time & @screen. (see _usage function)
 # input-profiles directory contains {all,center,left,right}.conf files.
 
+trap '_Close' SIGINT SIGTERM EXIT
+
 ssr_fifo="$XDG_RUNTIME_DIR/ssr.fifo"
 configs_path="$XDG_CONFIG_HOME/simplescreenrecorder/input-profiles"
 
-_close() {
-    unset IFS
-    rm "$ssr_fifo"
-    amixer set Capture,0 0%,0% mute nocap
-    polybar-msg action "#mic-ipc.hook.0"
-    clear
-} >/dev/null 2>&1
-
-_usage() {
-    echo -e "\n Usage:   ${0##*/} -d duration -p profile"
-    echo "             duration = hh:mm:ss"
-    echo " Example: ${0##*/} -d 00:15:30 -p {profile1,profile2,etc...}"
-    echo -e " or:      ${0##*/} -d 15:30 -p {profile1,profile2,etc...}\n"
+_Usage() {
+    echo -e "\n Usage:   ${0##*/} -v 80 -d duration -p profile"
+    echo " -v Set the microphone volume"
+    echo " -d Set the video duration"
+    echo -e " -p Set the SimpleScreenRecorder profile to use\n"
+    echo "                   duration = hh:mm:ss"
+    echo " Example: ${0##*/} -v 80 -d 00:15:30 -p {profile1,profile2,etc...}"
+    echo -e " or:         ${0##*/} -v 80 -d 15:30 -p {profile1,profile2,etc...}\n"
     echo " Profile(s) should be in $configs_path"
-    [[ -p "$ssr_fifo" ]] && _close
+    [[ -p "$ssr_fifo" ]] && rm "$ssr_fifo"
     exit 1
 }
 
-[[ $# -ne 4 ]] && {
+[[ $# -ne 6 ]] && {
     printf '\n%s\n' " Missing arguments..."
-    _usage
+    _Usage
 }
 
-amixer set Capture,0 80%,80% unmute cap >/dev/null 2>&1
-polybar-msg action "#mic-ipc.hook.1" >/dev/null 2>&1
+# getting user input according to _Usage function.
+while getopts "d:p:v:" opt; do
+    case "${opt}" in
+        d) duration="${OPTARG}" ;;
+        p)
+            profile="${OPTARG}"
+            if [[ -z $(find "$configs_path" -name "$profile.*") ]]; then
+                printf '\n%s\n' " profile $profile does not exist!"
+                _Usage
+            fi
+        ;;
+        v) volume="${OPTARG}%" ;;
+        *) _Usage ;;
+    esac
+done
 
-_timeConversion() {
+_BarActions() {
+    case "$1" in
+        on)
+            polybar-msg action "#mic-ipc.hook.1"
+            polybar-msg action "#volume-ipc.hook.0"
+        ;;
+        off)
+            polybar-msg action "#mic-ipc.hook.0"
+            polybar-msg action "#volume-ipc.hook.1"
+        ;;
+    esac
+
+} >/dev/null 2>&1
+
+_GetInputMute() { pactl get-source-mute @DEFAULT_SOURCE@; }
+_SetInputMute() { pactl set-source-mute @DEFAULT_SOURCE@ "$1"; }
+_SetOutputMute() { pactl set-sink-mute @DEFAULT_SINK@ "$1"; }
+_SetInputVolume() { pactl set-source-volume @DEFAULT_SOURCE@ "$1"; }
+_SetOutputVolume() { pactl set-sink-volume @DEFAULT_SINK@ "$1"; }
+# Getting the current volume level so we can restore it when stopping the recording
+read -r currentvolume < <(
+        pactl get-sink-volume @DEFAULT_SINK@ \
+        | awk '{if(NR!=2) {print $5}}'
+    )
+
+_SetVolume() {
+    case "$1" in
+        on)
+            _GetInputMute | grep -q 'yes' && _SetInputMute false
+            _SetInputVolume "$volume"
+            _SetOutputVolume 0%
+            _SetOutputMute true
+            gsettings set org.gnome.desktop.sound event-sounds false
+            _BarActions on
+        ;;
+        off)
+            _SetInputVolume 0%
+            _SetInputMute true
+            _SetOutputMute false
+            _SetOutputVolume "${currentvolume}"
+            _BarActions off
+            gsettings set org.gnome.desktop.sound event-sounds true
+        ;;
+    esac
+}
+
+_Close() {
+    unset IFS
+    rm "$ssr_fifo"
+    _SetVolume off
+    reset
+} >/dev/null 2>&1
+
+_TimeConversion() {
     convertString="$1"
     IFS=":";
-    if [[ ${#convertString} -eq 5 && $convertString =~ ':' ]]; then
-        # five characters (01:30)
+    if [[ $convertString  =~ ^[0-9]{2}:[0-9]{2}$ ]]; then
         read -r minutes seconds <<< "$convertString"
         totalSeconds=$((minutes * 60 + seconds))
-    elif [[ ${#convertString} -eq 8 && $convertString =~ ':' ]]; then
-        # eight characters (01:20:30)
+    elif [[ $convertString  =~ ^[0-9]{2}:[0-9]{2}:[0-9]{2}$ ]]; then
         read -r hours minutes seconds <<< "$convertString"
         totalSeconds=$(((hours * 3600) + (minutes * 60 + seconds)))
     else
         printf '\n%s\n' " Wrong duration syntax..."
-        _close; _usage
+        _Close; _Usage
     fi
     unset IFS
 }
 
-# getting user input according to _usage function.
-while getopts d:p: opt; do
-    case "${opt}" in
-        d) duration=${OPTARG} ;;
-        p)
-            profile=${OPTARG}
-            if [[ -z $(find "$configs_path" -name "$profile.*") ]]; then
-                printf '\n%s\n' " profile $profile does not exist!"
-                _close; _usage
-            fi
-        ;;
-        *) _usage ;;
-    esac
-done
-
-_timeConversion "$duration"
+_TimeConversion "$duration"
 
 if [[ -p "$ssr_fifo" ]]; then
-    rm "$ssr_fifo" && mkfifo "$ssr_fifo"
+    rm "$ssr_fifo" || exit 1
+    mkfifo "$ssr_fifo"
 else
     mkfifo "$ssr_fifo"
 fi
 
+[[ -n $volume ]] && _SetVolume on
 # ssr commands
 simplescreenrecorder \
     --start-hidden \
     --settingsfile="$configs_path/$profile.conf" < "$ssr_fifo" &
 
-exec 4> "$ssr_fifo"; sleep 1
+exec 4> "$ssr_fifo"; sleep 0.5
 echo "record-start" >&4; sleep "$totalSeconds"
 echo "record-save" >&4; sleep 1
 echo "quit" >&4; exec 4>&-
 
-_close; exit
+_Close; exit 0
