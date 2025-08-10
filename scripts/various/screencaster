@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Author: Barret E <archus@protonmail.com>
+# Author: Barret E 2025 <archus@protonmail.com>
 # Script name: screencaster
 # License: GPlv2
 #
@@ -36,6 +36,7 @@ _Usage() {
     " -b <yes/no>        Activate polybar mic/volume modules (default:no)" \
     " -d <audio delay>   If needed, to sync audio/video in milliseconds (default:0)" \
     " -D <add decibells> Number of decibells to add for the final result (default:1)" \
+    " -l <length>        How long the screencast should last (format = HH:MM:SS)" \
     " -m <monitor name>  example: HDMI-A-0 (required!)" \
     " -o <filename>      Output file (default:$HOME/screencast_$now.mkv)" \
     " -p <preset ratio>  Set the video quality (default:veryfast)" \
@@ -48,12 +49,13 @@ _Usage() {
 
 [[ $# -eq 0 ]] && _Usage
 # Parsing arguments
-while getopts "a:b:d:D:m:o:p:r:v:" opt; do
+while getopts "a:b:d:D:l:m:o:p:r:v:" opt; do
     case $opt in
         a) audio_source="${OPTARG}" ;;
         b) bar="${OPTARG}" ;;
         d) audio_delay="${OPTARG}" ;;
         D) num="${OPTARG}" ;;
+        l) length="${OPTARG}" ;;
         m) monitor="${OPTARG}" ;;
         o) output_file="${OPTARG}" ;;
         p) preset="${OPTARG}";;
@@ -176,6 +178,31 @@ _SetVolume() {
 }
 
 [[ -n $volume ]] && _SetVolume on
+
+_TimeConversion() {
+    IFS=":";
+    if [[ $1  =~ ^[0-9]{2}:[0-9]{2}$ ]]; then
+        read -r minutes seconds <<< "$1"
+        duration=$((minutes * 60 + seconds))
+    elif [[ $1  =~ ^[0-9]{2}:[0-9]{2}:[0-9]{2}$ ]]; then
+        read -r hours minutes seconds <<< "$1"
+        duration=$(((hours * 3600) + (minutes * 60 + seconds)))
+    else
+        unset IFS
+        printf '\n%s\n' " Wrong duration syntax..."
+        _Usage
+    fi
+    unset IFS
+}
+
+[[ -n $length ]] && {
+    _TimeConversion "$length"
+    for ((i=1;i<="$duration";i++)); do
+        sleep 1
+    done
+    kill -SIGTERM "$(pidof -x ffmpeg)"
+} &
+
 # Get monitor position (xrandr output)
 monitor_position=$(
     xrandr | awk -v m="$monitor" '$0 ~ m {split($3, a, "[+]"); print a[2] "," a[3]}'

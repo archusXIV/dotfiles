@@ -1,31 +1,37 @@
 #!/usr/bin/env bash
 
-# Author: Barret E 2024 <archus@protonmail.com>
+# Author: Barret E 2025 <archus@protonmail.com>
+# Script name: ssr_hidden v1.0.1
+# License: GPLv2
+#
 # simple script to run simplescreenrecorder in hidden mode
 # for the entered time & @screen. (see _usage function)
 # input-profiles directory contains {all,center,left,right}.conf files.
 
-trap '_Close' SIGINT SIGTERM EXIT
+_Has() { command -v "$1" >/dev/null; }
+
+for dep in pulseaudio simplescreenrecorder; do
+    _Has "${dep}" || {
+        printf '%s\n' " $dep isn't installed, exiting."
+        exit 127
+    }
+done
 
 ssr_fifo="$XDG_RUNTIME_DIR/ssr.fifo"
 configs_path="$XDG_CONFIG_HOME/simplescreenrecorder/input-profiles"
 
 _Usage() {
-    echo -e "\n Usage:   ${0##*/} -v 80 -d duration -p profile"
-    echo " -v Set the microphone volume"
-    echo " -d Set the video duration"
-    echo -e " -p Set the SimpleScreenRecorder profile to use\n"
-    echo "                   duration = hh:mm:ss"
-    echo " Example: ${0##*/} -v 80 -d 00:15:30 -p {profile1,profile2,etc...}"
-    echo -e " or:         ${0##*/} -v 80 -d 15:30 -p {profile1,profile2,etc...}\n"
-    echo " Profile(s) should be in $configs_path"
+    printf '%s\n' \
+    " Usage:   ${0##*/} -v <volume> -d <duration> -p <profile>" \
+    " -v Set the microphone volume (default:80)" \
+    " -d Set the video duration" \
+    " -p Set the SimpleScreenRecorder profile to use (omit .conf)" \
+    "                   duration = hh:mm:ss" \
+    " Example: ${0##*/} -v 80 -d 00:15:30 -p profile_name" \
+    " or:         ${0##*/} -v 80 -d 15:30 -p profile_name"
+    printf '\n%s\n' " Profile(s) should be in $configs_path"
     [[ -p "$ssr_fifo" ]] && rm "$ssr_fifo"
     exit 1
-}
-
-[[ $# -ne 6 ]] && {
-    printf '\n%s\n' " Missing arguments..."
-    _Usage
 }
 
 # getting user input according to _Usage function.
@@ -33,8 +39,8 @@ while getopts "d:p:v:" opt; do
     case "${opt}" in
         d) duration="${OPTARG}" ;;
         p)
-            profile="${OPTARG}"
-            if [[ -z $(find "$configs_path" -name "$profile.*") ]]; then
+            profile="${OPTARG}.conf"
+            if [[ -z $(find "$configs_path" -name "$profile") ]]; then
                 printf '\n%s\n' " profile $profile does not exist!"
                 _Usage
             fi
@@ -43,6 +49,13 @@ while getopts "d:p:v:" opt; do
         *) _Usage ;;
     esac
 done
+
+[[ -z $duration && -z $profile ]] && {
+    printf '\n%s\n' " Missing arguments..."
+    _Usage
+}
+
+volume=${volume:-80}
 
 _BarActions() {
     case "$1" in
@@ -77,14 +90,14 @@ _SetVolume() {
             _SetOutputVolume 0%
             _SetOutputMute true
             gsettings set org.gnome.desktop.sound event-sounds false
-            _BarActions on
+            _Has polybar && _BarActions on
         ;;
         off)
             _SetInputVolume 0%
             _SetInputMute true
             _SetOutputMute false
             _SetOutputVolume "${currentvolume}"
-            _BarActions off
+            _Has polybar && _BarActions off
             gsettings set org.gnome.desktop.sound event-sounds true
         ;;
     esac
@@ -97,14 +110,15 @@ _Close() {
     reset
 } >/dev/null 2>&1
 
+trap _Close SIGINT SIGTERM
+
 _TimeConversion() {
-    convertString="$1"
     IFS=":";
-    if [[ $convertString  =~ ^[0-9]{2}:[0-9]{2}$ ]]; then
-        read -r minutes seconds <<< "$convertString"
+    if [[ $1  =~ ^[0-9]{2}:[0-9]{2}$ ]]; then
+        read -r minutes seconds <<< "$1"
         totalSeconds=$((minutes * 60 + seconds))
-    elif [[ $convertString  =~ ^[0-9]{2}:[0-9]{2}:[0-9]{2}$ ]]; then
-        read -r hours minutes seconds <<< "$convertString"
+    elif [[ $1  =~ ^[0-9]{2}:[0-9]{2}:[0-9]{2}$ ]]; then
+        read -r hours minutes seconds <<< "$1"
         totalSeconds=$(((hours * 3600) + (minutes * 60 + seconds)))
     else
         printf '\n%s\n' " Wrong duration syntax..."
@@ -126,7 +140,7 @@ fi
 # ssr commands
 simplescreenrecorder \
     --start-hidden \
-    --settingsfile="$configs_path/$profile.conf" < "$ssr_fifo" &
+    --settingsfile="$configs_path/$profile" < "$ssr_fifo" &
 
 exec 4> "$ssr_fifo"; sleep 0.5
 echo "record-start" >&4; sleep "$totalSeconds"
