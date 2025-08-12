@@ -107,6 +107,7 @@ _Close() {
     unset IFS
     rm "$ssr_fifo"
     _SetVolume off
+    notify-send -u critical 'ssr_hidden is over'
     reset
 } >/dev/null 2>&1
 
