@@ -22,6 +22,7 @@
 r=$'\e[31m'
 g=$'\e[32m'
 c=$'\e[0m'
+github_repo="https://raw.githubusercontent.com/archusXIV/dotfiles/refs/heads/main/"
 
 # Display usage information if no arguments are provided
 if [[ $# -eq 0 ]]; then
@@ -377,11 +378,12 @@ fi
 }
 
 grub-mkconfig -o /boot/grub/grub.cfg
+
 echo "Downloading X desktop installation script in /home."
 cd /home || exit 1
-curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/refs/heads/main/scripts/various/install_archlinux_Xdesktop" -O
-curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/refs/heads/main/archinstall/core.txt" -O
-curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/refs/heads/main/archinstall/extra.txt" -O
+curl -sL "$github_repo"scripts/various/install_archlinux_Xdesktop -O
+curl -sL "$github_repo"archinstall/core.txt -O
+curl -sL "$github_repo"archinstall/extra.txt -O
 chmod +x install_archlinux_Xdesktop
 exit
 EOF
