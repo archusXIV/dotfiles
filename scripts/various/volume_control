@@ -109,7 +109,7 @@ _handleVolume() {
             fi
         ;;
         set)
-            __setVolume "${onthefly_preset}%"
+            __setVolume "${onthefly_preset}%"; _notifyVolume
             _polybarHook "${device}" 1
         ;;
     esac

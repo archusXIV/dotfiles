@@ -1,19 +1,22 @@
 #!/usr/bin/env bash
 
+# shellcheck disable=all
+
 xset s off -dpms
 xset r rate 660 25
 urxvtd -q -o -f &
 numlockx on &
 
-# Sound
+# Soundr
 # muting HDMI source/sink & webcam mic too.
 pactl set-source-volume 0 0%
 pactl set-source-volume 1 0%
-pactl set-source-mute 0 1
-pactl set-source-mute 1 1
+pactl set-source-mute 0 true
+pactl set-source-mute 1 true
 pactl set-sink-volume 0 0%
-pactl set-sink-mute 0 1
-amixer -D pulse set Master 70%,52% >/dev/null 2>&1
+pactl set-sink-mute 0 true
+pactl set-sink-volume 1 50%
+# amixer -D pulse set Master 40%,22% >/dev/null 2>&1
 
 # Wallpaper setter
 if command -v nitrogen >/dev/null; then
@@ -22,10 +25,12 @@ else
     sh -c "$XDG_CONFIG_HOME"/.fehbg &
 fi
 
+[[ -d $HOME/.dotnet ]] && rm -rf "$HOME"/.dotnet
+
 # Other settings
 cleanup &
 rsync -apq "$SCRIPTDIR"/* "$HOME"/Documents/scripts/ &
 rsync -apq "$XDG_CONFIG_HOME"/* "$HOME"/Documents/configs/CONFIGS/ &
 
-# Updates checking script
-sleep 10s; updates-manager --check
+# Updates checker script
+sleep 10s; updates-manager --chck
