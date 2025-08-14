@@ -406,7 +406,7 @@ fi
 
 # Check internet connectivity
 ping -c 1 archlinux.org >/dev/null 2>&1 || {
-    echo " ${r}No internet connection! Please connect to the internet first.${c}"
+    echo " ${r}archlinux.org is unreachable! Please check your internet connection.${c}"
     exit 1
 }
 

@@ -34,7 +34,7 @@ autostart &
 # Starting Xsession according on tty.
 # refers to $HOME/.config/zsh/.zlogin
 case $(tty | cut -b9-) in
-    (1) exec dk ;;
-    (2) exec bspwm ;;
+    (1) exec bspwm ;;
+    (2) exec dk ;;
     (3) exec i3 ;;
 esac
