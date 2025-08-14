@@ -1,4 +1,4 @@
-#
+# shellcheck disable=SC2148
 # ~/.bash_profile
 #
 # shellcheck source=/dev/null
@@ -99,4 +99,3 @@ export XAUTHORITY="$XDG_RUNTIME_DIR"/Xauthority
 export XCURSOR_PATH="${XCURSOR_PATH}:~/.local/share/icons"
 export XINITRC="$XDG_CONFIG_HOME"/X11/xinitrc
 export W3M_DIR="$XDG_CONFIG_HOME/w3m"
-. "$HOME/.cargo/env"

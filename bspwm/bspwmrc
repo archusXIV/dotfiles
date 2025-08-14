@@ -119,4 +119,4 @@ case "$1" in
     ;;
 esac
 
-Main "${@}" > "$XDG_CONFIG_HOME"/bspwm/bspwm.log
+_Main "${@}" > "$XDG_CONFIG_HOME"/bspwm/bspwm.log

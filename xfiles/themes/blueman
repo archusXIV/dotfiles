@@ -1,0 +1,21 @@
+! blueman
+#define fg    #7b81a6
+#define bg    #1E1F29
+#define curs  #D0D0D0
+
+#define blk   #5c6370
+#define blk2  #44475a
+#define red   #7672E8
+#define red2  #8970BF
+#define grn   #3C98A8
+#define grn2  #3C98A8
+#define ylw   #82AEEF
+#define ylw2  #82AEEF
+#define blu   #3060A6
+#define blu2  #4578C6
+#define mag   #9564C7
+#define mag2  #9564C7
+#define cyn   #8be9fd
+#define cyn2  #92DCFF
+#define wht   #f8f8f0
+#define wht2  #E1EEF5

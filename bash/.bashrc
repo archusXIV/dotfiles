@@ -17,6 +17,8 @@ export PATH
 for f in "$XDG_CONFIG_HOME"/bash/*.bash; do
     . "$f"
 done
+unset f
+
 . ~/.config/mpm/mpmrc
 . ~/.config/mpm/themerc
 

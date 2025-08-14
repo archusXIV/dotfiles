@@ -9,7 +9,7 @@
 !                               ▜█▛▘
 !
 
-#include ".config/xfiles/themes/monochrome-blue"
+#include ".config/xfiles/themes/blueman"
 #include ".config/xfiles/colors_vars"
 #include ".config/xfiles/menus"
 #include ".config/xfiles/urxvt"
