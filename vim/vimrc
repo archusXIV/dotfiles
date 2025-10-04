@@ -48,6 +48,12 @@ let g:indentLine_color_tty_light = 7
 let g:indentLine_color_dark = 1
 let g:indentLine_char_list = ['|', '¦', '┆', '┊']
 
+" Snippets
+let g:UltiSnipsExpandTrigger="<tab>" " Trigger to expand snippets
+let g:UltiSnipsJumpForwardTrigger="<c-j>" " Jump to next placeholder
+let g:UltiSnipsJumpBackwardTrigger="<c-k>" " Jump to previous placeholder
+" let g:UltiSnipsSnippetDirectories=["UltiSnips", "~/.config/vim/snippets/sh_snippets"]
+
 " ------ leader mapping ------
 let g:mapleader = "\<Space>"
 
@@ -65,7 +71,7 @@ set list listchars=tab:>>,trail:~
 
 " COLORSCHEMES
 try
-    colorscheme OceanicNext
+    colorscheme nord
 catch
     colorscheme slate
 endtry
@@ -95,6 +101,8 @@ Plug 'prabirshrestha/asyncomplete-ultisnips.vim'
 Plug 'prabirshrestha/asyncomplete-tags.vim'
 Plug 'junegunn/vim-easy-align'
 Plug 'preservim/nerdtree', { 'on': 'NERDTreeToggle' }
+Plug 'SirVer/ultisnips'
+Plug 'honza/vim-snippets'
 call plug#end()
 
 " Asyncomplete Setup
@@ -156,7 +164,7 @@ endfunction
 " AirLine config
 let g:airline_powerline_fonts = 1
 let g:airline#extensions#tabline#enabled = 1
-let g:airline_theme='base16_oceanicnext'
+let g:airline_theme='nord_minimal'
 if !exists('g:airline_symbols')
     let g:airline_symbols = {}
     let g:airline_left_sep = ''
@@ -177,6 +185,7 @@ inoremap <expr> <cr>    pumvisible() ? asyncomplete#close_popup() : "\<cr>"
 imap <c-space> <Plug>(asyncomplete_force_refresh)
 
 filetype plugin indent on
+filetype plugin on
 
 function! s:check_back_space() abort
     let col = col('.') - 1
@@ -219,13 +228,12 @@ endif
 " ------ commands ------
 nnoremap <expr> <F2> &foldlevel ? 'zM' : 'zR'
 command! D Explore
-command! R call <SID>ranger()
+"command! R call <SID>ranger()
 command! Q call <SID>quitbuffer()
 command! -nargs=1 B :call <SID>bufferselect("<args>")
 command! W execute 'silent w !sudo tee % >/dev/null' | edit!
 
 " ----- Basic keymaps -----
-nnoremap <leader>r :call <SID>ranger()<CR>
 " fix mixed indentation
 map <F7> gg=G<C-o><C-o>
 nnoremap <Leader>b :let b:buf = input('Match: ')<Bar>call <SID>bufferselect(b:buf)<CR>
@@ -247,9 +255,9 @@ nnoremap <silent> <Leader>tt :terminal<CR>
 nnoremap <silent> <M-j> :tabmove -1<CR>
 nnoremap <silent> <M-k> :tabmove +1<CR>
 nnoremap <silent> <Leader>te :tabnew<CR>
-nnoremap <silent> <Leader>tn :tabnext<CR>
+nnoremap <silent> <Leader>n :bnext<CR>
 nnoremap <silent> <Leader>tf :tabfirst<CR>
-nnoremap <silent> <Leader>tp :tabprevious<CR>
+nnoremap <silent> <Leader>p :bprevious<CR>
 nnoremap <silent> <Leader>q :B<CR>:silent tabclose<CR>gT
 nnoremap <silent> <Leader>tl :execute "tabn ".g:lasttab<CR>
 nnoremap <silent> <Leader>- :tabedit <C-R>=expand("%:p:h")<CR><CR>
@@ -257,6 +265,7 @@ nnoremap _ <C-W>s<C-W><Down>
 nnoremap <Bar> <C-W>v<C-W><Right>
 
 " ------ autocmd ------
+
 let g:lasttab = 1
 augroup save_last_tab
     autocmd!
@@ -354,24 +363,56 @@ function! <SID>bufferselect(pattern) abort
     endif
 endfunction
 
-function! <SID>ranger()
-    let l:temp = tempname()
-    execute 'silent !xterm -e ranger --choosefiles='.shellescape(l:temp).' $PWD'
+"function! <SID>ranger()
+"    let l:temp = tempname()
+"    execute 'silent !xterm -e ranger --choosefiles='.shellescape(l:temp).' $PWD'
+"    if !filereadable(temp)
+"        redraw!
+"        return
+"    endif
+"    let l:names = readfile(l:temp)
+"    if empty(l:names)
+"        redraw!
+"        return
+"    endif
+"    execute 'edit '.fnameescape(l:names[0])
+"    for l:name in l:names[1:]
+"        execute 'argadd '.fnameescape(l:name)
+"    endfor
+"    redraw!
+"endfunction
+
+function! RangeChooser()
+    let temp = tempname()
+    " The option "--choosefiles" was added in ranger 1.5.1. Use the next line
+    " with ranger 1.4.2 through 1.5.0 instead.
+    "exec 'silent !ranger --choosefile=' . shellescape(temp)
+    if has("gui_running")
+        exec 'silent !urxvtc -e ranger --choosefiles=' . shellescape(temp)
+    else
+        exec 'silent !ranger --choosefiles=' . shellescape(temp)
+    endif
     if !filereadable(temp)
         redraw!
+        " Nothing to read.
         return
     endif
-    let l:names = readfile(l:temp)
-    if empty(l:names)
+    let names = readfile(temp)
+    if empty(names)
         redraw!
+        " Nothing to open.
         return
     endif
-    execute 'edit '.fnameescape(l:names[0])
-    for l:name in l:names[1:]
-        execute 'argadd '.fnameescape(l:name)
+    " Edit the first item.
+    exec 'edit ' . fnameescape(names[0])
+    " Add any remaning items to the arg list/buffer list.
+    for name in names[1:]
+        exec 'argadd ' . fnameescape(name)
     endfor
     redraw!
 endfunction
+command! -bar RangerChooser call RangeChooser()
+nnoremap <leader>r :<C-U>RangerChooser<CR>
 
 function! TrimWhitespace()
   let l:save = winsaveview()

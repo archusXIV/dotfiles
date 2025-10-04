@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 sockets_dir="$XDG_RUNTIME_DIR/polybar"
 WM_NAME=$(awk '/Name/{print $2}' < <(wmctrl -m))
@@ -14,12 +14,15 @@ while pgrep -u "$UID" -x polybar; do
     sleep 0.5
 done
 
-# Bars names are prefixed with the running wm name.
-polybar "$WM_NAME"-bar-1 -q & disown
-polybar "$WM_NAME"-bar-2 -q & disown
-polybar "$WM_NAME"-bar-3 -q & disown
-#polybar fourth-bar -q & disown
-#sxhkd-start &
+mapfile -t monitors < <(
+    xrandr --listactivemonitors | awk '$0 !~ /Monitor/{print $NF}'
+)
+
+# Launching bars according to the number of monitors
+for ((i=1;i<="${#monitors[@]}";i++)); do
+    polybar "$WM_NAME"-bar-"${i}" -q & disown
+done
+
 notify-send 'Bars launched...'
 
 exit 0

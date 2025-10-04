@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+# Author: Barret E <archus@protonmail.com>
+# Script name: bspwm_set_laout v1.0.0
+# License: GPlv2
+# Dependencie: bsp-layout <https://github.com/phenax/bsp-layout>
+#
+# This script uses for the most part bsp-layout program to set/change
+# the current desktop layout, we can also toggle the bspwm native monocle layout,
+# then when we exit out monocle we will be back in the last set layout,
+# we can also change the automatic_scheme provided by bspwm.
+# sxhkd settings:
+# alt + l ; {a,e,g,l,m,r,s,w,z}
+#     bspwm_set_laout -{a,e,g,l,m,r,s,w,z}
+# Layout split ratios are defined in ~/config/bsp-layout/layoutrc
+
+mapfile -t all_ws < <(bspc query -D)
+current_ws=$(bspc query -d -D)
+n=0
+
+for ws in "${all_ws[@]}"; do
+    ((n++))
+    if [[ $ws == "$current_ws" ]]; then
+        # we have to translate the current_ws
+        # to a digit for bsp-layout to perform correctly.
+        current_ws="$n"
+        break
+    fi
+done
+
+case "${1}" in
+    -a) bspc config automatic_scheme alternate ;;
+    -e) bsp-layout set even "$current_ws" ;;
+    -g) bsp-layout set grid "$current_ws" ;;
+    -l) bspc config automatic_scheme longest_side ;;
+    -m)
+        layout=$(
+            bspc query -T -d | \
+                awk -F, '
+                    {gsub(/["]/,"")
+                    sub("userLayout:","")
+                    print $4; exit}
+                '
+        )
+        if [[ $layout == "monocle" ]]; then
+            bspc desktop --layout tiled
+            bspc node --focus last.local
+        elif [[ $layout == "tiled" ]]; then
+            bspc desktop --layout monocle
+        fi
+    ;;
+    -r) bsp-layout set rtall "$current_ws" ;;
+    -s) bspc config automatic_scheme spiral ;;
+    -t) bsp-layout set tiled "$current_ws" ;;
+    -w) bsp-layout set rwide "$current_ws" ;;
+    -z) bsp-layout remove "$current_ws" ;;
+esac

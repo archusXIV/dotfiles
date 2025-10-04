@@ -1,6 +1,66 @@
 # reload sxhkd configuration files.
 alt + Escape
 
+# logout menu
+ctrl + alt + Delete
+
+# dmenu/rofi
+Menu ; {d,l,r}
+
+# scratchpad custom script
+super + shift + {h,u,r}
+
+# center focused floating window
+super + c
+
+# terminal emulators (xterm,bashterm)
+super + {_,shift +,ctrl + }Return
+
+# fzf_edit (bin,config)
+super + e ; {b,c}
+
+# ranger stuff
+super + r ; {r,s,t}
+
+# URxvt applications (urxvt_apps script)
+super + u ; {a,b,c,d,etc..}
+
+# gui applications (vscode,lite-xl etc...)
+super + g ; {c,e,f,g,o,p,s,v,w}
+
+# opens sxhkdrc_<wm> in vim (s stands for main config)
+super + k ; {b,d,i,s}
+
+# script to launch rofi-record, obs/ssr.
+super + shift + v ; {a,o,v,k,s}
+
+# toggle/restart polybar(s)
+ctrl + {_,shift + }{KP_End,KP_Down,KP_Next,KP_Left}
+
+# volume/mic
+ctrl + {_,shift + }{KP_Subtract,KP_Add}
+
+# toggle mute
+{_,alt + }XF86AudioMute
+
+# set the volume by ten (10,20,30 etc...)
+alt + {1-9,0}
+
+# player control
+XF86Audio{Prev,Play,Next}
+
+# no XF86AudioStop on g815 keyboard
+alt + {_,ctrl + }F10
+
+# mpv_control script
+ctrl + XF86Audio{Lower,Raise}Volume
+
+# equalize volume {left/right,last position}
+super + alt + {equal,l}
+
+# reload sxhkd configuration files.
+alt + Escape
+
 # Invoke the session managemnt menu.
 ctrl + alt + Delete
 
@@ -57,7 +117,10 @@ super + alt + {n,c,k}
 # send focused window to {right,left} monitor.
 super + {_,shift + }BackSpace
 
-# alternate between the tiled and monocle layout.
+# bsp-layout script {even,grid,rtall,rwide,remove}
+alt + l ; {e,g,r,w,z}
+
+# toggle monocle layout.
 super + m
 
 # alternate, longest_side, spiral

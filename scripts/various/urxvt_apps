@@ -9,8 +9,8 @@ case "$1" in
     -f) : ;;
     -g) urxvtc -name floaterm -geometry 60x14 -e g810_switch_profile ;;
     -h) urxvtc -name htop -e htop -u archangel -s Command ;;
-    -i) : ;;
-    -j) urxvtc -name jnettop -e sudo jnettop -i enp7s0 ;;
+    -i) urxvtc -name jnettop -e sudo jnettop -i enp21s0f4u2 ;;
+    -j) urxvtc -name jnettop -e sudo jnettop -i enp8s0 ;;
     -k) : ;;
     -l) : ;;
     -m) urxvtc -name pulsemixer -e pulsemixer ;;

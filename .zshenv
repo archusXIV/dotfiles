@@ -6,15 +6,9 @@
 [ -d /usr/sbin ] && PATH="$PATH:/usr/sbin"
 [ -d /sbin ] && PATH="$PATH:/sbin"
 
-if [ -n "$(pidof nvidia-persistenced)" ]; then
-    export MONITOR1="DP-0"
-    export MONITOR2="HDMI-0"
-    export MONITOR3="DVI-D-0"
-else
-    export MONITOR1="DisplayPort-2"
-    export MONITOR2="HDMI-A-0"
-    export MONITOR3="DVI-D-0"
-fi
+export MONITOR1="DisplayPort-0"
+export MONITOR2="DisplayPort-1"
+export MONITOR3="DisplayPort-2"
 
 # Desktop & directories.
 export XDG_CACHE_HOME="$HOME/.cache"
@@ -39,7 +33,7 @@ export VSCODE_PORTABLE="$XDG_DATA_HOME"/vscode
 # Default programs.
 export BROWSER="brave"
 export EDITOR="lite-xl"
-export FILEMNGR="pcmanfm"
+export FILEMNGR="thunar"
 export MANPAGER="less -R --use-color -Dd+r -Du+b"
 #export MANPAGER="/bin/sh -c \"col -b | vim --not-a-term -c 'set ft=man ts=8 nomod nolist noma' -\""
 export MIXER="pulsemixer"
@@ -52,7 +46,7 @@ export VISUAL="vim"
 
 # Configs & files.
 export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR"/keyring/ssh
-export DKSOCK="/tmp/$(command ls /tmp | awk '/dk__/{print $0}')"
+#export DKSOCK="/tmp/$(command ls /tmp | awk '/dk__/{print $0}')"
 export BSPWM_SOCKET="$XDG_RUNTIME_DIR"/bspwm_0_0-socket
 export DKRC="$XDG_CONFIG_HOME"/dk/dkrc
 export GTK_RC_FILES="$XDG_CONFIG_HOME"/gtk-1.0/gtkrc

@@ -1,21 +1,25 @@
 #!/usr/bin/env bash
 
 # shellcheck disable=all
+# screens &
+network_switch_connection
 
-xset s off -dpms
-xset r rate 660 25
-urxvtd -q -o -f &
-numlockx on &
+for i in {0..2}; do
+    xrandr --output DisplayPort-"$i" --set TearFree on
+done
+unset i
 
-# Soundr
+# Sound
 # muting HDMI source/sink & webcam mic too.
 pactl set-source-volume 0 0%
-pactl set-source-volume 1 0%
 pactl set-source-mute 0 true
+pactl set-source-volume 1 0%
 pactl set-source-mute 1 true
 pactl set-sink-volume 0 0%
 pactl set-sink-mute 0 true
 pactl set-sink-volume 1 50%
+polybar-msg action "#mic-ipc.hook.0" >/dev/null 2>&1
+polybar-msg action "#volume-ipc.hook.1" >/dev/null 2>&1
 # amixer -D pulse set Master 40%,22% >/dev/null 2>&1
 
 # Wallpaper setter
@@ -25,6 +29,8 @@ else
     sh -c "$XDG_CONFIG_HOME"/.fehbg &
 fi
 
+if ip addr | grep -q 'enp21s0f4u2'; then touch /tmp/redmi_note; fi
+
 [[ -d $HOME/.dotnet ]] && rm -rf "$HOME"/.dotnet
 
 # Other settings
@@ -33,4 +39,11 @@ rsync -apq "$SCRIPTDIR"/* "$HOME"/Documents/scripts/ &
 rsync -apq "$XDG_CONFIG_HOME"/* "$HOME"/Documents/configs/CONFIGS/ &
 
 # Updates checker script
-sleep 10s; updates-manager --chck
+updates-manager --chck
+
+# keyboard colors profile
+profile_rules="/etc/udev/rules.d/g810-led.rules"
+profile_udev=$(grep -e 'profile_' "$profile_rules" | sed 's,.*/,,;s/"//;s/profile_//')
+g810_switch_profile "$profile_udev"
+
+# urxvtc &

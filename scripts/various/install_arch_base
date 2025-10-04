@@ -382,8 +382,8 @@ grub-mkconfig -o /boot/grub/grub.cfg
 echo "Downloading X desktop installation script in /home."
 cd /home || exit 1
 curl -sL "$github_repo"scripts/various/install_archlinux_Xdesktop -O
-curl -sL "$github_repo"archinstall/core.txt -O
-curl -sL "$github_repo"archinstall/extra.txt -O
+# curl -sL "$github_repo"archinstall/core.txt -O
+# curl -sL "$github_repo"archinstall/extra.txt -O
 chmod +x install_archlinux_Xdesktop
 exit
 EOF

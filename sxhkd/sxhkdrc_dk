@@ -6,7 +6,7 @@ ctrl + alt + {c,r,q}
     { \
     "$HOME"/.config/dk/dkrc; notify-send 'rules reloaded', \
     dkcmd restart, \
-    prompt "Do you really want to quit dk ?" "Xexit" \
+    prompt "Do you really want to quit DK ?" "session_exit" \
     }
 
 ######################################################################

@@ -10,6 +10,10 @@ if [ -d /etc/X11/xinit/xinitrc.d ]; then
     unset f
 fi
 
+# These guys are environment variables.
+[ -f "$MODMAP" ] && xmodmap "$MODMAP"
+[ -f "$HOME/.Xresources" ] && xrdb -merge ~/.Xresources
+
 # shadow.service will fail if this folder does not exist
 MAIL="/var/spool/mail"
 
@@ -23,18 +27,19 @@ systemctl --user import-environment DISPLAY XAUTHORITY
 systemctl --user start Xsession.target
 sudo systemctl restart dnsmasq.service
 
-# These guys are environment variables.
-[ -f "$MODMAP" ] && xmodmap "$MODMAP"
-[ -f "$HOME/.Xresources" ] && xrdb -merge ~/.Xresources
-
 # user init script and settings.
-autostart &
+xfsettingsd &
+# xset r rate 660 25
+xset s off -dpms
+urxvtd -q -o -f &
+numlockx on &
+#autostart &
 
 # launch the session, commands below these lines will be ignored
 # Starting Xsession according on tty.
 # refers to $HOME/.config/zsh/.zlogin
 case $(tty | cut -b9-) in
-    (1) exec bspwm ;;
-    (2) exec dk ;;
+    (1) exec dk ;;
+    (2) exec bspwm ;;
     (3) exec i3 ;;
 esac

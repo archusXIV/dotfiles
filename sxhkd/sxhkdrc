@@ -32,19 +32,23 @@ super + c
 
 # applications bindings
 # terminal emulators
-super + {_,shift +,ctrl + }Return
+super + {_,shift +,ctrl +} Return
     {\
     xterm, \
     urxvtc -name bashterm -geometry 124x30 -e bash; center_floatwin, \
     xterm -e bash \
     }
 
+# fzf_edit
+super + e ; {b,c}
+    urxvtc -name bashterm -e fzf_edit {"$SCRIPTDIR","$HOME"/.config}
+
 # ranger stuff
 super + r ; {r,s,t}
     {\
     urxvtc -name ranger -e ranger, \
     urxvtc -name sudoranger -e sudo ranger /etc, \
-    ranger_tab ~/Documents/ ~/.config/
+    ranger_tab ~/Documents/ ~/.config/ ~/.local/bin \
     }
 
 # URxvt applications (urxvt_apps script)
@@ -58,18 +62,18 @@ super + g ; {c,e,f,g,o,p,s,v,w}
     $EDITOR, \
     $FILEMNGR, \
     geany, \
-    obs, \
+    launch_obs, \
     cursor.AppImage, \
     pavucontrol, \
     $VIRTMNGR, \
-    $BROWSER \
+    $BROWSER --password-store=gnome %U \
     }
 
 # opens sxhkdrc_<wm> in vim (s stands for main config)
 super + k ; {b,d,i,s}
     vim_sxhkdrc -{b,d,i,s}
 
-# script to launch rofi-record, obs/ssr.
+# script to launch obs/ssr.
 super + shift + v ; {a,o,v,k,s}
     record_options -{a,o,v,k,s}
 
@@ -83,7 +87,8 @@ ctrl + {_,shift + }{KP_End,KP_Down,KP_Next,KP_Left}
 #    webcam_rectangle {1435 0,0 715,0 0,1435 715}
 
 # volume/mic
-{_,alt + }XF86Audio{Lower,Raise}Volume
+#{_,alt + }XF86Audio{Lower,Raise}Volume
+ctrl + {_,shift + }{KP_Subtract,KP_Add}
     volume_control {sink,source} --{down,up}
 
 {_,alt + }XF86AudioMute

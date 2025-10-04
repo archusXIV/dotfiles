@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+
+# Author: Barret E <https://github.com/archusXIV>
+# Script name: network_switch_connection
+# License: GPlv2
+#
+# This script runs in the background, it checks if the current connection
+# is still alive and if it receives packets back from a pinging function,
+# if not then we switch connection by taking down the current one and activating
+# the other one. If the default comes back online then we switch back to it.
+# All connections are already set in nm-connector-editor.
+# We will use nmcli which is already installed through the network-manager package.
+#
+# Interfaces: enp8s0 (default), enp21s0f4u2 (android mobile device).
+# Connections names: default (enp8s0), redmi_note (enp21s0f4u2)
+
+# Configuration
+default_interface="enp8s0"
+default_connection="default"
+rescue_interface="enp21s0f4u2"
+rescue_connection="redmi_note"
+check_interval=30
+
+_checkRescueInterface() {
+    if [[ ! $(ip addr show "$rescue_interface") ]]; then
+        exit 1
+    fi
+}
+
+_checkRescueInterface
+
+_getConnectionName() {
+    local conn_name=$1
+    if [[ $conn_name == "$default_connection" ]]; then
+        echo "$default_interface"
+        rm /tmp/redmi_note 2>/dev/null
+    else
+        echo "$rescue_interface"
+        touch /tmp/redmi_note
+    fi
+}
+
+_checkConnection() {
+    local conn_name device_name targets success
+    conn_name=$1
+    device_name=$(_getConnectionName "$conn_name")
+    declare -a targets=( "8.8.8.8" "1.1.1.1" "9.9.9.9" )
+    success=0
+    # Check if interface is up and has an IP
+    if [[ ! $(ip addr show "$device_name") =~ "inet " ]]; then
+        return 1
+    fi
+    # Test multiple DNS servers
+    for target in "${targets[@]}"; do
+        if ping -I "$device_name" -c 1 -W 2 "$target" >/dev/null 2>&1; then
+            ((success++))
+        fi
+    done
+    # Consider connection good if at least 2 checks over three succeed
+    (( "$success" >= 2))
+    return $?
+}
+
+_switchConnection() {
+    local new_connection=$2
+    local old_connection=$1
+    echo "Switching from $old_connection to $new_connection..."
+    nmcli connection down "$old_connection"
+    [[ $old_connection == "$rescue_connection" ]] && rm /tmp/redmi_note
+    # Small delay to ensure clean disconnect
+    sleep 1
+    nmcli connection up "$new_connection"
+    [[ $new_connection == "$rescue_connection" ]] && touch /tmp/redmi_note
+    # Wait for connection to establish
+    sleep 3
+}
+
+_getActiveConnection() {
+    nmcli -t -f NAME,DEVICE connection show --active \
+    | grep -E "$default_interface|$rescue_interface" \
+    | cut -d: -f1
+}
+
+_mainLoop() (
+    local current_connection alternate_connection
+    while true; do
+        _checkRescueInterface
+        current_connection=$(_getActiveConnection)
+        # If we're on secondary connection, check if primary is available
+        if [[ $current_connection == "$rescue_connection" ]]; then
+            if _checkConnection "$default_connection"; then
+                echo "Primary connection is back online, switching back..."
+                _switchConnection "$rescue_connection" "$default_connection"
+                continue
+            fi
+        fi
+        # Determine the alternate connection
+        if [[ $current_connection == "$default_connection" ]]; then
+            alternate_connection="$rescue_connection"
+        else
+            alternate_connection="$default_connection"
+        fi
+        # Check current connection
+        if ! _checkConnection "$current_connection"; then
+            echo "Connection $current_connection is down"
+            _switchConnection "$current_connection" "$alternate_connection"
+        else
+            echo "Connection $current_connection is up and running"
+        fi
+        sleep $check_interval
+    done &
+)
+
+case "$1" in
+    -d)
+        _switchConnection "$rescue_connection" "$default_connection"
+        rm /tmp/redmi_note 2>/dev/null
+    ;;
+    -r)
+        _switchConnection "$rescue_connection" "$rescue_connection"
+        touch /tmp/redmi_note
+    ;;
+    *)
+        _mainLoop
+    ;;
+esac

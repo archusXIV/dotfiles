@@ -38,14 +38,13 @@ super + {_,shift + }BackSpace
     bspc node -m {east,west}
 
 ############## LAYOUTS/STATES/FLAGS ####################
+# bsp-layout script {even,grid,monocle,rtall,rwide,remove}
+alt + l ; {a,e,g,l,r,s,t,w,z}
+    bspwm_set_layout -{a,e,g,l,r,s,t,w,z}
 
 # alternate between the tiled and monocle layout.
 super + m
-    bspwm_change_layouts -m
-
-# alternate, longest_side, spiral
-alt + l ; {a,l,s}
-    bspwm_change_layouts -{a,l,s}
+    bspwm_set_layout -m
 
 # set the window state.
 super + alt + {f,p,s,t}
@@ -155,7 +154,7 @@ super + alt + r
 
 # focus or swap the node in the given direction.
 super + {_,shift + }{Left,Down,Up,Right}
-    bspc node --{focus,swap} {west,south,north,east} --focus last
+    bspc node --{focus,swap} {west,south,north,east} --focus last.local
 
 # swap current node with the next/previous one across desktops.
 super + {_,shift + }s

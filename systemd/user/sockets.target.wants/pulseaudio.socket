@@ -1,1 +1,11 @@
-/usr/lib/systemd/user/pulseaudio.socket
+[Unit]
+Description=Sound System
+ConditionUser=!root
+
+[Socket]
+Priority=6
+Backlog=5
+ListenStream=%t/pulse/native
+
+[Install]
+WantedBy=sockets.target

@@ -7,19 +7,19 @@
 # We need sudo privileges without password prompt for this script to work
 : "${XDG_RUNTIME_DIR:-/run/user/1000}"
 
-ARCH="$XDG_RUNTIME_DIR/archlinux.list"
-AUR="$XDG_RUNTIME_DIR/aur.list"
-ARCHAUR="$XDG_RUNTIME_DIR/combined.list"
-MIRR="/etc/pacman.d/mirrorlist"
-BCKP="$MIRR"_bckp
-LOCK_FILE="$XDG_RUNTIME_DIR/updates-manager.lock"
+arch_list="$XDG_RUNTIME_DIR/archlinux.list"
+aur_list="$XDG_RUNTIME_DIR/aur.list"
+arch_aur_list="$XDG_RUNTIME_DIR/combined.list"
+mirr="/etc/pacman.d/mirrorlist"
+bckp="$mirr"_bckp
+country=$(curl --fail -s https://ipapi.co/country)
 
 # Colors
 nc=$'\e[0m'
 r=$'\e[0;31m'
 g=$'\e[0;32m'
 
-declare -a DEPS=( "checkupdates" "reflector" "yay" )
+declare -a deps=( "checkupdates" "reflector" "yay" )
 
 _Error() {
     printf '%s\n' " ${r}ERROR: $1${nc}" >&2
@@ -27,58 +27,51 @@ _Error() {
 }
 
 _Cleanup() {
-    rm -f "$LOCK_FILE"
+    rm -f {"$arch_list","$aur_list","$arch_aur_list"} >/dev/null 2>&1
     exit "${1:-0}"
 }
 
 _CheckDependencies() {
-
-    for dep in "${DEPS[@]}"; do
+    for dep in "${deps[@]}"; do
         command -v "$dep" >/dev/null 2>&1 || \
         _Error "Missing dependency: ${dep}" 127
     done
-
 }
 
-_CheckForUpdates() {
+#[[ -z $country ]] && _Error "Could not determine country" 1
 
-    checkupdates > "$ARCH"
-    yay -Qua > "$AUR"
-    cat "$ARCH" "$AUR" > "$ARCHAUR"
+_CheckForUpdates() {
+    checkupdates > "$arch_list"
+    yay -Qua > "$aur_list"
+    cat "$arch_list" "$aur_list" > "$arch_aur_list"
 
     # Clean up the combined list
-    sed -i -e '/^::/d' -e '/^\s*$/d' -e 's/^\s\+//' "$ARCHAUR"
-    awk -i inplace '!seen[$0]++' "$ARCHAUR"
-
+    sed -i -e '/^::/d' -e '/^\s*$/d' -e 's/^\s\+//' "$arch_aur_list"
+    awk -i inplace '!seen[$0]++' "$arch_aur_list"
 }
 
 _PolybarHook() {
     if pgrep -x polybar >/dev/null; then
         polybar-msg action "#updates-ipc.hook.0" >/dev/null 2>&1
-        notify-send "Available update(s): $(wc -l < "$ARCHAUR")"
+        notify-send "Available update(s): $(wc -l < "$arch_aur_list")"
     else
-        notify-send "Available update(s): $(wc -l < "$ARCHAUR")"
+        notify-send "Available update(s): $(wc -l < "$arch_aur_list")"
     fi
 }
 
 _CleanFiles() {
-    sed -i '1,$d' {"$ARCH","$AUR","$ARCHAUR"}
+    sed -i '1,$d' {"$arch_list","$aur_list","$arch_aur_list"}
     _PolybarHook
 }
 
 _CheckUpdates() {
     _CheckDependencies
 
-    # Use lock file instead of pid checking
-    if [[ -f $LOCK_FILE ]]; then
-        _Error "Another instance is running" 1
-    fi
-    touch "$LOCK_FILE"
-
     # Set trap for cleanup
     trap '_Cleanup' EXIT SIGINT SIGTERM
 
-    local country
+    [[ -f $arch_list ]] && rm {"$arch_list","$aur_list","$arch_aur_list"} 2>/dev/null
+
     while true; do
         # Check network
         if [[ -z $(ping -c 1 archlinux.org 2>/dev/null) ]]; then
@@ -86,9 +79,7 @@ _CheckUpdates() {
             _Cleanup 1
         fi
 
-        country=$(curl --fail -s https://ipapi.co/country)
-        [[ -z $country ]] && _Error "Could not determine country" 1
-        sudo cp -f "$MIRR" "$BCKP"
+        sudo cp -f "$mirr" "$bckp"
 
         sudo reflector \
             --country "$country" \
@@ -96,7 +87,7 @@ _CheckUpdates() {
             --age 24 \
             --protocol https \
             --sort rate \
-            --save "$MIRR" >/dev/null 2>&1
+            --save "$mirr" >/dev/null 2>&1
 
         _CheckForUpdates
         _PolybarHook
@@ -142,8 +133,8 @@ _Snapshot() {
     local OLDER_SNAPSHOT_INDEX OLDER_SNAPSHOT_NAME
     # will remove the first snapshot & create a new one.
     if command -v timeshift >/dev/null; then
-        sudo mount /dev/sdb2 /mnt
-        sleep 3
+        # sudo mount /dev/sdb2 /mnt
+        # sleep 3
         # awk '/^0/{print $3}' will match the first snapshot over three.
         OLDER_SNAPSHOT_INDEX=$(sudo timeshift --list | awk '/^0/{print $1}')
         OLDER_SNAPSHOT_NAME=$(sudo timeshift --list | awk '/^0/{print $3}')
@@ -155,7 +146,7 @@ _Snapshot() {
             sudo timeshift --create --skip-grub --comment "Before updates"
         fi
         sleep 2
-        sudo umount -R /mnt
+        # sudo umount -R /mnt
     else
         notify-send -u critical " ${g}Timeshift is not installed...${nc}"
         sleep 2
@@ -163,26 +154,33 @@ _Snapshot() {
 
 }
 
+_AskforSnapshot() {
+    _YesNoPrompt " ${r}Do you want to create a snapshot?: ${nc}" || {
+        return 1
+    }
+    return 0
+}
+
 _Installation() {
-    sudo cp -f "$MIRR" "$BCKP"
+    sudo cp -f "$mirr" "$bckp"
     echo "${g}Ranking mirrolist...be patient${nc}"
-    rankmirrors -n 10 "$BCKP" | sudo tee "$MIRR"
+    rankmirrors -n 10 "$bckp" | sudo tee "$mirr"
     sudo pacman -Syu --noconfirm
     sudo grub-mkconfig -o /boot/grub/grub.cfg
 }
 
 _PowerOptions() {
-	_Snapshot
+    _AskforSnapshot && _Snapshot
     _Installation
-	case "$1" in
-		-n)
-			sed -i '1,$d' {"$ARCH","$AUR","$ARCHAUR"}
-			_PolybarHook
-			exit 0
-		;;
-		-p) sudo poweroff ;;
-		-r) sudo reboot ;;
-	esac
+    case "$1" in
+        -n)
+            sed -i '1,$d' {"$arch_list","$aur_list","$arch_aur_list"}
+            _PolybarHook
+            exit 0
+        ;;
+        -p) sudo poweroff ;;
+        -r) sudo reboot ;;
+    esac
 }
 
 _CheckReboot() {
@@ -190,15 +188,16 @@ _CheckReboot() {
     declare -a criteria=(
         "amd-ucode"
         "grub"
-        "linux-lts"
         "linux-zen"
+        "linux-znver4"
         "mesa"
         "systemd"
         "xorg-server"
     )
 
     for pkg in "${criteria[@]}"; do
-        if grep -qw "${pkg}" "$ARCH"; then
+        if grep -qw "${pkg}" "$arch_list"; then
+            local restart
             echo -e " ${r}${pkg} requires REBOOT!${nc}\n"
             restart="yes"
             break
@@ -207,9 +206,10 @@ _CheckReboot() {
 
     # the default is reboot.
     # by pressing Enter we will get the default action.
-    if [[ $restart == yes ]]; then
+    if [[ -n $restart ]]; then
         _YesNoPrompt -n " ${r}Poweroff ${nc}after updates?" || {
             _YesNoPrompt " ${r}Reboot ${nc}after updates?" || {
+                unset restart
                 _PowerOptions -n
             }
             _PowerOptions -r
@@ -228,40 +228,37 @@ _CheckReboot() {
 
 _List() {
 
-    mapfile -t TOTALUPDATES < "$ARCHAUR"
+    mapfile -t total_updates < "$arch_aur_list"
 
-    if ((${#TOTALUPDATES[@]} == 0)); then
+    if (( ${#total_updates[@]} == 0 )); then
         printf '%s\n' " ${r}No available update."
-        sleep 3s
+        read -r -t 3
         return 0
     else
-        while read -r line; do
-            echo " $line"
-        done < "$ARCHAUR"
-
-        printf '\n%s\n' " ${g}Available update(s): ${#TOTALUPDATES[@]}${nc}"
+        nl "$arch_aur_list"
+        printf '\n%s\n' " ${g}Available update(s): ${#total_updates[@]}${nc}"
 
         _YesNoPrompt " Proceed with installation?" || {
             printf '%s\n' " bye..."
-            sleep 2s
+            read -r -t 2
             return 0
         }
 
-        # first AUR packages update
-        mapfile -t AUR_PACKAGES < "$AUR"
-        if (( ${#AUR_PACKAGES[@]} > 0 )); then
+        # first aur_list packages update
+        mapfile -t aur_packages < "$aur_list"
+        if (( ${#aur_packages[@]} > 0 )); then
             yay -Sua
             rm -rf "$HOME"/.ccache
-            if (( ${#AUR_PACKAGES[@]} == ${#TOTALUPDATES[@]} )); then
-                sed -i '1,$d' {"$AUR","$ARCHAUR"}
+            if (( ${#aur_packages[@]} == ${#total_updates[@]} )); then
+                sed -i '1,$d' {"$aur_list","$arch_aur_list"}
                 _PolybarHook
                 return 0
             fi
         fi
 
         # then Arch...
-        mapfile -t ARCH_PACKAGES < "$ARCH"
-        if (( ${#ARCH_PACKAGES[@]} > 0 )); then
+        mapfile -t arch_list_packages < "$arch_list"
+        if (( ${#arch_list_packages[@]} > 0 )); then
             _CheckReboot
         fi
 
@@ -273,6 +270,6 @@ case "$1" in
     --chck) _CheckUpdates ;;
     --hook) _PolybarHook ;;
     --list) _List ;;
-    --snap) _Snapshot ;;
+    --snap) _AskforSnapshot && _Snapshot ;;
     *     ) _Error "Wrong option: $1" 1 ;;
 esac
