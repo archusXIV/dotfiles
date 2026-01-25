@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+export FZF_DEFAULT_OPTS="
+  -e -i --info=hidden --layout=reverse --scroll-off=5
+  --tiebreak=index --bind 'home:first,end:last,tab:down,shift-tab:up'
+"
+
+_awk_stuff() {
+    awk "{
+        gsub(/ *\\(.*/,\"\");
+        gsub(/,.*/,\"\");
+        gsub(/ *-[^-]*$/,\"\");
+        gsub(/  +/,\" \");
+        sub(/ *$/,\"\");
+        print
+    }"
+}
+
+export -f _awk_stuff
+
+man -k . | \
+fzf -q "$1" --prompt='manpages >>> ' \
+    --preview-window 'right:60%' \
+    --preview 'echo {} \
+    | _awk_stuff | xargs -r man 2>/dev/null || echo \"No preview for this entry...\"' \
+    --bind 'enter:execute(
+        echo {} | _awk_stuff | xargs -r man
+    )+abort'
+

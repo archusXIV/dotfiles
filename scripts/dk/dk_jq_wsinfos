@@ -2,10 +2,10 @@
 
 # Author: Barret E <archus@protonmail.com>
 # 2024-06-17
-# Dependency: jq
+# Dependencies: awk jq sed
 
 DKRC="$HOME/.config/dk/dkrc"
-totalws=$(awk -F= '/numws/{print $2}' "$DKRC")
+totalws=$(awk -F= '/numws/{print $2; exit}' "$DKRC")
 
 _Error() {
     echo " [ERROR] Usage: ${0##*/} [-a|--all|<available desktop number>]"
@@ -31,7 +31,7 @@ case "$1" in
             echo ""
         done
     ;;
-    [0-"$totalws"])
+    [0-$totalws])
         i="$1"
         echo " WORKSPACE: $i"
         echo " name:      $(dkcmd status type=ws num=1 | jq -r '.workspaces | .[] | .name' | sed -n "${i}p")"

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# getting actual terminal size
+read -r rows cols < <(stty size)
+# ...changing it size to fit the calendar app
+echo -ne '\e[8;19;40t'
+dialog --no-shadow --calendar "" 0 0 --stdout
+# restoring terminal previous size
+echo -ne "\e[8;${rows};${cols}t"
+clear

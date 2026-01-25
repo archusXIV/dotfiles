@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+systemctl --user stop Xsession.target
+
+declare -A wm_cmd=(
+    [dk]="dkcmd exit"
+    [bspwm]="bspc quit"
+    [i3]="i3-msg exit"
+)
+
+for x in "${!wm_cmd[@]}"; do
+    pidof "${x}" >/dev/null && "${wm_cmd[${x}]}"
+done
+
+rm -f /tmp/{dk__*,dk_state} 2>/dev/null
+rm -f /tmp/{serverauth,polybar_mqueue}.* 2>/dev/null
+
+pkill -9 -u "$USER"

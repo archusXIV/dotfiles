@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# Author: Barret E 2025 <archus@protonmail.com>
-# Script name: screencaster
+# Author: Barret E 2026 <archus@protonmail.com>
+# Script name: screencaster v1.2.1
 # License: GPlv2
 #
 # This script records the chosen screen with both video and audio
@@ -9,65 +9,88 @@
 # It requires command line arguments like:
 # screencaster -m HDMI-A-0 -a alsa_output.pci-0000_0a_00.4.analog-stereo.monitor
 # If -m or -a is not provided, we will be prompt to set those required parameters.
+# Use Ctrl+C to end the script if launched with -l or -w options
 # See the _Usage function for more options/info.
 # You can also check the filters parameters and change them in the FILTERS array.
 
-# shellcheck disable=SC2140
+# colors
+grn=$'\e[32m'
+red=$'\e[31m'
+noc=$'\e[0m'
 
 reset
-declare -a dependencies=(
-    ffmpeg
-    pulseaudio
-    awk
-    xrandr
-)
+declare -a dependencies=( awk ffmpeg pulseaudio xrandr wmctrl )
 
 for dependency in "${dependencies[@]}"; do
     command -v "${dependency}" >/dev/null || {
-        printf '%s\n' " $dependency isn't installed, exiting."
+        printf '%s\n' " ${red}$dependency isn't installed, exiting.${noc}"
         exit 127
     }
 done
 
-grn=$'\e[32m';
-red=$'\e[31m';
-nc=$'\e[0m';
 now=$(date +%Y-%m-%d_%H:%M:%S)
 
+mapfile -t active_monitors < <(
+    xrandr --listactivemonitors | awk 'NR>1 {print $NF}'
+)
+
+max_resolution=$(
+    xrandr | awk '/current/{print $8 "x" substr($10, 1, length($10)-1)}'
+)
+
+mapfile -t audio_sources < <(pactl list sources short | awk '{print $2}')
+
 _Usage() {
+    # setting a minimum window size to display this _Usage function correctly
+    wmctrl -r :ACTIVE: -e "5,-1,-1,1100,700"
+    echo
     printf '%s\n' \
-    " Usage: ${0##*/} [OPTION] [ARG]" \
-    " -a <audio source>  See down below available sources (required!)" \
-    " -b <yes/no>        Activate polybar mic/volume modules (default:no)" \
-    " -d <audio delay>   If needed, to sync audio/video in milliseconds (default:0)" \
-    " -D <add decibells> Number of decibells to add for the final result (default:1)" \
-    " -f <audio filter>  compressor, denoiser, cutfreq (one filter only)" \
-    " -l <length>        How long the screencast should last (format = HH:MM:SS)" \
-    " -m <monitor name>  example: HDMI-A-0 (required!)" \
-    " -o <filename>      Output file (default:$HOME/screencast_$now.mkv)" \
-    " -p <preset ratio>  Set the video quality (default:veryfast)" \
-    " -r <resolution>    Set the screen resolution (default:1920x1080)" \
-    " -v <volume>        Set the audio source level (in percentage) using pactl (default:80)"
-    echo -e "\n ${grn}Currently available audio sources:\n${nc}"
-    pactl list sources short | awk '{print "  "$2}'
+    " Usage: ${0##*/} [OPTIONS] [ARGS]" \
+    "" \
+    " -a <audio source>   :See down below available sources (required!)" \
+    " -b <yes/no>         :Activate polybar mic/volume modules (default:no)" \
+    " -d <audio delay>    :If needed, to sync audio/video in milliseconds (default:100)" \
+    " -D <add decibells>  :Number of decibells to add for the final result (default:1)" \
+    " -f <audio filter>   :compressor, denoiser, cutfreq (only one filter at a time)" \
+    " -F <framerate>      :change ffmpeg framerate parameter (default:30)" \
+    " -h|--help           :Print this message and exit" \
+    " -l <duration>       :How long the screencast should last (format = HH:MM:SS)" \
+    " -m <monitor name>   :Example: HDMI-A-0 (required!)" \
+    " -o <filename>       :Output file (default:$HOME/screencast_$now.mkv)" \
+    " -p <preset ratio>   :Set the video quality (default:veryfast)" \
+    " -r <resolution>     :Set the screen resolution (default:1920x1080)" \
+    " -t <duration>       :Set a timer before starting the recording (format = HH:MM:SS)" \
+    " -v <volume>         :Set the audio source level (in percentage) using pactl (default:90)" \
+    " -w <webcam/prog>    :Set a webcam program or script to display your own face" \
+    "" \
+    "  ${grn}Audio source(s) currently available:${noc}" \
+    "${audio_sources[@]}" \
+    "" \
+    "  ${grn}Maximum screen resolution: ${noc}$max_resolution" \
+    "  (if you want to use this and have multiple monitors, choose your first monitor)" \
+    "  ${grn}Example: ${red}screencaster -r $max_resolution -m ${active_monitors[0]}${noc}"
     exit 1
 }
 
-[[ $# -eq 0 ]] && _Usage
+[[ $# -eq 0 || $1 =~ -h|--help ]] && _Usage
+
 # Parsing arguments
-while getopts "a:b:d:D:f:l:m:o:p:r:v:" opt; do
+while getopts "a:b:d:D:f:F:l:m:o:p:r:t:v:w:" opt; do
     case $opt in
         a) audio_source="${OPTARG}" ;;
         b) bar="${OPTARG}" ;;
         d) audio_delay="${OPTARG}" ;;
         D) ndB="${OPTARG}" ;;
         f) filter="${OPTARG}" ;;
+        F) framerate="${OPTARG}" ;;
         l) length="${OPTARG}" ;;
         m) monitor="${OPTARG}" ;;
         o) output_file="${OPTARG}" ;;
         p) preset="${OPTARG}";;
         r) resolution="${OPTARG}" ;;
+        t) timer="${OPTARG}" ;;
         v) volume="${OPTARG}" ;;
+        w) webcam="${OPTARG}" ;;
         *) _Usage ;;
     esac
 done
@@ -83,19 +106,20 @@ declare -A FILTERS=(
 )
 
 # Default values
-audio_delay=${audio_delay:-0}
-bar=${bar:-no}
-ndB=${ndB:-1}
-output_file=${output_file:-"$HOME"/screencast_"$now".mkv}
-preset=${preset:-veryfast}
-resolution=${resolution:-"1920x1080"}
-volume=${volume:-80}
+: "${audio_delay:=100}"
+: "${bar:=no}"
+: "${framerate:=30}"
+: "${ndB:=1}"
+: "${output_file:=$HOME/screencast_$now.mkv}"
+: "${preset:=veryfast}"
+: "${resolution:=1920x1080}"
+: "${volume:=90}"
 
 # Validate filter if provided
 if [[ -n $filter ]]; then
     if [[ -z ${FILTERS[$filter]} ]]; then
-        echo " ${red}Invalid filter: $filter${nc}"
-        echo " Available filters: ${grn}${!FILTERS[*]}${nc}"
+        echo " ${red}Invalid filter: $filter"
+        echo " Available filters: ${grn}${!FILTERS[*]}${noc}"
         exit 1
     fi
     filter=${FILTERS[$filter]}
@@ -106,8 +130,8 @@ fi
 # Giving a menu for monitor choice if not provided
 [[ -z $monitor ]] && {
     printf '\n'
-    PS3=""$'\n'" ${grn}Select a monitor: ${nc}"
-    select m in $(xrandr --listactivemonitors | awk '$0 !~ /Monitor/{print $NF}'); do
+    PS3=""$'\n'" ${grn}Select a monitor: ${noc}"
+    select m in "${active_monitors[@]}"; do
         if [[ -n ${m+x} ]]; then
             monitor="$m"
             break
@@ -120,8 +144,8 @@ fi
 # ...and for audio source device too.
 [[ -z $audio_source ]] && {
     printf '\n'
-    PS3=""$'\n'" ${grn}Select an audio source: ${nc}"
-    select a in $(pactl list sources short | awk '{print "  "$2}'); do
+    PS3=""$'\n'" ${grn}Select an audio source: ${noc}"
+    select a in "${audio_sources[@]}"; do
         if [[ -n ${a+x} ]]; then
             audio_source="$a"
             [[ $audio_source =~ output && -z $volume ]] && volume=50
@@ -132,23 +156,31 @@ fi
     done
 }
 
+_IsPolybarActive() {
+    if [[ -n $(pgrep polybar) && $bar == "yes" ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 _BarActions() {
+    pid=$(pgrep -f "$(wmctrl -m | awk '/Name/{print $2}')"-bar-2)
     case "$1" in
         on)
             if [[ $input == "on" ]]; then
-                polybar-msg action "#mic-ipc.hook.1"
-                polybar-msg action "#volume-ipc.hook.0"
+                polybar-msg -p "$pid" action "#mic-ipc.hook.1"
+                polybar-msg -p "$pid" action "#volume-ipc.hook.0"
             elif [[ $output == "on" ]]; then
-                polybar-msg action "#mic-ipc.hook.0"
-                polybar-msg action "#volume-ipc.hook.1"
+                polybar-msg -p "$pid" action "#mic-ipc.hook.0"
+                polybar-msg -p "$pid" action "#volume-ipc.hook.1"
             fi
         ;;
         off)
-            polybar-msg action "#mic-ipc.hook.0"
-            polybar-msg action "#volume-ipc.hook.1"
+            polybar-msg -p "$pid" action "#mic-ipc.hook.0"
+            polybar-msg -p "$pid" action "#volume-ipc.hook.1"
         ;;
     esac
-
 } >/dev/null 2>&1
 
 _GetInputMute() { pactl get-source-mute @DEFAULT_SOURCE@; }
@@ -160,7 +192,7 @@ _SetOutputVolume() { pactl set-sink-volume @DEFAULT_SINK@ "$1"; }
 # Getting the current volume level so we can restore it when stopping the recording
 read -r currentvolume < <(
     pactl get-sink-volume @DEFAULT_SINK@ \
-    | awk '{if(NR!=2) {print $5}}'
+    | awk 'NR==1 {print $5}'
 )
 
 _SetVolume() {
@@ -174,7 +206,7 @@ _SetVolume() {
                 }
                 _SetInputVolume "$volume"%
                 input=on
-                [[ $bar == "yes" ]] && _BarActions on
+                _IsPolybarActive && _BarActions on
             elif [[ $audio_source =~ output ]]; then
                 _GetOutputMute | grep -q 'yes' && _SetOutputMute false
                 _GetInputMute | grep -q 'no' && {
@@ -183,7 +215,7 @@ _SetVolume() {
                 }
                 _SetOutputVolume "$volume"%
                 output=on
-                [[ $bar == "yes" ]] && _BarActions on
+                _IsPolybarActive && _BarActions on
             fi
             gsettings set org.gnome.desktop.sound event-sounds false
             ;;
@@ -193,20 +225,17 @@ _SetVolume() {
                 _SetInputMute true
                 _SetOutputMute false
                 _SetOutputVolume "${currentvolume}"
-                [[ $bar == "yes" ]] && _BarActions off
+                _IsPolybarActive && _BarActions off
             }
             [[ $output == "on" ]] && {
                 _SetOutputVolume "${currentvolume}"
                 _SetOutputMute false
-                [[ $bar == "yes" ]] && _BarActions off
+                _IsPolybarActive && _BarActions off
             }
             gsettings set org.gnome.desktop.sound event-sounds true
         ;;
     esac
 }
-
-[[ -n $volume ]] && _SetVolume on
-
 
 # Get monitor position (xrandr output)
 monitor_position=$(
@@ -218,34 +247,51 @@ monitor_position=$(
 )
 
 if [[ -z $monitor_position ]]; then
-    echo " ${red}Could not determine monitor position for $monitor${nc}"
+    echo " ${red}Could not determine monitor position for $monitor${noc}"
     exit 1
+else
+    x=${monitor_position%,*}
+    y=${monitor_position#*,}
 fi
-
-x=${monitor_position%,*}
-y=${monitor_position#*,}
 
 _EndScreencast() {
     [[ -n $volume ]] && _SetVolume off
+    kill -TERM "$(cat /tmp/webcampid)" 2>/dev/null
+    kill -TERM "$(pidof ffmpeg)"
     reset
     notify-send 'screencast is over'
     exit 0
 }
 
+[[ -n $volume ]] && _SetVolume on
+
+[[ -n $webcam ]] && {
+    "$webcam" &
+    webcam_pid=$!
+    echo "$webcam_pid" > /tmp/webcampid
+    trap 'kill -TERM "$(pidof ffmpeg)" "$webcam_pid"; _EndScreencast' SIGINT SIGTERM
+}
+
+# Translating user input into seconds
 _TimeConverter() {
     IFS=":";
-    if [[ $1  =~ ^[0-9]{2}:[0-9]{2}$ ]]; then
+    if [[ $1 =~ ^[0-9]{2}:[0-9]{2}$ ]]; then
         read -r minutes seconds <<< "$1"
         total_seconds=$((minutes * 60 + seconds))
-    elif [[ $1  =~ ^[0-9]{2}:[0-9]{2}:[0-9]{2}$ ]]; then
+    elif [[ $1 =~ ^[0-9]{2}:[0-9]{2}:[0-9]{2}$ ]]; then
         read -r hours minutes seconds <<< "$1"
         total_seconds=$(((hours * 3600) + (minutes * 60 + seconds)))
     else
         unset IFS
-        printf '\n%s\n' " ${red}Wrong duration format...${nc}"
+        printf '\n%s\n' " ${red}Wrong duration format...${noc}"
         _Usage
     fi
     unset IFS
+}
+
+[[ -n $timer ]] && {
+    _TimeConverter "$timer"
+    sleep "$total_seconds"
 }
 
 [[ -n $length ]] && {
@@ -254,15 +300,10 @@ _TimeConverter() {
     (
         for ((i=1;i<="$total_seconds";i++)); do
             sleep 1
-            (( i == total_seconds )) && {
-                kill -TERM "$(pidof ffmpeg)"
-                _EndScreencast
-            }
         done
+        _EndScreencast
     ) &
     timer_pid=$!
-
-    # Trap SIGINT/SIGTERM to kill both ffmpeg and the timer process
     trap 'kill -TERM "$(pidof ffmpeg)" "$timer_pid"; _EndScreencast' SIGINT SIGTERM
 }
 
@@ -270,7 +311,7 @@ ffmpeg \
     -y \
     -thread_queue_size 512 \
     -video_size "$resolution" \
-    -framerate 30 \
+    -framerate "$framerate" \
     -f x11grab -i :0.0+"$x","$y" \
     -thread_queue_size 512 \
     -f pulse -i "$audio_source" \

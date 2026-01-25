@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
+# this script is used in multi-monitor setup
 # sxhkdrc:
-# super + s ; {workspace number}
+# super + s ; {1-9,0}
 #    dk_swap_ws {1-9,10}
 
 dkcmd set static_ws=false

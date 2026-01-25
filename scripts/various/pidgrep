@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Author: Barret E (2021) <archus@protonmail.com>
 # https://github.com/archusXIV/dotfiles
@@ -6,69 +6,89 @@
 # Simple script to get the pid(s) number(s) of a running process.
 # We are prompted to kill it or not...
 # Of course we could use xkill but what about a background process?
-# eg: pidgrep updates-manager (use sudo for root privileges).
+# eg: pidgrep my_script_name [option] (use sudo for root privileges).
 # ---------------------------------------------------------------------------------
-#  USER    |   PID   |   COMMAND
+#   USER    |   PID   |   COMMAND
 # ---------------------------------------------------------------------------------
-# archang+  156439      /bin/bash /home/archangel/.local/bin/updates-manager --check 
+#  archang+  156439      /bin/bash /home/archangel/.local/bin/updates-manager --check
 # ---------------------------------------------------------------------------------
 #
 # Kill all processes [a] or just one [x] ? (press q to quit).
 
-green=$'\e[0;32m';
+grn=$'\e[0;32m';
 red=$'\e[0;31m';
-nocolor=$'\e[0m';
+noc=$'\e[0m';
 
-# first test if $1 is a service.
-if [[ -n $(systemctl list-units | grep -w "$1") ]]; then
-    printf '%s\n' " ${green}$1 is a running systemd unit" \
-    " ${red}PLEASE USE: sudo systemctl <option> to manage it.${nocolor}"
-    systemctl status "$1"* | awk '/Main PID:/{print}'
-    exit 0
-elif [[ -n $(systemctl --user list-units | grep -w "$1") ]]; then
-    printf '%s\n' " ${green}$1 is a running systemd --user unit" \
-    " ${red}PLEASE USE: systemctl --user <option> to manage it.${nocolor}"
+case "${2}" in
+    -t) kill_option="-TERM" ;;
+    -k) kill_option="-KILL" ;;
+    *) printf '%s\n' " ${red}Wrong option $1" \
+    " Try: ${0##*/} <process_name> -[t|k]${noc}"; exit 1 ;;
+esac
+
+: "${USER:=$(whoami)}"
+
+# first test if $1 belongs to systemd.
+if systemctl --user status "$1" 2>/dev/null | grep -q 'active'; then
+    printf '%s\n' " ${grn}$1 is a running systemd --user unit" \
+    " ${red}PLEASE USE: systemctl --user <option> $1.service to manage it.${noc}"
     systemctl --user status "$1"* | awk '/Main PID:/{print}'
+    exit 0
+elif systemctl status "$1" 2>/dev/null | grep -q 'active'; then
+    printf '%s\n' " ${grn}$1 is a running systemd unit" \
+    " ${red}PLEASE USE: sudo systemctl <option> $1.service to manage it.${noc}"
+    systemctl status "$1"* | awk '/Main PID:/{print}'
     exit 0
 fi
 
 # then a regular process.
-if [[ -z $(pgrep -x "$1") ]]; then
-    echo "No such process!"
-    printf '%s\n'; exit 0
-elif (( $(pgrep -u "$USER" -fc "$1") >= 1 )); then
-    printf '%s\n'
-    perl -E 'say "-" x 81'
-    echo " ${green}USER    |   PID   |   COMMAND${nocolor}"
-    perl -E 'say "-" x 81'
-    ps -fp $(pgrep -x "$1") \
-    | awk '
-        {if(NR!=1)
-        { print $1"   "$2"     "$8" "$9" "$10" "$11" "$12 }}
-    '
-    
-    perl -E 'say "-" x 81'
-    printf '%s\n'
-    read -rsn 1 -p ${red}' Kill all processes [a] or just one [x] ? (press q to quit).'${nocolor} answer
-    
-    case "$answer" in
-        q)  printf '%s\n'; exit 0
+pids=$(pgrep -u "$USER" -f "$1" | grep -v "^$$\$")
+
+if ! pgrep -f "$1" >/dev/null; then
+    echo "No such process: $1"
+    exit 0
+else
+    _printLine() {
+        printf -- '-%.0s' {1..81}; printf '\n'
+    }
+
+    echo
+    _printLine
+    echo " ${grn}USER    |  PID  |  COMMAND${noc}"
+    _printLine
+    # shellcheck disable=SC2086
+    ps -fp $pids \
+        | awk '
+            NR==1{next} {
+                    count++
+                    if ( count <= 5 ) print $1"   "$2"     "$9" "$10" "$11" "$12
+                }
+        '
+    _printLine
+    printf '\n'
+    read -rsn 1 \
+        -p "${red} Kill all processes [a] or just one [x] ? (press q to quit).${noc}"
+
+    case "$REPLY" in
+        [qQ]) echo; exit 0 ;;
+        [aA])
+            for pid in $pids; do
+                kill "$kill_option" "$pid"
+            done >/dev/null 2>&1
+            echo -e  "\n ${red}$1 ${noc}does not exist anymore..."
+            echo; exit 0
         ;;
-        a)  for pid in $(pidof -x "$1"); do
-                kill -KILL "$pid"
-            done
-            echo " ${red}$1 ${nocolor}does not exist anymore..."
-            printf '%s\n'; exit 0
-        ;;
-        x)  printf '%s\n'
-            read -r -p ${red}" Enter the pid number to kill: "${nocolor} pid
-            if [[ -z $(pgrep --full "$1" | grep "$pid") ]]; then
+        [xX])
+            printf '\n'
+            read -r -p "${red}"' Enter the pid number to kill: '"${noc}" pid
+            if ! echo "$pids" | grep -q "^$pid\$"; then
                 echo " ${red}wrong pid number...$1 still alive."
                 exit 1
             else
-                kill -KILL "$pid" && echo " ${red}$1 ${nocolor}does not exist anymore..."
-                printf '%s\n'; exit 0
+                kill "$kill_option" "$pid" && echo -e "\n ${red}$1 ${noc}does not exist anymore..."
+                printf '\n'; exit 0
             fi
         ;;
+        *) exit 1 ;;
     esac
 fi

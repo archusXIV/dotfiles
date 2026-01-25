@@ -1,103 +1,188 @@
 #!/usr/bin/env bash
 
 # Author: Barret E 2025 <archus@protonmail.com>
-# Script name: ssr_hidden v1.0.1
+# Script name: ssr_hidden v2.1.2
 # License: GPLv2
 #
-# simple script to run simplescreenrecorder in hidden mode
-# for the entered time & @screen. (see _usage function)
-# input-profiles directory contains {all,center,left,right}.conf files.
+# Script to run simplescreenrecorder in hidden mode
+# for a determined duration & @screen. (see _Usage function)
+# input-profiles directory contains:
+# {all_{input,output},left_{input,output},center_{input,output},right_{input,output}}.conf files.
+# For example center_output.conf captures the sound from the speakers
+# and center_input.conf from the microphone.
 
+grn=$'\e[32m';
+nc=$'\e[0m';
 _Has() { command -v "$1" >/dev/null; }
 
-for dep in pulseaudio simplescreenrecorder; do
+for dep in polybar pulseaudio simplescreenrecorder; do
     _Has "${dep}" || {
-        printf '%s\n' " $dep isn't installed, exiting."
-        exit 127
+        if [[ $dep == polybar ]]; then
+            printf '%s\n' " ${grn}polybar is not installed but optional${nc}"
+            sleep 2
+        else
+            printf '%s\n' " $dep isn't installed, exiting."
+            exit 127
+        fi
     }
 done
 
+trap _Close SIGINT SIGTERM
+
 ssr_fifo="$XDG_RUNTIME_DIR/ssr.fifo"
-configs_path="$XDG_CONFIG_HOME/simplescreenrecorder/input-profiles"
+profiles_path="$XDG_CONFIG_HOME/simplescreenrecorder/input-profiles"
+
+if [[ -p "$ssr_fifo" ]]; then
+    rm "$ssr_fifo" || exit 1
+    mkfifo "$ssr_fifo"
+else
+    mkfifo "$ssr_fifo"
+fi
 
 _Usage() {
     printf '%s\n' \
     " Usage:   ${0##*/} -v <volume> -d <duration> -p <profile>" \
-    " -v Set the microphone volume (default:80)" \
-    " -d Set the video duration" \
-    " -p Set the SimpleScreenRecorder profile to use (omit .conf)" \
+    " -b <yes/no>       Activate polybar mic/volume modules (optional)" \
+    " -d <hh:mm:ss>     Set the video duration" \
+    " -l <all>          List all input profiles" \
+    " -p <profile name> Set the SimpleScreenRecorder profile to use (omit .conf)" \
+    " -v <volume>       Set the microphone volume (default:90)" \
     "                   duration = hh:mm:ss" \
     " Example: ${0##*/} -v 80 -d 00:15:30 -p profile_name" \
     " or:         ${0##*/} -v 80 -d 15:30 -p profile_name"
-    printf '\n%s\n' " Profile(s) should be in $configs_path"
+    printf '\n%s\n' " Profile(s) should be in $profiles_path" \
+    "  ${grn}Audio source(s) currently available:${nc}"
+    pactl list sources short | awk '{print "  "$2}'
     [[ -p "$ssr_fifo" ]] && rm "$ssr_fifo"
     exit 1
 }
 
+(($# == 0)) && _Usage
 # getting user input according to _Usage function.
-while getopts "d:p:v:" opt; do
+while getopts "b:d:l:p:v:" opt; do
     case "${opt}" in
+        b) bar="${OPTARG}" ;;
         d) duration="${OPTARG}" ;;
+        l)
+            if ! find "$profiles_path" -name "*.conf"; then
+                printf '\n%s\n' " No profile found in $profiles_path!"
+                exit 1
+            else
+                printf '\n%s\n' " Available profiles: "
+                find "$profiles_path" -name "*.conf" -printf '%f\n' \
+                | sort \
+                | sed 's/^/ /;s/.conf//'
+                exit 0
+            fi
+        ;;
         p)
             profile="${OPTARG}.conf"
-            if [[ -z $(find "$configs_path" -name "$profile") ]]; then
+            if ! find "$profiles_path" -name "$profile"; then
                 printf '\n%s\n' " profile $profile does not exist!"
                 _Usage
             fi
         ;;
         v) volume="${OPTARG}%" ;;
-        *) _Usage ;;
+        \?)
+            echo " Invalid option -${OPTARG}" >&2
+            exit 1
+        ;;
     esac
 done
 
-[[ -z $duration && -z $profile ]] && {
-    printf '\n%s\n' " Missing arguments..."
+shift $(( OPTIND - 1 ))
+
+[[ -z $duration ]] && {
+    printf '\n%s\n' " Missing duration..."
     _Usage
 }
 
-volume=${volume:-80}
+# default values
+: "${bar:=no}"
+: "${volume:="90%"}"
+
+[[ -z $profile ]] && {
+    printf '\n'
+    PS3=""$'\n'" ${grn}Select a source profile: ${nc}"
+    select p in $(find "$profiles_path" -type f -printf '%f\n' | sort -d); do
+        if [[ -n ${p+x} ]]; then
+            profile="$p"
+            [[ $profile =~ _output && -z $volume ]] && volume="70%"
+            break
+        else
+            _Usage
+        fi
+    done
+}
 
 _BarActions() {
+    pid=$(pgrep -f "$(wmctrl -m | awk '/Name/{print $2}')"-bar-2)
     case "$1" in
         on)
-            polybar-msg action "#mic-ipc.hook.1"
-            polybar-msg action "#volume-ipc.hook.0"
+            if [[ $input == "on" ]]; then
+                polybar-msg -p "$pid" action "#mic-ipc.hook.1"
+                polybar-msg -p "$pid" action "#volume-ipc.hook.0"
+            elif [[ $output == "on" ]]; then
+                polybar-msg -p "$pid" action "#mic-ipc.hook.0"
+                polybar-msg -p "$pid" action "#volume-ipc.hook.1"
+            fi
         ;;
         off)
-            polybar-msg action "#mic-ipc.hook.0"
-            polybar-msg action "#volume-ipc.hook.1"
+            polybar-msg -p "$pid" action "#mic-ipc.hook.0"
+            polybar-msg -p "$pid" action "#volume-ipc.hook.1"
         ;;
     esac
 
 } >/dev/null 2>&1
 
 _GetInputMute() { pactl get-source-mute @DEFAULT_SOURCE@; }
+_GetOutputMute() { pactl get-sink-mute @DEFAULT_SINK@; }
 _SetInputMute() { pactl set-source-mute @DEFAULT_SOURCE@ "$1"; }
 _SetOutputMute() { pactl set-sink-mute @DEFAULT_SINK@ "$1"; }
 _SetInputVolume() { pactl set-source-volume @DEFAULT_SOURCE@ "$1"; }
 _SetOutputVolume() { pactl set-sink-volume @DEFAULT_SINK@ "$1"; }
-# Getting the current volume level so we can restore it when stopping the recording
+# Getting the current volume level so we can restore it when the recording ends
 read -r currentvolume < <(
-        pactl get-sink-volume @DEFAULT_SINK@ \
-        | awk '{if(NR!=2) {print $5}}'
-    )
+    pactl get-sink-volume @DEFAULT_SINK@ \
+    | awk 'NR==1 {print $5}'
+)
 
 _SetVolume() {
     case "$1" in
         on)
-            _GetInputMute | grep -q 'yes' && _SetInputMute false
-            _SetInputVolume "$volume"
-            _SetOutputVolume 0%
-            _SetOutputMute true
+            if [[ $profile =~ input ]]; then
+                _GetInputMute | grep -q 'yes' && _SetInputMute false
+                _GetOutputMute | grep -q 'no' && {
+                    _SetOutputVolume 0%
+                    _SetOutputMute true
+                }
+                _SetInputVolume "$volume"
+                input=on
+                [[ $bar == "yes" ]] && _BarActions on
+            elif [[ $profile =~ output ]]; then
+                _GetOutputMute | grep -q 'yes' && _SetOutputMute false
+                _GetInputMute | grep -q 'no' && {
+                    _SetInputVolume 0%
+                    _SetInputMute true
+                }
+                _SetOutputVolume "$volume"
+                output=on
+                [[ $bar == "yes" ]] && _BarActions on
+            fi
             gsettings set org.gnome.desktop.sound event-sounds false
-            _Has polybar && _BarActions on
-        ;;
+            ;;
         off)
-            _SetInputVolume 0%
-            _SetInputMute true
-            _SetOutputMute false
-            _SetOutputVolume "${currentvolume}"
-            _Has polybar && _BarActions off
+            if [[ $input == "on" ]]; then
+                _SetInputVolume 0%
+                _SetInputMute true
+                _SetOutputMute false
+                _SetOutputVolume "${currentvolume}"
+                [[ $bar == "yes" ]] && _BarActions off
+            elif [[ $output == "on" ]]; then
+                _SetOutputVolume "${currentvolume}"
+                _SetOutputMute false
+                [[ $bar == "yes" ]] && _BarActions off
+            fi
             gsettings set org.gnome.desktop.sound event-sounds true
         ;;
     esac
@@ -105,13 +190,12 @@ _SetVolume() {
 
 _Close() {
     unset IFS
+    echo "record-save" >&4; sleep 0.5
+    echo "quit" >&4; exec 4>&-
     rm "$ssr_fifo"
     _SetVolume off
-    notify-send -u critical 'ssr_hidden is over'
     reset
 } >/dev/null 2>&1
-
-trap _Close SIGINT SIGTERM
 
 _TimeConversion() {
     IFS=":";
@@ -130,22 +214,13 @@ _TimeConversion() {
 
 _TimeConversion "$duration"
 
-if [[ -p "$ssr_fifo" ]]; then
-    rm "$ssr_fifo" || exit 1
-    mkfifo "$ssr_fifo"
-else
-    mkfifo "$ssr_fifo"
-fi
-
 [[ -n $volume ]] && _SetVolume on
 # ssr commands
 simplescreenrecorder \
     --start-hidden \
-    --settingsfile="$configs_path/$profile" < "$ssr_fifo" &
+    --settingsfile="$profiles_path/$profile" < "$ssr_fifo" &
 
 exec 4> "$ssr_fifo"; sleep 0.5
 echo "record-start" >&4; sleep "$totalSeconds"
-echo "record-save" >&4; sleep 1
-echo "quit" >&4; exec 4>&-
-
+sleep 1
 _Close; exit 0

@@ -2,7 +2,9 @@
 
 # move/resize window, signed (+/-) for relative changes
 # move/resize ($1) direction ($2)
-# change size to whatever you like.
+# change $size to whatever you like.
+# alt + ctrl + {h,j,k,l}
+    # dkcmd win resize {w=-20,h=+20,h=-20,w=+20}
 
 size=20 ver="" hor=""
 

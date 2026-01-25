@@ -1,28 +1,27 @@
 #!/bin/bash
 
 # Listen on sxhkd events to:
-# - indicate when in a chord chain,
-# the last hotkey and the corresponding command.
-# export SXHKD_FIFO="$XDG_RUNTIME_DIR"/sxhkd.fifo
+# - indicates when in a chord chain,
+# - indicates the last hotkey and the corresponding command.
 
+pid=$(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-1)
 cmd="$XDG_RUNTIME_DIR/cmd.txt"
 keys="$XDG_RUNTIME_DIR/keys.txt"
 
-while read line <$SXHKD_FIFO
-do
+while read -r line; do
     if [[ "$line" == 'EEnd chain' ]]; then
-        polybar-msg action "#sxhkd-ipc.hook.1" >/dev/null 2>&1
-        #polybar-msg action "#screenkeysxhkd-ipc.hook.1" >/dev/null 2>&1
+        polybar-msg -p "$pid" action \
+        "#sxhkd-ipc.hook.1" >/dev/null 2>&1
     elif [[ "$line" == 'BBegin chain' ]]; then
-        polybar-msg action "#sxhkd-ipc.hook.0" >/dev/null 2>&1
-        #polybar-msg action "#screenkeysxhkd-ipc.hook.0" >/dev/null 2>&1
+        polybar-msg -p "$pid" action \
+        "#sxhkd-ipc.hook.0" >/dev/null 2>&1
     elif [[ "$line" =~ 'H' ]]; then
         echo "$line" > "$keys"
-        polybar-msg action "#hotkeys-ipc.hook.1" >/dev/null 2>&1
-		#polybar-msg action "#screenkeyhotkeys-ipc.hook.1" >/dev/null 2>&1
+        polybar-msg -p "$pid" action \
+        "#hotkeys-ipc.hook.1" >/dev/null 2>&1
     elif [[ "$line" =~ 'C' ]]; then
         echo "$line" > "$cmd"
-        polybar-msg action "#command-ipc.hook.1" >/dev/null 2>&1
-        #polybar-msg action "#screenkeycommand-ipc.hook.1" >/dev/null 2>&1
+        polybar-msg -p "$pid" action \
+        "#command-ipc.hook.1" >/dev/null 2>&1
     fi
-done
+done < "$SXHKD_FIFO"

@@ -1,12 +1,13 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-find ~/.cache/ -maxdepth 1 -type f -mtime +2 -exec rm -f {} \;
-find ~/.cache/ -maxdepth 2 -type f -mtime +2 -exec rm -f {} \;
-find ~/.cache/ -maxdepth 2 -type d -mtime +2 -exec rm -rf {} \;
-find ~/.cache/ -maxdepth 1 -type d -empty -mtime +2 -exec rmdir {} \;
+[[ -d $HOME/.cache ]] && {
+    find "$HOME"/.cache -maxdepth 1 -type f -mtime +0 -exec rm -f {} \;
+    find "$HOME"/.cache -maxdepth 1 -type d -mtime +0 -exec rm -rf {} \;
+    find "$HOME"/.cache -maxdepth 1 -type d -empty -exec rmdir {} \;
+}
 
-info-trash --clean
-rm -f "$HOME"/.local/share/recently-used.xbel
-rm -f "$HOME"/.local/share/user-places.xbel
-echo "" > "$XDG_CONFIG_HOME"/zsh/.cache/zsh_history
-
+find "$HOME"/.local/share/{*.xbel,/xorg/*} -type f -mtime +2 -exec rm -f {} \;
+[[ -d $HOME/.dotnet ]] && rm -rf "$HOME"/.dotnet
+rm -rf "$HOME"/.local/share/Trash/{files,info}
+mkdir -p "$HOME"/.local/share/Trash/{files,info}
+sed -i '/[[:graph:]]/d;/^\s*$/d' "$XDG_CONFIG_HOME"/{bash/bash_history,zsh/.cache/zsh_history}

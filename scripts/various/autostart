@@ -1,49 +1,61 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=all
-# screens &
-network_switch_connection
+############################ Network ############################
+: "${def:=enp8s0}"
+: "${alt:=enp21s0f4u2}"
 
-for i in {0..2}; do
-    xrandr --output DisplayPort-"$i" --set TearFree on
-done
-unset i
+readarray -t connections < <(
+    nmcli -t -f NAME,DEVICE connection show --active | \
+    awk -F: -v d="$def" -v a="$alt" '
+        $0 !~ /lo/ && ($2 ~ d || $2 ~ a) { print $1 }
+    '
+)
 
-# Sound
+(( ${#connections[@]} > 1 )) && \
+    urxvtc -name floaterm -geometry 50x2 \
+    -e network_switch_connection -c 60
+
+############################# Sound #############################
 # muting HDMI source/sink & webcam mic too.
-pactl set-source-volume 0 0%
-pactl set-source-mute 0 true
-pactl set-source-volume 1 0%
-pactl set-source-mute 1 true
-pactl set-sink-volume 0 0%
-pactl set-sink-mute 0 true
+for type in source sink; do
+    for index in 0 1; do
+        if [[ "$type" != "sink" || "$index" != "1" ]]; then
+            pactl set-${type}-volume $index 0%
+            pactl set-${type}-mute $index true
+        fi
+    done
+done
+unset index type
 pactl set-sink-volume 1 50%
-polybar-msg action "#mic-ipc.hook.0" >/dev/null 2>&1
-polybar-msg action "#volume-ipc.hook.1" >/dev/null 2>&1
-# amixer -D pulse set Master 40%,22% >/dev/null 2>&1
 
-# Wallpaper setter
+pgrep -x polybar &>/dev/null && {
+    pid=$(pgrep -f "$(wmctrl -m | awk '/Name/{print $2}')"-bar-2)
+    polybar-msg -p "$pid" action "#mic-ipc.hook.0" >/dev/null 2>&1
+    polybar-msg -p "$pid" action "#volume-ipc.hook.1" >/dev/null 2>&1
+}
+
+####################### Wallpaper setter #######################
 if command -v nitrogen >/dev/null; then
     nitrogen --restore &
 else
     sh -c "$XDG_CONFIG_HOME"/.fehbg &
 fi
 
-if ip addr | grep -q 'enp21s0f4u2'; then touch /tmp/redmi_note; fi
+#################### keyboard colors profile ####################
+command -v g810-led >/dev/null && {
+    profile_rules="/etc/udev/rules.d/g810-led.rules"
+    profile_udev=$(grep -e 'profile_' "$profile_rules" | sed 's,.*/,,;s/"//;s/profile_//')
+    g810_switch_profile "$profile_udev"
+}
 
-[[ -d $HOME/.dotnet ]] && rm -rf "$HOME"/.dotnet
+##################### Updates checker script #####################
+[[ ! -f $XDG_RUNTIME_DIR/combined.list ]] && updates-manager --chck
 
-# Other settings
-cleanup &
-rsync -apq "$SCRIPTDIR"/* "$HOME"/Documents/scripts/ &
-rsync -apq "$XDG_CONFIG_HOME"/* "$HOME"/Documents/configs/CONFIGS/ &
-
-# Updates checker script
-updates-manager --chck
-
-# keyboard colors profile
-profile_rules="/etc/udev/rules.d/g810-led.rules"
-profile_udev=$(grep -e 'profile_' "$profile_rules" | sed 's,.*/,,;s/"//;s/profile_//')
-g810_switch_profile "$profile_udev"
+####################### Backups & cleaning #######################
+command -v rsync >/dev/null && {
+    rsync -apq "$SCRIPTDIR"/* "$HOME"/Documents/scripts/ &
+    rsync -apq "$XDG_CONFIG_HOME"/* "$HOME"/Documents/configs/ &
+}
 
 # urxvtc &
+

@@ -35,58 +35,58 @@ echo -ne '\e[8;32;124t'
 
 _fzfPlayer() {
 
-    __makePlaylistIndexes() (
-        index=0
-        while read -r line; do
-            echo "$index" "$line" >> ./yaytvIndexeslist
-            ((index++))
-        done < "${0##*/}.titles"
-        unset line
-        echo "starting fzf..." > ./yaytvSelectedFile
-    )
+    while pgrep -x mpv >/dev/null; do
+        __makePlaylistIndexes() (
+            index=0
+            while read -r line; do
+                echo "$index" "$line" >> ./yaytvIndexeslist
+                ((index++))
+            done < "${0##*/}.titles"
+            unset line
+            echo "starting fzf..." > ./yaytvSelectedFile
+        )
 
-    if [[ -s "${0##*/}.titles" ]]; then
-        __makePlaylistIndexes
-    else
-        return 1
-    fi
-
-    __currentMediaTitle() (
-        echo '{ "command": ["get_property", "media-title"] }' \
-        | socat - "${MPVSOCKET}" \
-        | awk -F'"' '{ print "\033[32m"" Now playing: " "\033[33m"$4 }'
-    )
-
-    __currentMediaIndex() (
-        local index lenght
-        index=$(awk '{print $1}' yaytvSelectedFile)
-        lenght="${#index}"
-
-        if [[ $lenght -eq 1 ]]; then
-            index="${index:0:1}"
-        elif [[ $lenght -eq 2 ]]; then
-            index="${index:0:2}"
+        if [[ -s "${0##*/}.titles" ]]; then
+            __makePlaylistIndexes
         else
-            index="${index:0:3}"
+            return 1
         fi
-        echo playlist-play-index "$index" | socat - "$MPVSOCKET"
-    )
 
-    export -f __currentMediaTitle
-    export -f __currentMediaIndex
-    export FZF_DEFAULT_OPTS='
-		--color=header:bold:#87afaf
-		--color=fg:#af5faa,fg+:#d0d0d0,bg:#21242b,bg+:#2e3944
-		--color=hl:#5f87af,hl+:#5fd7ff,info:#afaf87
-		--color=prompt:#d7005f,spinner:#af5fff,pointer:#af5fff
-		--color=border:#554476,label:#aeaeae,query:#d9d9d9
-    '
+        __currentMediaTitle() (
+            echo '{ "command": ["get_property", "media-title"] }' \
+            | socat - "${MPVSOCKET}" \
+            | awk -F'"' '{ print "\033[32m"" Now playing: " "\033[33m"$4 }'
+        )
 
-    while [[ -f ./yaytvSelectedFile ]]; do
+        __currentMediaIndex() (
+            local index lenght
+            index=$(awk '{print $1}' yaytvSelectedFile)
+            lenght="${#index}"
+
+            if (( lenght == 1 )); then
+                index="${index:0:1}"
+            elif (( lenght == 2 )); then
+                index="${index:0:2}"
+            else
+                index="${index:0:3}"
+            fi
+            echo playlist-play-index "$index" | socat - "$MPVSOCKET"
+        )
+
+        export -f __currentMediaTitle
+        export -f __currentMediaIndex
+        export FZF_DEFAULT_OPTS='
+            --color=header:bold:#87afaf
+            --color=fg:#af5faa,fg+:#d0d0d0,bg:#21242b,bg+:#2e3944
+            --color=hl:#5f87af,hl+:#5fd7ff,info:#afaf87
+            --color=prompt:#d7005f,spinner:#af5fff,pointer:#af5fff
+            --color=border:#554476,label:#aeaeae,query:#d9d9d9
+        '
+
         fzf --reverse --pointer '|>' --scroll-off=5 --no-scrollbar --no-multi --header-first \
         --border rounded --border-label "| yaytv player $VERSION |" --border-label-pos='101:bottom' --prompt='Search: ' \
         --header '   Enter:play, Left:-30s, Right:+30s, ^N:next, ^P:prev, ^T:toggle pause, ^R:reload, ESC:quit player, ^X:quit mpv:
-   ──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    ──────────────────────────────────────────────────────────────────────────────────────────────────────────────
         ' \
         --preview-window=down:1 \
         --preview="(__currentMediaTitle)" \
@@ -99,10 +99,9 @@ _fzfPlayer() {
         --bind "right:become(echo seek 30 | socat - ${MPVSOCKET})" \
         --bind "ctrl-x:become(echo stop | socat - $MPVSOCKET; rm ./{yaytvSelectedFile,yaytvIndexeslist})" \
         --bind "esc:become(rm ./{yaytvSelectedFile,yaytvIndexeslist})" < yaytvIndexeslist
-	done
 
+    done
     export FZF_DEFAULT_OPTS=
-
 }
 
 while [[ $# -gt 0 ]]; do
@@ -190,17 +189,10 @@ else
     echo "$fzfGrabLinks" | grep '^https' > "${0##*/}.m3u"
 
     if [[ $player == mpv ]]; then
+		_fzfPlayer
         cat "${0##*/}.m3u" \
         | "$player" --cache=yes --idle=no --no-terminal --playlist=- &
     else
         "$player" "${0##*/}.m3u"
-    fi
-
-    if [[ $player == mpv ]]; then
-        read -rp ' Launch player interface [Y/n]: ' answer
-        case "$answer" in
-            y*|Y*) _fzfPlayer ;;
-            *) exit 0 ;;
-        esac
     fi
 fi

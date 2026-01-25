@@ -3,31 +3,31 @@
 # command ls | fzf --reverse --bind "enter:become(echo {} && ffmpeg_tagger {})"
 err() {
     cat <<'USAGE'
-    tag [OPTIONS] <file>
+    ffmpeg_tagger [OPTIONS] <file>
     Options:
         -a: artist/author
-        -t: song/chapter title
         -A: album/book title
+        -c: comment
+        -g: genre
         -n: track/chapter number
         -N: total number of tracks/chapters
-        -d: year of publication
-        -g: genre
-        -c: comment
+        -t: song/chapter title
+        -y: year of publication
     You will be prompted for title, artist, and album if not given.
 USAGE
     exit 1
 }
 
-while getopts "a:t:A:n:N:d:g:c:" o; do
-    case "${o}" in
+while getopts "a:A:c:g:n:N:t:y:" tag; do
+    case "${tag}" in
         a) artist="${OPTARG}" ;;
-        t) title="${OPTARG}" ;;
         A) album="${OPTARG}" ;;
+        c) comment="${OPTARG}" ;;
+        g) genre="${OPTARG}" ;;
         n) track="${OPTARG}" ;;
         N) total="${OPTARG}" ;;
-        d) date="${OPTARG}" ;;
-        g) genre="${OPTARG}" ;;
-        c) comment="${OPTARG}" ;;
+        t) title="${OPTARG}" ;;
+        y) date="${OPTARG}" ;;
         *) printf "Invalid option: -%s\\n" "$OPTARG" && err ;;
     esac
 done
@@ -39,10 +39,10 @@ file="$1"
 temp="$(mktemp -p "$(dirname "$file")")"
 trap 'rm -f $temp' SIGHUP SIGINT SIGQUIT SIGTERM SIGPWR EXIT
 
-[[ ! -f $file ]] && echo 'Provide file to tag.' && err
-[[ -z $title ]] && echo 'Enter a title.' && read -r title
-[[ -z $artist ]] && echo 'Enter an artist.' && read -r artist
-[[ -z $album ]] && echo 'Enter an album.' && read -r album
+[[ ! -f $file ]] && echo -e "\n    Provide a file to ${0##*/}.\n" && err
+[[ -z $title ]] && echo -e "\n Enter a title." && read -r title
+[[ -z $artist ]] && echo -e "\n Enter an artist." && read -r artist
+[[ -z $album ]] && echo -e "\n Enter an album." && read -r album
 [[ -z $track ]] && track=1
 [[ -z $comment ]] && comment="tagged with ffmpeg"
 

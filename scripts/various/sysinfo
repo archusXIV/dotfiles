@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+
+################################################
+# script name: sysinfo                         #
+# Copyright (C) 2026 Barret E                  #
+# By: ArchusXIV <https://github.com/archusXIV> #
+# License: GPL v2.0                            #
+################################################
+
+# fancy stuff
+G=$'\e[0;32m'
+R=$'\e[0;31m'
+Y=$'\e[0;33m'
+Z=$'\e[0m'
+# Modify this to fit the longest output
+dashes=$(printf "%-77s" "-")
+
+distro=$(lsb_release -a | awk -F'\t' '/Description:/ { print $2 }')
+kernelver=$(uname -sr)
+arch=$(uname -m)
+shell="$SHELL"
+cpu_model=$(lscpu | awk -F: '/Model name:/{ sub(/^[ \t]+/,"",$2); print $2 }')
+cpu_threads=$(lscpu | awk -F: '/^CPU\(s):/{ sub(/^[ \t]+/,"",$2); print $2 }')
+
+if lscpu | grep -q "CPU max MHz" &>/dev/null; then
+    cpu_freq=$(lscpu | awk -F: '/CPU max MHz:/{ sub(/^[ \t]+/,"",$2); print $2 " MHz" }')
+else
+    cpu_freq=$(lscpu | awk -F: '/CPU MHz:/{ sub(/^[ \t]+/,"",$2); print $2 " MHz" }')
+fi
+
+gpu_cpu=$(lspci | awk -F: '/VGA/ { sub(/[^\s]/,"",$3); print $3; exit }')
+gpu_dedicated=$(lspci | awk -F: '/VGA/ { sub(/[^\s]/,"",$3); count++; if (count == 2) print $3 }')
+mem_total=$(free -m | awk 'NR==2 { print $2 " MiB" }')
+mem_used=$(free -m | awk '/Mem:/{ print ($2 - $4 - $6 + $5) " MiB" }')
+
+block_dev() {
+    mapfile -t blocks < <(lsblk)
+    echo "${Y}Block Devices:"
+    for ((i=1;i<=${#blocks[@]};i++)); do
+        echo "    ${R}> ${G}$(lsblk -o NAME,FSTYPE,MOUNTPOINT,SIZE,FSUSED,FSAVAIL | sed -n "${i}p")"
+    done
+}
+
+inet_dev=$(
+    echo -e "${Y}IP Configuration: \n${G}$(ip addr | awk -v red="${R}" -v green="${G}" '/\<inet\>/ { sub(/\<inet\>/, red "> " green "inet"); print }')"
+)
+
+tput clear
+printf '\n%s' \
+"  ${R}* ${G}$(whoami)${R}@${Y}$(</etc/hostname) ${R}${G}${dashes// /-}>${R}" \
+"  * ${Y}Command Shell: ${R}$shell" \
+"  * ${Y}Distribution: ${R}$distro ${G}BTW${R}" \
+"  * ${Y}Kernel Version: ${R}$kernelver" \
+"  * ${Y}Architecture: ${R}$arch" \
+"  * ${Y}System Uptime: ${R}$(uptime -p)" \
+"  * ${Y}CPU Model: ${R}$cpu_model" \
+"  * ${Y}CPU Threads: ${R}$cpu_threads" \
+"  * ${Y}CPU Clock: ${R}$cpu_freq" \
+"  * ${Y}GPU - CPU: ${R}$gpu_cpu" \
+"  * ${Y}GPU (dedicated): ${R}$gpu_dedicated" \
+"  * ${Y}Memory Usage: ${R}$mem_used / $mem_total" \
+"  * $(block_dev)${R}" \
+"  * $inet_dev${Z}" \
+""

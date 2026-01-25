@@ -4,23 +4,34 @@
 
 metadata="$XDG_RUNTIME_DIR/mpv.txt"
 
-until [[ -n $(pidof mpv) ]]; do
-    if [[ -f "$metadata" ]]; then
-        rm "$metadata" >/dev/null 2>&1
-        continue
-    fi
-    sleep 1s
+case "$1" in
+    on)
+        until [[ -n $(pidof mpv) ]]; do
+            if [[ -f "$metadata" ]]; then
+                rm "$metadata" >/dev/null 2>&1
+                continue
+            fi
+            # polybar-msg action "#mpv-ipc.hook.0" >/dev/null 2>&1
+            sleep 1s
 
-    while [[ -n $(pidof mpv) ]]; do
+            while [[ -n $(pidof mpv) ]]; do
 
-        [[ ! -f "$metadata" ]] && touch "$metadata"
-        
-        sleep 0.5
-        echo '{ "command": ["get_property", "media-title"] }' \
-        | socat - /tmp/mpvsocket | awk -F '"' '{print $4}' > "$metadata"
-        polybar-msg action "#mpv-ipc.hook.1" >/dev/null 2>&1
-        sleep 1.5
+                [[ ! -f "$metadata" ]] && touch "$metadata"
 
-    done
+                sleep 0.5
+                echo '{ "command": ["get_property", "media-title"] }' \
+                | socat - /tmp/mpvsocket | awk -F '"' '{print $4}' > "$metadata"
+                polybar-msg action "#mpv-ipc.hook.1" >/dev/null 2>&1
+                sleep 1.5
 
-done
+            done
+
+        done
+    ;;
+    off)
+        killall mpv
+        polybar-msg action "#mpv-ipc.hook.0" >/dev/null 2>&1
+        exit
+    ;;
+esac
+

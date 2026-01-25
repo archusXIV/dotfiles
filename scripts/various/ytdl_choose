@@ -4,14 +4,14 @@
 # first install youtube-dl yt-dlp then create a symlink:
 # ln -s /usr/bin/yt-dlp ~/.local/bin/youtube-dl
 
-# shellcheck disable=SC2076,SC2048
-: "${MPM_DIR:-$XDG_DATA_HOME/mpv-playlists-manager}"
+# shellcheck disable=SC2048,SC2076
+: "${MPM_DIR:-$XDG_DATA_HOME/mpm}"
 
 playlists_dir="$MPM_DIR/playlists"
-TMP1="$MPM_DIR/playlists/tmp1.m3u"
-TMP2="$MPM_DIR/playlists/tmp2.m3u"
+TMP1="$playlists_dir/tmp1.m3u"
+TMP2="$playlists_dir/tmp2.m3u"
 
-function _Selection {
+_Selection() {
 
     PS3=" Choose a playlist: "
     echo ""
@@ -28,7 +28,7 @@ function _Selection {
 
         echo ""
         for item in "${PLAYLIST[@]}"; do
-            youtube-dl --get-title "$item"
+            yt-dlp --no-warnings --get-title "$item"
         done | cat -n 2>/dev/null
         echo ""
 
@@ -42,9 +42,9 @@ function _Selection {
 
 }
 
-function _Download {
+_Download() {
 
-    cd "$MPM_DIR"/videos || return
+    cd "$VID"/mpm_videos || return
 
     echo ""
     IFS=","; read -r -a array -p " Links to download, eg: 1,3,5: "
@@ -56,15 +56,14 @@ function _Download {
         echo "$url" >> "$TMP1"
 
         [[ $url =~ 'youtube.com' ]] && {
-            youtube-dl --merge-output-format mp4 --progress "$url"
+            yt-dlp --merge-output-format mp4 --progress "$url"
             clear
-        } || youtube-dl --no-warnings --progress "$url" && clear
+        } || yt-dlp --no-warnings --progress "$url" && clear
     done
 
     # let's remove downloaded links from the original file
     # and sending the other ones in a second temporary file...
-    grep -v -F "$(grep '^[[:print:]]' "$playlists_dir"/"$playlist")" >> "$TMP2"
-
+    grep -v "$(grep '^https' "$TMP1")" "$playlists_dir"/"$playlist" >> "$TMP2"
     # ...that we now rename with the original file name.
     mv -f "$TMP2" "$playlists_dir"/"$playlist"
     rm "$TMP1"
@@ -74,7 +73,7 @@ function _Download {
 
 }
 
-function _Play {
+_Play() {
 
     echo ""
     IFS=","; read -r -a array -p " Links to load, eg: 1,3,5: "
@@ -93,3 +92,4 @@ function _Play {
 }
 
 _Selection "${@}"
+

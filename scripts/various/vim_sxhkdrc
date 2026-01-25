@@ -1,0 +1,10 @@
+#!/bin/bash
+
+editor=${VISUAL:-vim}
+
+case "$1" in
+    -b) urxvtc -e "$editor" "$XDG_CONFIG_HOME"/sxhkd/sxhkdrc_bspwm ;;
+    -d) urxvtc -e "$editor" "$XDG_CONFIG_HOME"/sxhkd/sxhkdrc_dk ;;
+    -i) urxvtc -e "$editor" "$XDG_CONFIG_HOME"/sxhkd/sxhkdrc_i3 ;;
+    -s) urxvtc -e "$editor" "$XDG_CONFIG_HOME"/sxhkd/sxhkdrc ;;
+esac

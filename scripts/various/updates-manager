@@ -5,8 +5,8 @@
 #
 # Yet Another Updates Manager Script for Arch Linux based systems.
 # We need sudo privileges without password prompt for this script to work
-: "${XDG_RUNTIME_DIR:-/run/user/1000}"
 
+: "${XDG_RUNTIME_DIR:-/run/user/1000}"
 arch_list="$XDG_RUNTIME_DIR/archlinux.list"
 aur_list="$XDG_RUNTIME_DIR/aur.list"
 arch_aur_list="$XDG_RUNTIME_DIR/combined.list"
@@ -19,54 +19,45 @@ nc=$'\e[0m'
 r=$'\e[0;31m'
 g=$'\e[0;32m'
 
-declare -a deps=( "checkupdates" "reflector" "yay" )
+declare -a deps=( "checkupdates" "reflector" "wmctrl" "yay" )
 
-_Error() {
-    printf '%s\n' " ${r}ERROR: $1${nc}" >&2
-    exit "${2:-1}"
-}
+declare -a reboot_criteria=(
+    "amd-ucode"
+    "grub"
+    "linux-cachyos"
+    "linux-zen"
+    "linux-znver4"
+    "mesa"
+    "systemd"
+    "xorg-server"
+)
 
 _Cleanup() {
     rm -f {"$arch_list","$aur_list","$arch_aur_list"} >/dev/null 2>&1
     exit "${1:-0}"
 }
 
-_CheckDependencies() {
-    for dep in "${deps[@]}"; do
-        command -v "$dep" >/dev/null 2>&1 || \
-        _Error "Missing dependency: ${dep}" 127
-    done
-}
-
-#[[ -z $country ]] && _Error "Could not determine country" 1
-
-_CheckForUpdates() {
-    checkupdates > "$arch_list"
-    yay -Qua > "$aur_list"
-    cat "$arch_list" "$aur_list" > "$arch_aur_list"
-
-    # Clean up the combined list
-    sed -i -e '/^::/d' -e '/^\s*$/d' -e 's/^\s\+//' "$arch_aur_list"
-    awk -i inplace '!seen[$0]++' "$arch_aur_list"
+_Error() {
+    printf '%s\n' " ${r}ERROR: $1${nc}" >&2
+    exit "${2:-1}"
 }
 
 _PolybarHook() {
-    if pgrep -x polybar >/dev/null; then
-        polybar-msg action "#updates-ipc.hook.0" >/dev/null 2>&1
-        notify-send "Available update(s): $(wc -l < "$arch_aur_list")"
+    if pgrep -x polybar &>/dev/null; then
+        pid=$(pgrep -f "$(wmctrl -m | awk '/Name/{print $2}')"-bar-2)
+        polybar-msg -p "$pid" action "#updates-ipc.hook.0" >/dev/null 2>&1
+        notify-send -p "Available update(s): $(wc -l < "$arch_aur_list")"
     else
         notify-send "Available update(s): $(wc -l < "$arch_aur_list")"
     fi
 }
 
-_CleanFiles() {
-    sed -i '1,$d' {"$arch_list","$aur_list","$arch_aur_list"}
-    _PolybarHook
-}
-
 _CheckUpdates() {
-    _CheckDependencies
 
+    for dep in "${deps[@]}"; do
+        command -v "$dep" >/dev/null 2>&1 || \
+        _Error "Missing dependency: ${dep}" 127
+    done
     # Set trap for cleanup
     trap '_Cleanup' EXIT SIGINT SIGTERM
 
@@ -89,11 +80,18 @@ _CheckUpdates() {
             --sort rate \
             --save "$mirr" >/dev/null 2>&1
 
-        _CheckForUpdates
-        _PolybarHook
+        timeout 5 checkupdates > "$arch_list"
+        timeout 5 yay -Qua > "$aur_list"
+        cat "$arch_list" "$aur_list" > "$arch_aur_list"
 
+        # remove weird characters,
+        sed -i -e '/^::/d' -e '/^\s*$/d' -e 's/^\s\+//' "$arch_aur_list"
+        # and duplicates from combined.list
+        awk -i inplace '!seen[$0]++' "$arch_aur_list"
+        _PolybarHook
         sleep 3592s
     done &
+
 }
 
 _YesNoPrompt() {
@@ -133,8 +131,6 @@ _Snapshot() {
     local OLDER_SNAPSHOT_INDEX OLDER_SNAPSHOT_NAME
     # will remove the first snapshot & create a new one.
     if command -v timeshift >/dev/null; then
-        # sudo mount /dev/sdb2 /mnt
-        # sleep 3
         # awk '/^0/{print $3}' will match the first snapshot over three.
         OLDER_SNAPSHOT_INDEX=$(sudo timeshift --list | awk '/^0/{print $1}')
         OLDER_SNAPSHOT_NAME=$(sudo timeshift --list | awk '/^0/{print $3}')
@@ -145,8 +141,6 @@ _Snapshot() {
         else
             sudo timeshift --create --skip-grub --comment "Before updates"
         fi
-        sleep 2
-        # sudo umount -R /mnt
     else
         notify-send -u critical " ${g}Timeshift is not installed...${nc}"
         sleep 2
@@ -173,33 +167,23 @@ _PowerOptions() {
     _AskforSnapshot && _Snapshot
     _Installation
     case "$1" in
-        -n)
+        --no-reboot)
             sed -i '1,$d' {"$arch_list","$aur_list","$arch_aur_list"}
             _PolybarHook
             exit 0
         ;;
-        -p) sudo poweroff ;;
-        -r) sudo reboot ;;
+        --poweroff) poweroff ;;
+        --reboot) reboot ;;
     esac
 }
 
 _CheckReboot() {
 
-    declare -a criteria=(
-        "amd-ucode"
-        "grub"
-        "linux-zen"
-        "linux-znver4"
-        "mesa"
-        "systemd"
-        "xorg-server"
-    )
-
-    for pkg in "${criteria[@]}"; do
-        if grep -qw "${pkg}" "$arch_list"; then
+    for pkg in "${reboot_criteria[@]}"; do
+        if grep -qw "${pkg}" "$arch_aur_list"; then
             local restart
-            echo -e " ${r}${pkg} requires REBOOT!${nc}\n"
             restart="yes"
+            echo -e " ${r}${pkg} requires REBOOT!${nc}\n"
             break
         fi
     done
@@ -210,23 +194,23 @@ _CheckReboot() {
         _YesNoPrompt -n " ${r}Poweroff ${nc}after updates?" || {
             _YesNoPrompt " ${r}Reboot ${nc}after updates?" || {
                 unset restart
-                _PowerOptions -n
+                _PowerOptions --no-reboot
             }
-            _PowerOptions -r
+            _PowerOptions --reboot
         }
-        _PowerOptions -p
+        _PowerOptions --poweroff
     else
         echo -e " ${g}NO REBOOT NEEDED!${nc}\n"
         # Here the default is 'No Reboot'.
         _YesNoPrompt -n " ${r}Poweroff ${nc}after updates?" || {
-            _PowerOptions -n
+            _PowerOptions --no-reboot
         }
-        _PowerOptions -p
+        _PowerOptions --poweroff
     fi
 
 }
 
-_List() {
+_ListUpdates() {
 
     mapfile -t total_updates < "$arch_aur_list"
 
@@ -257,19 +241,17 @@ _List() {
         fi
 
         # then Arch...
-        mapfile -t arch_list_packages < "$arch_list"
-        if (( ${#arch_list_packages[@]} > 0 )); then
-            _CheckReboot
-        fi
+        mapfile -t arch_packages < "$arch_list"
+        (( ${#arch_packages[@]} > 0 )) && _CheckReboot
 
     fi
 
 }
 
 case "$1" in
-    --chck) _CheckUpdates ;;
+    --chck) [[ -f $arch_aur_list ]] || _CheckUpdates ;;
     --hook) _PolybarHook ;;
-    --list) _List ;;
+    --list) _ListUpdates ;;
     --snap) _AskforSnapshot && _Snapshot ;;
     *     ) _Error "Wrong option: $1" 1 ;;
 esac

@@ -1,7 +1,9 @@
 #!/bin/bash
 
+# shellcheck disable=SC1090,SC2086
 rc="$HOME/.config/dmenu/dmenurc"
-
 [ -f "$rc" ] && . "$rc"
 
-command cd && ls -a | dmenu -i -l 20 $DMENU_OPTIONS | xargs -I {} pcmanfm "{}" &
+find . -maxdepth 1 -type d | sed 's/.\///' \
+| dmenu -i -l 20 $DMENU_OPTIONS \
+| xargs -I {} "$FILEMNGR" >/dev/null 2>&1 "{}" &

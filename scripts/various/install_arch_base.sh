@@ -22,7 +22,6 @@
 r=$'\e[31m'
 g=$'\e[32m'
 c=$'\e[0m'
-
 # Display usage information if no arguments are provided
 if [[ $# -eq 0 ]]; then
     echo ""
@@ -37,7 +36,7 @@ if [[ $# -eq 0 ]]; then
     -f <filesystem type> Set the filesystem type (ext4, btrfs, xfs, default: ext4)
     -h <name>            Set hostname (default: archlinux)
     -k <kbd layout>      Set your keyboard layout (default: us)
-    -K <kernel name>     Choose a kernel: linux, linux-hardened, linux-zen (default: linux)
+    -K <kernel name>     Choose a kernel: linux, linux-hardened, linux-lts, linux-zen (default: linux)
     -l <locales>         Set system locales (default: en_US)
     -r <root disk>       Set the system disk (default: sda)
     -R <root size>       Set the system disk size in GB (default: 30)
@@ -382,8 +381,8 @@ grub-mkconfig -o /boot/grub/grub.cfg
 echo "Downloading X desktop installation script in /home."
 cd /home || exit 1
 curl -sL "$github_repo"scripts/various/install_archlinux_Xdesktop -O
-# curl -sL "$github_repo"archinstall/core.txt -O
-# curl -sL "$github_repo"archinstall/extra.txt -O
+curl -sL "$github_repo"archinstall/core.txt -O
+curl -sL "$github_repo"archinstall/extra.txt -O
 chmod +x install_archlinux_Xdesktop
 exit
 EOF
@@ -406,7 +405,7 @@ fi
 
 # Check internet connectivity
 ping -c 1 archlinux.org >/dev/null 2>&1 || {
-    echo " ${r}archlinux.org is unreachable! Please check your internet connection.${c}"
+    echo " ${r}No internet connection! Please connect to the internet first.${c}"
     exit 1
 }
 
@@ -446,4 +445,5 @@ umount -R /mnt
 
 echo -e "\n ${g}Installation complete!${c}"
 echo "You can now reboot into your new Arch Linux system."
-echo "After reboot, log in as root with the password you set."
+echo "After reboot, log in as root with the password you've set."
+

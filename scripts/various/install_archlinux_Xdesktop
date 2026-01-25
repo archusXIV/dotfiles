@@ -28,7 +28,7 @@ ping -c 1 archlinux.org >/dev/null 2>&1 || {
     exit 1
 }
 
-# Display usage information if no arguments provided
+# Display usage information if no arguments are provided
 if [[ $# -eq 0 ]]; then
     echo ""
     cat <<'USAGE'
@@ -49,7 +49,7 @@ if [[ $# -eq 0 ]]; then
     Example usage:
     ./install_archlinux_Xdesktop -e vim -x xorg -p yes -t rxvt-unicode
 USAGE
-exit 1
+    exit 1
 fi
 
 # Parse command line arguments
@@ -62,7 +62,7 @@ while getopts "e:p:t:x:" opt; do
         \?)
             echo "${r}Invalid option -${OPTARG}${c}" >&2
             exit 1
-            ;;
+        ;;
     esac
 done
 
@@ -72,19 +72,10 @@ extra_packages=${extra_packages:-no}
 term=${term:-alacritty}
 xserver=${xserver:-xlibre}
 
-if [[ $extra_packages == "yes" ]]; then
-    echo -e " ${r}Do not use braces like in i3{lock,status}!!!${c}\n"
+[[ $extra_packages == "yes" ]] && {
+    echo -e " ${r}Do not use braces like in i3{lock,status}${c}\n"
     read -rp " ${g}Extra packages to install: ${c}" extra_packages
-else
-    extra_packages+=("htop")
-fi
-
-for pkg in "${extra_packages[@]}"; do
-    pacman -Ss "${pkg}" >/dev/null || {
-        echo "${r}${pkg} not found...exiting.${c}"
-        exit 1
-    }
-done
+}
 
 echo ""
 read -rp " ${g}Do you want to add a user account now? [Y/n]: ${c}" add_account
@@ -92,53 +83,52 @@ read -rp " ${g}Do you want to add a user account now? [Y/n]: ${c}" add_account
 case "${add_account}" in
     [yY])
         read -rp " ${g}Enter a user name: ${c}" user_name
-        useradd -m -G wheel,audio,video,storage -s /bin/bash "${user_name}"
-        echo " ${g}Enter ${user_name} a password: ${c}"
+        useradd -m -G wheel,audio,video,storage,network -s /bin/bash "${user_name}"
+        echo " ${g}Enter a password for ${user_name}: ${c}"
         passwd "${user_name}"
         echo " ${g}${user_name} account created.${c}"
         echo " ${g}Give ${user_name} sudo privileges now.${c}"
         read -r -t 3
         command -v "${editor}" >/dev/null || {
             echo "${r}Please install ${editor} to continue."
-                    echo " Removing ${user_name}...${c}"
-                    userdel -r "${user_name}"
-                    groupdel "${user_name}" >/dev/null 2>&1
-                    exit 1
-                }
-            EDITOR="${editor}" visudo
-            ;;
-        *)
-            echo " ${r}No user account created.${c}"
-            read -r -t 3
-            ;;
-    esac
+            echo " Removing ${user_name}...${c}"
+            userdel -r "${user_name}"
+            groupdel "${user_name}" >/dev/null 2>&1
+            exit 1
+        }
+        EDITOR="${editor}" visudo
+    ;;
+    *)
+        echo " ${r}No user account created.${c}"
+        read -r -t 3
+    ;;
+esac
 
-    if [[ $xserver == "xorg" ]]; then
-        pacman -Syu \
-            xorg \
-            xorgproto \
-            mesa ${extra_packages[@]} \
-            "${term}" --noconfirm --needed
-    elif [[ -n $user_name && $xserver != "xorg" ]]; then
-        # Instead of switching shells, run a command as the user:
-        su - "${user_name}" -c "
-        sudo pacman -Sy git --noconfirm
-        cd /home/${user_name} && {
-            git clone https://aur.archlinux.org/yay-bin && {
-                cd yay-bin/ && makepkg -si && \
+if [[ $xserver == "xorg" ]]; then
+    pacman -Syu \
+    xorg \
+    xorgproto \
+    mesa ${extra_packages[@]} \
+    "${term}" --noconfirm --needed
+elif [[ -n $user_name && $xserver != "xorg" ]]; then
+	# Instead of switching shells, run a command as the user:
+    su - "${user_name}" -c "
+	    sudo pacman -Sy git --noconfirm
+	    cd /home/${user_name} && {
+	        git clone https://aur.archlinux.org/yay-bin && {
+	            cd yay-bin/ && makepkg -si && \
                 yay -S xlibre-server-bootstrap
-        yay -S xlibre-input-libinput
-        yay -S xlibre-server xlibre-server-common
-        yay -S xlibre-input-{elographics,evdev,synaptics,vmmouse,void,wacom} \
-            xlibre-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,qxl,vesa,vmware} \
-            mesa ${extra_packages[@]} ${term} \
-            xorg-{setxkbmap,xev,xkill,xmodmap,xprop,xinit,xrandr,xrdb,xset,xsetroot}
-        sudo reboot
-    }
-}
-"
-    fi
+	            yay -S xlibre-input-libinput
+	            yay -S xlibre-server xlibre-server-common
+                yay -S xlibre-input-{elographics,evdev,synaptics,vmmouse,void,wacom} \
+                xlibre-video-{amdgpu,ati,dummy,fbdev,intel,nouveau,qxl,vesa,vmware} \
+	            mesa ${extra_packages[@]} ${term} \
+                xorg-{setxkbmap,xev,xkill,xmodmap,xprop,xinit,xrandr,xrdb,xset,xsetroot}
+            }
+        }
+    "
+fi
 
-    echo " ${g}Rebooting the system...${c}"
-    read -r -t 2
-    reboot
+echo " ${g}Rebooting the system...${c}"
+read -r -t 2
+reboot

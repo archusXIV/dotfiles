@@ -6,18 +6,16 @@ WinId() { wmctrl -lx | awk '{print $1}'; }
 
 case "$1" in
     restartmsg)
-        for wd in $(WinId); do
-            [[ $WmName == bspwm ]] && xdo close "$wd"
-            [[ $WmName == i3 ]] && xdo close "$wd"
-            [[ $WmName == dk ]] && dkcmd win "$wd" kill
-        done
+        [[ $WmName == bspwm ]] && bspc wm -r
+        [[ $WmName == i3 ]] && i3-msg restart
+        [[ $WmName == dk ]] && dkcmd restart
     ;;
     reloadmsg )
-        if [[ $WmName = bspwm ]]; then
+        if [[ $WmName == "bspwm" ]]; then
             "$HOME"/.config/bspwm/bspwmrc -c
-        elif [[ $WmName = i3 ]]; then
+        elif [[ $WmName == "i3" ]]; then
             i3-msg reload
-        elif [[ $WmName = dk ]]; then
+        elif [[ $WmName == "dk" ]]; then
             "$HOME"/.config/dk/dkrc
         fi
     ;;

@@ -12,26 +12,20 @@ color_off=$'\e[0m';
 red=$'\e[0;31m';
 green=$'\e[0;32m';
 
-
 [[ -z $(command -v mediainfo) ]] && {
-    echo " ${red}Missing dependencies...mediainfo"
-    exit 1
+    echo " ${red}Missing dependency...mediainfo"
+    exit 127
 }
 
 _if_ext() {
-    if [[ "$media" =~ .mkv ]]; then
-        mv "$media" "$(cat newname.txt)".mkv
-    elif [[ "$media" =~ .mp3 ]]; then
-        mv "$media" "$(cat newname.txt)".mp3
-    elif [[ "$media" =~ .mp4 ]]; then
-        mv "$media" "$(cat newname.txt)".mp4
-    elif [[ "$media" =~ .flac ]]; then
-        mv "$media" "$(cat newname.txt)".flac
-    elif [[ "$media" =~ .ogg ]]; then
-        mv "$media" "$(cat newname.txt)".ogg
-    else
-        mv "$media" "$(cat newname.txt)".wav
-    fi
+    case "$media" in
+        .mkv ) mv "$media" "$(cat newname.txt)".mkv  ;;
+        .mp3 ) mv "$media" "$(cat newname.txt)".mp3  ;;
+        .mp4 ) mv "$media" "$(cat newname.txt)".mp4  ;;
+        .flac) mv "$media" "$(cat newname.txt)".flac ;;
+        .ogg ) mv "$media" "$(cat newname.txt)".ogg  ;;
+        *    ) mv "$media" "$(cat newname.txt)".wav  ;;
+    esac
 }
 
 # Replacing spaces with underscores.
@@ -52,10 +46,10 @@ select media in $(find . -name "*.mkv" -o -name "*.mp3" -o -name "*.mp4" \
     -o -name "*.flac" -o -name "*.ogg" -o -name "*.wav" | sed 's,.*/,,'); do
 
     if [[ $(mediainfo "$media" | grep -e 'Track name') ]]; then
-        echo " ${green}$media" metadatas:${color_off}
-        mediainfo "$media"
+        echo " ${green}${media} metadatas:${color_off}"
+        mediainfo "${media}"
         sleep 5
-        mediainfo "$media" \
+        mediainfo "${media}" \
         | grep -e 'Track name' \
         | sed -n '1p' \
         | sed 's/Track name//;s/^ *[[:space:]]//;s/: //' > newname.txt
@@ -67,16 +61,16 @@ select media in $(find . -name "*.mkv" -o -name "*.mp3" -o -name "*.mp4" \
         _if_ext
 
     else
-        echo " ${green}$media" metadatas:${color_off}
-        mediainfo "$media"
+        echo " ${green}${media} metadatas:${color_off}"
+        mediainfo "${media}"
         sleep 5
-        mediainfo "$media" \
+        mediainfo "${media}" \
         | grep -e 'Complete name' \
         | sed 's/Complete name//;s/^ *[[:space:]]//;s/: //' > newname.txt
         echo " ${green}The suggested file name is: ${red}"$(cat newname.txt)""
         echo " ${green}Copy/paste it, or pick another one.${color_off}"
         read -r newname
-        echo "$newname" > newname.txt
+        echo "${newname}" > newname.txt
 
         _if_ext
 
@@ -84,7 +78,7 @@ select media in $(find . -name "*.mkv" -o -name "*.mp3" -o -name "*.mp4" \
 
     rm newname.txt
 
-# Replacing underscores with spaces.
+    # Replacing underscores with spaces.
     if [[ -n $(find . -depth -name "*_*") ]]; then
         find . -depth -name "*_*" -exec \
         bash -c '

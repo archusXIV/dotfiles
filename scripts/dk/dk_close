@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 # If we close the last window on a ws then focus the last ws
-# otherwise focus the last window next to the just closed one.
+# otherwise focus the last focused window who was next to the closed one.
+# For this to work we have to use typical dk command for closing windows (dkcmd win kill)
 
 [[ -S $DKSOCK ]] && {
     dkcmd win kill

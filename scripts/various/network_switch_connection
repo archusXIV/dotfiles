@@ -5,122 +5,164 @@
 # License: GPlv2
 #
 # This script runs in the background, it checks if the current connection
-# is still alive and if it receives packets back from a pinging function,
+# is still alive and receives packets back from a curl test function,
 # if not then we switch connection by taking down the current one and activating
 # the other one. If the default comes back online then we switch back to it.
-# All connections are already set in nm-connector-editor.
+# All connections are already set in nm-connection-editor.
 # We will use nmcli which is already installed through the network-manager package.
 #
 # Interfaces: enp8s0 (default), enp21s0f4u2 (android mobile device).
 # Connections names: default (enp8s0), redmi_note (enp21s0f4u2)
 
-# Configuration
-default_interface="enp8s0"
-default_connection="default"
-rescue_interface="enp21s0f4u2"
-rescue_connection="redmi_note"
-check_interval=30
+if (( $# == 0 )); then
+    echo
+    cat <<'USAGE'
+    =======================================================================
+                       network_switch_connection options
+    =======================================================================
+    The connection name is defined in the network manager connection editor
+    (nm-connection-editor), at least one argument is required.
+    Available options:
+    -a <alternative connection name>          eg: redmi_note>
+    -A <alternative connection device>        eg: enp21s0f4u2>
+    -c <check connection interval in seconds> default: 30
+    -d <default connection name>              default: default
+    -D <default connection device>            eg: enp8s0
+    (please edit the default configuration section in the script)
+USAGE
+    exit 1
+fi
 
-_checkRescueInterface() {
-    if [[ ! $(ip addr show "$rescue_interface") ]]; then
-        exit 1
-    fi
-}
+while getopts "a:A:c:d:D:" flag; do
+    case $flag in
+        a) alt_connection="$OPTARG" ;;
+        A) alt_interface="$OPTARG" ;;
+        c) check_interval="$OPTARG" ;;
+        d) def_connection="$OPTARG" ;;
+        D) def_interface="$OPTARG" ;;
+        \?) : ;;
+    esac
+done
 
-_checkRescueInterface
+# Default configuration
+: "${def_interface:=enp8s0}"
+: "${def_connection:=default}"
+: "${alt_interface:=enp21s0f4u2}"
+: "${alt_connection:=redmi_note}"
+: "${check_interval:=30}"
+: "${conky_witness:="/tmp/alt_conn"}"
 
-_getConnectionName() {
+# we can switch connections from the outside by sending signals to the script
+trap '_switchConnection "$alt_connection" "$def_connection"' SIGRTMIN+11
+trap '_switchConnection "$def_connection" "$alt_connection"' SIGRTMIN+12
+
+_getConnectionInterface() {
     local conn_name=$1
-    if [[ $conn_name == "$default_connection" ]]; then
-        echo "$default_interface"
-        rm /tmp/redmi_note 2>/dev/null
+    if [[ $conn_name == "$def_connection" ]]; then
+        echo "$def_interface"
+        rm "$conky_witness" 2>/dev/null
     else
-        echo "$rescue_interface"
-        touch /tmp/redmi_note
+        echo "$alt_interface"
+        touch "$conky_witness"
     fi
 }
 
 _checkConnection() {
-    local conn_name device_name targets success
+	local conn_name device_name urls success
     conn_name=$1
-    device_name=$(_getConnectionName "$conn_name")
-    declare -a targets=( "8.8.8.8" "1.1.1.1" "9.9.9.9" )
+    device_name=$(_getConnectionInterface "$conn_name")
+	# HTTPS endpoints (port 443) to test web connectivity
+	declare -a urls=(
+		"https://www.google.com/generate_204"
+		"https://example.com/"
+		"https://www.cloudflare.com/cdn-cgi/trace"
+	)
     success=0
     # Check if interface is up and has an IP
     if [[ ! $(ip addr show "$device_name") =~ "inet " ]]; then
         return 1
+    else
+		# Test multiple HTTPS endpoints on port 443 using the specific interface
+		for url in "${urls[@]}"; do
+            echo "Testing $url"
+			if curl --interface "$device_name" \
+                --silent --show-error --location \
+                --fail --output /dev/null \
+                --connect-timeout 3 --max-time 4 \
+                "$url"; then
+                echo "Success"
+                ((success++))
+			fi
+		done
+        # Consider connection good if at least 2 checks over "${#urls[@]}" succeed
+        (( "$success" >= 2))
+        return $?
     fi
-    # Test multiple DNS servers
-    for target in "${targets[@]}"; do
-        if ping -I "$device_name" -c 1 -W 2 "$target" >/dev/null 2>&1; then
-            ((success++))
-        fi
-    done
-    # Consider connection good if at least 2 checks over three succeed
-    (( "$success" >= 2))
-    return $?
 }
 
 _switchConnection() {
-    local new_connection=$2
     local old_connection=$1
+    local new_connection=$2
     echo "Switching from $old_connection to $new_connection..."
-    nmcli connection down "$old_connection"
-    [[ $old_connection == "$rescue_connection" ]] && rm /tmp/redmi_note
-    # Small delay to ensure clean disconnect
+    nmcli connection up "$new_connection" >/dev/null 2>&1
+    [[ $new_connection == "$alt_connection" ]] && touch "$conky_witness"
     sleep 1
-    nmcli connection up "$new_connection"
-    [[ $new_connection == "$rescue_connection" ]] && touch /tmp/redmi_note
-    # Wait for connection to establish
+    nmcli connection down "$old_connection" >/dev/null 2>&1
+    [[ $old_connection == "$alt_connection" ]] && rm "$conky_witness"
     sleep 3
 }
 
-_getActiveConnection() {
-    nmcli -t -f NAME,DEVICE connection show --active \
-    | grep -E "$default_interface|$rescue_interface" \
-    | cut -d: -f1
+_setActiveConnection() {
+    local connections
+    # We want the loopback connection to be ignored.
+    readarray -t connections < <(
+        nmcli -t -f NAME,DEVICE connection show --active | \
+        awk -F: -v d="$def_interface" -v a="$alt_interface" \
+        '$0 !~ /lo/ && ($2 ~ d || $2 ~ a) { print $1 }'
+    )
+    # If both connections are active, prioritize default and bring alt down
+    if (( ${#connections[@]} > 1 )); then
+        nmcli connection down "$alt_connection" >/dev/null 2>&1
+        echo "$def_connection"
+    elif (( ${#connections[@]} == 1 )); then
+        echo "${connections[0]}"
+    fi
 }
 
-_mainLoop() (
-    local current_connection alternate_connection
-    while true; do
-        _checkRescueInterface
-        current_connection=$(_getActiveConnection)
-        # If we're on secondary connection, check if primary is available
-        if [[ $current_connection == "$rescue_connection" ]]; then
-            if _checkConnection "$default_connection"; then
-                echo "Primary connection is back online, switching back..."
-                _switchConnection "$rescue_connection" "$default_connection"
-                continue
-            fi
-        fi
-        # Determine the alternate connection
-        if [[ $current_connection == "$default_connection" ]]; then
-            alternate_connection="$rescue_connection"
-        else
-            alternate_connection="$default_connection"
-        fi
-        # Check current connection
-        if ! _checkConnection "$current_connection"; then
-            echo "Connection $current_connection is down"
-            _switchConnection "$current_connection" "$alternate_connection"
-        else
-            echo "Connection $current_connection is up and running"
-        fi
-        sleep $check_interval
-    done &
-)
+while true; do
+    # The purpose of this script is to switch from a connection to another,
+    # so we need an alternate connection interface.
+    if [[ ! $(ip addr show "$alt_interface") ]]; then
+        exit 1
+    fi
 
-case "$1" in
-    -d)
-        _switchConnection "$rescue_connection" "$default_connection"
-        rm /tmp/redmi_note 2>/dev/null
-    ;;
-    -r)
-        _switchConnection "$rescue_connection" "$rescue_connection"
-        touch /tmp/redmi_note
-    ;;
-    *)
-        _mainLoop
-    ;;
-esac
+    current_connection=$(_setActiveConnection)
+    # If we're on alt connection, check if default is available
+    if [[ $current_connection == "$alt_connection" ]]; then
+        if _checkConnection "$def_connection"; then
+            echo "default connection is back online, switching back..."
+            _switchConnection "$alt_connection" "$def_connection"
+            rm "$conky_witness" 2>/dev/null
+            continue
+        fi
+    fi
+
+    if [[ $current_connection == "$def_connection" ]]; then
+        alternate_connection="$alt_connection"
+    else
+        alternate_connection="$def_connection"
+    fi
+
+    if ! _checkConnection "$current_connection"; then
+        echo "$current_connection connection is down"
+        _switchConnection "$current_connection" "$alternate_connection"
+        if [[ $alternate_connection == "$alt_connection" ]]; then
+            touch "$conky_witness"
+        else
+            rm "$conky_witness" 2>/dev/null
+        fi
+    else
+        echo "$current_connection connection is up and running"
+    fi
+    sleep "$check_interval"
+done

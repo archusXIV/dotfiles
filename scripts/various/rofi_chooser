@@ -74,7 +74,7 @@ _rofi_configs() {
     dirChoice=$(echo -e "${dirOptions[*]}\nquit" \
         | rofi -normal-window -dmenu -i -width 20 -hide-scrollbar \
         -line-padding 4 -padding 20 -lines 5 -p 'Config directories ')
-    fileOptions=$(cd "${confDir}""${dirChoice}" && ls -Ap | cut -d " " -f 1 | grep -v / )
+    fileOptions=$(cd "${confDir}${dirChoice}" && ls -Ap | cut -d " " -f 1 | grep -v / )
     fileChoice=$(echo -e "${fileOptions[@]}" \
         | rofi -normal-window -dmenu -i -width 20 -hide-scrollbar \
         -line-padding 4 -padding 20 -lines 4 -p 'Edit this file: ')
@@ -83,7 +83,7 @@ _rofi_configs() {
         exit 0
     else
         [[ -z $fileChoice ]] && exit 0
-        exec geany "${confDir}""${dirChoice}""${fileChoice}"
+        exec geany "${confDir}/${dirChoice}/${fileChoice}"
         exit
     fi
 }

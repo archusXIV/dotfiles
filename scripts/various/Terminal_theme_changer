@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# First change colors in ~/.Xresources, then run this script
 
+# Get the actual running terminals
 xrdb_query() {
     for scope in {urxvt,"\\*"}; do
       value=$(xrdb -query | grep -i "^${scope}\.$1:" | cut -f 2)
@@ -12,16 +12,24 @@ xrdb_query() {
     return 1
 }
 
+# Define ANSI sequences as an empty string (to be incremented).
+# This will create the sequence and then pass it to all running terminals,
+# to update their corresponding colours.
 sequences=""
+
+# Prepare ANSI sequences for colors 0-15.
 for i in $(seq 0 15); do
     sequences+="\033]4;${i};$(xrdb_query "color${i}")\007"
 done
+
+# Update base values (outside the 16-colour palette).
 sequences+="\033]10;$(xrdb_query foreground)\007"
 sequences+="\033]11;$(xrdb_query background)\007"
 sequences+="\033]12;$(xrdb_query cursor)\007"
 sequences+="\033]17;$(xrdb_query highlightColor)\007"
 sequences+="\033]708;$(xrdb_query borderColor || xrdb_query background)\007"
 
+# Apply ANSI sequences to running terminals.
 for term in /dev/pts/[0-9]*; do
   printf "%b" "${sequences}" > "${term}" &
 done

@@ -1,0 +1,427 @@
+#!/bin/bash
+
+# Author: Barret E <https://github.com/archusXIV/>
+# Creation date: 2025-07-03
+# Script name: install_artix_base openrc version 1.1.2
+# License: GPLv2
+#
+# This script automates the installation of Artix Linux Openrc with the following features:
+# - Important: It must be run from an Artix Linux iso image!!!
+# - Supports both UEFI and BIOS systems, btrfs, xfs and ext4 file systems.
+# - For btrfs file system you will have the create your subvolumes yourself.
+# - Configurable disk partitioning with option for separate /home partition using cfdisk.
+# - Customizable keyboard layout, locale, timezone and hostname.
+# - Customizable kernel name (linux, linux-hardened, linux-zen).
+# - Customizable disks and swap size.
+# - First edit /etc/pacman.conf to uncomment the parallel downloads.
+# - Automatic mirror selection based on response rate and package database update.
+# - Installation of base system packages (minimal) and bootloader (grub).
+# - Network configuration via NetworkManager.
+# - Root password setup during installation.
+# - Safety checks for live environment and internet connectivity.
+# - It will also download another script in /home to create a user account and to install xorg/xlibre
+
+# shellcheck disable=SC2015
+# Some colors
+r=$'\e[31m'
+g=$'\e[32m'
+c=$'\e[0m'
+
+# Display usage information if no arguments provided
+if [[ $# -eq 0 ]]; then
+    echo ""
+    cat <<'USAGE'
+             Artix Linux Installation Script by archusXIV
+    ==============================================================
+        IMPORTANT, A SWAP PARTITION WILL BE CREATED BY DEFAULT!
+    ==============================================================
+    Available options:
+    -D all               List all present disks for decision making
+    -f <filesystem type> Set the filesystem type (ext4, btrfs, xfs, default: ext4)
+    -h <name>            Set hostname (default: archlinux)
+    -k <kbd layout>      Set your keyboard layout (default: us)
+    -K <kernel name>     Set the kernel name: linux, linux-hardened, linux-zen (default: linux)
+    -l <locales>         Set system locales (default: en_US)
+    -r <root disk>       Set the system disk (default: sda)
+    -R <root size>       Set the system disk size in GB (default: 30)
+    -s <home disk>       Set the home disk for /home (optional: sdX)
+    -S <home size>       Set the home disk size in GB (uses remaining space if not set)
+    -t <Region/Capital>  Set your timezone (default: UTC)
+    -x <swap size>       Set the swap size in GB (default: 8)
+
+    Example usage for UEFI install (with default swap size):
+    (root drive,root size,home drive,home size,filesystem,keyboard,kernel name,locales,timezone,hostname)
+
+    ./install_artix_base -r sda -R 40 -s sdb -S 100 -f btrfs -k fr -K linux-zen -l fr_FR -t Europe/Paris -h myartixuefi
+
+    Example usage for BIOS install (with custom swap size):
+    (root drive,swap size,home drive,filesystem,keyboard,locales,timezone,hostname)
+
+    ./install_artix_base -r sda -x 12 -s sdb -f ext4 -k fr -l fr_FR -t Europe/Paris -h myartixbios
+
+USAGE
+    exit 1
+fi
+
+# Parse command line arguments
+while getopts "D:f:h:k:K:l:r:R:s:S:x:t:" opt; do
+    case $opt in
+        D)
+            echo -e " \n${g}Available disks:\n${c}"
+            lsblk -I 8 -d -o NAME,SIZE,MODEL
+            echo ""
+            exit 0
+        ;;
+        f) fs_type="${OPTARG}" ;;
+        h) hostname="${OPTARG}" ;;
+        k) keyboard_layout="${OPTARG}" ;;
+        K) kernel_name="${OPTARG}" ;;
+        l) locale="${OPTARG}" ;;
+        r) root_disk="${OPTARG}" ;;
+        R) root_size="${OPTARG}" ;;
+        s) home_disk="${OPTARG}" ;;
+        S) home_size="${OPTARG}" ;;
+        t) timezone="${OPTARG}" ;;
+        x) swap_size="${OPTARG}" ;;
+        \?)
+            echo "${r}Invalid option -${OPTARG}${c}" >&2
+            exit 1
+        ;;
+    esac
+done
+
+# Set defaults if not given
+fs_type=${fs_type:-ext4}
+hostname=${hostname:-archlinux}
+kernel_name=${kernel_name:-linux}
+keyboard_layout=${keyboard_layout:-us}
+locale=${locale:-en_US}
+root_disk=${root_disk:-sda}
+root_size=${root_size:-30}
+swap_size=${swap_size:-8}
+timezone=${timezone:-UTC}
+
+checkUefi() {
+    if [[ -d /sys/firmware/efi ]]; then
+        echo "${g}System is booted in UEFI mode${c}"
+        return 0
+    else
+        echo "${g}System is booted in BIOS mode${c}"
+        return 1
+    fi
+}
+
+ensureDisksPathsAreCorrect() {
+    [[ ! $root_disk =~ ^\/dev\/ ]] && root_disk="/dev/$root_disk"
+    [[ -n $home_disk ]] && [[ ! $home_disk =~ ^\/dev\/ ]] &&
+        home_disk="/dev/$home_disk"
+}
+
+errorDisk() {
+    case "$1" in
+        "create_efi") echo "${r}Error: Failed to create EFI partition${c}" ;;
+        "create_efi_mount") echo "${r}Error: Failed to create EFI mount point${c}" ;;
+        "create_home_mount") echo "${r}Error: Failed to create home mount point${c}" ;;
+        "create_swap") echo "${r}Error: Failed to create swap partition${c}" ;;
+        "enable_swap") echo "${r}Error: Failed to enable swap${c}" ;;
+        "format_efi") echo "${r}Error: Failed to format EFI partition${c}" ;;
+        "format_root") echo "${r}Error: Failed to format root partition${c}" ;;
+        "format_home") echo "${r}Error: Failed to format home partition${c}" ;;
+        "mount_root") echo "${r}Error: Failed to mount root partition${c}" ;;
+        "mount_efi") echo "${r}Error: Failed to mount EFI partition${c}" ;;
+        "mount_home") echo "${r}Error: Failed to mount home partition${c}" ;;
+    esac
+    exit 1
+}
+
+partitionDisk() {
+    local is_uefi="$1"
+    local root_disk="$2"
+    local home_disk="$3"
+
+    ensureDisksPathsAreCorrect
+
+    # Verify disks exist and clear partition tables
+    for d in "$root_disk" ${home_disk:+"$home_disk"}; do
+        [[ ! -b $d ]] && errorDisk "disk_not_exist"
+        sgdisk -Z "$d" || errorDisk "clear_partition"
+    done
+
+    if [[ $is_uefi -eq 0 ]]; then
+        sgdisk -n 1:0:+512M -t 1:ef00 -c 1:"EFI System" "$root_disk" \
+        || errorDisk "create_efi"
+        sgdisk -n 2:0:+"${swap_size}"G -t 2:8200 -c 2:"Linux swap" "$root_disk" \
+        || errorDisk "create_swap"
+        sgdisk -n 3:0:+"${root_size}"G -t 3:8300 -c 3:"Linux root" "$root_disk" \
+        || errorDisk "create_root"
+    else
+        # BIOS partitioning
+        sgdisk -n 1:0:+1M -t 1:ef02 -c 1:"BIOS boot partition" "$root_disk" \
+        || errorDisk "create_bios_boot"
+        sgdisk -n 2:0:+"${swap_size}"G -t 2:8200 -c 2:"Linux swap" "$root_disk" \
+        || errorDisk "create_swap"
+        sgdisk -n 3:0:+"${root_size}"G -t 3:8300 -c 3:"Linux root" "$root_disk" \
+        || errorDisk "create_root"
+    fi
+
+    [[ -n $home_disk ]] && {
+        if [[ -n $home_size ]]; then
+            sgdisk -n 1:0:+"${home_size}"G -t 1:8300 -c 1:"Linux home" "$home_disk" \
+            || errorDisk "create_home"
+        else
+            sgdisk -n 1:0:0 -t 1:8300 -c 1:"Linux home" "$home_disk" \
+            || errorDisk "create_home"
+        fi
+    }
+
+    echo "${g}Debug: Refreshing partition table...${c}"
+    # partprobe "$root_disk"
+    # [[ -n $home_disk ]] && partprobe "$home_disk"
+    blockdev --rereadpt
+    sleep 2 # Give the kernel some time to process
+}
+
+setupPartitions() {
+    local root_disk="$1"
+    local is_uefi="$2"
+    local home_disk="$3"
+
+    ensureDisksPathsAreCorrect
+
+    echo "${g}Debug: Setting up partitions for disk: $root_disk${c}"
+    echo "${g}Debug: UEFI mode: $is_uefi${c}"
+    lsblk "$root_disk"
+
+    if [[ $is_uefi -eq 0 ]]; then
+        echo "${g}Debug: Setting up UEFI partitions...${c}"
+        mkfs.fat -F32 "${root_disk}1" || errorDisk "format_efi"
+        mkfs."${fs_type}" "${root_disk}3" || errorDisk "format_root"
+        mount "${root_disk}3" /mnt || errorDisk "mount_root"
+        mkswap "${root_disk}2" || errorDisk "create_swap"
+        swapon "${root_disk}2" || errorDisk "enable_swap"
+        mkdir -p /mnt/boot/efi || errorDisk "create_efi_mount"
+        mount "${root_disk}1" /mnt/boot/efi || errorDisk "mount_efi"
+    else
+        echo "${g}Debug: Setting up BIOS partitions...${c}"
+        mkswap "${root_disk}1" || errorDisk "create_swap"
+        swapon "${root_disk}1" || errorDisk "enable_swap"
+        [[ ! -b "${root_disk}2" ]] && {
+            echo "${r}Error: Partition ${root_disk}2 does not exist. Available partitions:${c}"
+            lsblk "$root_disk"
+            exit 1
+        }
+        mkfs."${fs_type}" "${root_disk}2" 2>&1 || {
+            echo "${r}Error details for ext4 formatting:${c}"
+            mkfs."${fs_type}" "${root_disk}2" 2>&1
+            errorDisk "format_root"
+        }
+        mount "${root_disk}2" /mnt || errorDisk "mount_root"
+    fi
+
+    [[ -n $home_disk ]] && {
+        echo "${g}Debug: Setting up home partition on $home_disk${c}"
+        mkfs."${fs_type}" "${home_disk}1" || errorDisk "format_home"
+        mkdir -p /mnt/home || errorDisk "create_home_mount"
+        mount "${home_disk}1" /mnt/home || errorDisk "mount_home"
+    }
+}
+
+installBaseSystem() {
+
+    declare -a EXTRA=(
+        "git" "less" "pacman-contrib" "ranger" "vim"
+        "networkmanager" "networkmanager-openrc"
+    )
+
+    [[ $is_uefi -eq 0 ]] && EXTRA+=("efibootmgr")
+    [[ $fs_type == "btrfs" ]] && EXTRA+=("btrfs-progs")
+    [[ $fs_type == "xfs" ]] && EXTRA+=("xfsprogs")
+
+    # shellcheck disable=SC2068
+    basestrap /mnt \
+        artix-branding-base \
+        base \
+        base-devel \
+        dosfstools \
+        ${EXTRA[@]} \
+        elogind-openrc \
+        "${kernel_name}" \
+        "${kernel_name}"-headers \
+        linux-firmware \
+        openrc \
+        openrc-system
+
+    fstabgen -U /mnt >> /mnt/etc/fstab
+    cp -f /etc/pacman.conf /mnt/etc/pacman.conf
+    cp -f /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
+
+}
+
+configureSystem() {
+    local is_uefi="$1"
+    local root_disk="$2"
+
+    # Ensure disk path is complete
+    [[ ! $root_disk =~ ^\/dev\/ ]] && root_disk="/dev/$root_disk"
+
+    # Create configuration script
+    cat >/mnt/root/configure.sh <<-EOF
+#!/bin/bash
+# Set timezone
+ln -sf /usr/share/zoneinfo/"$timezone" /etc/localtime
+hwclock --systohc --utc
+
+sed -i "s/#${locale}.UTF-8/${locale}.UTF-8/" /etc/locale.gen
+locale-gen
+echo "LANG=${locale}.UTF-8" > /etc/locale.conf
+echo "LC_COLLATE=C" >> /etc/locale.conf
+export LANG="${locale}.UTF-8"
+export LC_COLLATE=C
+
+echo "$hostname" > /etc/hostname
+sed -i "s/hostname=\"localhost\"/hostname=\"${hostname}\"/" /etc/conf.d/hostname
+echo "127.0.1.1        $hostname.localdomain    $hostname" >> /etc/hosts
+
+echo "KEYMAP=$keyboard_layout" > /etc/vconsole.conf
+echo "FONT=sun12x22" >> /etc/vconsole.conf
+sed -i "s/keymap=\"us\"/keymap=\"${keyboard_layout}\"/" /etc/conf.d/keymaps
+
+echo "Adding performance tweaks..."
+# Enable parallel module loading
+sed -i 's/^MODULES=()/MODULES=(sd_mod ahci)/' /etc/mkinitcpio.conf
+sed -i 's/^#MODULES_DECOMPRESS="no"/MODULES_DECOMPRESS="yes"/' /etc/mkinitcpio.conf
+mkinitcpio -P
+
+rc-update add NetworkManager default
+
+echo "Set the root password:"
+passwd
+
+# Install/configure bootloader
+if [[ $is_uefi -eq 0 ]]; then
+
+mkdir --parents /etc/pacman.d/hooks
+# Grub stuff
+    cat > /etc/pacman.d/hooks/update_grub.hook <<EOG
+[Trigger]
+Operation=Install
+Operation=Upgrade
+Type=Package
+Target=grub
+Target=grub-btrfs
+
+[Action]
+Description=INSTALLING GRUB...
+When=PostTransaction
+Exec=/usr/bin/grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=ARTIX_GRUB
+EOG
+
+else
+    [[ -z "$root_disk" || ! -b /dev/"$root_disk" ]] && {
+        echo "${r}Error: Invalid or unset system disk for BIOS bootloader installation.${c}"
+        exit 1
+    }
+    cat > /etc/pacman.d/hooks/update_grub.hook <<EOB
+[Trigger]
+Operation=Install
+Operation=Upgrade
+Type=Package
+Target=grub
+Target=grub-btrfs
+
+[Action]
+Description=INSTALLING GRUB...
+When=PostTransaction
+Exec=/usr/bin/grub-install --target=i386-pc /dev/"$root_disk"
+EOB
+
+fi
+
+    if [[ $fs_type == "btrfs" ]]; then
+        pacman -S --noconfirm grub-btrfs os-prober
+    else
+        pacman -S --noconfirm grub os-prober
+    fi
+
+# Add performance-related kernel parameters to GRUB
+[[ -f /etc/default/grub ]] && {
+    sed -i '
+        s/GRUB_CMDLINE_LINUX_DEFAULT=\".*\"/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet nowatchdog nmi_watchdog=0 raid=noautodetect\"/
+    ' /etc/default/grub
+}
+
+grub-mkconfig -o /boot/grub/grub.cfg
+echo "Downloading X desktop installation script in /home."
+cd /home || exit 1
+curl -sL "https://raw.githubusercontent.com/archusXIV/dotfiles/refs/heads/main/scripts/various/install_artix_Xdesktop" -O
+chmod +x install_artix_Xdesktop
+exit
+EOF
+    chmod +x /mnt/root/configure.sh
+    if ! artix-chroot /mnt /root/configure.sh /dev/"$root_disk"; then
+        echo "${r}Error: Configuration script failed. Retaining /mnt/root/configure.sh for debugging.${c}"
+    else
+        rm /mnt/root/configure.sh
+    fi
+
+}
+
+# WE START FROM HERE
+echo -e "\n${g}Starting Artix Linux installation...\n${c}"
+
+# Verify we're in the live environment
+if [[ ! -f /run/artix/bootmnt/boot/vmlinuz-x86_64 ]]; then
+    echo "${r}This script must be run from the Artix Linux live environment!${c}"
+    exit 1
+fi
+
+# Check internet connectivity
+ping -c 1 artix.org >/dev/null 2>&1 || {
+    echo "${r}No internet connection! Please connect to the internet first.${c}"
+    exit 1
+}
+
+# Check UEFI status
+checkUefi
+is_uefi=$?
+
+# Confirm installation
+echo "${r}WARNING: This will erase ALL data on $root_disk${c}"
+read -rp "Do you want to continue? (y/N) " confirm
+[[ ! $confirm =~ ^[Yy]$ ]] && {
+    echo "${r}Installation cancelled.${c}"
+    exit 1
+}
+
+rc-service ntpd start
+pacman-key --init && pacman-key --populate artix
+pacman -Syy artix-keyring pacman-contrib gdisk parted --noconfirm
+cp -f /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist_bkp
+echo " ${g}Ranking mirrolist...be patient${c}"
+rankmirrors -n 10 /etc/pacman.d/mirrorlist_bkp > /etc/pacman.d/mirrorlist
+
+# Perform disks operations
+if [[ -n $home_disk ]]; then
+    echo "${g}Partitioning disks...${c}"
+    partitionDisk "$is_uefi" "$root_disk" "$home_disk"
+    echo "${g}Setting up partitions...${c}"
+    setupPartitions "$root_disk" "$is_uefi" "$home_disk"
+else
+    echo "${g}Formatting disk...${c}"
+    partitionDisk "$is_uefi" "$root_disk"
+    echo "${g}Setting up partitions...${c}"
+    setupPartitions "$root_disk" "$is_uefi"
+fi
+
+echo "${g}Installing base system...${c}"
+installBaseSystem
+
+echo "${g}Configuring system...${c}"
+configureSystem "$is_uefi" "$root_disk"
+
+echo "${g}Unmounting partitions...${c}"
+umount -R /mnt
+
+echo -e "\n${g}Installation complete!${c}"
+echo "You can now reboot into your new Arch Linux system."
+echo "After reboot, log in as root with the password you set."

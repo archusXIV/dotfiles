@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # shellcheck disable=SC2016
 color_off=$'\e[0m';
@@ -9,7 +9,7 @@ declare -a dependencies=( "fzf" "vim" "yay" )
 
 for package in "${dependencies[@]}"; do
     [[ -z $(command -v "$package") ]] && {
-        echo " ${red}Missing dependency...$package"
+        echo " ${red}Missing dependency...$package${color_off}"
         notify-send "aur_cli missing dependency...$package"
         exit 127
     }

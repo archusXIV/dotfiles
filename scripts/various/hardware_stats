@@ -1,72 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Hardware utilizations and temperatures displayed in polybar.
 # I had to include mpd stuff not to create another polybar module.
 # Same thing for mpv...
 # Dependencies: polybar FontAwesome.
-
-WM_NAME=$(wmctrl -m | awk '/Name/{print $2}')
-
-_mpd() {
-    # if ncmpcpp is running it will activate the same polybar module,
-    # but if it's not the case...
-    if pactl list sink-inputs | grep -w 'mpd' && [[ -z $(pidof ncmpcpp) ]]; then
-        polybar-msg \
-        -p "$(pgrep --full "$WM_NAME"-bar-2)" \
-        action "#player-ipc.hook.1" >/dev/null 2>&1
-    fi
-}
-
-# shellcheck disable=SC2015
-_mpv() {
-    [[ -n $(pidof mpv) ]] && {
-        local metadata="$XDG_RUNTIME_DIR/mpv.txt"
-
-        [[ ! -f "$metadata" ]] && touch "$metadata"
-        echo '{ "command": ["get_property", "media-title"]}1' \
-        | socat - /tmp/mpvsocket | awk -F '"' '{print $4}' > "$metadata"
-
-        polybar-msg -p "$(pgrep --full "$WM_NAME"-bar-3)" \
-        action "#mpv-ipc.hook.1"
-
-    } || polybar-msg -p "$(pgrep --full "$WM_NAME"-bar-3)" \
-         action "#mpv-ipc.hook.0"
-}
-
-_coreusage() { cut -d ' ' -f1 /proc/loadavg; }
-
-_coretemp() {
-    sensors | awk '/Tccd1/{ sub("[+]",""); print $2 }' \
-    || sensors | awk '/Tdie/{ sub("[+]",""); print $2 }'
-}
-
-_gputemp() { sensors | awk '/edge:/{sub("+",""); print $2}'; }
-
-_fanspeed() { sensors | awk '/fan2/{print $2" ""rpm"}'; }
-
-_mem() {
-    total=$(free -m | awk '/Mem:/{print $2}')
-    free=$(free -m | awk '/Mem:/{print $4}')
-    cache=$(free -m | awk '/Mem:/{print $6}')
-    shared=$(free -m | awk '/Mem:/{print $5}')
-    echo "$((total - free - cache + shared)) MiB"
-}
-
-_sysdisksusage() {
-    if (( $(df -h | awk '/sda2/{ sub("[%]",""); print $5 }') > 60 )); then
-        echo "/: %{F#FF4747}$(df -h | awk '/sda2/{print $5}')%{F-}"
-    else
-        echo "/: $(df -h | awk '/sda2/{print $5}')"
-    fi
-}
-
-_homedisksusage() {
-    if (( $(df -h | awk '/sda3/{ sub("[%]",""); print $5 }') > 85 )); then
-        echo "- : %{F#FF4747}$(df -h | awk '/sda3/{print $5}')%{F-}"
-    else
-        echo "- : $(df -h | awk '/sda3/{print $5}')"
-    fi
-}
 
 # colored FontAwesome icons for polybar using ~/.Xresources parameters.
 # pad is just a character that creates a kind of padding function,
@@ -74,18 +11,55 @@ _homedisksusage() {
 _icons_color() { xrdb -query | awk '/color3:/{print $NF}'; }
 tc="%{F$(xrdb -query | awk '/color4:/{print $NF}')}"
 pad="%{F$(xrdb -query | awk '/background:/{print $NF}')}_%{F-}"
-
 icon_core="%{F$(_icons_color)}%{F-}"
-icon_gputemp="%{F$(_icons_color)}%{F-}"
-icon_fan="%{F$(_icons_color)}%{F-}"
-icon_mem="%{F$(_icons_color)}%{F-}"
 icon_disk="%{F$(_icons_color)}%{F-}"
+icon_fan="%{F$(_icons_color)}%{F-}"
+icon_gputemp="%{F$(_icons_color)}%{F-}"
+icon_home="%{F$(_icons_color)}%{F-}"
+icon_mem="%{F$(_icons_color)}%{F-}"
 
+_mpd() {
+    # if ncmpcpp is running it will activate the same polybar module,
+    # but if that is not the case...
+    if pactl list sink-inputs | grep -wq 'mpd' && [[ -z $(pidof ncmpcpp) ]]; then
+        polybar-msg \
+        action "#player-ipc.hook.1" >/dev/null 2>&1
+    fi
+}
+
+_coreusage() { cut -d ' ' -f1 /proc/loadavg; }
+_coretemp() { sensors k10temp-pci-00c3 | awk '/Tctl/{ sub("[+]",""); print $2 }'; }
+_gputemp() { sensors amdgpu-pci-0300 | awk '/edge:/{ sub("[+]",""); print $2 }'; }
+_gpufanspeed() { sensors nct6687-isa-0a20 | awk '/fan1:/{ print $2" ""rpm" }'; }
+_cpufanspeed() { sensors nct6687-isa-0a20 | awk '/fan2:/{ print $2" ""rpm" }'; }
+_mem() { free -m | awk '/Mem:/{print ($2 - $4 - $6 + $5) " MiB"}'; }
+
+_sysdisksusage() {
+    if (( $(df -h | awk '/nvme0n1p2/{ sub("[%]",""); print $5 }') > 60 )); then
+        echo "/: %{F#FF4747}$(df -h | awk '/nvme0n1p2/{print $5}')%{F-}"
+    else
+        df -h | awk '/nvme0n1p2/{print $5}'
+    fi
+}
+
+_homedisksusage() {
+    if (( $(df -h | awk '/nvme0n1p3/{ sub("[%]",""); print $5 }') > 85 )); then
+        echo "- : %{F#FF4747}$(df -h | awk '/nvme0n1p3/{ sub("[%]",""); print $5 }')%{F-}"
+    else
+        df -h | awk '/nvme0n1p3/{print $5}'
+    fi
+}
+
+# loop if the polybar module uses: tail = true
+# while true; do
 echo "${icon_core}${pad}${tc}$(_coreusage)% - $(_coretemp)${pad}\
 ${icon_gputemp}${pad}${tc}$(_gputemp)${pad}\
-${icon_fan}${pad}${tc}$(_fanspeed)${pad}\
+${icon_fan}${pad}${tc}$(_gpufanspeed)${pad}\
+${icon_fan}${pad}${tc}$(_cpufanspeed)${pad}\
 ${icon_mem}${pad}${tc}$(_mem)${pad}\
 ${icon_disk}${pad}${tc}$(_sysdisksusage)${pad}\
-${tc}$(_homedisksusage)"
+${icon_home}${pad}${tc}$(_homedisksusage)"
 eval _mpd
-# eval _mpv
+	# sleep 4
+    # [[ -z $(pidof polybar) ]] && exit
+# done

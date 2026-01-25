@@ -1,31 +1,46 @@
 #!/bin/bash
 
+# shellcheck disable=SC2006
+barpid=$(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-2)
+chrono_cache="$XDG_CACHE_HOME/chrono.txt"
+
 _chrono1() {
-	date1=`date +%s`; while true; do
-		echo -ne "$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)\r" > "$XDG_CACHE_HOME"/chrono.txt
-		sleep 1s
-		polybar-msg action "#chrono-ipc-1.hook.0" >/dev/null 2>&1
-	done
+    local date1
+    date1=$(date +%s); while true; do
+    echo -ne "$(date -u --date @$((`date +%s` - "$date1")) +%H:%M:%S)\r" > "$chrono_cache"
+        sleep 1
+        polybar-msg -p "$barpid" action "#chrono-ipc-1.hook.0" >/dev/null 2>&1
+    done &
 }
 
 _chrono2() {
-	date1=`date +%s`; while true; do
-		echo -ne "$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)\r" > "$XDG_CACHE_HOME"/chrono.txt
-		sleep 1s
-		polybar-msg action "#chrono-ipc-2.hook.0" >/dev/null 2>&1
-	done
+    local date2
+    date2=$(date +%s); while true; do
+    echo -ne "$(date -u --date @$((`date +%s` - "$date2")) +%H:%M:%S)\r" > "$chrono_cache"
+        sleep 1
+        polybar-msg -p "$barpid" action "#chrono-ipc-2.hook.0" >/dev/null 2>&1
+    done &
 }
 
 _chrono3() {
-	date1=`date +%s`; while true; do
-		echo -ne "$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)\r" > "$XDG_CACHE_HOME"/chrono.txt
-		sleep 1s
-		polybar-msg action "#chrono-ipc-3.hook.0" >/dev/null 2>&1
-	done
+    local date3
+    date3=$(date +%s); while true; do
+    echo -ne "$(date -u --date @$((`date +%s` - "$date3")) +%H:%M:%S)\r" > "$chrono_cache"
+        sleep 1
+        polybar-msg -p "$barpid" action "#chrono-ipc-3.hook.0" >/dev/null 2>&1
+    done &
 }
 
+_kill() {
+    polybar-msg -p "$barpid" action "#chrono-ipc-1.hook.1" >/dev/null 2>&1
+    polybar-msg -p "$barpid" action "#chrono-ipc-2.hook.1" >/dev/null 2>&1
+    polybar-msg -p "$barpid" action "#chrono-ipc-3.hook.1" >/dev/null 2>&1
+    killall record_chrono
+}
 case "$1" in
-	1) _chrono1 ;;
-	2) _chrono2 ;;
-	3) _chrono3 ;;
+    1 ) _chrono1 ;;
+    2 ) _chrono2 ;;
+    3 ) _chrono3 ;;
+    -k) _kill ;;
 esac
+

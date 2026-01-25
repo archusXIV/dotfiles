@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Script name: mpmsw version 1.1.0
+# Script name: mpmsw version 1.1.2
 # Author: Barret E <archus@protonmail>
 # Licensed under the GPLv2
 # Github: https://github.com/archusXIV/mpv-playlists-manager
@@ -13,11 +13,11 @@
 # in schedules.txt, if a match is found yt-dlp downloads the audio/videos
 # from the corresponding m3u file (make sure that the URLs provide audio files).
 #
-# Change the yt-dlp format options @ line 41 & 42 if you will:
+# Change the yt-dlp format options @ line 41, 42 & 43 if you will:
 # change browser variable @ line 38, eg: browser=brave
 # Run it in your terminal, (it will stay attached): mpmsw
 
-# shellcheck disable=SC2164,SC2317,SC2001
+# shellcheck disable=SC2164,SC2317,SC2001,SC2329
 # Do not rename this file, it is handled by mpm.
 trap '_Cleanup; echo " Caught Ctrl+C"; exit 0' SIGINT
 trap _Cleanup SIGTERM
@@ -31,10 +31,11 @@ for dep in awk sed yt-dlp; do
 done
 
 ############################# BEGIN PREFERENCES #############################
-# Edit your directories and yt-dlp options here.
+# Edit your directories and yt-dlp options here etc...
 : "${XDG_DATA_HOME:-$HOME/.local/share}"
-schedules_dir="$XDG_DATA_HOME/mpm/schedules"
+schedules_dir="$XDG_DATA_HOME/mpv-playlists-manager/schedules"
 schedulesFile="$schedules_dir/schedules.txt"
+remove_video_ids=yes
 browser=brave
 # yt-dlp cookies & format options here
 ytdlpCookyCmd=( --cookies-from-browser="${browser}" )
@@ -99,22 +100,22 @@ _Cleanup() {
         rm "$schedulesFile"
         sed -i '1s/^/#EXTM3U\n/' "${LISTS[@]}" >/dev/null 2>&1
         printf '%s\n' " Scheduled downloads cancelled or finished."
-
     fi
 
-    mapfile \
-        -t downloadedFiles < <(
-            find . -maxdepth 1 -type f \
-            -regextype egrep -regex '.*(\[|\]).*' \
-            | sed 's,./,,'
-    )
+    if [[ $remove_video_ids == "yes" ]]; then
+        mapfile \
+            -t downloadedFiles < <(
+                find . -maxdepth 1 -type f -printf '%f\n' \
+                -regextype egrep -regex '.*(\[|\]).*'
+            )
 
-    for file in "${downloadedFiles[@]}"; do
-        mv "$file" \
-        "$(echo "$file" | sed -e 's/ \[.*\]//')"
-    done 2>/dev/null
+        for file in "${downloadedFiles[@]}"; do
+            mv "$file" "$(echo "$file" | sed -e 's/ \[.*\]//')"
+        done 2>/dev/null
 
-    unset file downloadedFiles
+        unset file downloadedFiles
+    fi
+
     exit 0
 
 }
@@ -165,7 +166,6 @@ while true; do
             printf '%s\n' " No more scheduled downloads."
             break
         }
-
     fi
     # Use 5 seconds intervals for a balance between responsiveness and resource usage
     for _ in {1..12}; do

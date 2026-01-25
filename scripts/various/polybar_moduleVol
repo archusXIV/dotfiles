@@ -5,16 +5,18 @@ getSinkVolHook=$(
     pactl get-sink-volume @DEFAULT_SINK@ \
     | awk '{if(NR!=2) {print $5}}'
 )
+
 getSourceVolHook=$(
     pactl get-source-volume @DEFAULT_SOURCE@ \
     | awk '{if(NR!=2) {print $5}}'| sed 's/^0%//'
 )
+
 color3=$(xrdb -query | awk '/color3:/{print $NF}')
 color4=$(xrdb -query | awk '/color4:/{print $NF}')
 
 case "$1" in
     --out-hook-0)
-        echo -e "%{F#FF4747}%{F-} $getSinkVolHook"
+        echo -e "%{F#FF4747} %{F-} $getSinkVolHook"
     ;;
     --out-hook-1)
         echo -e "%{F$color3}%{F-} %{F$color4} $getSinkVolHook%{F-}"

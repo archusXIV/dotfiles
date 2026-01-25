@@ -1,59 +1,99 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Manage polybar instances individually using -p option.
-# For instance: 3 monitors (3 bars), 3 window managers
-# bspwm-bar-{1,2,3} i3-bar-{1,2,3} & dk-bar-{1,2,3}
+# Author: Barret E <https://github.com/archusXIV/dofiles>
+# Manage polybar instances individually using -p option and fullscreen state.
+# For instance: 3 monitors (3 bars), 3 window managers (dk, bspwm, i3)
+# Dependencies: awk polybar wmctrl
 #
-# -r: Restarts the bar(s).
-# -t: Toggles between the hidden and visible state.
-# $MONITOR{1,2,3} are environment variables
-# shellcheck disable=SC2015
+# a = all                               | keyboard shortcuts (sxhkd)
+# -f: Toggles fullscreen mode           | ctrl + {_,alt,shift} + {1-4}
+# -r: Restarts the bar(s).              |     polybar_control -{t,f,r}{1,2,3,a}
+# -t: Toggles hidden and visible state. |
+#
+# ctrl + 1: toggles visibility of polybar on screen one
+# ctrl + a: toggles visibility of polybar on all screens
+# ctrl + alt + 1: toggles focused window fullscreen on screen one
+# ctrl + alt + a: toggles last focused windows fullscreen on all screens
+# ctrl + shift + 1: restarts polybar on screen one
+# ctrl + shift + a: restarts all polybar instances
+# See: man polybar-msg
 
-WM_NAME=$(wmctrl -m | awk '/Name:/{print $2}')
-barpid_1=$(pgrep --full "$WM_NAME"-bar-1)
-barpid_2=$(pgrep --full "$WM_NAME"-bar-2)
-barpid_3=$(pgrep --full "$WM_NAME"-bar-3)
+for dep in awk polybar wmctrl; do
+    command -v "${dep}" >/dev/null || {
+        echo "$dep is not installed. Exiting..."
+        exit 127
+    }
+done
 
-_Fullscreen() {
-    if [[ $WM_NAME == bspwm ]]; then
-        [[ $(bspc query -N -n focused.fullscreen) ]] \
-            && bspc node focused -t tiled \
-            || bspc node focused -t fullscreen
-    elif [[ $WM_NAME == i3 ]]; then
-        i3-msg fullscreen toggle
-    elif [[ $WM_NAME == dk ]]; then
-        dkcmd win full
-    fi
-}
+# Getting monitors names and polybar pids
+mapfile -t monitors < <(polybar -M | awk -F: '{print $1}')
+mapfile -t barpids < <(pgrep polybar)
+
+((${#barpids[@]} != ${#monitors[@]})) && exit 1
+
+for ((i=0;i<${#monitors[@]};i++)); do
+    monitor+=("$((i+1))")
+    barpid+=("${barpids[$i]}")
+done
+
+declare -A mon_id pid_id
+for ((i=1;i<=${#monitor[@]};i++)); do
+    mon_id[$i]="${monitor[$((i-1))]}"
+    pid_id[$i]="${barpid[$((i-1))]}"
+done
+
+action="${1#-}"
+option="${action:0:1}"
+num="${action:1}"
+wm_name=$(wmctrl -m | awk '/Name:/{print $2}')
 
 _WmFocusMonitor() {
-    if [[ $WM_NAME == bspwm ]]; then
-        bspc monitor -f "$1"
-    elif [[ $WM_NAME == i3 ]]; then
-        i3-msg focus output "$1"
-    elif [[ $WM_NAME == dk ]]; then
-        dkcmd mon "$1"
-    fi
+    [[ $wm_name == dk ]] && dkcmd mon "${mon_id[$num]}"
+    [[ $wm_name == bspwm ]] && bspc monitor -f "${mon_id[$num]}"
+    [[ $wm_name == i3 ]] && i3-msg focus output "${mon_id[$num]}"
 }
 
-case "$1" in
-    -t1)
-        _WmFocusMonitor "$MONITOR1" \
-         && polybar-msg -p "$barpid_1" cmd toggle \
-         && _Fullscreen
+_ToggleFullscreen() {
+    case "$1" in
+        --all)
+            # awk has to ignore polybar ids from wmctrl output
+            # if the window manager can or do manage them.
+            wmctrl -l | awk '$2 != -1 {print $1}' \
+            | xargs -I {} wmctrl -i -r {} -b toggle,fullscreen
+        ;;
+        --focused)
+            _WmFocusMonitor
+            [[ $wm_name == dk ]] && { dkcmd win full; exit; }
+            # No need to test $WM here, this test will fail if bspwm isn't running
+            [[ -n $(bspc query -N -n focused.fullscreen) ]] && {
+                bspc node focused -t tiled || bspc node focused -t fullscreen
+                exit
+            }
+            [[ $wm_name == i3 ]] && { i3-msg fullscreen toggle; exit; }
+        ;;
+    esac
+}
+
+[[ -z $num && -n "$2" ]] && num="$2"
+[[ $option == f && $num == a ]] && _ToggleFullscreen --all
+[[ $option == t && $num == a ]] && { polybar-msg cmd toggle; exit; }
+[[ $option == r && $num == a ]] && { polybar-msg cmd restart; exit; }
+
+case "$option" in
+    f) _ToggleFullscreen --focused ;;
+    r)
+        [[ -n "${pid_id[$num]}" ]] || { echo "Invalid bar number: $num"; exit 1; }
+        polybar-msg -p "${pid_id[$num]}" cmd restart
     ;;
-    -t2)
-        _WmFocusMonitor "$MONITOR2" \
-        && polybar-msg -p "$barpid_2" cmd toggle \
-        && _Fullscreen
+    t)
+        [[ -n "${mon_id[$num]}" ]] || { echo "Invalid monitor number: $num"; exit 1; }
+        _WmFocusMonitor "${mon_id[$num]}"
+        polybar-msg -p "${pid_id[$num]}" cmd toggle
     ;;
-    -t3)
-        _WmFocusMonitor "$MONITOR3" \
-        && polybar-msg -p "$barpid_3" cmd toggle \
-        && _Fullscreen
+    *)
+        echo "Invalid option: $option"
+        exit 1
     ;;
-    -r1) polybar-msg -p "$barpid_1" cmd restart ;;
-    -r2) polybar-msg -p "$barpid_2" cmd restart ;;
-    -r3) polybar-msg -p "$barpid_3" cmd restart ;;
-    -ra) "$SCRIPTDIR"/launch_polybar & exit ;;
 esac
+exit
+

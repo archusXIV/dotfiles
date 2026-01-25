@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+v4l2-ctl --set-fmt-video=width=320,height=180
+ffplay -f v4l2 -framerate 30 -i /dev/video0 >/dev/null 2>&1

@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+# Center the currently focused floating window on its monitor (supports multiple monitors)
+# Requires: xrandr, xdo, dk{cmd} (optional)
+
+# Get the ID of the currently focused window
+win_id=$(xdo id)
+
+# Get window geometry (absolute position and size)
+read -r win_x win_y win_w win_h <<< "$(
+    xwininfo -id "$win_id" \
+    | awk '
+        /Absolute upper-left X:/ {x=$4}
+        /Absolute upper-left Y:/ {y=$4}
+        /Width:/ {w=$2}
+        /Height:/ {h=$2}
+        END {print x, y, w, h}
+    '
+)"
+
+# Get monitor info from xrandr, parse width/height as numbers
+while read -r _ _ mon_geom _; do
+    # mon_geom is like 1920/477x1080/286+0+0
+    width=$(awk -F'[x+]' '{print $1}' <<< "$mon_geom" | awk -F'/' '{print $1}')
+    height=$(awk -F'[x+]' '{print $2}' <<< "$mon_geom" | awk -F'/' '{print $1}')
+    x=$(awk -F'[+]' '{print $2}' <<< "$mon_geom")
+    y=$(awk -F'[+]' '{print $3}' <<< "$mon_geom")
+    # Check if window is on this monitor
+    if (( win_x >= x && win_x < x + width && win_y >= y && win_y < y + height )); then
+        mon_x=$x; mon_y=$y; mon_w=$width; mon_h=$height
+        break
+    fi
+done < <(xrandr --listactivemonitors | awk 'NR>1 {print $0}')
+
+# Fallback: if not found, use first monitor
+if [[ -z "$mon_x" ]]; then
+    mon_geom=$(xrandr --listactivemonitors | awk 'NR==2 {print $4}')
+    width=$(awk -F'[x+]' '{print $1}' <<< "$mon_geom" | awk -F'/' '{print $1}')
+    height=$(awk -F'[x+]' '{print $2}' <<< "$mon_geom" | awk -F'/' '{print $1}')
+    x=$(awk -F'[+]' '{print $2}' <<< "$mon_geom")
+    y=$(awk -F'[+]' '{print $3}' <<< "$mon_geom")
+    mon_x=$x; mon_y=$y; mon_w=$width; mon_h=$height
+fi
+
+# Calculate new position to center the window
+new_x=$(( mon_x + (mon_w - win_w) / 2 ))
+new_y=$(( mon_y + (mon_h - win_h) / 2 ))
+
+# Move the window
+if [[ ${DKSOCK+x} ]]; then
+    dkcmd win "$win_id" resize x="$new_x" y="$new_y"
+else
+    xdo move -x "$new_x" -y "$new_y" "$win_id"
+fi
+

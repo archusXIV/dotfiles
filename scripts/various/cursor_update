@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Author: Barret E <https://github.com/archusXIV>
-# Script name: update_cursor version 1.0.1
+# Script name: cursor_update version 1.0.2
 # Licensed under the GPLv2
 #
 # This script install/update the Cursor AI IDE software for Linux
@@ -12,9 +12,14 @@
 # If not argument is given the usage message is printed
 # The default application name is cursor.AppImage
 
+# Some colors
+r=$'\e[31m'
+g=$'\e[32m'
+c=$'\e[0m'
+
 # Display usage information if no arguments provided
 if [[ $# -eq 0 ]]; then
-    echo ""
+    echo -e "\n ${r}At least provide one option.${c}\n"
     cat <<'USAGE'
     Cursor AI Installation Script by archusXIV
     ==========================================
@@ -24,18 +29,14 @@ if [[ $# -eq 0 ]]; then
     -i <path>    Set the installation directory (default: /usr/local/bin)
     -s <su cmd>  Set the elevetaded privileges command (defaut: sudo)
     -v <version> Set desired version: stable or latest (defaut: stable)
-    Example usage with the defaults:
-    cursor_update (no option needed)
+
+    Example usage with the defaults (at least one argument):
+    cursor_update -i /usr/local/bin
     Example usage customized:
     cursor_update -s doas -d $HOME/Documents/Downloads -i /opt -v latest
 USAGE
     exit 1
 fi
-
-# Some colors
-r=$'\e[31m'
-g=$'\e[32m'
-c=$'\e[0m'
 
 # Parse command line arguments
 while getopts "d:i:s:v:" opt; do
@@ -53,7 +54,7 @@ done
 
 # Set defaults if not provided
 app_name="cursor.AppImage"
-download_dir=${download_dir:-"$HOME/Downloads"}
+download_dir=${download_dir:-"$HOME/Documents/Downloads"}
 install_dir=${install_dir:-"/usr/local/bin"}
 su_cmd=${su_cmd:-sudo}
 version=${version:-stable}
@@ -76,13 +77,13 @@ createDesktopFile() {
     cat <<EOF | "${su_cmd}" tee "$desktop_file" >/dev/null
 [Desktop Entry]
 Name=Cursor
-Exec=$install_dir/cursor.AppImage
+Exec=$install_dir/$app_name
 Terminal=false
 Type=Application
 Icon=$icon
 StartupWMClass=Cursor
 X-AppImage-Version=$version
-Comment=Cursor AI coding IDE.
+Comment=Cursor AI coding IDE
 MimeType=x-scheme-handler/cursor;
 Categories=Utility;Development;
 EOF
@@ -101,7 +102,7 @@ installCursor() {
 downloadCursor() {
     echo -e "\n ${g}Fetching the $version version of Cursor...${c}\n"
     curl -sL "$(curl -fsSL "$app_api" | jq -r '.downloadUrl')" -O
-    curl -sL "https://www.cursor.so/brand/icon.svg" -O
+    curl -sL "https://www.cursor.com/brand/icon.svg" -O
 }
 
 downloadCursor || error "Cursor download failed."
@@ -110,3 +111,4 @@ installCursor || error "Cursor installation failed"
 echo "${g} cursor installation successful${c}"
 createDesktopFile || error "Failed to update cursor.desktop"
 echo "${g} cursor desktop file installed, happy coding.${c}"
+

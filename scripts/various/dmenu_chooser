@@ -1,26 +1,25 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# shellcheck disable=SC2086,SC2012
-# shellcheck source=/dev/null
+# shellcheck disable=SC2086,SC2012,SC1091
 
 source "$HOME"/.config/dmenu/dmenurc
 
-choice=$(printf "Apps\\nArchwiki\\nAutoscript\\nConfig\\nFind\\nMan\\nPower\\nScrot\\nThemes" \
-        | dmenu -i $DMENU_OPTIONS -p 'Select a script:')
+choice=$(
+    printf "Apps\\nArchwiki\\nAutoscript\\nConfig\\nFind\\nGlyphs\\nMan\\nNetwork\\nPower\\nScrot\\nThemes" \
+    | dmenu -i $DMENU_OPTIONS -p 'Select a script:'
+)
 
-[[ -z $choice ]] && exit
+[[ -z $choice ]] && exit 0
 
 case "$choice" in
-    Apps    )
-        dmenu_run $DMENU_OPTIONS
-    ;;
+    Apps) dmenu_run $DMENU_OPTIONS ;;
     Archwiki)
         browser=${BROWSER:-brave}
         pgrep -x dmenu && exit
 
         choice=$(echo "" | dmenu -i $DMENU_OPTIONS -p "Search ArchWiki:") || exit 1
 
-        if [ "$choice" = ""  ]; then
+        if [[ $choice = ""  ]]; then
             $browser "https://wiki.archlinux.org/"
         else
             # Detect if url
@@ -35,12 +34,9 @@ case "$choice" in
         [[ -z ${SCRIPTDIR+x} ]] && exit 1
 
         _autoscript() {
-
             local script_file EDITOR
-
             script_file="$SCRIPTDIR/$1"
             EDITOR=${EDITOR:-lite-xl}
-
             if [[ -f $script_file ]]; then
                 "$EDITOR" "$script_file" &
             else
@@ -49,59 +45,101 @@ case "$choice" in
                 "$EDITOR" "$script_file" &
             fi
         }
-
         selected=$(
             command ls "$SCRIPTDIR" \
             | dmenu -i -l 20 $DMENU_OPTIONS -p "edit/create a script "
         )
         [[ -z $selected ]] && exit 0
-
         _autoscript "$selected"
     ;;
-    Config  )
+    Config)
         confDir="$HOME/.config/"
         # shellcheck disable=SC2035
         dirOptions=$(cd ${confDir} && command ls -d */ | cut -d " " -f 1)
         dirChoice=$(echo "${dirOptions[@]}" | dmenu -i $DMENU_OPTIONS -p 'Config directories: ')
         fileOptions=$(cd ${confDir}${dirChoice} && ls -Ap | cut -d " " -f 1 | grep -v / )
         fileChoice=$(echo "${fileOptions[@]}" | dmenu -i -l 20 $DMENU_OPTIONS -p 'Edit this file: ')
-
         if [[ -z $dirChoice ]]; then
             exit 0
         else
             exec geany ${confDir}${dirChoice}${fileChoice}
         fi
     ;;
-    Find    )
+    Find)
         find ~ \
         | sed 's/ /\\ /g' \
         | sort -f \
         | dmenu -i -l 20 $DMENU_OPTIONS -p 'finder: ' \
         | xargs xdg-open
     ;;
-    Man     )
+    Glyphs)
+        if [[ -e $XDG_DATA_HOME/glyphlist ]]; then
+            mapfile -t glyphs < "$XDG_DATA_HOME"/glyphlist
+            chosen=$(
+                printf '%s\n' "${glyphs[@]}" \
+                | sed 's/nf-*-/ /' \
+                | dmenu -i -l 30 $DMENU_OPTIONS -p ' Select a glyph: '
+            )
+        else
+            exit 1
+        fi
+        # Exit if none chosen.
+        [[ -z $chosen ]] && exit 0
+        # If you run this command with an argument, it will automatically insert the
+        # character. Otherwise, show a message that the emoji has been copied.
+        if [[ -n $1 ]]; then
+            xdotool type "$chosen"
+        else
+            printf '%s\n' "$chosen" | xclip -selection clipboard
+            notify-send "'$chosen' copied to clipboard." &
+        fi
+    ;;
+    Man)
         man -k . \
         | awk '{print $1}' \
         | dmenu -i -l 30 $DMENU_OPTIONS -p 'Search for man-pages: ' \
         | xargs xterm -e man &
     ;;
-    Power   )
+    Network)
+        nsc=$(ps -ef | awk '/network_switch_connection/ && $0 !~ /grep/ {print $2}')
+        connections=$(echo -e "default\\nphone" | dmenu -i -l 2 $DMENU_OPTIONS -p "switch connection: ")
+        [[ -z $connections ]] && exit 0
+        case "${connections}" in
+            default)
+                if [[ $nsc ]]; then
+                    kill -SIGRTMIN+11 "$nsc"
+                else
+                    nmcli connection down redmi_note
+                    nmcli connection up default
+                    rm /tmp/alt_conn 2>/dev/null
+                fi
+            ;;
+            phone)
+                if [[ $nsc ]]; then
+                    kill -SIGRTMIN+12 "$nsc"
+                else
+                    nmcli connection down default
+                    nmcli connection up redmi_note
+                    touch /tmp/alt_conn
+                fi
+            ;;
+        esac
+    ;;
+    Power)
         _main() {
             # Possible actions
-            actions=('Lockscreen ' 'WM restart ' 'Exit ' 'Reboot ' 'Power off ')
-
+            actions=('Cancel' 'Lockscreen ' 'WM restart ' 'Exit ' 'Reboot ' 'Power off ')
             choice="$(_list_actions)"
-
             # Run the selected command.
             case "$choice" in
-                E*) Xexit            ;;
-                L*) i3lock -c 1e1f29 ;;
-                P*) _poweroff        ;;
-                R*) _reboot          ;;
-                W*) restart_wm       ;;
+                E*) session_exit          ;;
+                L*) i3lock -c 1e1f29      ;;
+                P*) _poweroff             ;;
+                R*) _reboot               ;;
+                W*) restart_wm  reloadmsg ;;
+                *) exit                   ;;
             esac
         }
-
         _check_systemd() {
             if [[ -d /run/systemd/system ]]; then
                 systemctl "$1"
@@ -109,11 +147,8 @@ case "$choice" in
                 sudo "$1"
             fi
         }
-
         _reboot() { _check_systemd 'reboot'; }
-
         _poweroff() { _check_systemd 'poweroff'; }
-
         _dynamic_menu() {
             if [[ -n $(command -v dmenu) ]]; then
                 dmenu -i $DMENU_OPTIONS -p 'Power options'
@@ -121,58 +156,53 @@ case "$choice" in
                 echo "dmenu command not found." && return 1
             fi
         }
-
         # List actions to choose from.  Output array items on a new line.
         _list_actions() {
             printf '%s\n' "${actions[@]}" | _dynamic_menu
         }
-
         _main "${@}"
     ;;
-    Scrot   )
-        scrot_path="/home/archangel/Documents/Pictures/screens/"
+    Scrot)
+        scrot_path="$HOME/Documents/Pictures/screens/"
         viewer="feh" # Can edit images too.
-
         choice=$(
             printf "quick_fullscreen\\ndelayed_fullscreen\\nselection\\nfocused_window" \
             | dmenu -i $DMENU_OPTIONS -p "Select a capture type:"
         )
-
         cd "$scrot_path" || exit 1
-
         case "$choice" in
-            quick_fullscreen)   scrot '%d-%m-%Y-@%H-%M-%S-full.png' \
-                                -e "$viewer \$f" && notify-send 'Fullscreen taken and saved'
+            quick_fullscreen)
+                scrot '%d-%m-%Y-@%H-%M-%S-full.png' \
+                -e "$viewer \$f" && notify-send 'Fullscreen taken and saved'
             ;;
-            delayed_fullscreen) scrot -d 15 '%d-%m-%Y-@%H-%M-%S-full.png' \
-                                -e "$viewer \$f" && notify-send 'Fullscreen taken and saved'
+            delayed_fullscreen)
+                scrot -d 15 '%d-%m-%Y-@%H-%M-%S-full.png' \
+                -e "$viewer \$f" && notify-send 'Fullscreen taken and saved'
             ;;
-            selection)          scrot -s '%d-%m-%Y-@%H-%M-%S-selection.png' \
-                                -e "$viewer \$f" && notify-send 'Scrot selection saved'
+            selection)
+                scrot -s '%d-%m-%Y-@%H-%M-%S-selection.png' \
+                -e "$viewer \$f" && notify-send 'Scrot selection saved'
             ;;
-            focused_window)     scrot -u -b '%d-%m-%Y-@%H-%M-%S-focused.png' \
-                                -e "$viewer \$f" && notify-send 'Focused window captured'
+            focused_window)
+                scrot -u -b '%d-%m-%Y-@%H-%M-%S-focused.png' \
+                -e "$viewer \$f" && notify-send 'Focused window captured'
             ;;
-            *)                  notify-send 'No screenshot taken!'
-            ;;
+            *) notify-send 'No screenshot taken!' ;;
         esac
     ;;
     Themes)
         xres_file="$RESOURCES_FILE"
-
         [[ ! -f $xres_file ]] && echo "$xres_file: no such file or directory" && exit 1
-
-        selected=$(command ls "$HOME"/.config/xfiles/themes \
-        | dmenu -i -l 20 $DMENU_OPTIONS \
-        -p "The actual theme is $(grep themes "$xres_file" | sed 's,.*/,,;s/"//')")
-
-        [[ ! -f "$HOME"/.config/xfiles/themes/"$selected" ]] && exit 1
-
+        current_theme=$(grep themes "$xres_file" | sed 's,.*/,,;s/"//')
+        selected=$(
+            command ls "$HOME"/.config/xfiles/themes \
+            | dmenu -i -l 20 $DMENU_OPTIONS \
+            -p "The actual theme is $current_theme:"
+        )
+        [[ ! -f $HOME/.config/xfiles/themes/$selected ]] && exit 1
         sed -i --follow-symlinks \
         "/\#include \"\.config\/xfiles\/themes\//c\\#include \"\.config\/xfiles\/themes\/$selected\"" "$xres_file"
-
         sleep 1s
-
         # Function below calls other scripts.
         _reload() {
             xrdb -load "$xres_file" \
@@ -182,7 +212,6 @@ case "$choice" in
             && sxhkd_start \
             && notify-send 'theme changed'
         }
-
         if [[ -n $(pidof "$(wmctrl -m | awk '/Name:/{print $2}')") ]]; then
             _reload
         else
@@ -190,3 +219,4 @@ case "$choice" in
         fi
     ;;
 esac
+

@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+cd "$1" || exit 1
+touch fzf_file
+echo -ne '\e[8;12;60t'; center_floatwin
+fzfHeader="Shorts: Ctrl+X:remove item, Ctrl+Q:exit, Enter:edit"
+
+while [[ -f ./fzf_file ]]; do
+    find . -type f -not -name fzf_file | sort -d | fzf \
+    --cycle \
+    --reverse \
+    --no-multi \
+    --header-first \
+    --header "${fzfHeader}" \
+    --border rounded \
+    --prompt="Search in ${1##*/}: " \
+    --bind "ctrl-q:become(rm fzf_file)" \
+    --bind "ctrl-x:become(rm {})" \
+    --bind "enter:become(echo -ne '\e[8;32;124t'; center_floatwin; vim {})"
+    echo -ne '\e[8;12;60t'; center_floatwin
+done
+
+if [[ -S $DKSOCK ]]; then
+    dkcmd win kill
+else
+    xdo close
+fi

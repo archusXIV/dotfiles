@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# close all windows in the present desktop.
+# or close all execpt the focused one.
+# deps: xdo
+
+command -v xdo >/dev/null || exit 1
+dkSocketExist() { [[ -S $DKSOCK ]]; }
+
+case "$1" in
+    --all)
+        xdo id -d | \
+        while read -r winid; do
+            if dkSocketExist; then
+                # because dk freezes when using xdo close command
+                dkcmd win "$winid" kill
+            else
+                xdo close "$winid"
+            fi
+        done
+        dkSocketExist && dkcmd ws last
+    ;;
+    --nonfocused)
+        focused=$(xdo id)
+        xdo id -d | \
+        while read -r winid; do
+            if [[ $winid == "$focused" ]]; then
+                continue
+            else
+                dkSocketExist && dkcmd win "$winid" kill
+            fi
+        done
+    ;;
+esac

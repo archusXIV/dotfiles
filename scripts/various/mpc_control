@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# This script controls MPD while it's active
+# even if ncmpc/ncmpcpp is launched otherwise
+# mpc will not exactly do what we want to.
+
+command -v mpc >/dev/null || exit 127
+[[ -z $(pidof mpd) ]] && exit 1
+
 mpc random off
 
 current=$(mpc --format %position% current)

@@ -41,7 +41,8 @@ currentModeStatic=$(
             gsub(/"/,"")
             sub(/static_ws:/,"")
             print $2
-        }'
+        }
+    '
 )
 
 _SetNewFocusedName() {
@@ -71,7 +72,16 @@ _TriggerNewNames() {
     _ApplyNewWsNames
 }
 
-# a mode indicator in polybar
+# a mode indicator module in polybar
+# [module/static_ws-ipc]
+# type = custom/ipc
+# hook-0 = echo " %{F$(xrdb -query | awk '/color2:/{print $NF}')}%{F-}"
+# hook-1 = echo " %{F$(xrdb -query | awk '/color1:/{print $NF}')}%{F-}"
+# initial = 2
+# format = <output>
+# format-padding = 1
+# click-left = dk_change_layouts --dynamic && "#static_ws-ipc.hook.0"
+# click-right = dk_change_layouts --static  && "#static_ws-ipc.hook.1"
 _BarStatic() {
     polybar-msg -p $(pgrep --full dk-bar-3) \
     action "#static_ws-ipc.hook.${hooknum}" >/dev/null 2>&1
@@ -81,10 +91,11 @@ _ToggleMode() {
     local hooknum
     case "$1" in
         --default)
-            "$DKRC"
+            # reset every workspaces (names & layouts)
+            "$DKRC" || dkcmd restart
             hooknum=1
             _BarStatic
-            notify-send 'dk static mode'
+            notify-send 'dk default mode'
         ;;
         --dynamic)
             dkcmd set static_ws=false
@@ -108,7 +119,7 @@ _GetMode() {
         if grep -qF 'static_ws=true' "$DKRC"; then
 
             wmctrl -d | awk '{print $NF}' > "$NWSN"
-            mapfile -t prevWsLayouts < <(
+            mapfile -t previousWsLayouts < <(
                 dkcmd status type=ws num=1 \
                 | jq -r '.workspaces | .[] | .layout'
             )
@@ -116,22 +127,22 @@ _GetMode() {
             _ToggleMode --default
             _ApplyNewWsNames
 
-            # applying the previous layouts, not the defaults.
+            # then applying the previous layouts, not the defaults.
             wsn=1
-            for wslayout in "${prevWsLayouts[@]}"; do
+            for wslayout in "${previousWsLayouts[@]}"; do
                 dkcmd set ws="$wsn" layout "$wslayout"
                 ((wsn++))
                 sleep 0.1
             done
 
-            unset prevWsLayouts
+            unset previousWsLayouts
 
         else
             # workspaces will not be ordered if not already.
             _ToggleMode --static
         fi
 
-    elif [[ $currentModeStatic = true ]]; then
+    elif [[ $currentModeStatic == true ]]; then
         _ToggleMode --dynamic
     fi
 }
@@ -171,17 +182,17 @@ _ToggleMono() {
 
 # 9 available layouts, toggle {mono/last,static/dynamic}
 case "$1" in
-    alternate) SYMBOL="A"; _SetLayout dwindle && _TriggerNewNames ;;
-    dyntile  ) SYMBOL="D"; _SetLayout dyntile && _TriggerNewNames ;;
-    grid     ) SYMBOL="G"; _SetLayout grid && _TriggerNewNames ;;
-    none     ) SYMBOL="N"; _SetLayout none && _TriggerNewNames ;;
-    rtile    ) SYMBOL="R"; _SetLayout rtile && _TriggerNewNames ;;
-    spiral   ) SYMBOL="S"; _SetLayout spiral && _TriggerNewNames ;;
-    tile     ) SYMBOL="T"; _SetLayout tile && _TriggerNewNames ;;
-    tstack   ) SYMBOL="W"; _SetLayout tstack && _TriggerNewNames ;;
-    mono     ) _ToggleMono ;;
-    false    ) _GetMode ;;
-    static   ) _ToggleMode --static ;;
-    dynamic  ) _ToggleMode --dynamic ;;
+    --alternate) SYMBOL="A"; _SetLayout dwindle && _TriggerNewNames ;;
+    --dyntile  ) SYMBOL="D"; _SetLayout dyntile && _TriggerNewNames ;;
+    --grid     ) SYMBOL="G"; _SetLayout grid && _TriggerNewNames ;;
+    --none     ) SYMBOL="N"; _SetLayout none && _TriggerNewNames ;;
+    --rtile    ) SYMBOL="R"; _SetLayout rtile && _TriggerNewNames ;;
+    --spiral   ) SYMBOL="S"; _SetLayout spiral && _TriggerNewNames ;;
+    --tile     ) SYMBOL="T"; _SetLayout tile && _TriggerNewNames ;;
+    --tstack   ) SYMBOL="W"; _SetLayout tstack && _TriggerNewNames ;;
+    --mono     ) _ToggleMono ;;
+    --reorder  ) _GetMode ;;
+    --static   ) _ToggleMode --static ;;
+    --dynamic  ) _ToggleMode --dynamic ;;
 esac
 

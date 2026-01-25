@@ -11,17 +11,17 @@
 #        volume_control source --{up,down,toggle} (preset is -/+1%)
 #        volume_control sink --set "value" (onthefly_preset)
 #        volume_control source --set "value" (onthefly_preset)
-
-# Make sure we have polybar running
-! pgrep -x polybar >/dev/null && exit 1
+#        volume_control sink --balance "left_vol" "right_vol" (for balance control)
 
 # change default presets values to your liking.
 sink_preset=5
 source_preset=1
 onthefly_preset="$3"
-default_source_vol="80%"
+default_source_vol="90%"
 
 _polybarHook() {
+    # Make sure we have polybar running
+    ! pgrep -x polybar >/dev/null && return 1
     local type state module
     type=$1
     state=$2
@@ -30,7 +30,8 @@ _polybarHook() {
     else
         module="mic-ipc"
     fi
-    polybar-msg action "#${module}.hook.${state}" >/dev/null 2>&1
+    pid=$(pgrep -f "$(wmctrl -m | awk '/Name/{print $2}')"-bar-2)
+    polybar-msg -p "$pid" action "#${module}.hook.${state}" >/dev/null 2>&1
 }
 
 _notifyVolume() {
@@ -41,6 +42,7 @@ _notifyVolume() {
 }
 
 _keyboardMuteKey() {
+    command -v g810-led >/dev/null 2>&1 || return 1
     # variables used if g810-led package is installed.
     local profile_rules profile_udev profiles_dir muteKeyOff muteKeyOn state key_state
 
@@ -55,29 +57,37 @@ _keyboardMuteKey() {
     [[ $state == "on" ]] && key_state="$muteKeyOn" || key_state="$muteKeyOff"
 
     if [[ -s "$XDG_RUNTIME_DIR"/scratchpad_hidden.list ]]; then
-        g815-led -k mute "$key_state"
-        g815-led -fx breathing logo fb4934 5
+        sudo g815-led -k mute "$key_state"
+        sudo g815-led -fx breathing logo fb4934 5
         [[ $state == "on" ]] && notify-send 'Volume muted'
     else
-        g815-led -k mute "$key_state"
+        sudo g815-led -k mute "$key_state"
         [[ $state == "on" ]] && notify-send 'Volume muted'
     fi
 }
 
 # Helper function to handle volume changes
 _handleVolume() {
-    local device action preset default_device
+    local device action preset default_device left_vol right_vol
 
     device=$1    # sink or source
     action=$2    # up, down, toggle, set
     preset=$3    # volume change preset
+    left_vol=$4  # left channel volume (for balance)
+    right_vol=$5 # right channel volume (for balance)
     default_device="DEFAULT_${device^^}"
 
     __setVolume() { pactl set-"${device}"-volume "@${default_device}@" "$1"; }
+    __setBalance() { pactl set-"${device}"-volume "@${default_device}@" "$1" "$2"; }
     __getVolume() { pactl get-"${device}"-mute "@${default_device}@"; }
     __toggleMute() { pactl set-"${device}"-mute "@${default_device}@" toggle; }
 
     case "$action" in
+        balance)
+            __setBalance "$left_vol%" "$right_vol%"
+            [[ $device == sink ]] && _notifyVolume
+            _polybarHook "${device}" 1
+        ;;
         up)
             if __getVolume | grep -q "yes"; then
                 __toggleMute
@@ -103,7 +113,7 @@ _handleVolume() {
                 _polybarHook "${device}" 1
             else
                 __toggleMute
-                [[ $device == "source" ]] && __setVolume 0%
+                [[ $device == "source" ]] && __setVolume "0%"
                 [[ $device == "sink" ]] && _keyboardMuteKey on
                 _polybarHook "${device}" 0
             fi
@@ -115,19 +125,14 @@ _handleVolume() {
     esac
 }
 
-# Main case statement
 case "$1" in
     sink)
         case "$2" in
             --up|--down|--toggle)
                 _handleVolume "sink" "${2#--}" "$sink_preset"
             ;;
-            --equalize)
-                amixer -D pulse set Master 40%,40% >/dev/null 2>&1
-                _polybarHook "sink" 1
-            ;;
-            --last)
-                amixer -D pulse set Master 40%,22% >/dev/null 2>&1
+            --balance)
+                _handleVolume "sink" "balance" "set" "$3" "$4"
                 _polybarHook "sink" 1
             ;;
             --set)
@@ -139,6 +144,10 @@ case "$1" in
         case "$2" in
             --up|--down|--toggle|--set)
                 _handleVolume "source" "${2#--}" "$source_preset"
+            ;;
+            --balance)
+                _handleVolume "source" "balance" "set" "$3" "$4"
+                _polybarHook "source" 1
             ;;
         esac
     ;;

@@ -24,28 +24,22 @@ duration=$(ffmpeg -i "${file}" 2>&1 | awk '/Duration/{print substr($2, 1, length
 
 _ConcatClips() {
     local ffmpegInputFile="./files.txt"
-    declare -a mpFourFiles=(*.mp4)
-    declare -a mkvFiles=(*.mkv)
     declare -a filesWithSpaces=(* *)
-    if ((${#mpFourFiles[@]} >= 2 || ${#mkvFiles[@]} >= 2)); then 
-        if ((${#filesWithSpaces[@]} >= 1)); then
-            find . -depth -name "* *" -exec bash -c '
-                for f in "$@"; do
-                    n="${f##*/}"
-                    mv -n "$f" "${f%/*}/${n// /_}"
-                done
-            ' dummy {} +
-        fi
-        find . -name "*.mp4" -o -name "*.mkv" \
-        | sed ':\ :\ :g;s/^/file /' | sort -d > "$ffmpegInputFile"
-        ffmpeg \
-        -safe 0 \
-        -f concat \
-        -i "$ffmpegInputFile" \
-        -c copy "$1" >/dev/null 2>&1
-        mv "$1" ..
-        rm ./*
+    if ((${#filesWithSpaces[@]} >= 1)); then
+        find . -depth -name "* *" -exec bash -c '
+            for f in "$@"; do
+                n="${f##*/}"
+                mv -n "$f" "${f%/*}/${n// /_}"
+            done
+        ' dummy {} +
     fi
+    find . -name "*.mp4" -o -name "*.mkv" \
+    | sed ':\ :\ :g;s/^/file /' | sort -d > "$ffmpegInputFile"
+    ffmpeg -safe 0 -f concat \
+    -i "$ffmpegInputFile" \
+    -c copy "$1" >/dev/null 2>&1
+    mv "$1" ..
+    rm ./*
 }
 
 _CheckTimeFormat() {

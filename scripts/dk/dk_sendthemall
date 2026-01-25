@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# send/follow all windows from the focused workspace to another one.
+# send/follow all windows from the focused workspace to ws number.
 # options: dk_sendthemall -s (send) <workspace>
 #          dk_sendthemall -f (follow) <workspace>
 #
@@ -8,17 +8,19 @@
 # send/follow all windows of the current ws to ws n°($2)
 # super + shift + s ; {_,alt + }{1-9,0}
 #     dk_sendthemall -{s,f} {1-9,10}
-settings
+
+_sendAllWindowsThere() {
+    for win in $(xdo id -d); do
+        dkcmd ws send "$win" "$2"
+    done
+}
+
 case "$1" in
     -s)
-        for win in $(xdo id -d); do
-            dkcmd ws send "$win" "$2"
-        done
+        _sendAllWindowsThere "$@"
     ;;
     -f)
-        for win in $(xdo id -d); do
-            dkcmd ws send "$win" "$2"
-        done
+        _sendAllWindowsThere "$@"
         dkcmd ws "$2"
     ;;
 esac

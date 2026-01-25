@@ -1,0 +1,14 @@
+#!/bin/bash
+
+scrot_path="$HOME/Documents/Pictures/screens"
+capture="$scrot_path/lock.png"
+
+cd "$scrot_path" || exit 1
+
+bspc monitor --focus "$MONITOR1" 2>/dev/null \
+|| i3-msg --monitor "$MONITOR1" 2>/dev/null \
+|| dkcmd mon "$MONITOR1" 2>/dev/null
+sleep 0.3
+scrot -o "$capture"
+i3lock -i "$capture"
+

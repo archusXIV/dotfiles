@@ -1,4 +1,4 @@
 #!/bin/bash
 
-notify-send "Main pulseaudio volume "$(pactl get-sink-volume 1 | awk '{if(NR!=2) {print $5}}')""
+notify-send "Main pulseaudio volume $(pactl get-sink-volume 1 | awk '{if(NR!=2) {print $5}}')"
 exit

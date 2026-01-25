@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-pacman -Qq | \
-  fzf \
-  --border rounded --border-label='| Installed Packages |' --border-label-pos='-89:top' \
-  --preview 'pacman -Qil {}' --preview-window='right:60%' --layout=reverse \
-  --bind 'enter:execute(pacman -Qil {} | less)' --cycle
+pacman -Qq \
+    | fzf \
+    --preview 'pacman -Qil {}' \
+    --layout=reverse \
+    --bind 'enter:execute(pacman -Qil {} | less)'

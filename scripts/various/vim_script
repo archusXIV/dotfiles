@@ -4,43 +4,64 @@
 
 cd "$SCRIPTDIR" || exit 1
 
-PS3="Enter a script number to Chmod, Edit, Remove, or Rename: "
+editor=${VISUAL:-vim}
+
+clear
+
+PS3=" Enter a script number to Chmod, Edit, Remove, or Rename: "
 
 [[ -n $(find . -maxdepth 1 -perm 644) ]] && {
-    printf '%s\n' "THESE FILES ARE NOT EXECUTABLE:"
+    perl -E 'say "-" x 46'
+    printf '%s\n' "THESE FILES ARE NOT EXECUTABLE: "
     find . -maxdepth 1 -perm 644 | sed 's/.\///'
+    perl -E 'say "-" x 46'
     echo ""
 }
 
 # set the scripts list.
-select file in $(find "$SCRIPTDIR" -maxdepth 1 -type f | sort -d | sed 's,.*/,,'); do
+select file in $(find . -maxdepth 1 -type f | sort | sed 's,.*/,,'); do
     echo ""
     read -rp '[C]hmod, [E]dit, [R]emove, [r]ename the chosen script or QUIT [q]: ' action
     case "$action" in
-        C|c)    chmod u+x "$file"
-                printf '%s\n' "$file is now executable."
-
+        C|c)
+            chmod u+x "$file"
+            printf '%s\n' "$file is now executable."
+            sleep 2
         ;;
-        E|e)    $VISUAL "$file"
+        E|e)
+            "$editor" "$file"
+            printf '%s\n' "$file saved"
+            sleep 2
         ;;
-        R  )    printf '%s\n' "remove $file? [y/N]:"
-                read -rsn 1 del
-                case "$del" in
-                    y|yes|Y) rm "$file" && printf '%s\n' "$file removed"
-                    ;;
-                    n|no|N) printf '%s\n' "Deletion aborted"
-                    ;;
-                    *) printf '%s\n' "Unknown option...deletion aborted" && exit 1
-                    ;;
-                esac
+        R  )
+            printf '%s\n' "remove $file? [y/N]:"
+            read -rsn 1 del
+            case "$del" in
+                y|yes|Y)
+                    rm "$file" && printf '%s\n' "$file removed"
+                    sleep 2
+                ;;
+                n|no|N)
+                    printf '%s\n' "Deletion aborted" && sleep 2
+                ;;
+                *)
+                    printf '%s\n' "Unknown option...deletion aborted" \
+                    && sleep 2 && exit 1
+                ;;
+            esac
         ;;
-        r  )    printf '%s\n' "rename $file:"
-                read -r name
-                mv "$file" "$name"
-                printf '%s\n' "$file renamed to: $name"
+        r  )
+            printf '%s\n' "rename $file:"
+            read -r name
+            mv "$file" "$name"
+            printf '%s\n' "$file renamed to: $name"
+            sleep 2
         ;;
-        q)  exit 0
+        q)
+            exit 0
         ;;
     esac
+
     break
+
 done

@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# Simple script to edit our list of Xresources themes.
+# And we can also apply the selected theme.
+
+themedir="$XDG_CONFIG_HOME/xfiles/themes"
+xres_file="$HOME/.Xresources"
+EDITOR="${EDITOR:-lite-xl}"
+
+# colors
+nocolor=$'\e[0m';
+red=$'\e[0;31m';
+green=$'\e[0;32m';
+
+[[ ! -e $xres_file ]] && echo "$xres_file, no such file." && exit 1
+cd "$themedir" || exit 1
+
+_apply_theme() {
+    sed -i --follow-symlinks \
+    "/\#include \"\.config\/xfiles\/themes\//c\\#include \"\.config\/xfiles\/themes\/$theme\"" "$xres_file"
+
+    sleep 1s
+
+    xrdb -load "${xres_file}" \
+    && Terminal_theme_changer \
+    && restart_wm \
+    && xre2rasi \
+    && notify-send 'theme changed'
+}
+
+echo " ${green}The actual theme is "$(grep themes $xres_file | sed 's,.*/,,;s/"//')" ${nocolor}"
+echo ""
+PS3='Select a theme number: '
+
+select theme in $(find "${themedir}" -type f | sort -d | sed 's,.*/,,'); do
+    read -rp '[E]dit, [R]emove, [r]ename or [A]pply the chosen theme: ' action
+    case "$action" in
+        E|e)    $EDITOR "$theme" &
+                exit
+        ;;
+        R  )    echo " ${red}remove $theme? ${nocolor}[y/N]:"
+                read -r del
+                case "$del" in
+                    y|yes|Y) rm "$theme" && echo " ${red}$theme removed${nocolor}"
+                    ;;
+                    n|no|N) echo " ${green}Deletion aborted${nocolor}"
+                    ;;
+                    *) echo " ${red}Unknown option...deletion aborted" && break
+                    ;;
+                esac
+        ;;
+        r  )    echo " ${green}rename $theme:${nocolor}"
+                read -r name
+                mv "$theme" "$name"
+                echo " ${green}$theme renamed to: $name${nocolor}"
+        ;;
+        A|a)    _apply_theme
+        ;;
+    esac
+done
+

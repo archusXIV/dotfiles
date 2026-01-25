@@ -71,19 +71,10 @@ extra_packages=${extra_packages:-no}
 term=${term:-alacritty}
 xserver=${xserver:-xlibre}
 
-if [[ $extra_packages == "yes" ]]; then
+[[ $extra_packages == "yes" ]] && {
     echo -e " ${r}Do not use braces like in i3{lock,status}!!!${c}\n"
     read -rp " ${g}Extra packages to install: ${c}" extra_packages
-else
-    extra_packages+=("htop")
-fi
-
-for pkg in "${extra_packages[@]}"; do
-    pacman -Ss "${pkg}" >/dev/null || {
-        echo "${r}${pkg} not found...exiting.${c}"
-        exit 1
-    }
-done
+}
 
 echo ""
 read -rp " ${g}Do you want to add a user now? [Y/n]: ${c}" create_user
@@ -98,7 +89,7 @@ case "${create_user}" in
         echo " ${g}Give ${user_name} sudo privileges.${c}"
         read -r -t 3
         command -v "${editor}" >/dev/null || {
-            echo "${r}Installing ${editor}..."
+            echo " ${g}Installing ${editor}...${c}"
             pacman -Sy "${editor}" --noconfirm
         }
         EDITOR="${editor}" visudo

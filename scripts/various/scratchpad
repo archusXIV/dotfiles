@@ -4,8 +4,16 @@
 # This script hides and showes focused windows whithin you favorite
 # window manager or DE by using the xdo package to proceed.
 # We can also use rofi to select and show back hidden windows
+# If you do not use g810-led, uncomment xset commands in function _Indicator.
 
 DEPS=( "polybar" "rofi" "wmctrl" "xdo" "xprop" "xset" )
+
+for pkg in "${DEPS[@]}"; do
+    [[ -z $(command -v "$pkg") ]] && {
+        notify-send -t 0 -u critical "$pkg is not installed...exiting"
+        exit 127
+    }
+done
 
 # Place your polybar module in WM_NAME-bar-3
 BARPID=$(pgrep --full "$(wmctrl -m | awk '/Name/{print $2}')"-bar-3)
@@ -18,18 +26,20 @@ fixed_logo_color=$(awk '/^var color3/{print $NF}' "$profiles_dir"/"$profile_udev
 
 _Indicator() {
     case "$1" in
-        off)    # xset -led 3
-                [[ $profile_udev = profile_default ]] && \
-                g810_switch_profile default && exit 0
-                g815-led -k logo "$fixed_logo_color"
-                polybar-msg -p "$BARPID" \
-                action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
-                notify-send 'nothing else in scratchpad'
+        off)
+            # xset -led 3
+            [[ $profile_udev == "profile_default" ]] && \
+            g810_switch_profile default && exit 0
+            sudo g815-led -k logo "$fixed_logo_color"
+            polybar-msg -p "$BARPID" \
+            action "#scratchpad-ipc.hook.0" >/dev/null 2>&1
+            notify-send 'nothing else in scratchpad'
         ;;
-        on )    # xset led 3
-                g815-led -fx breathing logo fb4934 5
-                polybar-msg -p "$BARPID" \
-                action "#scratchpad-ipc.hook.1" >/dev/null 2>&1
+        on )
+            # xset led 3
+            sudo g815-led -fx breathing logo fb4934 5
+            polybar-msg -p "$BARPID" \
+            action "#scratchpad-ipc.hook.1" >/dev/null 2>&1
         ;;
     esac
 }
@@ -39,20 +49,16 @@ ID_LIST="$XDG_RUNTIME_DIR/scratchpad_hidden.list"
 ID_LIST_ALL="$XDG_RUNTIME_DIR/scratchpad_all.list"
 
 case "$1" in
-    --hide) for pkg in "${DEPS[@]}"; do
-            [[ -z $(command -v "$pkg") ]] && {
-                notify-send -t 0 -u critical "$pkg is not installed...exiting"
-                exit 127
-            }
-        done
+    --hide)
         # sending all existing windows ids/instances/classes in a file for debugging.
         wmctrl -lx | awk '{print $1" "$3}' > "$ID_LIST_ALL"
         # using lowercases will match ids in $ID_LIST_ALL
-        echo "$TARGET" | tr '[:upper:]' '[:lower:]' >> "$ID_LIST"
+        echo "${TARGET,,}" >> "$ID_LIST"
         xdo hide "$TARGET"
         _Indicator on
     ;;
-    --unhide) if [[ $(xprop -id "$(sed -n '1p' "$ID_LIST")" \
+    --unhide)
+        if [[ $(xprop -id "$(sed -n '1p' "$ID_LIST")" \
             | awk '/window state: / {print $3}') = Withdrawn ]]; then
             # show the first entry.
             xdo show "$(sed -n '1p' "$ID_LIST")"
@@ -67,16 +73,19 @@ case "$1" in
             _Indicator off
         fi
     ;;
-    --rofi) if (( $(grep "" -c "$ID_LIST") > 0 )); then
+    --rofi)
+        if (( $(grep "" -c "$ID_LIST") > 0 )); then
 
             HIDDEN=$(cat "$ID_LIST")
 
             # making a rofi menu.
-            ROFIMENU=$(for w in $HIDDEN; do
+            ROFIMENU=$(
+                for w in $HIDDEN; do
                     NAME=$(xprop -id "$w" WM_CLASS 2>/dev/null | sed -r 's/.+ "(.+)"$/\1/')
                     TITLE=$(xprop -id "$w" _NET_WM_NAME 2>/dev/null | sed -r 's/.+ "(.+)"$/\1/')
                     [[ "$NAME" = "WM_CLASS" ]] && echo "$w" || echo "$NAME  \"$TITLE\""
-                done | rofi -dmenu -no-custom -format i -p 'Unhide a window: ')
+                done | rofi -dmenu -no-custom -format i -p 'Unhide a window: '
+            )
 
             [[ -n "$ROFIMENU" ]] && {
 

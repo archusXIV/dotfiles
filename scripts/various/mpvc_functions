@@ -1026,3 +1026,4 @@ getVersion() {
     printf '%s\n' "MPVC Release 1.3 (c) Laurence Willetts MIT"
     exit
 }
+

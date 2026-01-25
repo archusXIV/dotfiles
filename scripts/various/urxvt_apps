@@ -21,7 +21,7 @@ case "$1" in
     -r) urxvtc -name newsboat -e newsboat ;;
     -s) urxvtc -name somabox -e somabox ;;
     -t) urxvtc -name top -e btop ;;
-    -u) : ;;
+    -u) urxvtc -name floaterm -e sudo fzf_systemctl -u running ;;
     -v) urxvtc -name vim_script -geometry 160x40 -e vim_script ;;
     -w) : ;;
     -x) urxvtc -name ripper -e Xtreamripper ;;
