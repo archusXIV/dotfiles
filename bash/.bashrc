@@ -34,7 +34,7 @@ shopt -s extglob dotglob
 shopt -s no_empty_cmd_completion
 shopt -s autocd cdable_vars cdspell
 shopt -s cmdhist histappend histreedit histverify
-export HISTCONTOL="ignoreboth:erasdups"
+HISTCONTOL="ignoreboth:erasdups"
 
 [[ -n $DISPLAY ]] && shopt -s checkwinsize
 
@@ -79,11 +79,12 @@ txtrst='\[\e[0m\]'    # Text Reset
 atC="${txtcyn}"
 dateC="${txtylw}"
 nameC="${bldblu}"
-hostC="${txtgrn}"
+hostC="${txtblu}"
 pathC="${txtgrn}"
 gitC="${txtpur}"
 pointerC="${txtred}"
 normalC="${txtcyn}"
+underC="${txtred}"
 
 # Red name for root
 if [[ ${UID} -eq "0" ]]; then
@@ -91,5 +92,5 @@ if [[ ${UID} -eq "0" ]]; then
 fi
 
 PS1="\n ${dateC} \t ${nameC}\u${atC}@${hostC}\h: ${pathC}\${PWD##*/}
-  ============================
+${underC}  ============================
 ${pointerC} ▶ ${txtrst}"

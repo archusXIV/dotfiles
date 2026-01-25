@@ -1,217 +1,310 @@
 ################ LITE-XL KEYBOARD SHORTCUTS ###############
-# core quit
-ctrl + q
+# core:quit
+ctrl+q
 
-# core find-{file,command}
-ctrl + {_,shift + }p
+# core:find-command
+ctrl + shift + p
 
-# core open-file
+# core:find-file
+ctrl + p
+
+# core:open-file
 ctrl + o
 
-# core new-doc
+# core:new-doc
 ctrl + n
 
-# core change-project-folder
+# core:change-project-folder
 ctrl + shift + c
 
-# core open-project-folder
+# core:open-project-folder
 ctrl + shift + o
 
-# core restart
+# core:restart
 alt + r
 
-# treeview toggle
-f9
-
-# root split-{left,right,down,up}
-ctrl + shift + {h,l,j,k}
-
-# root close
-ctrl + w
-
-# root move-tab-{left,right}
-ctrl + {pageup,pagedown}
-
-# root switch-to-{left,right,up,down}
-alt + {j,l,i,k}
-
-# root switch-to-{next-tab,previous-tab}
-ctrl + {_,shift + }tab
-
-# root switch-to-tab-{1,2,3,4,5,6,7,8,9}
-alt + {1,2,3,4,5,6,7,8,9}
-
-# find-replace find
-ctrl + f
-
-# find-replace replace
-ctrl + r
-
-# find-replace repeat-find
-f3
-
-# find-replace previous-find 
-shift + f3
-
-# find-replace toggle-sensitivity
-ctrl + i
-
-# find-replace toggle-regex  
-ctrl + shift + i
-
-# doc align-carets   
+# doc:align-carets
 ctrl + shift + space
 
-# doc left-align-selections  
-ctrl + shift + l
+# doc:create-cursor-previous-line
+ctrl + shift + up
 
-# doc right-align-selections
-ctrl + shift + r
+# doc:create-cursor-next-line
+ctrl + shift + down
 
-# doc go-to-line
-ctrl + g
-
-# doc {save,save-as}
-ctrl + {_,shift + }s
-
-# doc {undo,redo}
-ctrl + {z,y}
-
-# doc cut
-ctrl + x
-
-# doc copy
+# doc:copy
 ctrl + c
 
-# doc paste
-ctrl + v
+# doc:cut
+ctrl + x
 
-# doc unindent
-shift + tab
-
-# doc backspace
+# doc:backspace
 backspace
 
-# doc delete-to-previous-word-start
-ctrl + backspace
-
-# doc delete
+# doc:delete
 delete
 
-# doc delete-to-next-word-end
-ctrl + delete
-
-# doc newline-below
-ctrl + return
-
-# doc newline-above
-ctrl + shift + return
-
-# doc join-lines
-ctrl + j
-
-# doc select-all
-ctrl + a
-
-# doc select-lines
-ctrl + l
-
-# doc toggle-line-comments
-ctrl + escape
-
-# doc duplicate-lines
-ctrl + shift + d
-
-# doc delete-lines
+# doc:delete-lines
 ctrl + shift + k
 
-# doc move-lines-{up,down}
-ctrl + {up,down}
+# doc:delete-to-next-word-end
+ctrl + delete
 
-# doc move-to-previous-word-start
-ctrl + left
+# doc:delete-to-previous-word-start
+ctrl + backspace
 
-# doc move-to-next-word-end
-ctrl + right
+# doc:duplicate-lines
+ctrl + shift + d
 
-# doc move-to-previous-block-start
-ctrl + braketleft
+# doc:go-to-line
+ctrl + g
 
-# doc move-to-next-block-end
-ctrl + braketright
+# doc:join-lines
+ctrl + j
 
-# doc move-to-start-of-indentation
+# doc:left-align-selections
+ctrl + shift + l
+
+# doc:move-lines-down
+ctrl + j
+
+# doc:move-lines-up
+ctrl + k
+
+# doc:move-to-previous-word-start
+ctrl + h
+
+# doc:move-to-next-word-end
+ctrl + l
+
+# doc:move-to-previous-block-start
+ctrl + ^
+
+# doc:move-to-next-block-end
+ctrl + $
+
+# doc:move-to-start-of-indentation
 home
 
-# doc move-to-end-of-line
+# doc:move-to-end-of-line
 end
 
-# doc move-to-{start,end}-of-doc
-ctrl + {home,end}
+# doc:move-to-start-of-doc
+ctrl + home
 
-# doc move-to-{previous,next}-page
-pageup,pagedown
+# doc:move-to-end-of-doc
+ctrl + end
 
-# doc select-to-{previous,next}-char
-shift + {left,righ}
+# doc:move-to-previous-page
+pageup
 
-# doc select-to-{previous,next}-line
-shift + {up,down}
+# doc:move-to-next-page
+pagedown
 
-# doc select-to-previous-word-start
-ctrl + shift + left
+# doc:move-to-previous-char dialog:previous-entry
+left
 
-# doc select-to-next-word-end
-ctrl + shift + right
+# doc:move-to-next-char dialog:next-entry
+right
 
-# doc select-to-previous-block-start
-ctrl + shift + braketleft
+# doc:newline-above
+ctrl + shift + return
 
-# doc select-to-next-block-end
-ctrl + shift + braketright
+# doc:newline-below
+ctrl + return
 
-# doc select-to-start-of-indentation
+# doc:paste
+ctrl + v
+
+# doc:redo
+ctrl + y
+
+# doc:right-align-selections
+ctrl + shift + r
+
+# doc:save
+ctrl + s
+
+# doc:save-as
+ctrl + shift + s
+
+# doc:select-all
+ctrl + a
+
+# doc:select-lines
+ctrl + l
+
+# doc:select-to-cursor
+shift + 1lclick
+
+# doc:select-to-previous-char
+shift + left
+
+# doc:select-to-next-char
+shift + right
+
+# doc:select-to-previous-line
+shift + up
+
+# doc:select-to-next-line
+shift + down
+
+# doc:select-to-previous-word-start
+alt + shift + left
+
+# doc:select-to-next-word-end
+alt + shift + right
+
+# doc:select-to-previous-block-start
+ctrl + shift + ^
+
+# doc:select-to-next-block-end
+ctrl + shift + $
+
+# doc:select-to-start-of-indentation
 shift + home
 
-# doc select-to-end-of-line
+# doc:select-to-end-of-line
 shift + end
 
-# doc select-to-{start,end}-of-doc
-ctrl + shift + {home,end}
+# doc:select-to-end-of-doc
+ctrl + shift + end
 
-# doc select-to-{previous,next}-page
-shift + {pageup,pagedown}
+# doc:select-to-previous-page
+shift + pageup
 
-# doc create-cursor-{previous,next}-line
-ctrl + shift + {up,down}
+# doc:select-to-next-page
+shift + pagedown
 
-# doc zoom in/reset zoom
-ctrl + {equal,@}
+# doc:select-to-start-of-doc
+ctrl + shift + home
 
-# exterm open-terminal
-f7
+# doc:set-cursor
+1lclick
 
-# minimap toggle-visibility
-shift + delete
+# doc:set-cursor-line
+3lclick
 
-# command escape doc select-none dialog select-no
-escape
+# doc:set-cursor-word
+2lclick
 
-# command complete doc indent
-tab
+# doc:split-cursor
+ctrl + 1lclick
 
-# command submit doc newline dialog select
-return
+# doc:toggle-line-comments
+ctrl + escape
 
-# command submit doc newline dialog select
-keypad enter
+# doc:toggle-block-comments
+ctrl + shift + /
 
-# find-replace select-next doc select-word
+# doc:undo
+ctrl + z
+
+# doc:unindent
+shift + tab
+
+# find-replace:find
+ctrl + f
+
+# find-replace:replace
+ctrl + r
+
+# find-replace:repeat-find
+f3
+
+# find-replace:previous-find
+shift + f3
+
+# find-replace:toggle-sensitivity
+ctrl + i
+
+# find-replace:toggle-regex
+ctrl + shift + i
+
+# find-replace:select-next
+ctrl + f3
+
+# find-replace:select-previous
+ctrl + shift + f3
+
+# find-replace:select-add-next doc:select-word
 ctrl + d
 
-# doc move-to-{previous,next}-char dialog {previous,next}-entry
-left,right
+# find-replace:select-add-all doc:select-word
+ctrl + shift + l
 
-# shell format the current document.
-alt + shift + s
+# root:split-left
+alt + shift + h
+
+# root:split-down
+alt + shift + j
+
+# root:split-up
+alt + shift + k
+
+# root:split-right
+alt + shift + l
+
+# root:close
+ctrl + w
+
+# root:move-tab-left
+ctrl + pageup
+
+# root:move-tab-right
+ctrl + pagedown
+
+# root:switch-to-left
+alt + h
+
+# root:switch-to-right
+alt + l
+
+# root:switch-to-up
+alt + k
+
+# root:switch-to-down
+alt + j
+
+# root:switch-to-next-tab
+ctrl + tab
+
+# root:switch-to-previous-tab
+ctrl + shift + tab
+
+# root:switch-to-tab-{1-9}
+alt + {1-9}
+
+# root:scroll
+wheel
+
+# treeview:toggle
+ctrl + b
+
+# command:complete doc:indent
+tab
+
+# command:escape doc:select-none dialog:select-no
+escape
+
+# command:select-previous doc:move-to-previous-line
+up
+
+# command:select-next doc:move-to-next-line
+down
+
+# command:submit doc:newline dialog:select
+return
+
+# command:submit doc:newline dialog:select
+keypad enter
+
+# minimap:toggle-visibility
+shift + delete
+
+# minimap:toggle-syntax-highlighting
+ctrl + shift + home
+
+# shfmt:format
+alt + shift + f
 

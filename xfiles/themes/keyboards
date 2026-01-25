@@ -1,0 +1,20 @@
+! Keyboards
+#define bg    #1E1F29
+#define fg    #7b81a6
+
+#define blk   #282a36
+#define blk2  #414458
+#define red   #f37f97
+#define red2  #ff4971
+#define grn   #5adecd
+#define grn2  #26CDB8
+#define ylw   #f2a272
+#define ylw2  #ff8037
+#define blu   #8897f4
+#define blu2  #556fff
+#define mag   #c574dd
+#define mag2  #b043d1
+#define cyn   #79e6f3
+#define cyn2  #3fdcee
+#define wht   #fdfdfd
+#define wht2  #bebec1

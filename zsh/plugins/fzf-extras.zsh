@@ -118,7 +118,7 @@ fstash() {
     done
 }
 
-# ftpane - switch pane (@george-b)
+# ftpane - switch pane in tmux (@george-b)
 ftpane() {
     local panes current_window current_pane target target_window target_pane
     panes=$(tmux list-panes -s -F '#I:#P - #{pane_current_path} #{pane_current_command}')

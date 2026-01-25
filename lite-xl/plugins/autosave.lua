@@ -71,4 +71,3 @@ function Doc:on_text_change(type)
   end
   return on_text_change(self, type)
 end
-

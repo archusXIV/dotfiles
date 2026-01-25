@@ -1,4 +1,4 @@
-#files: 985	version: 5.9
+#files: 990	version: 5.9
 
 _comps=(
 '-' '_precommand'
@@ -25,6 +25,7 @@ _comps=(
 'add-zsh-hook' '_add-zsh-hook'
 'admin' '_sccs'
 'afew' '_afew'
+'alacritty' '_alacritty'
 'ali' '_mh'
 'alias' '_alias'
 'amaya' '_webbrowser'
@@ -267,6 +268,7 @@ _comps=(
 'declare' '_typeset'
 '-default-' '_default'
 'delta' '_sccs'
+'deno' '_deno'
 'designate' '_openstack'
 'devtodo' '_devtodo'
 'df' '_df'
@@ -298,6 +300,7 @@ _comps=(
 'docpad' '_docpad'
 'domainname' '_yp'
 'dos2unix' '_dos2unix'
+'dotnet' '_dotnet'
 'drill' '_drill'
 'dropbox' '_dropbox'
 'dropdb' '_pgsql_utils'
@@ -750,7 +753,6 @@ _comps=(
 'let' '_math'
 'lftp' '_ncftp'
 'lha' '_lha'
-'libinput' '_libinput'
 'light' '_webbrowser'
 'lilypond' '_lilypond'
 'limit' '_limit'
@@ -981,6 +983,7 @@ _comps=(
 'opusdec' '_opustools'
 'opusenc' '_opustools'
 'opusinfo' '_opustools'
+'p11-kit' '_p11-kit'
 'p4' '_perforce'
 'p4d' '_perforce'
 'pacat' '_pulseaudio'
@@ -1443,6 +1446,7 @@ _comps=(
 'true' '_nothing'
 'truncate' '_truncate'
 'truss' '_truss'
+'trust' '_trust'
 'tryaffix' '_ispell'
 'tsc' '_tsc'
 'ts-node' '_ts-node'
@@ -1516,6 +1520,8 @@ _comps=(
 '-value-,CMAKE_GENERATOR,-default-' '_cmake'
 '-value-,CPPFLAGS,-default-' '_gcc'
 '-value-,CXXFLAGS,-default-' '_gcc'
+'-value-,DBUS_SESSION_BUS_ADDRESS,-default-' '_sd_bus_address'
+'-value-,DBUS_SYSTEM_BUS_ADDRESS,-default-' '_sd_bus_address'
 '-value-,-default-,-command-' '_zargs'
 '-value-,-default-,-default-' '_value'
 '-value-,DISPLAY,-default-' '_x_display'
@@ -1852,47 +1858,48 @@ bindkey '^[,' _history-complete-newer
 bindkey '^[/' _history-complete-older
 bindkey '^[~' _bash_complete-word
 
-autoload -Uz _afew _android _arch-chroot _archlinux-java _artisan \
-            _atach _avdmanager _bat _bitcoin-cli _bootctl \
-            _bower _bspc _bundle _busctl _bwrap \
-            _cap _cask _ccache _cf _checkupdates \
-            _choc _chromium _clang-check _clang-format _clang-tidy \
-            _cmake _cmus _code _coffee _conan \
-            _concourse _console _coredumpctl _cppcheck _curl \
-            _dad _dart _dget _dhcpcd _diana \
-            _direnv _dkms _docpad _drush _dunst \
-            _dunstctl _ecdsautil _emacs _emacsclient _emulator \
-            _envdir _exportfs _fab _fail2ban-client _ffind \
-            _fleetctl _flutter _fvm _fwupdmgr _gas \
-            _genfstab _ghc _gist _git-flow _git-pulls \
-            _git-revise _git-wtf _glances _golang _google \
-            _gpgconf _grpcurl _gtk-launch _hello _highlight \
-            _hledger _homestead _hostnamectl _httpie _ibus \
-            _img2sixel _include-what-you-use _insmod _inxi _jmeter \
-            _jmeter-plugins _jonas _journalctl _jrnl _kak \
-            _kernel-install _kitchen _knife _language_codes _libinput \
-            _lilypond _localectl _loginctl _lsmod _lunchy \
-            _machinectl _mc _middleman _mina _mix \
-            _mkcert _mkinitcpio _mpv _mssh _mussh \
-            _mvn _nano _nanoc _neofetch _networkctl \
-            _networkQuality _nftables _ninja _node _nvm \
-            _oomctl _openssl _openvpn3 _optirun _paccache \
-            _pacdiff _paclist _paclog-pkglist _pacman _pacscripts \
-            _pacsearch _pacsort _pacstrap _pactree _parallel \
-            _patool _periscope _pgsql_utils _phing _pip \
-            _pipenv _pixz _pkcon _play _pm2 \
-            _polybar _polybar_msg _port _protoc _pulseaudio \
-            _pygmentize _qmk _rails _ralio _rankmirrors \
-            _redis-cli _resolvectl _rfkill _rg _rkt \
-            _rmlint _rmmod _rslsync _rspec _rsvm \
-            _rubocop _run0 _sbt _scala _screencapture \
-            _scrub _sdd _sd_hosts_or_user_at_host _sdkmanager _sd_machines \
-            _sd_outputmodes _sd_unit_files _sensors _sensors-detect _setcap \
-            _setup.py _sfdx _shellcheck _showoff _srm \
-            _stack _subliminal _supervisorctl _svm _systemctl \
-            _systemd _systemd-analyze _systemd-delta _systemd-inhibit _systemd-nspawn \
-            _systemd-path _systemd-run _systemd-tmpfiles _teamocil _thor \
-            _timedatectl _tmuxinator _tox _tsc _ts-node \
+autoload -Uz _afew _alacritty _android _arch-chroot _archlinux-java \
+            _artisan _atach _avdmanager _bat _bitcoin-cli \
+            _bootctl _bower _bspc _bundle _busctl \
+            _bwrap _cap _cask _ccache _cf \
+            _checkupdates _choc _chromium _clang-check _clang-format \
+            _clang-tidy _cmake _cmus _code _coffee \
+            _conan _concourse _console _coredumpctl _cppcheck \
+            _curl _dad _dart _deno _dget \
+            _dhcpcd _diana _direnv _dkms _docpad \
+            _dotnet _drush _dunst _dunstctl _ecdsautil \
+            _emacs _emacsclient _emulator _envdir _exportfs \
+            _fab _fail2ban-client _ffind _fleetctl _flutter \
+            _fvm _fwupdmgr _gas _genfstab _ghc \
+            _gist _git-flow _git-pulls _git-revise _git-wtf \
+            _glances _golang _google _gpgconf _grpcurl \
+            _gtk-launch _hello _highlight _hledger _homestead \
+            _hostnamectl _httpie _ibus _img2sixel _include-what-you-use \
+            _insmod _inxi _jmeter _jmeter-plugins _jonas \
+            _journalctl _jrnl _kak _kernel-install _kitchen \
+            _knife _language_codes _lilypond _localectl _loginctl \
+            _lsmod _lunchy _machinectl _mc _middleman \
+            _mina _mix _mkcert _mkinitcpio _mpv \
+            _mssh _mussh _mvn _nano _nanoc \
+            _neofetch _networkctl _networkQuality _nftables _ninja \
+            _node _nvm _oomctl _openssl _openvpn3 \
+            _optirun _p11-kit _paccache _pacdiff _paclist \
+            _paclog-pkglist _pacman _pacscripts _pacsearch _pacsort \
+            _pacstrap _pactree _parallel _patool _periscope \
+            _pgsql_utils _phing _pip _pipenv _pixz \
+            _pkcon _play _pm2 _polybar _polybar_msg \
+            _port _protoc _pulseaudio _pygmentize _qmk \
+            _rails _ralio _rankmirrors _redis-cli _resolvectl \
+            _rfkill _rg _rkt _rmlint _rmmod \
+            _rslsync _rspec _rsvm _rubocop _run0 \
+            _sbt _scala _screencapture _scrub _sd_bus_address \
+            _sdd _sd_hosts_or_user_at_host _sdkmanager _sd_machines _sd_outputmodes \
+            _sd_unit_files _sensors _sensors-detect _setcap _setup.py \
+            _sfdx _shellcheck _showoff _srm _stack \
+            _subliminal _supervisorctl _svm _systemctl _systemd \
+            _systemd-analyze _systemd-delta _systemd-inhibit _systemd-nspawn _systemd-path \
+            _systemd-run _systemd-tmpfiles _teamocil _thor _timedatectl \
+            _tmuxinator _tox _trust _tsc _ts-node \
             _udevadm _udisks2 _udisksctl _ufw _updpkgsums \
             _varlinkctl _virtualbox _vnstat _wemux _wg-quick \
             _xsel _yarn _yay _yt-dlp _zathura \

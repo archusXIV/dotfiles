@@ -1,0 +1,21 @@
+! zorange
+#define fg    #7F7F7F
+#define bg    #1E1F29
+#define curs  #dddddd
+
+#define blk   #191919
+#define blk2  #404040
+#define red   #f84200
+#define red2  #f84200
+#define grn   #f87400
+#define grn2  #f88900
+#define ylw   #f89b29
+#define ylw2  #f89b4d
+#define blu   #f89b3e
+#define blu2  #2b4f98
+#define mag   #f0a211
+#define mag2  #826ab1
+#define cyn   #f0bb11
+#define cyn2  #a1cdcd
+#define wht   #d5c353
+#define wht2  #dddddd

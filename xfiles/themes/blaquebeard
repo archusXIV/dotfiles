@@ -1,0 +1,21 @@
+! blaquebeard
+#define fg    #C2C2B0
+#define bg    #1E1F29
+#define curs  #C2C2B0
+
+#define blk   #222222
+#define blk2  #404040
+#define red   #924650
+#define red2  #924650
+#define grn   #666666
+#define grn2  #666666
+#define ylw   #BA9864
+#define ylw2  #BA9864
+#define blu   #888888
+#define blu2  #888888
+#define mag   #4F8396
+#define mag2  #4F8396
+#define cyn   #777777
+#define cyn2  #777777
+#define wht   #C2C2B0
+#define wht2  #C2C2B0

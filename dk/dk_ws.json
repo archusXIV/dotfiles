@@ -1,0 +1,94 @@
+{
+  "workspaces": [
+    {
+      "name": "1:G",
+      "number": 1,
+      "focused": false,
+      "active": false,
+      "monitor": "DisplayPort-0",
+      "layout": "grid",
+      "title": "",
+      "id": ""
+    },
+    {
+      "name": "2:R",
+      "number": 2,
+      "focused": false,
+      "active": false,
+      "monitor": "DisplayPort-0",
+      "layout": "rtile",
+      "title": "",
+      "id": ""
+    },
+    {
+      "name": "3:R",
+      "number": 3,
+      "focused": false,
+      "active": false,
+      "monitor": "DisplayPort-0",
+      "layout": "rtile",
+      "title": "",
+      "id": ""
+    },
+    {
+      "name": "4:W",
+      "number": 4,
+      "focused": true,
+      "active": false,
+      "monitor": "DisplayPort-1",
+      "layout": "tstack",
+      "title": "",
+      "id": ""
+    },
+    {
+      "name": "5:R",
+      "number": 5,
+      "focused": false,
+      "active": false,
+      "monitor": "DisplayPort-1",
+      "layout": "rtile",
+      "title": "",
+      "id": ""
+    },
+    {
+      "name": "6:R",
+      "number": 6,
+      "focused": false,
+      "active": false,
+      "monitor": "DisplayPort-1",
+      "layout": "rtile",
+      "title": "",
+      "id": ""
+    },
+    {
+      "name": "7:T",
+      "number": 7,
+      "focused": false,
+      "active": false,
+      "monitor": "DisplayPort-2",
+      "layout": "tile",
+      "title": "",
+      "id": ""
+    },
+    {
+      "name": "8:R",
+      "number": 8,
+      "focused": false,
+      "active": false,
+      "monitor": "DisplayPort-2",
+      "layout": "rtile",
+      "title": "",
+      "id": ""
+    },
+    {
+      "name": "9:R",
+      "number": 9,
+      "focused": false,
+      "active": false,
+      "monitor": "DisplayPort-2",
+      "layout": "rtile",
+      "title": "",
+      "id": ""
+    }
+  ]
+}

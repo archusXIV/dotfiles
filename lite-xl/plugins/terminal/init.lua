@@ -362,7 +362,7 @@ function TerminalView:draw()
           end
           foreground = contrast_foreground[line[i]]
         end
-        
+
         local font = (((text_style >> 3) & 0x1) ~= 0) and self.options.bold_font or self.options.font
         local text = line[i+1]
         local length = text:ulen()
@@ -895,5 +895,4 @@ end
 return {
   class = TerminalView
 }
-
 

@@ -1,0 +1,21 @@
+! orange
+#define fg    #FFFFFF
+#define bg    #1E1F29
+#define curs  #FFFFFF
+
+#define blk   #2E0904
+#define blk2  #757575
+#define red   #A66550
+#define red2  #A66550
+#define grn   #D46950
+#define grn2  #D46950
+#define ylw   #B7876C
+#define ylw2  #B7876C
+#define blu   #BF616A
+#define blu2  #BF616A
+#define mag   #B77D83
+#define mag2  #B77D83
+#define cyn   #E1A792
+#define cyn2  #E1A792
+#define wht   #EFD2C3
+#define wht2  #EFD2C3

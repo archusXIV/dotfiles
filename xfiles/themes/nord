@@ -1,0 +1,21 @@
+! nord
+#define fg    #d8dee9
+#define bg    #2e3440
+#define curs  #e5e9f0
+
+#define blk   #2e3440
+#define blk2  #4c566a
+#define red   #bf616a
+#define red2  #bf616a
+#define grn   #a3be8c
+#define grn2  #a3be8c
+#define ylw   #EBCB8B
+#define ylw2  #EBCB8B
+#define blu   #5E81AC
+#define blu2  #81A1C1
+#define mag   #B48EAD
+#define mag2  #B48EAD
+#define cyn   #81A1C1
+#define cyn2  #81A1C1
+#define wht   #e5e9f0
+#define wht2  #eceff4

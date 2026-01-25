@@ -1,6 +1,6 @@
 ! codeschool
 #define fg    #9EA7A6
-#define bg    #1E1F29
+#define bg    #232c31
 #define curs  #9EA7A6
 
 #define blk   #232C31
@@ -19,5 +19,3 @@
 #define cyn2  #B02F30
 #define wht   #9EA7A6
 #define wht2  #B5D8F6
-
-

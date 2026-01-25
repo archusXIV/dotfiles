@@ -1,6 +1,6 @@
 ! insignificato
 #define fg    #99AC9E
-#define bg    #1E1F29
+#define bg    #1D2021
 #define curs  #D0D0D0
 
 #define blk   #3D3E3D

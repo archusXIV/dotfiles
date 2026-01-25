@@ -2,7 +2,7 @@
 lite-xl version 2.1.8-2
 put user settings here
 this module will be loaded after everything else when the application starts
-it will be automatically reloaded when saved
+it will be automatically reloaded when saved and by pressing alt+r
 --]]
 
 local core = require "core"
@@ -42,42 +42,40 @@ style.lint = {
 }
 
 --------------------------------------- THEMES -------------------------------------------
----------------------------------------- dark --------------------------------------------
--- core.reload_module("colors.archlabs")
--- core.reload_module("colors.aurora")
--- core.reload_module("colors.blacksea")
--- core.reload_module("colors.betelgeuse")
--- core.reload_module("colors.embers-dark")
--- core.reload_module("colors.gruvbox_dark")
--- core.reload_module("colors.monochrome-dark")
--- core.reload_module("colors.predawn")
--- core.reload_module("colors.simplicity")
--- core.reload_module("colors.winter")
+local available_themes = {
+    -- dark
+    "archlabs", "aurora", "blacksea", "embers-dark", "gruvbox-dark",
+    "monochrome-dark", "melle-julie", "nord", "predawn", "simplicity", "winter",
+    -- lite
+    "github", "gruvbox-lite", "yousai-lite", "monochrome-lite",
+}
 
------------------------------------------ lite -------------------------------------------
--- core.reload_module("colors.github")
--- core.reload_module("colors.gruvbox_light")
-core.reload_module("colors.yousai-lite")
--- core.reload_module("colors.monochrome-lite")
+local function apply_theme(name)
+    core.reload_module("colors." .. name)
+end
+
+apply_theme("simplicity")
 
 ------------------------------------------ FONTS -----------------------------------------
 local loadFont = (renderer.font.load)
 local ttfPath = "/usr/share/fonts/TTF/"
 
--- Available fonts:
--- CaskaydiaCoveNerdFontMono, Hack, IBMPlexMono,
--- JetBrainsMono, JetBrainsMonoNerdFont, JetBrainsMonoNerdFont{Mono,Propo},
--- JetBrainsMonoNL, JetBrainsMonoNLNerdFont{Mono,Propo},
--- Montserrat{Alternates},
--- MesloLGLDZNerdFont{Mono,Propo}, MesloLGLNerdFont{Mono,Propo},
--- MesloLGMDZNerdFont{Mono,Propo}, MesloLGMNerdFont{Mono,Propo},
--- MesloLGSDZNerdFont{Mono,Propo}, MesloLGSNerdFont{Mono,Propo}
+--[[
+Available fonts:
+CaskaydiaCoveNerdFontMono, Hack, IBMPlexMono,
+JetBrainsMono, JetBrainsMonoNerdFont, JetBrainsMonoNerdFont{Mono,Propo},
+JetBrainsMonoNL, JetBrainsMonoNLNerdFont{Mono,Propo},
+LilexNerdFont{Mono,Propo},
+MesloLGLDZNerdFont{Mono,Propo}, MesloLGLNerdFont{Mono,Propo},
+MesloLGMDZNerdFont{Mono,Propo}, MesloLGMNerdFont{Mono,Propo},
+MesloLGSDZNerdFont{Mono,Propo}, MesloLGSNerdFont{Mono,Propo}
+--]]
 
 -------------------------------------- fonts names ---------------------------------------
 local guiFont  = "Hack"
-local codeFont = "MesloLGSDZNerdFontPropo"
-local funcFont = "IBMPlexMono"
-local keyFont  = "JetBrainsMonoNerdFontPropo"
+local codeFont = "LilexNerdFontMono"
+local funcFont = "LilexNerdFontMono"
+local keyFont  = "LilexNerdFontMono"
 
 ----------------------------------------- styles -----------------------------------------
 local Regular    = "-Regular.ttf"
@@ -87,8 +85,8 @@ local BoldItalic = "-BoldItalic.ttf"
 
 ----------------------------------------- sizes ------------------------------------------
 local guiFontSize    = 14
-local regularSize    = 18
-local italicSize     = 16
+local regularSize    = 17
+local italicSize     = regularSize
 local boldSize       = regularSize
 local boldItalicSize = boldSize
 
@@ -114,12 +112,9 @@ end
 
 -------------------------------------- Definitions ---------------------------------------
 -- com = comment, key = keyword, fun = function
-local com = loadFont(ttfPath .. codeFont .. Italic, italicSize)
+local com = loadFont(ttfPath .. guiFont .. Italic, italicSize)
 local key = loadFont(get_font_path(keyFont, "-SemiBold.ttf", Bold), boldSize)
-local fun = loadFont(get_font_path(funcFont, "-SemiBoldItalic.ttf", BoldItalic), boldItalicSize)
-
-style.font = loadFont(ttfPath .. guiFont .. Italic, guiFontSize * SCALE)
-style.code_font = loadFont(ttfPath .. codeFont .. Regular, regularSize * SCALE)
+local fun = loadFont(get_font_path(funcFont, "-Regular.ttf", BoldItalic), boldItalicSize)
 
 style.syntax_fonts = {
     ["comment"]  = com,
@@ -127,3 +122,5 @@ style.syntax_fonts = {
     ["function"] = fun,
 }
 
+style.font = loadFont(ttfPath .. guiFont .. Italic, guiFontSize * SCALE)
+style.code_font = loadFont(ttfPath .. codeFont .. Regular, regularSize * SCALE)

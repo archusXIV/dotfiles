@@ -15,7 +15,8 @@ rofistyle.cyan: cyn
 rofistyle.white: wht
 
 ! DMENU specials
+dmenustyle.DMENU_FN: Hack-11
 dmenustyle.DMENU_NB: bg
-dmenustyle.DMENU_NF: ylw
-dmenustyle.DMENU_SB: blk
-dmenustyle.DMENU_SF: fg
+dmenustyle.DMENU_NF: fg
+dmenustyle.DMENU_SB: fg
+dmenustyle.DMENU_SF: bg

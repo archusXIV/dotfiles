@@ -1,0 +1,21 @@
+! dawn
+#define fg    #9b9081
+#define bg    #1e1f29
+#define curs  #9b9081
+
+#define blk   #353535
+#define blk2  #5f5f5f
+#define red   #744b40
+#define red2  #785850
+#define grn   #6d6137
+#define grn2  #6f6749
+#define ylw   #765636
+#define ylw2  #776049
+#define blu   #61564b
+#define blu2  #696057
+#define mag   #6b4a49
+#define mag2  #6f5a59
+#define cyn   #435861
+#define cyn2  #525f66
+#define wht   #b3b3b3
+#define wht2  #cdcdcd

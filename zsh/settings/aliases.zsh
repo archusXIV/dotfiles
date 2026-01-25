@@ -58,6 +58,7 @@ alias \
         enabled='systemctl list-unit-files --state=enabled' \
         enabledu='systemctl --user list-unit-files --state=enabled' \
         failed='systemctl list-unit-files --state=failed' \
+        fsctl='sudo fzf_systemctl' \
         ksp='g810_switch_profile' \
         timers='systemctl list-timers --all' \
         grub='sudo grub-mkconfig -o /boot/grub/grub.cfg' \

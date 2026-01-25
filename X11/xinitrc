@@ -12,7 +12,7 @@ fi
 
 # These guys are environment variables.
 [ -f "$MODMAP" ] && xmodmap "$MODMAP"
-[ -f "$HOME/.Xresources" ] && xrdb -merge ~/.Xresources
+[ -f "$RESOURCES_FILE" ] && xrdb -load "$RESOURCES_FILE"
 
 # shadow.service will fail if this folder does not exist
 MAIL="/var/spool/mail"
@@ -29,11 +29,12 @@ sudo systemctl restart dnsmasq.service
 
 # user init script and settings.
 xfsettingsd &
+cleanup &
 # xset r rate 660 25
 xset s off -dpms
 urxvtd -q -o -f &
 numlockx on &
-#autostart &
+# autostart &
 
 # launch the session, commands below these lines will be ignored
 # Starting Xsession according on tty.

@@ -112,7 +112,7 @@ format = <label>
 label-foreground = ${colors.urgent}
 exec = ~/bin/updates-arch.sh
 interval = 3600
-click-left = pamac-manager --updates &
+click-left = pamac-manager --list &
 format-padding =1
 
 [module/arch-aur-ipc]

@@ -1,0 +1,21 @@
+! github
+#define fg    #1E1F29
+#define bg    #666666
+#define curs  #032F62
+
+#define blk   #181818
+#define blk2  #44475a
+#define red   #D73A49
+#define red2  #D73A49
+#define grn   #3C98A8
+#define grn2  #3C98A8
+#define ylw   #FFA500
+#define ylw2  #FFA500
+#define blu   #032F62
+#define blu2  #005CC5
+#define mag   #CB2F81
+#define mag2  #CB2F81
+#define cyn   #b7dce8
+#define cyn2  #b7dce8
+#define wht   #f2f2f2
+#define wht2  #f2f2f2

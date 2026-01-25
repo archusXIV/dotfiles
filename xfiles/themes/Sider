@@ -1,0 +1,21 @@
+! Sider
+#define fg    #95A7CC
+#define bg    #1E1F29
+#define curs  #CCCCCC
+
+#define blk   #1C1C1C
+#define blk2  #333333
+#define red   #B28284
+#define red2  #CC9597
+#define grn   #82B284
+#define grn2  #95CC97
+#define ylw   #B2B282
+#define ylw2  #CCCC95
+#define blu   #8292B2
+#define blu2  #95A7CC
+#define mag   #A082B2
+#define mag2  #B795CC
+#define cyn   #82B2A6
+#define cyn2  #95CCBE
+#define wht   #B2B2B2
+#define wht2  #CCCCCC

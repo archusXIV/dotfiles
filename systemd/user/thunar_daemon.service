@@ -1,0 +1,12 @@
+[Unit]
+Description=Thunar filemanager in daemon mode
+PartOf=Xsession.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=simple
+RemainAfterExit=no
+ExecStart=/usr/bin/thunar --daemon
+Restart=on-failure

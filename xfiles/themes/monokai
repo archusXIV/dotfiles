@@ -1,0 +1,21 @@
+! monokai
+#define fg    #f8f8f2
+#define bg    #1D2021
+#define curs  #F8F8F2
+
+#define blk   #272822
+#define blk2  #75715e
+#define red   #f92672
+#define red2  #f92672
+#define grn   #a6e22e
+#define grn2  #a6e22e
+#define ylw   #f4bf75
+#define ylw2  #f4bf75
+#define blu   #66d9ef
+#define blu2  #66d9ef
+#define mag   #ae81ff
+#define mag2  #ae81ff
+#define cyn   #a1efe4
+#define cyn2  #a1efe4
+#define wht   #f8f8f2
+#define wht2  #f9f8f5

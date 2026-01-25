@@ -19,6 +19,9 @@ setopt pushd_ignore_dups
 setopt nonomatch
 setopt extendedglob
 setopt completealiases
+setopt dot_glob
+setopt extended_glob
+setopt auto_menu menu_complete
 
 # history
 setopt hist_verify

@@ -1,0 +1,21 @@
+! pastel
+#define fg    #EBDDEB
+#define bg    #1E1F29
+#define curs  #afbfbf
+
+#define blk   #36416B
+#define blk2  #414B75
+#define red   #f0719b
+#define red2  #f02e6e
+#define grn   #5af7b0
+#define grn2  #2ce592
+#define ylw   #ffa56b
+#define ylw2  #ff8537
+#define blu   #57c7ff
+#define blu2  #1da0e2
+#define mag   #c792ea
+#define mag2  #a742ea
+#define cyn   #89ddff
+#define cyn2  #47bae8
+#define wht   #eeffff
+#define wht2  #dee6e7

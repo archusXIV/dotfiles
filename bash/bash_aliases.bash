@@ -58,6 +58,7 @@ alias \
         enabled='systemctl list-unit-files --state=enabled' \
         enabledu='systemctl --user list-unit-files --state=enabled' \
         failed='systemctl list-unit-files --state=failed' \
+        fsctl='sudo fzf_systemctl' \
         kdp='g810_delete_profile' \
         ksp='g810_switch_profile' \
         kcp='g810_create_profile' \
@@ -66,7 +67,7 @@ alias \
         kernel='sudo mkinitcpio -P' \
         lsa='ls -al --color=auto --group-directories-first' \
         mpminst='cd /home/archangel/.local/bin/mpv-playlists-manager && sudo ./install.sh' \
-        out='Xexit' \
+        out='session_exit' \
         sshon='sudo systemctl stop iptables.service && sudo ufw enable && sudo systemctl start sshd' \
         sshoff='sudo ufw disable && sudo systemctl start iptables.service && sudo systemctl stop sshd' \
         sx='startx'

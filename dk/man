@@ -385,7 +385,7 @@ COMMANDS
 
          • ou outer_unfocus (colour) normal window outer border colour.
 
-         set border w=5 ow=3 colour f='#6699cc' u='#444444' r='#ee5555' of='#222222' ou='#222222' or='#222222'
+         set border w=5 ow=3 colour f='#6699cc' #5E81AC u='#444444' r='#ee5555' of='#222222' ou='#222222' or='#222222'
 
        pad change the workspace padding.
 

@@ -1,10 +1,10 @@
--- yousai
+-- yousai-lite
 
 local style = require "core.style"
 local common = require "core.common"
 
 -- UI COLORS
-style.background         = { common.color "#f5e7de" }
+style.background         = { common.color "#dfd3c5" }
 style.background2        = { common.color "#d1c6bb" }
 style.background3        = { common.color "#d1c6bb" }
 style.text               = { common.color "#7e776f" }
@@ -37,4 +37,4 @@ style.syntax["function"] = { common.color "#bf8f60" }
 style.bracketmatch_color = { common.color "#af3a03" }   -- bracketmatch
 style.guide              = { common.color "#dfd3c5" }   -- indentguide
 style.guide_highlight    = { common.color "#bf9559" }   -- indentguide
-style.guide_width        = 1                                -- indentguide
+style.guide_width        = 1                              -- indentguide

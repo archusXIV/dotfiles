@@ -153,7 +153,7 @@ snippets.add {
 if [[ ${1:condition} ]]; then
     ${2:command1}
 else
-    ${3:command1}
+    ${3:command2}
 fi
 ]=]
 }

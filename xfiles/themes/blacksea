@@ -1,0 +1,21 @@
+! blacksea
+#define fg    #BFBFB9
+#define bg    #1E1F29
+#define curs  #7b81a6
+
+#define blk   #3D4058
+#define blk2  #4f5873
+#define red   #BF616A
+#define red2  #BF616A
+#define grn   #817C5C
+#define grn2  #817C5C
+#define ylw   #A06D4E
+#define ylw2  #A06D4E
+#define blu   #7672E8
+#define blu2  #544DD9
+#define mag   #8970BF
+#define mag2  #8454D1
+#define cyn   #82AEEF
+#define cyn2  #82AEEF
+#define wht   #f8f8f0
+#define wht2  #f8f8f0

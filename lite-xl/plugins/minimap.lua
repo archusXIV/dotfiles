@@ -32,7 +32,7 @@ config.plugins.minimap = common.merge({
   -- number of spaces needed to split a token
   spaces_to_split = 2,
   -- hide on small docs (can be true, false or min number of lines)
-  avoid_small_docs = false,
+  avoid_small_docs = true,
   -- how many spaces one tab is equivalent to
   tab_width = 4,
   draw_background = true,

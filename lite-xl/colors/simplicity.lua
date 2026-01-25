@@ -9,7 +9,7 @@ style.background3        = { common.color "#1D1E29" }
 style.text               = { common.color "#778899" }
 style.caret              = { common.color "#cccccc" }
 style.accent             = { common.color "#D7BD8A" }
-style.dim                = { common.color "#778899" }
+style.dim                = { common.color "#2c3440" }
 style.divider            = { common.color "#1e232b" }
 style.selection          = { common.color "#2c3440" }
 style.guide              = { common.color "#2c3440" }
@@ -24,9 +24,6 @@ style.nagbar_text        = { common.color "#cccccc" }
 style.nagbar_dim         = { common.color "rgba(0, 0, 0, 0.45)" }
 style.drag_overlay       = { common.color "#dfe2e733" }
 style.drag_overlay_tab   = { common.color "#e3b71d" }
-style.good               = { common.color "#79c8c5" }
-style.warn               = { common.color "#e3b71d" }
-style.error              = { common.color "#ff3c41" }
 style.modified           = { common.color "#3b7aba" }
 
 -- CODE COLORS

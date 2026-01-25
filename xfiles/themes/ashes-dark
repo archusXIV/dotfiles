@@ -1,5 +1,5 @@
 ! ashes-dark
-#define fg    #abb2bf
+#define fg    #747c84
 #define bg    #1E1F29
 #define curs  #c7ccd1
 

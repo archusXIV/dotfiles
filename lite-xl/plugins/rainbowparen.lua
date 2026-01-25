@@ -13,10 +13,10 @@ config.plugins.rainbowparen = common.merge({
 }, config.plugins.rainbowparen)
 
 style.syntax.paren_unbalanced = style.syntax.paren_unbalanced or { common.color "#cc241d" }
-style.syntax.paren1  =  style.syntax.paren1 or { common.color "#8f3f71"}
-style.syntax.paren2  =  style.syntax.paren2 or { common.color "#076678"}
-style.syntax.paren3  =  style.syntax.paren3 or { common.color "#b57614"}
-style.syntax.paren4  =  style.syntax.paren4 or { common.color "#79740e"}
+style.syntax.paren1  =  style.syntax.paren1 or { common.color "#bf616a"}
+style.syntax.paren2  =  style.syntax.paren2 or { common.color "#bf618a"}
+style.syntax.paren3  =  style.syntax.paren3 or { common.color "#bf629a"}
+style.syntax.paren4  =  style.syntax.paren4 or { common.color "#bf6300"}
 style.syntax.paren5  =  style.syntax.paren5 or { common.color "#427b58"}
 
 local tokenize = tokenizer.tokenize

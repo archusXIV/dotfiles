@@ -19,14 +19,14 @@ super + {_,shift +,ctrl + }Return
 # fzf_edit (bin,config)
 super + e ; {b,c}
 
-# ranger stuff
+# ranger stuff {ranger,sudoranger,ranger_tab}
 super + r ; {r,s,t}
 
 # URxvt applications (urxvt_apps script)
 super + u ; {a,b,c,d,etc..}
 
-# gui applications (vscode,lite-xl etc...)
-super + g ; {c,e,f,g,o,p,s,v,w}
+# gui applications (AI web page,vscode,lite-xl etc...)
+super + g ; {a,c,e,f,g,o,p,s,v,w}
 
 # opens sxhkdrc_<wm> in vim (s stands for main config)
 super + k ; {b,d,i,s}
@@ -34,8 +34,8 @@ super + k ; {b,d,i,s}
 # script to launch rofi-record, obs/ssr.
 super + shift + v ; {a,o,v,k,s}
 
-# toggle/restart polybar(s)
-ctrl + {_,shift + }{KP_End,KP_Down,KP_Next,KP_Left}
+# toggle/fullscreen/restart polybar(s)
+ctrl + {_,alt,shift} + {KP_End,KP_Down,KP_Next,KP_Left}
 
 # volume/mic
 ctrl + {_,shift + }{KP_Subtract,KP_Add}
@@ -45,6 +45,9 @@ ctrl + {_,shift + }{KP_Subtract,KP_Add}
 
 # set the volume by ten (10,20,30 etc...)
 alt + {1-9,0}
+
+# balance the volume left/right
+super + alt + {h,l,equal}
 
 # player control
 XF86Audio{Prev,Play,Next}

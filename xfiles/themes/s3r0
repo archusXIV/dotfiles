@@ -1,0 +1,21 @@
+! s3r0
+#define fg    #c0b18b
+#define bg    #1f1f1f
+#define curs  #c0b18b
+
+#define blk   #4a3637
+#define blk2  #4a3637
+#define red   #d17b49
+#define red2  #d17b49
+#define grn   #7b8748
+#define grn2  #7b8748
+#define ylw   #af865a
+#define ylw2  #af865a
+#define blu   #535c5c
+#define blu2  #535c5c
+#define mag   #775759
+#define mag2  #775759
+#define cyn   #6d715e
+#define cyn2  #6d715e
+#define wht   #c0b18b
+#define wht2  #c0b18b

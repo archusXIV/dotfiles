@@ -1,4 +1,4 @@
-! black & cyan
+! black is black
 #define fg    #7b81a6
 #define bg    #000000
 #define curs  #8be9fd

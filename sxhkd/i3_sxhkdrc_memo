@@ -34,8 +34,8 @@ super + k ; {b,d,i,s}
 # script to launch rofi-record, obs/ssr.
 super + shift + v ; {a,o,v,k,s}
 
-# toggle/restart polybar(s)
-ctrl + {_,shift + }{KP_End,KP_Down,KP_Next,KP_Left}
+# toggle/fullscreen/restart polybar(s)
+ctrl + {_,alt,shift} + {KP_End,KP_Down,KP_Next,KP_Left}
 
 # volume/mic
 ctrl + {_,shift + }{KP_Subtract,KP_Add}

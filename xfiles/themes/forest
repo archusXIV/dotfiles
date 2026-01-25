@@ -1,0 +1,21 @@
+! forest
+#define fg    #C4C7C5
+#define bg    #1E1F29
+#define curs  #afbfbf
+
+#define blk   #263640
+#define blk2  #4a697d
+#define red   #EC7875
+#define red2  #FB8784
+#define grn   #61C766
+#define grn2  #70D675
+#define ylw   #FDD835
+#define ylw2  #FFE744
+#define blu   #42A5F5
+#define blu2  #51B4FF
+#define mag   #BA68C8
+#define mag2  #C979D7
+#define cyn   #4DD0E1
+#define cyn2  #5CDFF0
+#define wht   #bfbaac
+#define wht2  #fdf6e3

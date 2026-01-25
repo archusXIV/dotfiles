@@ -1,0 +1,21 @@
+! google
+#define fg    #c5c8c6
+#define bg    #1d1f21
+#define curs  #198844
+
+#define blk   #1d1f21
+#define blk2  #969896
+#define red   #cc342b
+#define red2  #cc342b
+#define grn   #198844
+#define grn2  #198844
+#define ylw   #fba922
+#define ylw2  #fba922
+#define blu   #3971ed
+#define blu2  #3971ed
+#define mag   #a36ac7
+#define mag2  #a36ac7
+#define cyn   #3971ed
+#define cyn2  #3971ed
+#define wht   #c5c8c6
+#define wht2  #ffffff

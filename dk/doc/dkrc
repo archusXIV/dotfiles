@@ -18,7 +18,7 @@ fi
 px=$(xrandr | grep ' connected' | tail -n1 | grep -o '[0-9]\+x[0-9]\+' | cut -d'x' -f2)
 mm=$(xrandr | grep ' connected' | tail -n1 | grep -o '[0-9]\+mm' | tail -n1 | sed 's/mm//')
 dpi=$(( (px / mm) * 25 ))
-
+mon
 if [ $dpi -ge 140 ]; then
     border_width=5
     border_outer_width=3

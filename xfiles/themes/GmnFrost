@@ -1,0 +1,21 @@
+! GmnFrost
+#define fg    #9BBBC6
+#define bg    #1C1C23
+#define curs  #1C1C23
+
+#define blk   #323246
+#define blk2  #323246
+#define red   #5A7882
+#define red2  #5A7882
+#define grn   #8C8CA0
+#define grn2  #8C8CA0
+#define ylw   #1E828C
+#define ylw2  #1E828C
+#define blu   #3C788C
+#define blu2  #3C788C
+#define mag   #6EA0B4
+#define mag2  #6EA0B4
+#define cyn   #6E8CA0
+#define cyn2  #6E8CA0
+#define wht   #96BEC8
+#define wht2  #96BEC8

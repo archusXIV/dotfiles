@@ -1,21 +1,21 @@
 ! dracula
-#define fg    #7b81a6
+#define fg    #F8F8F2
 #define bg    #1E1F29
 #define curs  #8be9fd
 
-#define blk   #313442
-#define blk2  #434659
-#define red   #BF616A
-#define red2  #BF616A
-#define grn   #A3BE8C
-#define grn2  #A3BE8C
+#define blk   #191A21
+#define blk2  #44475A
+#define red   #FF5555
+#define red2  #FF6E6E
+#define grn   #50FA7B
+#define grn2  #69FF94
 #define ylw   #F1FA8C
-#define ylw2  #EBCB8B
-#define blu   #6272A4
-#define blu2  #6272A4
-#define mag   #BD93F9
-#define mag2  #FF79C6
+#define ylw2  #FFFFA5
+#define blu   #BD93F9
+#define blu2  #CAA9FA
+#define mag   #FF79C6
+#define mag2  #FF92DF
 #define cyn   #8BE9FD
-#define cyn2  #96B5B4
-#define wht   #F8F8F0
-#define wht2  #F8F8F2
+#define cyn2  #A4FFFF
+#define wht   #BFBFBF
+#define wht2  #E6E6E6

@@ -1,26 +1,18 @@
-# shellcheck disable=SC2148
+#
 # ~/.bash_profile
 #
 # shellcheck source=/dev/null
-[[ -f ~/.bashrc ]] && . ~/.bashrc
+[[ -e ~/.bashrc ]] && . ~/.bashrc
 
-# [[ -z $DISPLAY ]] && [[ $XDG_VTNR -eq 1 ]] && startx
 
 # Setting our path
 [[ -d "$HOME"/.local/bin ]] && PATH="$HOME/.local/bin:$PATH"
 [[ -d /usr/sbin ]] && PATH="$PATH:/usr/sbin"
 [[ -d /sbin ]] && PATH="$PATH:/sbin"
 
-if [ -n "$(pidof nvidia-persistenced)" ]; then
-    export MONITOR1="DP-0"
-    export MONITOR2="HDMI-0"
-    export MONITOR3="DVI-D-0"
-else
-    export MONITOR1="DisplayPort-2"
-    export MONITOR2="HDMI-A-0"
-    export MONITOR3="DVI-D-0"
-fi
-
+export MONITOR1="DisplayPort-0"
+export MONITOR2="DisplayPort-1"
+export MONITOR3="DisplayPort-2"
 
 # bash specifics
 export MANWIDTH="100"
@@ -76,6 +68,7 @@ export VISUAL="vim"
 export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR"/keyring/ssh
 export BSPWM_SOCKET="$XDG_RUNTIME_DIR"/bspwm_0_0-socket
 export DKRC="$XDG_CONFIG_HOME"/dk/dkrc
+#export DKRC="$XDG_CONFIG_HOME"/dk/dkrc.py
 export FONTCONFIG_PATH="/etc/fonts"
 export GTK_RC_FILES="$XDG_CONFIG_HOME"/gtk-1.0/gtkrc
 export GTK2_RC_FILES="$XDG_CONFIG_HOME"/gtk-2.0/gtkrc
@@ -90,7 +83,7 @@ export MYVIMRC="$XDG_CONFIG_HOME"/vim/vimrc
 export MPVSOCKET="/tmp/mpvsocket"
 export NANORC_FILE="$XDG_CONFIG_HOME"/nano/nanorc
 export NOTMUCH_CONFIG="$XDG_CONFIG_HOME"/notmuch/notmuchrc
-export QT_QPA_PLATFORMTHEME="qt5ct"
+export QT_QPA_PLATFORMTHEME="qt6ct"
 export RESOURCES_FILE="$HOME"/.Xresources
 export RXVT_SOCKET="$XDG_RUNTIME_DIR"/urxvtd-socket
 export SXHKD_FIFO="$XDG_RUNTIME_DIR"/sxhkd.fifo
@@ -99,3 +92,14 @@ export XAUTHORITY="$XDG_RUNTIME_DIR"/Xauthority
 export XCURSOR_PATH="${XCURSOR_PATH}:~/.local/share/icons"
 export XINITRC="$XDG_CONFIG_HOME"/X11/xinitrc
 export W3M_DIR="$XDG_CONFIG_HOME/w3m"
+# automatically run startx when logging in on tty1
+# if my shell is bash
+#[[ -z $DISPLAY ]] && [[ $XDG_VTNR -eq 1 ]] && startx
+#
+export FZF_CTRL_T_OPTS="
+    --walker-skip .git,node_modules,target
+    --preview 'bat -n --color=always {}'
+    --bind 'ctrl-p:change-preview-window(down|hidden)'
+    --no-height
+"
+

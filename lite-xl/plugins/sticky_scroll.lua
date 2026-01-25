@@ -288,7 +288,7 @@ function DocView:draw_overlay(...)
     y = math.min(y, rl_y)
     max_y = math.max(y, max_y)
     drawn = true
-    renderer.draw_rect(self.position.x, y, self.size.x, lh, style.background)
+    renderer.draw_rect(self.position.x, y, self.size.x, lh, style.line_number)
     self:draw_line_gutter(l, self.position.x, y, gpad and gw - gpad or gw)
     self:draw_line_text(l, x, y)
     if data.hovered_sticky_scroll_line == l then

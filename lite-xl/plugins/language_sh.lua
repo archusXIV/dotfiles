@@ -3,44 +3,43 @@ local syntax = require "core.syntax"
 
 syntax.add {
   name = "Shell script",
-  files = { "%.sh$", "%.bash$", "^%.bashrc$", "^%.bash_profile$", "^%.profile$" },
+  files = {
+    "%.sh$", "%.bash$",
+    PATHSEP .. "%.bashrc$", PATHSEP .. "%.bash_profile$", PATHSEP .. "%.profile$",
+    "%.zsh$", "%.fish$",
+    PATHSEP .. "APKBUILD$",
+  },
   headers = "^#!.*bin.*sh\n",
   comment = "#",
   patterns = {
     -- $# is a bash special variable and the '#' shouldn't be interpreted
     -- as a comment.
-    { pattern = "$[%a_@*#][%w_]*",                type = "keyword2" },
+    { pattern = "%$[%a_@*#][%w_]*",                type = "keyword2" },
     -- Comments
-    { pattern = "#.*\n",                          type = "comment"  },
+    { pattern = "#.*",                             type = "comment" },
     -- Strings
-    { pattern = { '"', '"', '\\' },               type = "string"   },
-    { pattern = { "'", "'", '\\' },               type = "string2"  },
-    { pattern = { '`', '`', '\\' },               type = "string3"  },
+    { pattern = { '"', '"', '\\' },                type = "string" },
+    { pattern = { "'", "'", '\\' },                type = "string2" },
+    { pattern = { '`', '`', '\\' },                type = "string3" },
     -- Ignore numbers that start with dots or slashes
-    { pattern = "%f[%w_%.%/]%d[%d%.]*%f[^%w_%.]", type = "number"   },
+    { pattern = "%f[%w_%.%/]%d[%d%.]*%f[^%w_%.]",  type = "number" },
     -- Operators
-    { pattern = "[!<>|&%[%]:=*]",                 type = "operator" },
+    { pattern = "[!<>|&%[%]:=*]",                  type = "operator" },
     -- Match parameters
-    { pattern = "%f[%S][%+%-][%w%-_:]+",          type = "function" },
-    { pattern = "%f[%S][%+%-][%w%-_]+%f[=]",      type = "function" },
+    { pattern = "%f[%S][%+%-][%w%-_:]+",           type = "function" },
+    { pattern = "%f[%S][%+%-][%w%-_]+%f[=]",       type = "function" },
     -- Prevent parameters with assignments from been matched as variables
-    {
-      pattern = "%s%-%a[%w_%-]*%s+()%d[%d%.]+",
-      type = { "function", "number" }
-    },
-    {
-      pattern = "%s%-%a[%w_%-]*%s+()%a[%a%-_:=]+",
-      type = { "function", "symbol" }
-    },
+    { pattern = "%s%-%a[%w_%-]*%s+()%d[%d%.]+",    type = { "function", "number" } },
+    { pattern = "%s%-%a[%w_%-]*%s+()%a[%a%-_:=]+", type = { "function", "symbol" } },
     -- Match variable assignments
     { pattern = "[_%a][%w_]+%f[%+=]",              type = "keyword2" },
     -- Match variable expansions
-    { pattern = "${.-}",                           type = "keyword2" },
-    { pattern = "$[%d$%a_@*][%w_]*",               type = "keyword2" },
+    { pattern = "%${.-}",                          type = "keyword2" },
+    { pattern = "%$[%d%$%a_@*][%w_]*",             type = "keyword2" },
+    -- Everything else
+    { pattern = "[%a_][%w_]*",                     type = "symbol" },
     -- Functions
     { pattern = "[%a_%-][%w_%-]*[%s]*%f[(]",       type = "function" },
-    -- Everything else
-    { pattern = "[%a_][%w_]*",                     type = "symbol"   },
   },
   symbols = {
     ["alias"]     = "normal",

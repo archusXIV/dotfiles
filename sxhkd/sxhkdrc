@@ -36,12 +36,12 @@ super + {_,shift +,ctrl +} Return
     {\
     xterm, \
     urxvtc -name bashterm -geometry 124x30 -e bash; center_floatwin, \
-    xterm -e bash \
+    alacritty --class floaterm --command bash \
     }
 
 # fzf_edit
 super + e ; {b,c}
-    urxvtc -name bashterm -e fzf_edit {"$SCRIPTDIR","$HOME"/.config}
+    urxvtc -name bashterm -e fzf_edit {"$SCRIPTDIR","$XDG_CONFIG_HOME"}
 
 # ranger stuff
 super + r ; {r,s,t}
@@ -56,17 +56,18 @@ super + u ; {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}
     urxvt_apps -{a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}
 
 # gui applications
-super + g ; {c,e,f,g,o,p,s,v,w}
+super + g ; {a,c,e,f,g,o,p,s,v,w}
     {\
+    launch_editor -a, \
     code, \
     $EDITOR, \
     $FILEMNGR, \
     geany, \
     launch_obs, \
-    cursor.AppImage, \
     pavucontrol, \
+    launch_vokoscreen, \
     $VIRTMNGR, \
-    $BROWSER --password-store=gnome %U \
+    $BROWSER --enable-unsafe-swiftshader --password-store=basic %U \
     }
 
 # opens sxhkdrc_<wm> in vim (s stands for main config)
@@ -77,10 +78,10 @@ super + k ; {b,d,i,s}
 super + shift + v ; {a,o,v,k,s}
     record_options -{a,o,v,k,s}
 
-# polycontrol
-# toggle/restart polybar(s)
-ctrl + {_,shift + }{KP_End,KP_Down,KP_Next,KP_Left}
-    polybar_control -{t,r}{1,2,3,a}
+# polybar control
+# toggle/fullscreen/restart polybar(s)
+ctrl + {_,alt +,shift +} {KP_End,KP_Down,KP_Next,KP_Left}
+    polybar_control -{t,f,r} {1,2,3,a}
 
 # controls the webcam rectangle position on the screen.
 #alt + shift + {Left,Down,Up,Right}
@@ -97,6 +98,13 @@ ctrl + {_,shift + }{KP_Subtract,KP_Add}
 alt + {KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,KP_Home,KP_Up,KP_Prior,KP_Insert}
     volume_control sink --set {10,20,30,40,50,60,70,80,90,100}
 
+super + alt + {h,l,equal}
+    {\
+    volume_control sink --balance 40 60, \
+    volume_control sink --balance 60 40, \
+    volume_control sink --balance 50 50 \
+    }
+
 # player control
 XF86Audio{Prev,Play,Next}
     mediacontrol --{prev,toggle,next}
@@ -108,9 +116,5 @@ alt + {_,ctrl + }F10
 # mpv_control script
 ctrl + XF86Audio{Lower,Raise}Volume
     mpv_control vol {-,+}5%
-
-# equalize volume {left/right,last position}
-super + alt + {equal,l}
-    volume_control sink --{equalize,last}
 
 # vim:ft=sxhkdrc

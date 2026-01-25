@@ -1,0 +1,21 @@
+! kanagawa
+#define fg    #dcd7ba
+#define bg    #1f1f28
+#define curs  #dcd7ba
+
+#define blk   #090618
+#define blk2  #727169
+#define red   #c34043
+#define red2  #e82424
+#define grn   #76946a
+#define grn2  #98bb6c
+#define ylw   #c0a36e
+#define ylw2  #e6c384
+#define blu   #7e9cd8
+#define blu2  #7fb4ca
+#define mag   #957fb8
+#define mag2  #938aa9
+#define cyn   #6a9589
+#define cyn2  #7aa89f
+#define wht   #c8c093
+#define wht2  #dcd7ba

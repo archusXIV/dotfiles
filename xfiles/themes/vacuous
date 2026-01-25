@@ -1,0 +1,21 @@
+! vacuous
+#define fg    #d2c5bc
+#define bg    #1e1f29
+#define curs  #d2c5bc
+
+#define blk   #202020
+#define blk2  #606060
+#define red   #b91e2e
+#define red2  #d14548
+#define grn   #81957c
+#define grn2  #a7b79a
+#define ylw   #f9bb80
+#define ylw2  #fae3a0
+#define blu   #356579
+#define blu2  #7491a1
+#define mag   #46324d
+#define mag2  #87314e
+#define cyn   #0b3452
+#define cyn2  #0f829d
+#define wht   #909090
+#define wht2  #fff0f0

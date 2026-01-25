@@ -1,0 +1,21 @@
+! wall
+#define fg    #01B7A0
+#define bg    #1E1F29
+#define curs  #778899
+
+#define blk   #1C2023
+#define blk2  #333A40
+#define red   #792A69
+#define red2  #792A69
+#define grn   #00917C
+#define grn2  #00917C
+#define ylw   #01BC9D
+#define ylw2  #01BC9D
+#define blu   #005382
+#define blu2  #005382
+#define mag   #B229BA
+#define mag2  #B229BA
+#define cyn   #019EC4
+#define cyn2  #019EC4
+#define wht   #E1E1E1
+#define wht2  #C0C5CE

@@ -1,0 +1,21 @@
+! port_royal
+#define fg    #dedede
+#define bg    #1E1F29
+#define curs  #DEDEDE
+
+#define blk   #38393A
+#define blk2  #525252
+#define red   #894747
+#define red2  #C26862
+#define grn   #C5A85E
+#define grn2  #DFBA6F
+#define ylw   #528F9E
+#define ylw2  #6BAEC1
+#define blu   #63757F
+#define blu2  #7397A1
+#define mag   #864049
+#define mag2  #A3535E
+#define cyn   #AA904D
+#define cyn2  #C9B06A
+#define wht   #DEDEDE
+#define wht2  #D1CBB1

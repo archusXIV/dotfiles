@@ -39,7 +39,7 @@ xterm*highlightSelection: true
 xterm*highlightTextColor: XtDefaultBackground
 
 ! Font settings
-xterm*faceName: Hack
+xterm*faceName: JetBrainsMono Nerd Font Mono
 xterm*faceSize: 12
 xterm*renderFont: true
 xterm*boldColors: false
@@ -68,9 +68,6 @@ xterm*ttyModes: erase ^?
 ! Key bindings.  Use C-S-{c,v} to copy/paste as in GNOME terminal.  The
 ! keys "Prior" and "Next" represent PgUp and PgDown respectively.
 xterm*selectToClipboard: true
-xterm*translations: #override \n\
-	Ctrl Shift <KeyPress>C: select-end(SELECT, CLIPBOARD) \n\
-	Ctrl Shift <KeyPress>V: insert-selection(SELECT, CLIPBOARD) \n\
-	Ctrl Shift <KeyPress>Next: smaller-vt-font() \n\
-	Ctrl Shift <KeyPress>Prior: larger-vt-font() \n\
-	Ctrl Shift <KeyPress>Home: set-vt-font(d)
+XTerm.VT100.translations: #override \
+    Ctrl Shift <Key>C: select-end(CLIPBOARD) \n\
+    Ctrl Shift <Key>V: insert-selection(CLIPBOARD)

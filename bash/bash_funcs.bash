@@ -3,13 +3,13 @@
 # shell helper functions
 ####### better ls and cd #########
 unalias ls >/dev/null 2>&1
-ls() { command ls -Ahl --color=auto -F "$@"; }
+ls() { command ls -CtAhl --color=auto -F --group-directories-first "$@"; }
 
 unalias cd >/dev/null 2>&1
-cd() { builtin cd "$@" && command ls -a --color=auto -F; }
-..() { builtin cd .. && command ls -a --color=auto -F; }
-...() { builtin cd ../.. && command ls -a --color=auto -F; }
-....() { builtin cd ../../.. && command ls -a --color=auto -F; }
+cd() { builtin cd "$@" && ls "$@"; }
+..() { builtin cd .. && ls "$@"; }
+...() { builtin cd ../.. && ls "$@"; }
+....() { builtin cd ../../.. && ls "$@"; }
 
 bins() {
     command cd ~/.local/bin/ || exit 1
@@ -51,7 +51,7 @@ confs() {
             --border rounded \
             --scroll-off=5 \
             --border-label="| ${PWD##*/} |" \
-            --border-label-pos='102:bottom' \
+            --border-label-pos='105:bottom' \
             --preview='(bat --color=always {})' \
             --preview-window="60%" \
             --bind "enter:become(vim {})" \
@@ -173,6 +173,22 @@ pss() {
     PS3=$'\n'"Enter a package number to install, Ctrl C to exit"$'\n\n'">> "
     select pkg in $(pacman -Ssq "$1"); do sudo pacman -S "$pkg"; break; done
 }
+
+cam() {
+    v4l2-ctl --set-fmt-video=width=320,height=180
+    #ffplay -f v4l2 -framerate 30 -i /dev/video0 >/dev/null 2>&1
+    cameraview.py -c none -d /dev/video0 &
+}
+
+webcam() {
+    local dev="${1:-/dev/video0}"
+    local w="${2:-640}"
+    local h="${3:-360}"
+    local fps="${4:-30}"
+    ffplay -f v4l2 -video_size "${w}x${h}" -framerate "$fps" -i "$dev" >/dev/null 2>&1
+}
+
+screengrab() { screencaster -b yes -p faster -v 90 -D 3 -o "$VID"/Xsessions/"$1".mkv; }
 
 # find all webm files that are in the current directory/sub-folders and extract the audio to mp3 format.
 webm_to_mp3() {

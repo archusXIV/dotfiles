@@ -1,6 +1,6 @@
 ! default
 #define fg    #D0D0D0
-#define bg    #1E1F29
+#define bg    #151515
 #define curs  #D0D0D0
 
 #define blk   #151515
@@ -19,5 +19,3 @@
 #define cyn2  #75B5AA
 #define wht   #D0D0D0
 #define wht2  #F5F5F5
-
-

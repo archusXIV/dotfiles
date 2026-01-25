@@ -1,0 +1,21 @@
+! spacebox
+#define fg    #738299
+#define bg    #1E1F29
+#define curs  #F4F4F2
+
+#define blk   #444444
+#define blk2  #444444
+#define red   #EF56FF
+#define red2  #EF56FF
+#define grn   #8E76FF
+#define grn2  #8E76FF
+#define ylw   #8069FF
+#define ylw2  #8069FF
+#define blu   #2B4FFF
+#define blu2  #2B4FFF
+#define mag   #2883FF
+#define mag2  #2883FF
+#define cyn   #28B9FF
+#define cyn2  #28B9FF
+#define wht   #C9CCE6
+#define wht2  #C9CCE6

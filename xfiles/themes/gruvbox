@@ -1,20 +1,20 @@
 ! gruvbox
 #define fg    #bdae93
-#define bg    #1E1F29
+#define bg    #1D2021
 
-#define blk   #252323
-#define blk2  #32302F
-#define red   #cc241d
-#define red2  #9d0006
-#define grn   #98971a
-#define grn2  #79740e
-#define ylw   #d79921
-#define ylw2  #b57614
+#define blk   #282828
+#define blk2  #928374
+#define red   #CC241D
+#define red2  #FB4934
+#define grn   #98971A
+#define grn2  #B9BB27
+#define ylw   #D79921
+#define ylw2  #FABD2F
 #define blu   #458588
-#define blu2  #076678
+#define blu2  #83A598
 #define mag   #b16286
-#define mag2  #8f3f71
+#define mag2  #D3869B
 #define cyn   #689d6a
-#define cyn2  #427b58
-#define wht   #ebdbb2
-#define wht2  #f9f5d7
+#define cyn2  #8EC87C
+#define wht   #A89984
+#define wht2  #EBDDB2

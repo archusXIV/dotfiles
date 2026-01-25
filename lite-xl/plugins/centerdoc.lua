@@ -23,7 +23,7 @@ function DocView:draw_line_gutter(line, x, y, width)
     lh = draw_line_gutter(self, line, x, y, width)
   else
     local real_gutter_width = self:get_font():get_width(#self.doc.lines)
-    local offset = self:get_gutter_width() - real_gutter_width * 2 - style.padding.x
+    local offset = self:get_gutter_width() - real_gutter_width * 1.75 - style.padding.x
     lh = draw_line_gutter(self, line, x + offset, y, real_gutter_width)
   end
   return lh
@@ -36,7 +36,7 @@ function DocView:get_gutter_width()
   else
     local real_gutter_width, gutter_padding = get_gutter_width(self)
     local width = real_gutter_width + self:get_font():get_width("n") * config.line_limit
-    return math.max((self.size.x - width) / 2, real_gutter_width), gutter_padding
+    return math.max((self.size.x - width) / 1.75, real_gutter_width), gutter_padding
   end
 end
 

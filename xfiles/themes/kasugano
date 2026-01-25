@@ -1,6 +1,6 @@
 ! kasugano
 #define fg    #89CFF0
-#define bg    #1E1F29
+#define bg    #1e1f29
 #define curs  #ffffff
 
 #define blk   #3d3d3d

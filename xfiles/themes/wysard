@@ -1,0 +1,21 @@
+! wysard
+#define fg    #ABC0C5
+#define bg    #1E1F29
+#define curs  #ABC0C5
+
+#define blk   #222222
+#define blk2  #444444
+#define red   #8B5C51
+#define red2  #8B5C51
+#define grn   #5C8676
+#define grn2  #5C8676
+#define ylw   #A29076
+#define ylw2  #A29076
+#define blu   #4F8396
+#define blu2  #4F8396
+#define mag   #776E89
+#define mag2  #776E89
+#define cyn   #5A7588
+#define cyn2  #5A7588
+#define wht   #ABC0C5
+#define wht2  #ABC0C5

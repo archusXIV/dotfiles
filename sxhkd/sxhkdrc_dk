@@ -4,7 +4,7 @@
 # Reload dk config, restart dk, quit dk.
 ctrl + alt + {c,r,q}
     { \
-    "$HOME"/.config/dk/dkrc; notify-send 'rules reloaded', \
+    "$DKRC" && notify-send 'dk config reloaded', \
     dkcmd restart, \
     prompt "Do you really want to quit DK ?" "session_exit" \
     }
@@ -62,11 +62,11 @@ super + shift + s ; {_,alt + }{KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,
 
 # change active workspace layout.
 alt + l ; {a,d,g,n,r,s,t,w}
-    dk_change_layouts {alternate,dyntile,grid,none,rtile,spiral,tile,tstack}
+    dk_change_layouts --{alternate,dyntile,grid,none,rtile,spiral,tile,tstack}
 
-# toggle static/dynamic mode (false resets ws orders).
-alt + m ; {d,f,s}
-    dk_change_layouts {dynamic,false,static}
+# toggle static/dynamic mode (reorder = reorder workspaces).
+alt + m ; {d,r,s}
+    dk_change_layouts --{dynamic,reorder,static}
 
 # swap workspaces
 super + s ; {KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,KP_Home,KP_Up,KP_Prior,KP_Insert}
@@ -74,7 +74,7 @@ super + s ; {KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,KP_Home,KP_Up,KP_P
 
 # toggle between monocle/last layout.
 super + m
-    dk_change_layouts mono
+    dk_change_layouts --mono
 
 # toggle floating, sticky
 super + alt + {s,space}

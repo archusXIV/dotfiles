@@ -46,7 +46,7 @@ confs() {
 # search a string within a bunch of files in the current directory: grep_this <string>
 grep_this() {
     rg --color=always --line-number --no-heading --smart-case "${*:-}" \
-		| sort -d \
+        | sort -d \
         | fzf \
         --ansi \
         --reverse \
@@ -124,6 +124,13 @@ por()
     local orphans
     orphans="$(pacman -Qtdq 2>/dev/null)"
     [[ -z $orphans ]] && printf "System has no orphaned packages\n" || sudo pacman -Rns $orphans
+}
+
+cam()
+{
+    v4l2-ctl --set-fmt-video=width=720,height=360
+    mpv av://v4l2:/dev/video0 --profile=low-latency &
+    #screencaster -p faster -v 90 -o "$VID"/Xessions/"$1".mkv
 }
 
 # find all webm files that are in the current directory/sub-folders and extract the audio to mp3 format.

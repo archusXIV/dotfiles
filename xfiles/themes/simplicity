@@ -1,0 +1,21 @@
+! simplicity
+#define fg    #738299
+#define bg    #1E1F29
+#define curs  #F4F4F2
+
+#define blk   #222222
+#define blk2  #444444
+#define red   #BF5C56
+#define red2  #BF5C56
+#define grn   #97B19C
+#define grn2  #97B19C
+#define ylw   #D7BD8A
+#define ylw2  #D7BD8A
+#define blu   #545F72
+#define blu2  #545F72
+#define mag   #DD949A
+#define mag2  #DD949A
+#define cyn   #BE926B
+#define cyn2  #BE926B
+#define wht   #F4F4F2
+#define wht2  #F4F4F2

@@ -112,7 +112,7 @@ class DKConfig:
             5: ['virt-manager', 'VirtualBox', 'Org.gnome.Boxes'],
             6: ['feh', 'Zathura'],
             8: ['Thunar', 'transmission-gtk', 'Worker'],
-            9: ['obs', 'SimpleScreenRecorder']
+            9: ['obs', 'SimpleScreenRecorder', 'vokoscreenNG']
         }
 
         # Special cases

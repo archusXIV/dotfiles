@@ -1,0 +1,22 @@
+! sweerlove
+#define fg    #c0b18b
+#define bg    #1f1f1f
+#define curs  #c0b18b
+
+#define blk   #4a3637
+#define blk2  #402e2e
+#define red   #d17b49
+#define red2  #ac5d2f
+#define grn   #7b8748
+#define grn2  #647035
+#define ylw   #af865a
+#define ylw2  #8f6840
+#define blu   #535c5c
+#define blu2  #444b4b
+#define mag   #775759
+#define mag2  #614445
+#define cyn   #6d715e
+#define cyn2  #585c49
+#define wht   #c0b18b
+#define wht2  #978965
+

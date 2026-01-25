@@ -3,11 +3,9 @@ Description=X session user's services
 
 BindsTo=graphical-session.target
 
-Wants=dunst.socket
-Wants=pipewire.socket
-Wants=pulseaudio.socket
-Wants=gnome-keyring-daemon.socket
+Wants=pulseaudio.service
+Wants=gnome-keyring-daemon.service
 Wants=polkit-gnome.service
 Wants=mpd.service
 Wants=powerline-daemon.service
-#Wants=firefox-profile@xg1a4enm.default.service
+Wants=thunar_daemon.service

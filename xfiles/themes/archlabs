@@ -1,6 +1,6 @@
 ! archlabs
 #define fg    #E1E1E1
-#define bg    #1E1F29
+#define bg    #21232e
 #define curs  #778899
 
 #define blk   #1C2023

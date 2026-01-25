@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ~/.config/mpm/mpmrc (version 2.4-6)
+# ~/.config/mpm/mpmrc (version 2.6-2)
 
 ############################################################
 ############################################################
@@ -29,31 +29,28 @@ schedule_delay=15
 mainThemes=(
     default archlabs blacksea c64 dracula embers gotham
     gruvbox jellybeans kasugano monokai nord pistachio retro
-    simplicity solarized TokyoNight vacuous yatheme zenburn zorange
+    simplicity solarized TokyoNight vacuous yatheme zenburn
 )
 
-THEME=nord
+THEME=simplicity
 
 ####################### SYSTEM TOOLS #######################
-MPMEDITOR=${VISUAL:-vim}
-FILEMANAGER=ranger
 clipboardCmd=( xclip -out )
+FILEMANAGER=ranger
+MPMEDITOR=${VISUAL:-vim}
 use_somabox=yes
 
 ###################### MPM DIRECTORIES ######################
 main_dir=${MPM_DIR:-$HOME/.local/share/mpm}
-# playlists_dir="$main_dir/playlists"
-playlists_dir="$main_dir/htpl"
+playlists_dir="$main_dir/playlists"
 schedules_dir="$main_dir/schedules"
-# titles_dir="$main_dir/titles"
-titles_dir="$main_dir/httl"
+titles_dir="$main_dir/titles"
 tmp_dir="$main_dir/tmp"
 MUSIC_DIR=${MUZ:-$HOME/Documents/Music}
 VIDEO_DIR=${VID:-$HOME/Documents/Videos}
-# VIDEO_DIR="/run/media/archangel/docs/Videos/"
 audios_dir="$MUSIC_DIR/mpm_audios"
 radios_dir="$MUSIC_DIR/mpd_playlists"
-videos_dir="$VID/mpm_videos"
+videos_dir="$VIDEO_DIR/mpm_videos"
 
 ################### DEFAULT TASKS ANSWERS ###################
 keep_none_empty_playlist=yes
@@ -62,14 +59,15 @@ remove_video_ids=yes
 quit_after_task=no
 
 ################### GNU PARALLEL OPTIONS ####################
+export PARALLEL_HOME="/tmp/parallel"
 use_parallel=yes
 use_parallel_downloads=yes
-parallel_animation="progress"
+parallel_animation=progress
 # parallel_animation=spinners
 parallel_threads="$(nproc)"
 parallel_conversion=yes
 
-################### YT{FZF} FUNCTIONALITY ###################
+################## YT{FZF} FUNCTIONALITIES ##################
 use_fzf=yes
 fzf_preview=mediainfo
 # fzf_preview=exiftool
@@ -93,7 +91,7 @@ ytfzfOptions_X=(
 
 ############ FFMPEG SPECIFICS (audio conversion) ############
 automatic_audio_conversion=no
-default_conversion_format=mp3
+default_conversion_format=
 
 ffmpegAacCodecOptions=( -acodec aac -ar 48000 -ab 320k )
 ffmpegFlacCodecOptions=( -af aformat=s32:48000 )
@@ -103,14 +101,15 @@ ffmpegWavCodecOptions=( -acodec pcm_s32le -ar 48000 )
 
 ####################### MPVC SETTINGS #######################
 use_mpvc=yes
-#mpvc_tui=ncmpvc
+# mpvc_tui=ncmpvc
 mpvc_tui=native
-#mpvc_tui=
+# mpvc_tui=
 nativeThemes=(
-    default c64 dark gruvbox molokai nord
-    retro seoul256 solarized yatheme
+    default c64 dark embers gruvbox molokai
+    nord retro seoul256 simplicity solarized yatheme
 )
-native_tui_colors=nord
+
+native_tui_colors=simplicity
 mpvc_tui_cheatsheet="/usr/local/share/doc/mpm/ncmpvc_cheatsheet"
 
 ####################### MPV SPECIFICS #######################
@@ -122,10 +121,12 @@ mpvGenOptions_CF=( --no-config )
 mpvGenOptions_RP=( --no-resume-playback )
 mpvGenOptions_MS=( --term-playing-msg='[Title]: ${media-title}' )
 mpvGenOptions_UC=( --cookies=no )
+mpvGenOptions_HD=( --hwdec=no )
 
 mpvGenOptions_X=(
     "${mpvGenOptions_AO[@]}"
     "${mpvGenOptions_CA[@]}"
+    "${mpvGenOptions_HD[@]}"
     "${mpvGenOptions_SK[@]}"
     "${mpvGenOptions_ID[@]}"
     "${mpvGenOptions_RP[@]}"
@@ -133,7 +134,7 @@ mpvGenOptions_X=(
     "${mpvGenOptions_UC[@]}"
 )
 
-mpvAudioFormatOptions=( --ytdl-format='bestaudio/best' )
+mpvAudioFormatOptions=( --ytdl-format='bestaudio' )
 mpvVideoFormatOptions=( --ytdl-format='bestvideo+bestaudio/best' )
 
 mpvVideoOptions_DM=( --demuxer-max-bytes=1024MiB )
@@ -149,6 +150,7 @@ mpvVideoOptions_X=(
 )
 
 ###################### YT-DLP PRESETS ######################
+# default_video_resolution="1080"
 ytdlPreset_BR=( --break-on-existing )
 ytdlPreset_BC=( --cookies-from-browser=brave )
 ytdlPreset_DN=( --downloader m3u8:native )
@@ -156,13 +158,12 @@ ytdlPreset_DP=( --progress )
 ytdlPreset_DW=( --no-warnings --ignore-errors )
 ytdlPreset_FS=( --compat-options filename-sanitization )
 ytdlPreset_MF=( --merge-output-format mp4 )
-ytdlPreset_NR=( 50 )
 
 ytdlPreset_NC=(
     "${ytdlPreset_BR[@]}"
-    "${ytdlPreset_DW[@]}"
     "${ytdlPreset_DN[@]}"
     "${ytdlPreset_DP[@]}"
+    "${ytdlPreset_DW[@]}"
     "${ytdlPreset_FS[@]}"
 )
 
@@ -170,3 +171,6 @@ ytdlPreset_X=(
     "${ytdlPreset_NC[@]}"
     "${ytdlPreset_MF[@]}"
 )
+
+ytdlPreset_MR=( '"bestvideo[height<=?1080][vcodec!=vp9]+bestaudio/best"' )
+ytdlPreset_NR=( 50 )

@@ -1,0 +1,21 @@
+! TokyoNight
+#define fg    #c0caf5
+#define bg    #1a1b26
+#define curs  #778899
+
+#define blk   #15161e
+#define blk2  #414868
+#define red   #f7768e
+#define red2  #f7768e
+#define grn   #9ece6a
+#define grn2  #9ece6a
+#define ylw   #e0af68
+#define ylw2  #e0af68
+#define blu   #7aa2f7
+#define blu2  #7aa2f7
+#define mag   #bb9af7
+#define mag2  #bb9af7
+#define cyn   #7dcfff
+#define cyn2  #7dcfff
+#define wht   #a9b1d6
+#define wht2  #c0caf5

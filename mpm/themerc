@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ~/.config/mpm/themerc (version 2.4-4)
+# ~/.config/mpm/themerc (version 2.6-2)
 
 ######################################################################
 #                                                                    #
@@ -64,6 +64,17 @@ _NativePlayerColors() {
                 --border-label '[ theme: dark ]'
             "
         ;;
+        embers)
+            export FZF_DEFAULT_OPTS="
+                --color=header:bold:#576d82
+                --color=fg:#998C82,fg+:#787D57,bg:$default_bg,bg+:$default_bg
+                --color=hl:#576d82,hl+:#82576d,info:#afaf87
+                --color=prompt:#82576d,spinner:#af5fff,pointer:#82576d
+                --color=border:#57826d,label:#998C82,query:#d9d9d9
+                --border-label-pos='103:bottom'
+                --border-label '[ theme: embers ]'
+            "
+        ;;
         gruvbox)
             export FZF_DEFAULT_OPTS="
                 --color=header:bold:#928374
@@ -120,6 +131,17 @@ _NativePlayerColors() {
                 --border-label '[ theme: seoul256 ]'
             "
         ;;
+        simplicity)
+            export FZF_DEFAULT_OPTS="
+                --color=header:bold:#778899
+                --color=bg+:$default_bg,bg:$default_bg,border:#719872
+                --color=spinner:#BF5C56,hl:#D7BD8A,fg:#778899
+                --color=info:#97B19C,pointer:#BF5C56,fg+:#719872
+                --color=preview-bg:$default_bg,prompt:#BF5C56,hl+:#97B19C
+                --border-label-pos='100:bottom'
+                --border-label '[ theme: simplicity ]'
+            "
+        ;;
         solarized)
             export FZF_DEFAULT_OPTS="
                 --color=header:bold:#859900
@@ -151,11 +173,11 @@ _Theme() {
     case "$1" in
         default)
             bg="$default_bg"
-            nc=$'\e[0m';
-            critical=$'\e[31m';
-            info=$'\e[32m';
-            mtitle=$'\e[33m';
-            task=$'\e[37m';
+            nc=$'\e[0m'
+            critical=$'\e[31m'
+            info=$'\e[32m'
+            mtitle=$'\e[33m'
+            task=$'\e[37m'
         ;;
         archlabs)
             # Using HEX colors for array 'customColors'
@@ -182,11 +204,11 @@ _Theme() {
         c64)
             bg="#0000AA"
             nc=$'\e[38;2;0;136;255m';         #0088ff "0x00 0x88 0xff"
-            critical=$'\e[38;2;207;6;6m';     #cf0606 "0xcf 0x06 0x06"
+            critical=$'\e[38;2;255;119;119m'; #FF7777 "0xff 0x77 0x77"
             info=$'\e[38;2;170;255;102m';     #AAFF66 "0xaa 0xff 0x66"
             mtitle=$'\e[38;2;170;255;238m';   #AAFFEE "0xaa 0xff 0xee"
             task=$'\e[38;2;255;255;255m';     #ffffff "0xff 0xff 0xff"
-            customColors=( "0x00 0x88 0xff" "0xcf 0x06 0x06" "0xaa 0xff 0x66" \
+            customColors=( "0x00 0x88 0xff" "0xff 0x77 0x77" "0xaa 0xff 0x66" \
             "0xaa 0xff 0xee" "0xff 0xff 0xff" )
         ;;
         dracula)
@@ -356,16 +378,6 @@ _Theme() {
             task=$'\e[38;2;79;122;167m';      #4F7AA7 "0x4f 0x7a 0xa7"
             customColors=( "0xdc 0xdc 0xcc" "0xc6 0x5c 0x5c" "0x60 0xb4 0x8a" \
             "0xf0 0xdf 0xaf" "0x4f 0x7a 0xa7" )
-        ;;
-        zorange)
-            bg="#000000"
-            nc=$'\e[38;2;248;116;0m';         #f87400 "0xf8 0x74 0x00"
-            critical=$'\e[38;2;248;66;0m';    #f84200 "0xf8 0x42 0x00"
-            info=$'\e[38;2;248;155;41m';      #f89b29 "0xf8 0x9b 0x29"
-            mtitle=$'\e[38;2;240;187;17m';    #f0bb11 "0xf0 0xbb 0x11"
-            task=$'\e[38;2;240;162;17m';      #f0a211 "0xf0 0xa2 0x11"
-            customColors=( "0xf8 0x74 0x00" "0xf8 0x42 0x00" "0xf8 0x9b 0x29" \
-            "0xf0 0xbb 0x11" "0xf0 0xa2 0x11" )
         ;;
     esac
 

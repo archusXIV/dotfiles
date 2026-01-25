@@ -1,0 +1,21 @@
+! delt-dark
+#define fg    #7B81A6
+#define bg    #1E1F29
+#define curs  #c7ccd1
+
+#define blk   #21222B
+#define blk2  #373A4D
+#define red   #FF5555
+#define red2  #cc6666
+#define grn   #A0CC7A
+#define grn2  #84A865
+#define ylw   #D66F1A
+#define ylw2  #c59820
+#define blu   #638AFF
+#define blu2  #3060A6
+#define mag   #AF5EA0
+#define mag2  #9564C7
+#define cyn   #75FFD6
+#define cyn2  #8be9fd
+#define wht   #c7ccd1
+#define wht2  #FDFEFF
