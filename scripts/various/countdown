@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 #
+# Author: Barret E <https://github.com/archusXIV/dotfiles/blob/main/scripts/various/countdown>
+# License: GPLv2
+# Description:
 # This script enables you to set a countdown
 # and eventually launch a command at the end of it.
 # Use a future date or time format as an argument:
