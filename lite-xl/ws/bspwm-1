@@ -1,1 +1,0 @@
-return { path = "/home/archangel/.config/bspwm", documents = {["type"]="leaf",["views"]={[1]={["active"]=true,["filename"]="bspwmrc",["type"]="doc",["text"]=false,["selection"]={[1]=12,[2]=5,[3]=12,[4]=5},["scroll"]={["y"]=0.0,["x"]=0}}},["active_view"]=1}, directories = {} }

@@ -1,1 +1,0 @@
-return { path = "/home/archangel/.config/dk", documents = {["type"]="leaf",["views"]={[1]={["active"]=true,["filename"]="dkrc",["type"]="doc",["text"]=false,["selection"]={[1]=97,[2]=1,[3]=97,[4]=1},["scroll"]={["y"]=0,["x"]=0}}},["active_view"]=1}, directories = {} }

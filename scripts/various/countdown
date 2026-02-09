@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+#
+# This script enables you to set a countdown
+# and eventually launch a command at the end of it.
+# Use a future date or time format as an argument:
+# option=$1
+# argument=$2
+# command=$3
+# countdown -d "Jun 09 2026 11:07"
+# countdown -t 00:02:30 same as countdown -t 02:30
+# countdown -t 00:02:30 "urxvtc -e htop -u $USER"
+
+# colors
+red=$'\e[31m'
+grn=$'\e[32m'
+ylw=$'\e[33m'
+mag=$'\e[35m'
+cyn=$'\e[36m'
+wht=$'\e[37m'
+noc=$'\e[0m'
+
+now=$(date +%s)
+surroundings=$(printf "%-10s" "")
+cmd="${mag}Undefined..."
+
+_usage() {
+    echo
+    printf '%s\n' \
+    " Usage: ${0##*/} [OPTION] [ARG] [COMMAND]" \
+    "" \
+    " -d <date> :month day year time" \
+    " -t <time> :format = MM:SS or HH:MM:SS" \
+    "" \
+    "  ${mag}\$3 (command) is optional." \
+    "  ${grn}Examples: ${noc}"\
+    "  ${0##*/} -d \"Jun 09 2026 11:07\"" \
+    "  ${0##*/} -t 01:07:30 urxvtc" \
+    "  ${0##*/} -t 01:35 \"urxvtc -e htop -u $USER\""
+    exit 1
+}
+
+(( $# <= 1 )) && _usage
+
+case $1 in
+    -d)
+        until=$(date -d "$2" +%s)
+        total_seconds=$((until - now))
+        (( total_seconds < 1 )) && {
+            printf '\n%s\n' " ${red}The date should be in the future!${noc}"
+            _usage
+        }
+    ;;
+    -t)
+        IFS=":";
+        if [[ $2 =~ ^[0-9]{2}:[0-9]{2}$ ]]; then
+            read -r minutes seconds <<< "$2"
+            total_seconds=$((minutes * 60 + seconds))
+        elif [[ $2 =~ ^[0-9]{2}:[0-9]{2}:[0-9]{2}$ ]]; then
+            read -r hours minutes seconds <<< "$2"
+            total_seconds=$(((hours * 3600) + (minutes * 60 + seconds)))
+        else
+            unset IFS
+            printf '\n%s\n' " ${red}Wrong time format: '$2'${noc}"
+            _usage
+        fi
+        unset IFS
+    ;;
+    *) printf '\n%s\n' " ${red}Wrong option: '$1'${noc}"; _usage ;;
+esac
+
+[[ $3 ]] && { cmd="${cyn}$3"; _cmd() { $3; } }
+
+while (( total_seconds > 0 )); do
+
+    clear
+    printf '\n'
+    date
+
+    interval="$total_seconds"
+    seconds=$((interval % 60))
+    interval=$((interval - seconds))
+    minutes=$((interval % 3600 / 60))
+    interval=$((interval - minutes))
+    hours=$((interval % 86400 / 3600))
+    interval=$((interval - hours))
+    days=$((interval % 604800 / 86400))
+
+    # Adding a zero before the output when it's a single digit
+    [[ $days =~ ^[0-9]{1}$ ]] && days="0$days"
+    [[ $hours =~ ^[0-9]{1}$ ]] && hours="0$hours"
+    [[ $minutes =~ ^[0-9]{1}$ ]] && minutes="0$minutes"
+    [[ $seconds =~ ^[0-9]{1}$ ]] && seconds="0$seconds"
+
+    echo "${ylw}${surroundings// /*}"
+    printf '%s\n' " ${grn}Command: $cmd"
+    echo -e "${ylw}${surroundings// /*}\n"
+    printf '%s\n' " ${wht}Days:    ${red}$days" \
+    " ${wht}Hours:   ${mag}$hours" \
+    " ${wht}Minutes: ${cyn}$minutes" \
+    " ${wht}Seconds: ${grn}$seconds${noc}"
+
+    ((total_seconds--))
+    read -r -t 1
+
+done
+
+clear
+[[ $3 ]] && _cmd "$@"
+
