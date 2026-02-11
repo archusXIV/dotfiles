@@ -23,7 +23,6 @@ wht=$'\e[37m'
 noc=$'\e[0m'
 
 now=$(date +%s)
-surroundings=$(printf "%-10s" "")
 cmd="${mag}Undefined..."
 
 _usage() {
@@ -72,6 +71,7 @@ case $1 in
 esac
 
 [[ $3 ]] && { cmd="${cyn}$3"; _cmd() { $3; } }
+surroundings=$(printf "%-$(awk '{ print length($0) + 6 }' <<< "$cmd")s" "")
 
 while (( total_seconds > 0 )); do
 
@@ -109,4 +109,3 @@ done
 
 clear
 [[ $3 ]] && _cmd "$@"
-
