@@ -30,7 +30,7 @@ else
     echo -ne '\e[8;29;96t'
 fi
 
-VERSION="v.0.7"
+VERSION="v.0.8"
 
 export MPVSOCKET="/tmp/mpvsocket"
 soma_url="http://somafm.com/nossl/"
