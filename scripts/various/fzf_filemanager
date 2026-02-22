@@ -1,0 +1,311 @@
+#!/usr/bin/env bash
+#
+# Author: Barret E (2026) <archus@protonmail.com>
+# https://github.com/archusXIV/dotfiles
+# Script name: fzf_filemanager
+# License: GPLv2
+#
+# Simple terminal file manager using fzf, bat for file previews, and tree for directory previews.
+# Navigate directories with fzf selection; previews update dynamically.
+# Press Ctrl-C or ESC in fzf to exit.
+# Check dependencies @line 89
+
+# Needed if your shell isn't bash
+export SHELL="/bin/bash"
+shopt -s checkwinsize
+
+# Terminal size (xterm protocols support)
+: "${lines:=32}"
+: "${columns:=124}"
+
+echo -ne "\e[8;${lines};${columns}t"
+
+_usage() {
+    tput clear
+    echo
+    local script_name
+    script_name=$(basename "$0")
+    cat <<- USAGE
+    =========================================================================
+    A TERMINAL BASED SIMPLE FILEMANAGER USING FZF WITH BASIC EXPECTED OPTIONS
+    =========================================================================
+    At least one option is required.
+
+    Available options:
+    -b <"color">      :Set the terminal background color (default:#000000)
+    -e <editor>       :Set your editor for editing selected file (default:vim)
+    -f <program>      :Set a program to get infos from selected file (default:exiftool)
+    -h                :Print this help and exit
+    -i <image viewer> :Set a program to open image files (default:sxiv)
+    -m <program>      :Set a program to get infos from selected media file (default:mediainfo)
+    -s <"color">      :Set the highlighted item background color (default:#000000)
+
+    Example:
+    $script_name -e nano -b "#1c1c23" -i feh -f exiftool -m exiftool
+USAGE
+    exit 1
+}
+
+[[ $# -eq 0 || $1 == "-h" ]] && _usage
+
+# Parsing command-line options
+while getopts "b:e:f:i:m:p:s:" opt; do
+    case $opt in
+        b) background="${OPTARG}" ;;
+        e) editor="$OPTARG" ;;
+        f) file_info="$OPTARG" ;;
+        i) image_viewer="$OPTARG" ;;
+        m) media_info="$OPTARG" ;;
+        p) media_player="$OPTARG" ;;
+        s) sel_background="${OPTARG}" ;;
+        *) _usage ;;
+    esac
+done
+
+shift $(( OPTIND - 1 ))
+
+# Defaults, change values to your likings
+: "${background:=#000000}"
+: "${sel_background:=#000000}"
+: "${editor:=vim}"
+: "${image_viewer:=sxiv}"
+: "${file_info:=exiftool}"
+: "${media_info:=mediainfo}"
+: "${media_player:=mpv}"
+
+# shell color syntax for prompts
+red=$'\e[31m'
+grn=$'\e[32m'
+ylw=$'\e[33m'
+noc=$'\e[0m'
+
+copy_buffer=""
+source_file=""
+image_exts="(.bmp|.gif|.jpe?g|.png|.tiff|.webp)"
+media_exts="(.aac|.flac|.mkv|.mp3|.mp4|.ogg|.wav)"
+other_exts="(.gz|.ini|.iso|.m3u|.pdf|.pls|.rar|.txt|.xml|.xz|.zip|.zst)"
+
+# Ensure required tools are installed
+declare -a packages=(
+    bat chafa w3m "$file_info" fzf tree
+    "$media_info" "$image_viewer" "$editor"
+)
+
+for pkg in "${packages[@]}"; do
+    command -v "$pkg" >/dev/null || {
+        echo "$pkg is needed but not installed, exiting..."
+        exit 127
+    }
+done
+
+declare -a shortcuts=(
+    "Hit enter on .. to go up a directotry (same as cd ..)"
+    "ctrl+e:edit" "ctrl+y:copy" "ctrl+p:paste" "ctrl+d:delete" "ctrl+t:touch"
+    "ctrl+r:rename" "ctrl+x:cut" "ctrl+f:top" "ctrl+l:bottom"
+)
+
+export FZF_DEFAULT_OPTS="
+    --bind ctrl-f:first,ctrl-l:last
+    --bind ctrl-d:accept,ctrl-e:accept,ctrl-p:accept,ctrl-r:accept
+    --bind ctrl-t:accept,ctrl-x:accept,ctrl-y:accept
+    --border-label-pos='bottom'
+    --border=rounded
+    --color 'bg:$background,bg+:$sel_background'
+    --color 'border:cyan'
+    --color 'list-label:bold:red,input-label:bold:cyan'
+    --cycle
+    --info=inline-right
+    --input-border=rounded
+    --input-label ' Search box '
+    --input-label-pos=top
+    --height 100%
+    --list-border=rounded
+    --list-label-pos=top
+    --preview-window=right:65%
+    --pointer '|>'
+    --reverse
+    --scroll-off=5
+"
+_mediaPlayer() {
+    # Media player should run in the background (detatched from the terminal),
+    # so we stay in the menu if we want to navigate elsewhere.
+    __killMediaPlayerPid() {
+        pidof "$media_player" >/dev/null && kill -TERM "$(pidof "$media_player")"
+        return 0
+    }
+
+    if [[ $media_player == 'mpv' ]]; then
+        __killMediaPlayerPid && {
+            mpv --no-config --idle=once --cache=no \
+            --no-terminal --force-window --fullscreen=no "$selection" &
+        }
+    else
+        # Other media players may use the command line too...
+        __killMediaPlayerPid && "$media_player" "$selection" &
+    fi
+    tput clear
+}
+
+# Main loop for navigation
+while true; do
+    # fzf preview: bat/chafa/exiftool/mediainfo for files, tree for directories
+    if [[ $(pwd) == '/' ]]; then
+        export current_dir=${PWD}
+    else
+        export current_dir=${PWD##*/}
+    fi
+    selection=$(
+        command ls -a --group-directories-first | grep -v '^.$' \
+        | fzf --preview="
+            if [[ {} == '..' ]]; then
+                echo -e ${ylw}'\n          ${shortcuts[0]}\n'${noc}
+            elif [[ -d {} ]]; then
+                tree -C {} | head -200
+            elif [[ {} =~ ${image_exts}$ ]]; then
+                chafa --colors 240 --color-space din99d \
+                --size=\"\$FZF_PREVIEW_COLUMNS\"x\"\$FZF_PREVIEW_LINES\" {}
+            elif [[ {} =~ ${media_exts}$ ]]; then
+                $media_info {}
+            elif [[ {} =~ ${other_exts}$ ]]; then
+                $file_info {}
+            else
+                bat --wrap=never --color=always --style=numbers --line-range :200 {}
+            fi" \
+            --border-label="${grn}[ ${shortcuts[*]:1:9} ]${noc}" \
+            --expect=ctrl-d,ctrl-e,ctrl-p,ctrl-r,ctrl-t,ctrl-y,ctrl-x \
+            --list-label " Current dir: ${current_dir} "
+    )
+
+    # If nothing selected (ESC or Ctrl-C), exit the loop
+    [[ -z $selection ]] && break
+
+    mapfile -t fzf_output <<< "$selection"
+    key="${fzf_output[0]}"
+    selection="${fzf_output[1]}"
+
+    case "$key" in
+        ctrl-d) # delete
+            tput clear
+            printf '\n'
+            target="$selection"
+            read -r -p " ${red}Remove '${target}'? [y/N]: ${noc}" remove
+            case "${remove}" in
+                [yY]) rm -rf -- "${target}" ;;
+                *) continue ;;
+            esac
+            continue
+        ;;
+        ctrl-e) # edit
+            tput clear
+            if [[ $selection =~ ${other_exts}$ ]]; then
+                "$editor" "$selection"
+            else
+                printf '\n'
+                read -r -p " ${red}Edit ${selection}? [N/y]: ${noc}" edit
+                [[ $edit =~ [yY] ]] && "$editor" "$selection"
+            fi
+            unset edit
+            continue
+        ;;
+        ctrl-p) # paste
+            source_file="${copy_buffer}"
+            if [[ -z ${source_file} ]]; then
+                echo " ${red}Nothing to paste. Use copy first.${noc}" >&2
+                sleep 2
+            elif [[ ${source_file} == "$(pwd)/${source_file##*/}" ]]; then
+                cp -a -- "${source_file}" "$(pwd)/${source_file##*/}"_
+            else
+                cp -a -- "${source_file}" "$(pwd)/${source_file##*/}"
+            fi
+            continue
+        ;;
+        ctrl-r) # rename
+            tput clear
+            source_file="$selection"
+            printf '\n'
+            read -r -p " ${grn}Rename ${source_file##*/} to: ${noc}" new_name
+            [[ -z ${new_name} ]] && {
+                echo " ${red}${source_file##*/} has not been renamed.${noc}"
+                sleep 2
+                continue
+            }
+            mv -f -- "${source_file}" "${new_name}"
+            continue
+        ;;
+        ctrl-t) # touch
+            tput clear
+            printf '\n'
+            read -r -p " ${grn}Enter the new filename: " new_file
+            [[ -z ${new_file} ]] && {
+                echo " ${red}No filename provided.${noc}"
+                sleep 2
+                continue
+            }
+            touch -- "${new_file}"
+            read -r -p " ${grn}Edit ${new_file}? [Y/n]: ${noc}" edit
+            [[ $edit =~ [yY] ]] && "$editor" "$new_file"
+            unset edit
+            continue
+        ;;
+        ctrl-y) # copy
+            source_file="$PWD/$selection"
+            copy_buffer="${source_file}"
+            continue
+        ;;
+        ctrl-x) # cut
+            tput clear
+            source_file="$PWD/$selection"
+            printf '\n'
+            read -r -p " ${grn}Move ${source_file##*/} to (path): ${noc}" destination
+            [[ -z ${destination} ]] && {
+                echo " ${red}No destination provided for ${source_file##*/}...${noc}"
+                sleep 3
+                continue
+            }
+            # Expanding leading tilde ~
+            destination="${destination/#~/$HOME}"
+            mv -f -- "${source_file}" "$destination/${source_file##*/}"
+            continue
+        ;;
+        *) : ;;
+    esac
+
+    # Opening selected folder/file
+    if [[ -d $selection ]]; then
+        cd "$selection" || continue
+    else
+        if [[ $selection =~ ${image_exts}$ ]]; then
+            "$image_viewer" "$selection"
+        elif [[ $selection =~ ${media_exts}$ ]]; then
+            _mediaPlayer "$selection"
+        elif [[ $selection =~ ${other_exts}$ ]]; then
+            tput clear
+            printf '\n'
+            read -r -p " ${grn}Open $selection with?: " program
+            case $program in
+                deadbeef|ffplay|mpv|vlc)
+                    _mediaPlayer "$selection"
+                ;;
+                *)
+                    "$program" "$selection" || {
+                        tput clear
+                        echo -e "\n ${red}Unable to open $selection.${noc}"
+                        sleep 2
+                        continue
+                    }
+                ;;
+            esac
+        else
+            tput clear
+            printf '\n'
+            read -r -p " ${red}Edit ${selection}? [N/y]: ${noc}" edit
+            [[ $edit =~ [yY] ]] && "$editor" "$selection"
+            unset edit
+            continue
+        fi
+    fi
+done
+
+unset current_dir edit
+export FZF_DEFAULT_OPTS=
+tput clear
