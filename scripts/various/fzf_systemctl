@@ -2,15 +2,22 @@
 
 # Author: Barret E <https://github.com/archusXIV/dofiles>
 # License: GPLv2
-# Script name: fzf_systemctl
+# Script name: fzf_systemctl v0.5
 #
 # NO WARRANTY, USE AT YOUR OWN RISK
 # THE AUTHOR DOES NOT OWN RESPONSABILITY FOR SYSTEM DAMAGE OR INSTABILITY
 #
 # Dependencies: awk, bat, fzf and a text editor
 # Script to interact with SystemD units using fzf:
-# list/select a unit, then view status/logs, edit config, enable,
-# disable, mask, unmask, start, restart, stop and reload systemd manager config.
+# list/select a unit, then view status/logs, edit config, enable, disable,
+# mask, unmask, start, restart, stop and reload systemd manager config.
+
+# Terminal size (xterm protocols support)
+: "${lines:=32}"
+: "${columns:=124}"
+
+shopt -s checkwinsize
+echo -ne "\e[8;${lines};${columns}t"
 
 [[ $EUID -ne 0 ]] && {
     echo "Please, use sudo to run this program!"
@@ -88,59 +95,73 @@ export FZF_DEFAULT_OPTS="
     --border-label-pos='68:top' --border=rounded
     --cycle --reverse --pointer '|>'
     --scroll-off=5 --bind 'ctrl-j:down,ctrl-k:up'
-    --prompt='Search for unit: '
+    --info=inline-right
+    --input-border=rounded
+    --input-label ' Filter box '
+    --input-label-pos=top
+    --list-border=rounded
+    --list-label ' Units '
+    --list-label-pos=top
 "
 
-declare -a SystemctlOptions=(
+declare -a sysctlOpts=(
     "--all" "--plain" "--no-legend"
     "--type=socket" "--type=service" "--type=timer"
 )
 
+# List units consistently using list-unit-files for installed units
+case "$unit_type" in
+    all)
+        border_label="All SystemD Units Management"
+        units=$(
+            systemctl list-unit-files "${sysctlOpts[@]:1:2}" \
+            | awk '$1 ~ /\.(service|socket|timer)$/{print $1}'
+        )
+    ;;
+    running)
+        border_label="SystemD Running Units Management"
+        units=$(
+            systemctl list-units "${sysctlOpts[@]:0:2}" \
+            | awk '$1 ~ /\.(service|socket|timer)$/{print $1}'
+        )
+    ;;
+    sockets)
+        border_label="SystemD Sockets Units Management"
+        units=$(
+            systemctl list-unit-files "${sysctlOpts[@]:1:3}" \
+            | awk '{print $1}'
+        )
+    ;;
+    services)
+        border_label="SystemD Services Units Management"
+        units=$(
+            systemctl list-unit-files "${sysctlOpts[@]:1:2}" \
+            "${sysctlOpts[4]}" | awk '{print $1}'
+        )
+    ;;
+    timers)
+        border_label="SystemD Timers Units Management"
+        units=$(
+            systemctl list-unit-files "${sysctlOpts[@]:1:2}" \
+            "${sysctlOpts[5]}" | awk '{print $1}'
+        )
+    ;;
+    *) _usage ;;
+esac
+
+shopt -s checkwinsize
+echo -ne '\e[8;32;124t'
+
+# Making our fzf menus
 while true; do
-    # List units consistently using list-unit-files for installed units
-    case "$unit_type" in
-        all)
-            border_label="All SystemD Units Management"
-            units=$(
-                systemctl list-unit-files "${SystemctlOptions[@]:1:2}" \
-                | awk '$1 ~ /\.(service|socket|timer)$/{print $1}'
-            )
-        ;;
-        running)
-            border_label="SystemD Running Units Management"
-            units=$(
-                systemctl list-units "${SystemctlOptions[@]:0:2}" \
-                | awk '$1 ~ /\.(service|socket|timer)$/{print $1}'
-            )
-        ;;
-        sockets)
-            border_label="SystemD Sockets Units Management"
-            units=$(
-                systemctl list-unit-files "${SystemctlOptions[@]:1:3}" \
-                | awk '{print $1}'
-            )
-        ;;
-        services)
-            border_label="SystemD Services Units Management"
-            units=$(
-                systemctl list-unit-files "${SystemctlOptions[@]:1:2}" \
-                "${SystemctlOptions[4]}" | awk '{print $1}'
-            )
-        ;;
-        timers)
-            border_label="SystemD Timers Units Management"
-            units=$(
-                systemctl list-unit-files "${SystemctlOptions[@]:1:2}" \
-                "${SystemctlOptions[5]}" | awk '{print $1}'
-            )
-        ;;
-        *) _usage ;;
-    esac
 
     selected_unit=$(
         echo "$units" \
         | fzf \
-        --header="Use arrow keys up/down, Enter to select." \
+        --header-border=rounded \
+        --header-label ' Motions ' \
+        --header-label-pos=top \
+        --header="Arrow keys: up/down, Enter: select." \
         --border-label="[ $border_label ]" \
         --preview="systemctl status {}" \
         --preview-window=right:63%
@@ -161,6 +182,7 @@ while true; do
             --border-label-pos='top' \
             --border-label="[ Choose an action for $selected_unit ]" \
             --preview-window=right:80% \
+            --list-label ' Actions ' \
             --preview="
                 case {} in
                     status)
@@ -264,7 +286,7 @@ while true; do
                 "$editor" "$unit_path"
                 tput clear
                 printf '%s\n' " $selected_unit file edited. Run 'daemon-reload' to apply changes," \
-                " then restart/start the unit if needed."
+                " then restart/start $selected_unit if needed."
                 sleep 5
                 tput clear
             ;;
@@ -281,26 +303,26 @@ while true; do
                     key=$(dd bs=1 count=1 2>/dev/null)
                     if [[ $key =~ [qQ] ]]; then
                         kill $pid
+                        wait $pid 2>/dev/null
                         break
                     fi
                 done
                 # Restore terminal settings
                 stty icanon echo
-                wait $pid 2>/dev/null
             ;;
             enable) systemctl enable --now "$selected_unit" || _error ;;
             disable) systemctl disable --now "$selected_unit" || _error ;;
             mask) systemctl mask "$selected_unit" || _error ;;
             unmask) systemctl unmask "$selected_unit" || _error ;;
-            restart) systemctl restart "$selected_unit" || _error ;;
             start) systemctl start "$selected_unit" || _error ;;
+            restart) systemctl restart "$selected_unit" || _error ;;
             stop) systemctl stop "$selected_unit" || _error ;;
             daemon-reload) systemctl daemon-reload || _error && break ;;
             back) break ;;
         esac
         tput clear
-        continue
     done
+
 done
 
 export FZF_DEFAULT_OPTS=
