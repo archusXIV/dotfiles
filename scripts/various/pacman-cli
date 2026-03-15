@@ -1,161 +1,251 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Author: Barret E (2021) <archus@protonmail.com>
 # https://github.com/archusXIV/dotfiles
-# Dependencies: fzf, pacdiff, reflector, vim, pacman or/and updates-manager.
+# Dependencies: fzf, reflector, vim, pacman, pacman-contrib.
 # https://github.com/archusXIV/dotfiles/blob/main/scripts/various/updates-viewer
 #
 # This script shows a menu to let you choose over severals pacman tools and options.
 # In order to install or remove packages it uses fzf utility on the fancy side.
 # We can also find and purge orphan packages, refresh our mirrorlist, purge the cache,
 # edit pacman.conf/makepkg.conf and of course update the system.
-# shellcheck disable=SC2016
+# shellcheck disable=SC2016,SC2145
 
-color_off=$'\e[0m';
-red=$'\e[0;31m';
-green=$'\e[0;32m';
+N=$'\e[0m'
+R=$'\e[0;31m'
+G=$'\e[0;32m'
 
-declare -a dependencies=( "fzf" "pacdiff" "reflector" "vim" "pacman" )
+if (( UID )); then
+  echo "${R}You must be root to run this program.${N}" >&2
+  exit 1
+fi
 
-for package in "${dependencies[@]}"; do
-    [[ -z $(command -v "$package") ]] && {
-        echo " ${red}Missing dependency...$package"
-        notify-send "pacman-cli missing dependency...$package"
+declare -a dependencies=(
+    awk fzf checkupdates less
+    reflector vim pacdiff pacman
+)
+
+for dep in "${dependencies[@]}"; do
+    command -v "$dep" >/dev/null || {
+        echo " ${R}Missing dependency...$dep${N}"
+        notify-send "pacman-cli: missing dependency...$dep"
         exit 127
     }
 done
 
+export FZF_DEFAULT_OPTS="
+    --cycle --pointer '|>' --scroll-off=5 --no-scrollbar
+    --multi --border rounded --layout=reverse
+    --preview-window='right:70%' --prompt='Search: '
+"
+
 _Menu() {
-    clear
-    while [[ -f /etc/pacman.conf ]]; do
+    while true; do
+        printf '%s\n' " ${G}Checking for updates...${N}"
+        declare -a updates=()
+        mapfile -t updates < <(checkupdates)
+        declare -a packages=()
+        mapfile -t packages < <(pacman -Q)
         clear
-        echo ""
-        echo -e "                                ${green}Installed packages: $(pacman -Q | wc -l) - ${red}System updates: $(grep "" -c "$XDG_RUNTIME_DIR"/combined.list)${color_off}\n"
-        echo -e "                                            ::pacman options::"
-        echo -e "                        ::To select multiple packages in listing views, press Tab:: "
-        echo -e "                       ┌───────────────────────────────────────────────────────────┐"
-        echo -e "                       │    1) Search & Install           6) Update the system     │"
-        echo -e "                       │    2) Uninstall package(s)       7) Pacdiff               │"
-        echo -e "                       │    3) List installed packages    8) Edit pacman.conf      │"
-        echo -e "                       │    4) Purge orphans/cache        9) Edit makepkg.conf     │"
-        echo -e "                       │    5) Refresh mirrors            x) Exit                  │"
-        echo -e "                       └───────────────────────────────────────────────────────────┘"
-        echo -e "                                             ${green}Select an item${color_off}"
-        echo ""
+        echo
+        printf '%s\n' "                                ${G}Installed packages: ${#packages[@]} - ${R}System updates: ${#updates[@]}${N}" \
+        "" \
+        "                                          ${G}** PACMAN-CLI OPTIONS **" \
+        "                        ::To select multiple packages in listing views, press Tab:: " \
+        "                       ${R}┌───────────────────────────────────────────────────────────┐" \
+        "                       │    ${G}1) ${R}Search & Install           ${G}6) ${R}Update the system     │" \
+        "                       │    ${G}2) ${R}Uninstall package(s)       ${G}7) ${R}Run pacdiff           │" \
+        "                       │    ${G}3) ${R}List installed packages    ${G}8) ${R}Edit pacman.conf      │" \
+        "                       │    ${G}4) ${R}Purge orphans/cache        ${G}9) ${R}Edit makepkg.conf     │" \
+        "                       │    ${G}5) ${R}Refresh mirrors            ${G}x) ${R}Exit                  │" \
+        "                       └───────────────────────────────────────────────────────────┘" \
+        "                                             ${G}Select an item${N}"
+        echo
+
         read -rsn 1 option
+
         case "$option" in
             1) _Install ;;
             2) _Uninstall ;;
             3) _PackagesList ;;
             4) _Purge ;;
             5) _Reflector ;;
-            6) updates-manager --list || sudo pacman -Syu ;;
+            6) _Update ;;
             7) _Pacdiff ;;
-            8) sudo vim /etc/pacman.conf ;;
-            9) sudo vim /etc/makepkg.conf ;;
-            x|X) clear && exit ;;
-            *) echo " ${red}Unknown option $option.${color_off}" ;;
+            8) vim /etc/pacman.conf ;;
+            9) vim /etc/makepkg.conf ;;
+            x|X)
+                clear
+                rm "$orphans_list" 2>/dev/null
+                export FZF_DEFAULT_OPTS=
+                exit
+            ;;
+            *) echo " ${R}Wrong option: $option${N}"; sleep 2 ;;
         esac
+
     done
 }
 
 _Install() {
-    sudo pacman -Sy >/dev/null 2>&1
-    sudo pacman -Fy >/dev/null 2>&1
+    printf '%s\n' " ${G}Initialyzing repositories... please wait.${N}"
+    pacman -Sy >/dev/null 2>&1
+    pacman -Fy >/dev/null 2>&1
     pacman -Slq \
+        | awk '!seen[$0]++' \
         | fzf \
-        --multi \
-        --border rounded \
         --border-label "| Install packages |" \
-        --preview-window='right:70%' \
         --preview \
-        'cat <(sudo pacman -Si {1}) <(sudo pacman -Fl {1} | awk "{print \$2}")' \
-        --layout=reverse \
-        | xargs -ro sudo pacman -S
+        'cat <(pacman -Si {1}) <(pacman -Fl {1} | awk "{print \$2}")' \
+        | xargs -ro pacman -Syu
 }
 
 _Uninstall() {
     pacman -Qnq \
+        | awk '!seen[$0]++' \
         | fzf \
-        --multi \
-        --border rounded \
         --border-label "| Uninstall packages |" \
-        --preview-window='right:70%' \
         --preview \
-        'cat <(sudo pacman -Si {1}) <(sudo pacman -Fl {1} | awk "{print \$2}")' \
-        --layout=reverse \
-        | xargs -ro sudo pacman -Rns
+        'cat <(pacman -Si {1}) <(pacman -Fl {1} | awk "{print \$2}")' \
+        | xargs -ro pacman -Rns
 }
 
 _PackagesList() {
     pacman -Qq \
+        | awk '!seen[$0]++' \
         | fzf \
-        --border rounded \
+        --no-multi \
         --border-label "| Installed packages |" \
-        --preview-window='right:70%' \
         --preview 'pacman -Qil {}' \
-        --layout=reverse \
         --bind 'enter:execute(pacman -Qil {} | less)'
 }
 
 _Purge() {
-    read -rn 1 -p ' Purge [O]rphans or [C]ache: ' purge
-    case "$purge" in
-        o|O)
-            local pkgs="$XDG_CACHE_HOME/orphans_list.txt"
-            echo ""
-            if [[ -n $(pacman -Qdt) ]]; then
-                touch "$pkgs"
-                pacman -Qdt > "$pkgs" && cat "$pkgs"
-                echo ""
-                echo " ${red}Would you like to purge orphan packages? [N/y]:${color_off}"
-                read -rn 1 orphan
-                case "$orphan" in
-                    N|n)
-                        _menu
+    read -rn 1 -p ' Purge [O]rphans or [C]ache: ' choice
+    case "$choice" in
+        [oO])
+            echo
+            local orphans_list="$XDG_CACHE_HOME/orphans.list"
+            mapfile -t orphans < <(pacman -Qdtq)
+
+            if (( ${#orphans[@]} )); then
+                clear
+                touch "$orphans_list"
+
+                declare -a debug_list=()
+                for pkg in "${orphans[@]}"; do
+                    [[ $pkg =~ -debug ]] && debug_list+=("$pkg")
+                    echo "$pkg" >> "$orphans_list"
+                done
+
+                awk -i inplace '!seen[$0]++' "$orphans_list"
+
+                if (( ${#debug_list[@]} )); then
+                    echo -e "\n ${R}Orphan(s) debug package(s) found.${N}"
+                    printf '%s\n' "${debug_list[@]}"
+                    echo -e "\n ${R}Certainly needed by:${N}"
+                    printf '%s\n' "${debug_list[@]/-debug/}"
+                    echo
+                    read -rn 1 -p " ${R}Would you like to purge orphan packages? [N/y]:${N}" purge
+                else
+                    cat "$orphans_list" 2>/dev/null
+                    echo
+                    read -rn 1 -p " ${R}Would you like to purge orphan packages? [Y/n]:${N}" purge
+                fi
+
+                case $purge in
+                    [nN])
+                        rm "$orphans_list" 2>/dev/null
+                        _Menu
                     ;;
-                    y|Y)
-                        pacman -Qtdq | sudo pacman -Rdd --noconfirm -
-                        echo " ${green}Removed packages list saved in $pkgs.${color_off}"
+                    [yY])
+                        echo
+                        if (( ${#debug_list[@]} )); then
+                            printf '%s\n' "${debug_list[@]/-debug/}" | pacman -Rns -
+                            printf '%s\n' "${debug_list[@]}" | pacman -Rdd --noconfirm -
+                        else
+                            pacman -Rns "$(pacman -Qtdq)" --noconfirm
+                        fi
+                        echo " ${G}Removed packages list saved in $orphans_list.${N}"
                         sleep 5s
                     ;;
-                    *)
-                        echo " ${red}Bad option $orphan...${color_off}"; sleep 2s
-                    ;;
+                    *)  echo " ${R}Bad option $purge...${N}"; sleep 2 ;;
                 esac
+                rm "$orphans_list" 2>/dev/null
             else
-                echo " ${green}No orphan package found.${color_off}"
-                sleep 3s
-                _menu
+                echo " ${G}No orphan package found.${N}"
+                sleep 3
+                _Menu
             fi
         ;;
-        c|C)
-            sudo pacman -Scc
-        ;;
+        [cC]) pacman -Scc ;;
+        *) printf '\n%s\n' " ${R}Wrong option: ${choice}"; sleep 2 ;;
     esac
     return 0
 }
 
-_Pacdiff() {
-    if [[ -z $(find /etc -maxdepth 2 -name "*.pacnew" 2> /dev/null) ]]; then
-        echo " ${green}No pacnew files found.${color_off}"
-        sleep 3s
+_Snapshot() {
+    local older_snapshot_index older_snapshot_name
+    # will remove the first snapshot & create a new one.
+    # awk '/^0/{print $3}' will match the first snapshot over three.
+    older_snapshot_index=$(sudo timeshift --list | awk '/^0/{print $1}')
+    older_snapshot_name=$(sudo timeshift --list | awk '/^0/{print $3}')
+    # checking '0' as a string
+    if [[ $older_snapshot_index == '0' ]]; then
+        sudo timeshift --delete --snapshot "$older_snapshot_name"
+        sudo timeshift --create --skip-grub --comment "Before updates"
     else
-        sudo pacdiff
+        sudo timeshift --create --skip-grub --comment "Before updates"
+    fi
+}
+
+_AskforSnapshot() {
+    local answer
+    read -rsn 1 -p " ${R}Do you want to create a snapshot?: [Y/n]${N}" answer
+    case $answer in
+        [yY])
+            if command -v timeshift >/dev/null; then
+                return 0
+            else
+                printf '%s\n' " ${R}Timeshift isn't installed.${N}"
+                sleep 2
+                return 1
+            fi
+        ;;
+        *) return 1 ;;
+    esac
+}
+
+_Update() {
+    if (( ${#updates[@]} )); then
+        clear
+        printf '\n'
+        _AskforSnapshot && _Snapshot
+        pacman -Syu
+    else
+        printf '\n%s\n' " ${G}No updates available.${N}"
+        sleep 2
+    fi
+}
+
+_Pacdiff() {
+    if [[ -s $(awk '$7~/\.(pacnew|pacsave)/{last = $7} END {print last}' < /var/log/pacman.log) ]]; then
+        pacdiff
+    else
+        echo " ${G}No pacnew or pacsave files found.${N}"; sleep 2
     fi
 }
 
 _Reflector() {
+    tput clear
     PS3=""
-    echo ""
-    echo " ${green}Select your country:"
-    echo " Example for France: 21"
-    echo -e " More details in a terminal, type: reflector --list-countries | less${color_off}\n"
+    echo -e "\n ${G}Select your country:\n Example for France: 21"
+    echo -e " More details in a terminal, type: reflector --list-countries | less${N}\n"
     select country in $(reflector --list-countries \
         | sed '1,2d;8d
         s/Hong Kong/Hong-Kong/;s/North Macedonia/North-Macedonia/;
         s/New Caledonia/New-Caledonia/;s/New Zealand/New-Zealand/;
         s/South Africa/South-Africa/;s/South Korea/South-Korea/;
+        s/United Arab Emirates/United-Arab-Emirates/;
         s/United States/United-States/;s/United Kingdom/United-Kingdom/' \
         | awk '{print $1}'); do
 
@@ -166,11 +256,12 @@ _Reflector() {
             North-Macedonia) country='North Macedonia' ;;
             South-Africa) country='South Africa' ;;
             South-Korea) country='South Korea' ;;
+            United-Arab-Emirates) country='United Arab Emirates' ;;
             United-Kingdom) country='United Kingdom' ;;
             United-States) country='United States' ;;
         esac
 
-        sudo reflector \
+        reflector \
             --country "$country" \
             --verbose \
             --latest 10 \
@@ -178,8 +269,8 @@ _Reflector() {
             --protocol https \
             --sort rate \
             --save /etc/pacman.d/mirrorlist
-        echo " ${green}New mirrorlist saved.${color_off}"
-        sleep 3s
+        echo " ${G}New mirrorlist saved.${N}"
+        sleep 3
         break
     done
 }
