@@ -1,29 +1,47 @@
 #!/bin/bash
 
 # shellcheck disable=SC2012
-WM_NAME=$(wmctrl -m | awk '/Name/{print $2}')
-choice=$(printf "applications\\nautoscript\\nconfigs\\nfind\\nfonts\\nkeybindings\\npass\\nrecord\\nthemes\\nwindow" \
-        | rofi -normal-window -dmenu -i -p 'Rofi scripts' -no-show-icons -width 500 -lines 10 -location 0)
+declare -a choices=(
+    applications autoscript configs find
+    fonts keybindings pass record themes window
+)
 
-[[ -z $choice ]] && exit 0
+choice=$(
+    printf '%s\n' "${choices[@]}" \
+    | rofi \
+    -normal-window \
+    -dmenu \
+    -i \
+    -p 'Rofi scripts' \
+    -no-show-icons \
+    -width 500 \
+    -lines 10 \
+    -location 0
+)
 
 _autoscript_menu() {
     [[ -z ${SCRIPTDIR+x} ]] && exit 1
 
-    _autoscript() (
-
-        local script_file
-
+    _autoscript() {
+        local date script_file
+        date=$(date +%Y)
         script_file="$SCRIPTDIR/$1"
 
         if [[ -f $script_file ]]; then
             $EDITOR "$script_file" &
         else
-            echo "#!/usr/bin/env bash" > "$script_file"
+            cat > "$script_file" <<EOF
+#!/usr/bin/env bash
+#
+# Author: Barret E ($date) <https://github.com/archusXIV/>
+# Script name: ${script_file##*/}
+# License: GPLv2
+
+EOF
             chmod +x "$script_file"
             $EDITOR "$script_file" &
         fi
-    )
+    }
 
     selected=$(find "$HOME"/.local/bin -maxdepth 1 -type f \
         | sed 's,.*/,,' | sort | rofi -i \
@@ -69,7 +87,6 @@ _rofi_configs() {
     local confDir dirOptions dirChoice fileOptions fileChoice
 
     confDir="$HOME/.config/"
-
     dirOptions=$(cd "${confDir}" && ls -d ./* | cut -d " " -f 1)
     dirChoice=$(echo -e "${dirOptions[*]}\nquit" \
         | rofi -normal-window -dmenu -i -width 20 -hide-scrollbar \
@@ -116,9 +133,6 @@ _theme_selector() {
     xrdb -load "$xres_file" \
     && restart_wm reloadmsg \
     && Terminal_theme_changer \
-    && killall conky \
-    && polybar_start \
-    && sxhkd_start \
     && xre2rasi \
     && notify-send 'theme changed'
     exit 0
@@ -151,22 +165,15 @@ case "$choice" in
         fontawesomemenu -f "$HOME"/Documents/theming/fa4-icon-list.txt; exit
     ;;
     keybindings)
+        WM_NAME=$(wmctrl -m | awk '/Name/{print $2}')
         awk '/^[a-zA-Z]/ && last {print $0,"\t",last} \
         {last=""} /^#/{last=$0}' ~/.config/sxhkd/"$WM_NAME"_sxhkdrc_memo \
         | column -t -s $'\t' | rofi -normal-window -dmenu -no-show-icons \
         -width 1200 -location 0 -i -p "$WM_NAME keybindings memo"
         exit 0
     ;;
-    pass)
-        _passwd_copy
-    ;;
-    record)
-        rofi-record &
-    ;;
-    themes)
-        _theme_selector
-    ;;
-    window)
-        rofi -modi window -show window -location 0 -width 850 &
-    ;;
+    pass  ) _passwd_copy ;;
+    record) rofi-record & ;;
+    themes) _theme_selector ;;
+    window) rofi -modi window -show window -location 0 -width 850 & ;;
 esac

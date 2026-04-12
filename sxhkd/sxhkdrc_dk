@@ -58,7 +58,7 @@ super + {_,shift + }less
 
 # send/send & follow all windows of the current ws to ws n°
 super + shift + s ; {_,alt + }{KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,KP_Home,KP_Up,KP_Prior,KP_Insert}
-    dk_sendthemall -{s,f} {1-9,10}
+    dk_sendthemall --{send,follow} {1-9,10}
 
 # change active workspace layout.
 alt + l ; {a,d,g,n,r,s,t,w}
@@ -92,6 +92,14 @@ super + ctrl + {KP_Add,KP_Subtract}
 # none effective in grid desktop layout.
 alt + {_,ctrl + }{Left,Up,Down,Right}
     dk_winresize --{resize,move} {Left,Up,Down,Right}
+
+# set the split ratio of the focused workspace
+shift + {KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,KP_Home,KP_Up,KP_Prior}
+    dk_splitratio set {1-9}
+
+# restore/reset the original split ratio of the workspace number
+super + r ; {KP_End,KP_Down,KP_Next,KP_Left,KP_Begin,KP_Right,KP_Home,KP_Up,KP_Prior,KP_Insert}
+    dk_splitratio reset {1-9,10}
 
 # change number of windows in master or first stack
 super + {_,shift + }{KP_Add,KP_Subtract}

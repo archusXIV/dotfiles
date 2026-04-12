@@ -4,8 +4,8 @@ alt + Escape
 # logout menu
 ctrl + alt + Delete
 
-# dmenu/rofi
-Menu ; {d,l,r}
+# dmenu/rofi {dmenu,logout,rofi,sleep}
+Menu ; {d,l,r,s}
 
 # scratchpad custom script
 super + shift + {h,u,r}
@@ -13,7 +13,7 @@ super + shift + {h,u,r}
 # center focused floating window
 super + c
 
-# terminal emulators (xterm,bashterm)
+# terminal emulators (bashterm,xterm,alacritty)
 super + {_,shift +,ctrl + }Return
 
 # fzf_edit (bin,config)
@@ -23,7 +23,7 @@ super + e ; {b,c}
 super + r ; {r,s,t}
 
 # URxvt applications (urxvt_apps script)
-super + u ; {a,b,c,d,etc..}
+super + u ; {a-z}
 
 # gui applications (AI web page,vscode,lite-xl etc...)
 super + g ; {a,c,e,f,g,o,p,s,v,w}
@@ -117,6 +117,12 @@ super + ctrl + {KP_Add,KP_Subtract}
 
 # resize/move (floating) window using custom script
 alt + {_,ctrl + }{Left,Up,Down,Right}
+
+# set the split ratio
+shift + {1-9}
+
+# restore the original split ratio
+super + r ; {1-9}
 
 # change number of windows in master or first stack
 super + {_,shift + }{KP_Add,KP_Subtract}

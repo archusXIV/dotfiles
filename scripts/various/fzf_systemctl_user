@@ -2,7 +2,7 @@
 
 # Author: Barret E <https://github.com/archusXIV/dofiles>
 # License: GPLv2
-# Script name: fzf_systemctl v0.7
+# Script name: fzf_systemctl_user v0.6
 #
 # NO WARRANTY, USE AT YOUR OWN RISK
 # THE AUTHOR DOES NOT OWN RESPONSABILITY FOR SYSTEM DAMAGE OR INSTABILITY
@@ -19,11 +19,6 @@
 shopt -s checkwinsize
 echo -ne "\e[8;${lines};${columns}t"
 
-[[ $EUID -ne 0 ]] && {
-    echo "Please, use sudo to run this program!"
-    exit 1
-}
-
 _usage() {
     tput clear
     echo
@@ -33,12 +28,15 @@ _usage() {
     ===========================================================================================
     VIEW STATUS/LOGS, EDIT, ENABLE, DISABLE, MASK, UNMASK, START, RESTART OR STOP SYSTEMD UNITS
     ===========================================================================================
-    This program must be run as root. At least one option or argument is required.
+    This program may need root privileges to edit certain unit files, but it will prompt you if needed.
+    It is designed to be run as a regular user to manage user units,
+    so it does not require sudo for listing or managing files in the user's home directory.
+    At least one option or argument is required.
 
     Available options:
-    -e <editor>    :Set your prefered editor for editing units files (default: vim)
-    -h             :Print this help and exit
-    -u <unit type> : all, paths, running, services, slices, sockets, targets, timers (default: running)
+    -e <editor>    Set your prefered editor for editing units files (default: vim)
+    -h             Print this help and exit
+    -u <unit type> List of unit types: all, running, services, sockets, timers (default: running)
 
     Examples:
     $script_name -e nano -u sockets
@@ -79,18 +77,18 @@ for dep in awk bat fzf "$editor"; do
     }
 done
 
-if ! command -v xrdb >/dev/null; then
+if command -v xrdb >/dev/null; then
     default_bg=$(xrdb -query | awk '/background:/{print $NF}')
 else
-    default_bg="#0000AA"
+    default_bg="#1e1f29"
 fi
 
 export FZF_DEFAULT_OPTS="
-    --color=header:bold:#DD8855
-    --color=fg:#0088FF,fg+:#ffffff,bg:$default_bg,bg+:#0000AA
-    --color=hl:#FF7777,hl+:#AAFF66,info:#AAFFEE
-    --color=prompt:#AAFF66,spinner:#880000,pointer:#CC44CC
-    --color=border:#BBBBBB,label:#EEEE77,query:#BBBBBB
+    --color=header:bold:#87afaf
+    --color=fg:#d0d0d0,fg+:#ffffff,bg:$default_bg,bg+:#262626
+    --color=hl:#5f87af,hl+:#5fd7ff,info:#afaf87
+    --color=prompt:#d7005f,spinner:#af5fff,pointer:#af5fff
+    --color=border:#af5fff,label:#aeaeae,query:#d9d9d9
     --border-label-pos='68:top' --border=rounded
     --cycle --reverse --pointer '|>'
     --scroll-off=5 --bind 'ctrl-j:down,ctrl-k:up'
@@ -103,63 +101,50 @@ export FZF_DEFAULT_OPTS="
     --list-label-pos=top
 "
 
-readonly opt_all="--all"
-readonly opt_plain="--plain"
-readonly opt_no_legend="--no-legend"
-readonly opt_path="--type=path"
-readonly opt_socket="--type=socket"
-readonly opt_service="--type=service"
-readonly opt_slice="--type=slice"
-readonly opt_target="--type=target"
-readonly opt_timer="--type=timer"
-readonly managed_units_regex='\.(path|service|slice|socket|target|timer)$'
-
-declare -A unit_type_labels=(
-    [all]="All SystemD Units Management"
-    [paths]="SystemD Paths Units Management"
-    [running]="SystemD Running Units Management"
-    [sockets]="SystemD Sockets Units Management"
-    [services]="SystemD Services Units Management"
-    [slices]="SystemD Slices Units Management"
-    [targets]="SystemD Targets Units Management"
-    [timers]="SystemD Timers Units Management"
+declare -a sysctlOpts=(
+    "--all" "--plain" "--no-legend"
+    "--type=socket" "--type=service" "--type=timer"
 )
-
-declare -A unit_type_options=(
-    [paths]="$opt_path"
-    [sockets]="$opt_socket"
-    [services]="$opt_service"
-    [slices]="$opt_slice"
-    [targets]="$opt_target"
-    [timers]="$opt_timer"
-)
-
-_list_units_by_type() {
-    local selected_type
-    selected_type="$1"
-
-    case "$selected_type" in
-        all)
-            systemctl list-unit-files "$opt_plain" "$opt_no_legend" \
-            | awk -v pattern="$managed_units_regex" '$1 ~ pattern {print $1}'
-        ;;
-        running)
-            systemctl list-units "$opt_all" "$opt_plain" \
-            | awk -v pattern="$managed_units_regex" '$1 ~ pattern {print $1}'
-        ;;
-        paths|sockets|services|slices|targets|timers)
-            systemctl list-unit-files "$opt_plain" "$opt_no_legend" \
-            "${unit_type_options[$selected_type]}" | awk '{print $1}'
-        ;;
-        *) return 1 ;;
-    esac
-}
 
 # List units consistently using list-unit-files for installed units
-border_label="${unit_type_labels[$unit_type]}"
-[[ -z $border_label ]] && _usage
-
-units=$(_list_units_by_type "$unit_type") || _usage
+case "$unit_type" in
+    all)
+        border_label="All SystemD User Units Management"
+        units=$(
+            systemctl --user list-unit-files "${sysctlOpts[@]:1:2}" \
+            | awk '$1 ~ /\.(service|socket|timer)$/{print $1}'
+        )
+    ;;
+    running)
+        border_label="SystemD User Running Units Management"
+        units=$(
+            systemctl --user list-units "${sysctlOpts[@]:0:2}" \
+            | awk '$1 ~ /\.(service|socket|timer)$/{print $1}'
+        )
+    ;;
+    sockets)
+        border_label="SystemD User Sockets Units Management"
+        units=$(
+            systemctl --user list-unit-files "${sysctlOpts[@]:1:3}" \
+            | awk '{print $1}'
+        )
+    ;;
+    services)
+        border_label="SystemD User Services Units Management"
+        units=$(
+            systemctl --user list-unit-files "${sysctlOpts[@]:1:2}" \
+            "${sysctlOpts[4]}" | awk '{print $1}'
+        )
+    ;;
+    timers)
+        border_label="SystemD User Timers Units Management"
+        units=$(
+            systemctl --user list-unit-files "${sysctlOpts[@]:1:2}" \
+            "${sysctlOpts[5]}" | awk '{print $1}'
+        )
+    ;;
+    *) _usage ;;
+esac
 
 shopt -s checkwinsize
 echo -ne '\e[8;32;124t'
@@ -175,7 +160,7 @@ while true; do
         --header-label-pos=top \
         --header="Arrow keys: up/down, Enter: select." \
         --border-label="[ $border_label ]" \
-        --preview="systemctl status {}" \
+        --preview="systemctl --user status {}" \
         --preview-window=right:63%
     )
 
@@ -198,12 +183,12 @@ while true; do
             --preview="
                 case {} in
                     status)
-                        systemctl status --no-pager -l \"$selected_unit\" \
+                        systemctl --user status --no-pager -l \"$selected_unit\" \
                         | head -23 \
                         | bat --language log --color=always
                     ;;
                     edit)
-                        unit_path=\$(systemctl show -p FragmentPath \"$selected_unit\")
+                        unit_path=\$(systemctl --user show -p FragmentPath \"$selected_unit\")
                         unit_path=\${unit_path#*=}
                         if [[ -z \$unit_path || \$unit_path == '/dev/null' ]]; then
                             echo 'No editable unit file found (may be transient or generated).'
@@ -212,11 +197,11 @@ while true; do
                         fi
                     ;;
                     logs)
-                        journalctl -u \"$selected_unit\" -n 23 --no-pager \
+                        journalctl --user -u \"$selected_unit\" -n 23 --no-pager \
                         | bat --language log --color=always
                     ;;
                     enable)
-                        enabled_state=\$(systemctl is-enabled \"$selected_unit\")
+                        enabled_state=\$(systemctl --user is-enabled \"$selected_unit\")
                         case \$enabled_state in
                             enabled) echo \"$selected_unit is already enabled on startup.\" ;;
                             disabled) echo \"Enable $selected_unit now (enable on startup and start if not active).\" ;;
@@ -224,7 +209,7 @@ while true; do
                         esac
                     ;;
                     disable)
-                        enabled_state=\$(systemctl is-enabled \"$selected_unit\")
+                        enabled_state=\$(systemctl --user is-enabled \"$selected_unit\")
                         case \$enabled_state in
                             disabled) echo \"$selected_unit is already disabled on startup.\" ;;
                             enabled) echo \"Disable $selected_unit now (disable on startup and stop if active).\" ;;
@@ -232,7 +217,7 @@ while true; do
                         esac
                     ;;
                     mask)
-                        enabled_state=\$(systemctl is-enabled \"$selected_unit\")
+                        enabled_state=\$(systemctl --user is-enabled \"$selected_unit\")
                         if [[ \$enabled_state == 'masked' ]]; then
                             echo \"$selected_unit is already masked (cannot be started).\"
                         else
@@ -240,7 +225,7 @@ while true; do
                         fi
                     ;;
                     unmask)
-                        enabled_state=\$(systemctl is-enabled \"$selected_unit\")
+                        enabled_state=\$(systemctl --user is-enabled \"$selected_unit\")
                         if [[ \$enabled_state != 'masked' ]]; then
                             echo \"$selected_unit is not masked (current state: \$enabled_state).\"
                         else
@@ -248,7 +233,7 @@ while true; do
                         fi
                     ;;
                     start)
-                        active_state=\$(systemctl is-active \"$selected_unit\")
+                        active_state=\$(systemctl --user is-active \"$selected_unit\")
                         if [[ \$active_state != 'active' ]]; then
                             echo \"Start $selected_unit (current state: \$active_state).\"
                         else
@@ -256,11 +241,11 @@ while true; do
                         fi
                     ;;
                     restart)
-                        active_state=\$(systemctl is-active \"$selected_unit\")
+                        active_state=\$(systemctl --user is-active \"$selected_unit\")
                         echo \"Restart $selected_unit (current state: \$active_state; will start if inactive).\"
                     ;;
                     stop)
-                        active_state=\$(systemctl is-active \"$selected_unit\")
+                        active_state=\$(systemctl --user is-active \"$selected_unit\")
                         if [[ \$active_state == 'active' ]]; then
                             echo \"Stop $selected_unit (current state: \$active_state).\"
                         else
@@ -286,10 +271,10 @@ while true; do
 
         case "$selected_action" in
             status)
-                systemctl status "$selected_unit" | bat --paging=always; tput clear
+                systemctl --user status "$selected_unit" | bat --paging=always; tput clear
             ;;
             edit)
-                unit_path=$(systemctl show -p FragmentPath "$selected_unit")
+                unit_path=$(systemctl --user show -p FragmentPath "$selected_unit")
                 unit_path=${unit_path#*=}
                 if [[ -z $unit_path ]] || [[ $unit_path == "/dev/null" ]]; then
                     printf '%s\n' " No editable unit file found for $selected_unit" \
@@ -297,7 +282,11 @@ while true; do
                     sleep 3
                     break
                 fi
-                "$editor" "$unit_path"
+                if [[ ! -w $unit_path ]]; then
+                    sudo "$editor" "$unit_path"
+                else
+                    "$editor" "$unit_path"
+                fi
                 tput clear
                 printf '%s\n' " $selected_unit file edited. Run 'daemon-reload' to apply changes," \
                 " then restart/start $selected_unit if needed."
@@ -308,7 +297,7 @@ while true; do
                 tput clear
                 echo " Following logs for $selected_unit (last 100 lines + live updates). Press q to quit."
                 sleep 2
-                journalctl -u "$selected_unit" -n 100 -f --no-pager &
+                journalctl --user -u "$selected_unit" -n 100 -f --no-pager &
                 pid=$!
                 # Set terminal to raw mode to read single key without using enter
                 stty -icanon -echo
@@ -324,14 +313,14 @@ while true; do
                 # Restore terminal settings
                 stty icanon echo
             ;;
-            enable) systemctl enable --now "$selected_unit" || _error ;;
-            disable) systemctl disable --now "$selected_unit" || _error ;;
-            mask) systemctl mask "$selected_unit" || _error ;;
-            unmask) systemctl unmask "$selected_unit" || _error ;;
-            start) systemctl start "$selected_unit" || _error ;;
-            restart) systemctl restart "$selected_unit" || _error ;;
-            stop) systemctl stop "$selected_unit" || _error ;;
-            daemon-reload) systemctl daemon-reload || _error && break ;;
+            enable) systemctl --user enable --now "$selected_unit" || _error ;;
+            disable) systemctl --user disable --now "$selected_unit" || _error ;;
+            mask) systemctl --user mask "$selected_unit" || _error ;;
+            unmask) systemctl --user unmask "$selected_unit" || _error ;;
+            start) systemctl --user start "$selected_unit" || _error ;;
+            restart) systemctl --user restart "$selected_unit" || _error ;;
+            stop) systemctl --user stop "$selected_unit" || _error ;;
+            daemon-reload) systemctl --user daemon-reload || _error && break ;;
             back) break ;;
         esac
         tput clear

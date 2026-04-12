@@ -70,7 +70,6 @@
       }
     }
   },
-  
   "workspaces": [
     {
       "name": "1:G",
@@ -343,7 +342,6 @@
     }
   ],
   "clients": [],
-  
   "rules": [
     {
       "title": "",
@@ -656,8 +654,7 @@
       "h": -1,
       "float": false,
       "full": false,
-      "fakefull": f
-alse,
+      "fakefull": false,
       "sticky": false,
       "scratch": false,
       "focus": true,

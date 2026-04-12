@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+#
+# Author: Barret E (2026) <https://github.com/archusXIV/>
+# Script name: dk_splitratio
+# License: GPLv2
+# set/reset the focused workspace split ratio
+#
+# The $JSON file is generated at the window manager startup,
+# with this command:
+# dkcmd -p < <(dkcmd status type=full num=1) > "$XDG_CONFIG_HOME"/dk/dk_full.json
+# sxhkd settings:
+# set the split ratio whereas {1-9} is the ratio
+# shift + {1-9}
+#     dk_splitratio set {1-9}
+# reset the workspace split ratio whereas {1-9,10} is the ws num
+# super + r ; {1-9}
+#     dk_splitratio reset {1-9,10}
+
+command -v jq &> /dev/null || exit 127
+JSON="$XDG_CONFIG_HOME/dk/dk_workspaces.json"
+[[ ! -f $JSON || ! -s $JSON ]] && exit 1
+
+case $1 in
+    set) ratio="0.$2"; dkcmd set msplit="$ratio" ;;
+    reset)
+        WS="$2"
+        # getting the original msplit ratio for any workspace from the workspaces array
+        ratio=$(
+            jq -r --arg ws "$WS" '
+                .workspaces[] |
+                select(.name == $ws or (.number | tostring) == $ws) |
+                .msplit
+            ' "$JSON"
+        )
+        [[ -z "$ratio" || "$ratio" == "null" ]] && exit 1
+        # we can also reset another workspace split ratio by passing ws option
+        dkcmd set ws="$WS" msplit="$ratio"
+    ;;
+esac

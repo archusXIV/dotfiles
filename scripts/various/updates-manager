@@ -159,7 +159,7 @@ _Installation() {
     sudo cp -f "$mirr" "$bckp"
     echo "${g}Ranking mirrolist...be patient${nc}"
     rankmirrors -n 10 "$bckp" | sudo tee "$mirr"
-    sudo pacman -Syu --noconfirm
+    sudo pacman -Syu --noconfirm --disable-download-timeout
     sudo grub-mkconfig -o /boot/grub/grub.cfg
 }
 
@@ -253,5 +253,6 @@ case "$1" in
     --hook) _PolybarHook ;;
     --list) _ListUpdates ;;
     --snap) _AskforSnapshot && _Snapshot ;;
+    --stop) exit ;;
     *     ) _Error "Wrong option: $1" 1 ;;
 esac

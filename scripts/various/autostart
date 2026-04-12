@@ -51,11 +51,4 @@ command -v g810-led >/dev/null && {
 ##################### Updates checker script #####################
 [[ ! -f $XDG_RUNTIME_DIR/combined.list ]] && updates-manager --chck
 
-####################### Backups & cleaning #######################
-command -v rsync >/dev/null && {
-    rsync -apq "$SCRIPTDIR"/* "$HOME"/Documents/scripts/ &
-    rsync -apq "$XDG_CONFIG_HOME"/* "$HOME"/Documents/configs/ &
-}
-
 # urxvtc &
-

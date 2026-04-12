@@ -1,0 +1,10 @@
+[Unit]
+Description=Cleanup & backup on session startup
+PartOf=Xsession.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/start_with_systemd

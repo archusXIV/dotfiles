@@ -15,23 +15,23 @@ Z=$'\e[0m'
 # Modify this to fit the longest output
 dashes=$(printf "%-77s" "-")
 
-distro=$(lsb_release -a | awk -F'\t' '/Description:/ { print $2 }')
+distro=$(awk -F'\t' '/Description:/ { print $2 }' < <(lsb_release -a))
 kernelver=$(uname -sr)
 arch=$(uname -m)
 shell="$SHELL"
-cpu_model=$(lscpu | awk -F: '/Model name:/{ sub(/^[ \t]+/,"",$2); print $2 }')
-cpu_threads=$(lscpu | awk -F: '/^CPU\(s):/{ sub(/^[ \t]+/,"",$2); print $2 }')
+cpu_model=$(awk -F: '/Model name:/{ sub(/^[ \t]+/,"",$2); print $2 }' < <(lscpu))
+cpu_threads=$(awk -F: '/^CPU\(s):/{ sub(/^[ \t]+/,"",$2); print $2 }' < <(lscpu))
 
 if lscpu | grep -q "CPU max MHz" &>/dev/null; then
-    cpu_freq=$(lscpu | awk -F: '/CPU max MHz:/{ sub(/^[ \t]+/,"",$2); print $2 " MHz" }')
+    cpu_freq=$(awk -F: '/CPU max MHz:/{ sub(/^[ \t]+/,"",$2); print $2 " MHz" }' < <(lscpu))
 else
-    cpu_freq=$(lscpu | awk -F: '/CPU MHz:/{ sub(/^[ \t]+/,"",$2); print $2 " MHz" }')
+    cpu_freq=$(awk -F: '/CPU MHz:/{ sub(/^[ \t]+/,"",$2); print $2 " MHz" }' < <(lscpu))
 fi
 
-gpu_cpu=$(lspci | awk -F: '/VGA/ { sub(/[^\s]/,"",$3); print $3; exit }')
-gpu_dedicated=$(lspci | awk -F: '/VGA/ { sub(/[^\s]/,"",$3); count++; if (count == 2) print $3 }')
-mem_total=$(free -m | awk 'NR==2 { print $2 " MiB" }')
-mem_used=$(free -m | awk '/Mem:/{ print ($2 - $4 - $6 + $5) " MiB" }')
+gpu_cpu=$(awk -F: '/VGA/ { sub(/[^\s]/,"",$3); print $3; exit }' < <(lspci))
+gpu_dedicated=$(awk -F: '/VGA/ { sub(/[^\s]/,"",$3); count++; if (count == 2) print $3 }' < <(lspci))
+mem_total=$(awk 'NR==2 { print $2 " MiB" }' < <(free -m))
+mem_used=$(awk '/Mem:/{ print ($2 - $4 - $6 + $5) " MiB" }' < <(free -m))
 
 block_dev() {
     mapfile -t blocks < <(lsblk)
@@ -41,8 +41,14 @@ block_dev() {
     done
 }
 
-inet_dev=$(
-    echo -e "${Y}IP Configuration: \n${G}$(ip addr | awk -v red="${R}" -v green="${G}" '/\<inet\>/ { sub(/\<inet\>/, red "> " green "inet"); print }')"
+network=$(
+    echo -e "${Y}IP Configuration: \n${G}$(ip addr \
+    | awk \
+    -v red="${R}" \
+    -v green="${G}" '
+        /\<inet\>/ { sub(/\<inet\>/, red "> " green "inet"); print }
+        '
+    )"
 )
 
 tput clear
@@ -60,5 +66,5 @@ printf '\n%s' \
 "  * ${Y}GPU (dedicated): ${R}$gpu_dedicated" \
 "  * ${Y}Memory Usage: ${R}$mem_used / $mem_total" \
 "  * $(block_dev)${R}" \
-"  * $inet_dev${Z}" \
+"  * $network${Z}" \
 ""

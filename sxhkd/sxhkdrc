@@ -11,11 +11,12 @@ ctrl + alt + Delete
     rofi_run -l
 
 # dmenu/rofi
-Menu ; {d,l,r}
+Menu ; {d,l,r,s}
     {\
     dmenu_chooser, \
     lite-xl_kbshorts, \
-    rofi_chooser \
+    rofi_chooser, \
+    rofi_run --sleep
     }
 
 # scratchpad custom script
@@ -34,8 +35,8 @@ super + c
 # terminal emulators
 super + {_,shift +,ctrl +} Return
     {\
-    xterm, \
     urxvtc -name bashterm -geometry 124x30 -e bash; center_floatwin, \
+    xterm, \
     alacritty --class floaterm --command bash \
     }
 
@@ -52,8 +53,8 @@ super + r ; {r,s,t}
     }
 
 # URxvt applications (urxvt_apps script)
-super + u ; {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}
-    urxvt_apps -{a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}
+super + u ; {a-z}
+    urxvt_apps -{a-z}
 
 # gui applications
 super + g ; {a,c,e,f,g,o,p,s,v,w}

@@ -134,6 +134,7 @@ _Check socat >/dev/null && {
 dkcmd rule apply '*'
 
 #============================== CURRENT WM STATE IN .json FILES ==============================#
+# generated files can be used in variuous scripts.
 declare -a types=( full ws )
 for type in "${types[@]}"; do
     dkcmd -p < <(dkcmd status type="$type" num=1) > "$XDG_CONFIG_HOME"/dk/dk_"$type".json
@@ -146,6 +147,6 @@ for bin in polybar sxhkd; do
     }
 done
 
-_Check autostart && autostart &
+_Check autostart && autostart & disown
 
 exit 0

@@ -8,4 +8,5 @@ Wants=gnome-keyring-daemon.service
 Wants=polkit-gnome.service
 Wants=mpd.service
 Wants=powerline-daemon.service
+Wants=onstartup.service
 Wants=thunar_daemon.service

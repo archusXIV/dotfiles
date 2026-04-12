@@ -2,7 +2,7 @@
 	"myShebang": {
 		"prefix": "myb",
 		"body": [
-			"#!/bin/bash",
+			"#!/usr/bin/env bash",
 			"## This is a part of main script: mpm.",
 			"",
 			"# shellcheck disable=SC2154"
@@ -46,10 +46,9 @@
     		"    ${3:\"index2\"}",
     		"    ${4:\"index3\"}",
     		"    ${5:\"index4\"}",
-			"    ${6:\"index5\"}",
     		")\n",
-			"for ${7:var} in \"${$1[@]}\"; do",
-			"    ${8:command} \"$$7\"",
+			"for ${6:var} in \"${$1[@]}\"; do",
+			"    ${7:command} \"$$6\"",
 			"done"
 		],
 		"description": "myDeclareLoop"
@@ -80,10 +79,19 @@
   		"prefix": "myfi",
   		"body": [
     		"for ((i=${1:n1};i<${2:n2};i++)); do",
-    		"    ${3:echo} \"${${i}}\"",
+    		"    ${3:command} \"${${i}}\"",
     		"done"
   		],
   		"description": "myForInt"
+	},
+	"myForSequence": {
+		"prefix": "myfs",
+		"body": [
+			"for ${1:var} in {1..${2:n}}; do",
+			"    ${3:command} \"$$1\"",
+			"done"
+		],
+		"description": "myForSequence"
 	},
 	"myFunction": {
   		"prefix": "myfn",
@@ -95,7 +103,7 @@
   		"description": "myFunction"
 	},
 	"myIfStatement": {
-		"prefix": "myi",
+		"prefix": "myif",
 		"body": [
 			"if [[ ${1:condition} ]]; then",
 			"    ${2:command1}",
@@ -112,12 +120,21 @@
 		],
 		"description": "myMapfile"
 	},
+	"myNestedSubshell": {
+		"prefix": "myns",
+		"body": [
+			"__${1:nestedSubshellName}() (",
+			"    ${2:command}",
+			")"
+		],
+		"description": "myNestedSubshell"
+	},
 	"myNestedFunction": {
 		"prefix": "mynf",
 		"body": [
-			"__${1:nestedFunctionName}() (",
-			"    ${2:command}",
-			")"
+			"__${1:nestedFunctionName}() {",
+			"    ${2:body}",
+			"}"
 		],
 		"description": "myNestedFunction"
 	},
@@ -152,5 +169,30 @@
 			"done"
 		],
 		"description": "myWhileTrue"
+	},
+	"myDoubleQuotes": {
+		"prefix": "\"",
+		"body": [
+			"\"${1}\""
+		],
+		"description": "myDoubleQuotes"
+	},
+	"mySingleQuotes": {
+		"prefix": "'",
+		"body": [
+			"'${1}'"
+		],
+		"description": "mySingleQuotes"
+	},
+	"myArithmeticIf": {
+		"prefix": "myaif",
+		"body": [
+			"if (( ${1:a} ${2:operator} ${3:b} )); then",
+			"    ${4:command1}",
+			"else",
+			"    ${5:command2}",
+			"fi"
+		],
+		"description": "myArithmeticIf"
 	}
 }

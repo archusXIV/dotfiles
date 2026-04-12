@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-# Author: Barret E (2021) <archus@protonmail.com>
-# https://github.com/archusXIV/dotfiles
-# Dependencies: fzf, reflector, vim, pacman, pacman-contrib.
-# https://github.com/archusXIV/dotfiles/blob/main/scripts/various/updates-viewer
+# Author: Barret E (2021) <https://github.com/archusXIV/dotfiles>
+# Script name: pacman-cli
+# License: GPLv2
+# Dependencies: awk, fzf, less, reflector, vim, pacman, pacman-contrib.
 #
 # This script shows a menu to let you choose over severals pacman tools and options.
 # In order to install or remove packages it uses fzf utility on the fancy side.
@@ -15,9 +15,9 @@ N=$'\e[0m'
 R=$'\e[0;31m'
 G=$'\e[0;32m'
 
-if (( UID )); then
-  echo "${R}You must be root to run this program.${N}" >&2
-  exit 1
+if [[ $UID != "0" ]]; then
+    echo "${R}You must be root to run this program.${N}" >&2
+    exit 1
 fi
 
 declare -a dependencies=(
@@ -34,21 +34,35 @@ for dep in "${dependencies[@]}"; do
 done
 
 export FZF_DEFAULT_OPTS="
-    --cycle --pointer '|>' --scroll-off=5 --no-scrollbar
-    --multi --border rounded --layout=reverse
-    --preview-window='right:70%' --prompt='Search: '
+    --cycle
+    --border rounded
+    --info=inline-right
+    --input-border=rounded
+    --input-label ' filter box '
+    --input-label-pos=top
+    --list-border=rounded
+    --list-label-pos=top
+    --layout=reverse
+    --multi
+    --no-scrollbar
+    --preview-window='right:70%'
+    --pointer '|>'
+    --scroll-off=5
 "
 
+printf '%s\n' " ${G}Checking for system updates & installed packages...${N}"
+declare -a total_updates=()
+mapfile -t total_updates < <(checkupdates)
+declare -a packages=()
+mapfile -t packages < <(pacman -Q)
+
 _Menu() {
+
     while true; do
-        printf '%s\n' " ${G}Checking for updates...${N}"
-        declare -a updates=()
-        mapfile -t updates < <(checkupdates)
-        declare -a packages=()
-        mapfile -t packages < <(pacman -Q)
+
         clear
         echo
-        printf '%s\n' "                                ${G}Installed packages: ${#packages[@]} - ${R}System updates: ${#updates[@]}${N}" \
+        printf '%s\n' "                                ${G}Installed packages: ${#packages[@]} - ${R}System updates: ${#total_updates[@]}${N}" \
         "" \
         "                                          ${G}** PACMAN-CLI OPTIONS **" \
         "                        ::To select multiple packages in listing views, press Tab:: " \
@@ -65,12 +79,29 @@ _Menu() {
         read -rsn 1 option
 
         case "$option" in
-            1) _Install ;;
-            2) _Uninstall ;;
+            1)
+                _Install
+                packages=()
+                mapfile -t packages < <(pacman -Q)
+            ;;
+            2)
+                _Uninstall
+                packages=()
+                mapfile -t packages < <(pacman -Q)
+            ;;
             3) _PackagesList ;;
-            4) _Purge ;;
+            4)
+                _Purge
+                packages=()
+                mapfile -t packages < <(pacman -Q)
+            ;;
             5) _Reflector ;;
-            6) _Update ;;
+            6)
+                _Update
+                total_updates=()
+                mapfile -t total_updates < <(checkupdates)
+                sleep 1
+            ;;
             7) _Pacdiff ;;
             8) vim /etc/pacman.conf ;;
             9) vim /etc/makepkg.conf ;;
@@ -90,22 +121,21 @@ _Install() {
     printf '%s\n' " ${G}Initialyzing repositories... please wait.${N}"
     pacman -Sy >/dev/null 2>&1
     pacman -Fy >/dev/null 2>&1
+    clear
     pacman -Slq \
         | awk '!seen[$0]++' \
         | fzf \
-        --border-label "| Install packages |" \
-        --preview \
-        'cat <(pacman -Si {1}) <(pacman -Fl {1} | awk "{print \$2}")' \
-        | xargs -ro pacman -Syu
+        --list-label "Install packages" \
+        --preview='cat <(pacman -Si {1}) <(pacman -Fl {1} | awk "{print \$2}")' \
+        | xargs -ro pacman -Syu --disable-download-timeout
 }
 
 _Uninstall() {
     pacman -Qnq \
         | awk '!seen[$0]++' \
         | fzf \
-        --border-label "| Uninstall packages |" \
-        --preview \
-        'cat <(pacman -Si {1}) <(pacman -Fl {1} | awk "{print \$2}")' \
+        --list-label "Uninstall packages" \
+        --preview='cat <(pacman -Si {1}) <(pacman -Fl {1} | awk "{print \$2}")' \
         | xargs -ro pacman -Rns
 }
 
@@ -114,8 +144,8 @@ _PackagesList() {
         | awk '!seen[$0]++' \
         | fzf \
         --no-multi \
-        --border-label "| Installed packages |" \
-        --preview 'pacman -Qil {}' \
+        --list-label "Installed packages" \
+        --preview='pacman -Qil {}' \
         --bind 'enter:execute(pacman -Qil {} | less)'
 }
 
@@ -155,7 +185,6 @@ _Purge() {
                 case $purge in
                     [nN])
                         rm "$orphans_list" 2>/dev/null
-                        _Menu
                     ;;
                     [yY])
                         echo
@@ -166,7 +195,7 @@ _Purge() {
                             pacman -Rns "$(pacman -Qtdq)" --noconfirm
                         fi
                         echo " ${G}Removed packages list saved in $orphans_list.${N}"
-                        sleep 5s
+                        sleep 5
                     ;;
                     *)  echo " ${R}Bad option $purge...${N}"; sleep 2 ;;
                 esac
@@ -174,32 +203,31 @@ _Purge() {
             else
                 echo " ${G}No orphan package found.${N}"
                 sleep 3
-                _Menu
             fi
         ;;
         [cC]) pacman -Scc ;;
         *) printf '\n%s\n' " ${R}Wrong option: ${choice}"; sleep 2 ;;
     esac
-    return 0
 }
 
 _Snapshot() {
     local older_snapshot_index older_snapshot_name
-    # will remove the first snapshot & create a new one.
-    # awk '/^0/{print $3}' will match the first snapshot over three.
-    older_snapshot_index=$(sudo timeshift --list | awk '/^0/{print $1}')
-    older_snapshot_name=$(sudo timeshift --list | awk '/^0/{print $3}')
-    # checking '0' as a string
+    # This will remove the first snapshot & create a new one.
+    # awk '/^0/{print $3}' have to match the first snapshot over three.
+    older_snapshot_name=$(timeshift --list | awk '/^0/{print $3}')
+    older_snapshot_index=$(timeshift --list | awk '/^0/{print $1}')
+    # checking if '0' is a string
     if [[ $older_snapshot_index == '0' ]]; then
-        sudo timeshift --delete --snapshot "$older_snapshot_name"
-        sudo timeshift --create --skip-grub --comment "Before updates"
+        timeshift --delete --snapshot "$older_snapshot_name"
+        timeshift --create --skip-grub --comment "Before updates $(date)"
     else
-        sudo timeshift --create --skip-grub --comment "Before updates"
+        timeshift --create --skip-grub --comment "Before updates $(date)"
     fi
 }
 
-_AskforSnapshot() {
+_AskForSnapshot() {
     local answer
+    printf '\n'
     read -rsn 1 -p " ${R}Do you want to create a snapshot?: [Y/n]${N}" answer
     case $answer in
         [yY])
@@ -216,10 +244,10 @@ _AskforSnapshot() {
 }
 
 _Update() {
-    if (( ${#updates[@]} )); then
+    if (( ${#total_updates[@]} )); then
         clear
+        _AskForSnapshot && _Snapshot
         printf '\n'
-        _AskforSnapshot && _Snapshot
         pacman -Syu
     else
         printf '\n%s\n' " ${G}No updates available.${N}"
@@ -228,7 +256,7 @@ _Update() {
 }
 
 _Pacdiff() {
-    if [[ -s $(awk '$7~/\.(pacnew|pacsave)/{last = $7} END {print last}' < /var/log/pacman.log) ]]; then
+    if [[ -f $(awk '$7~/\.(pacnew|pacsave)/{last = $7} END {print last}' < /var/log/pacman.log) ]]; then
         pacdiff
     else
         echo " ${G}No pacnew or pacsave files found.${N}"; sleep 2

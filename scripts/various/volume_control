@@ -35,10 +35,17 @@ _polybarHook() {
 }
 
 _notifyVolume() {
-    notify-send "\
-    Main pulseaudio volume $(pactl get-sink-volume @DEFAULT_SINK@ \
-    | awk '{if(NR!=2) {print $5}}')\
-    "
+    if [[ $1 == balance ]]; then
+        notify-send "\
+        Main volume $(pactl get-sink-volume @DEFAULT_SINK@ \
+        | awk 'NR==1 {print $5" "$12}')\
+        "
+    else
+        notify-send "\
+        Main volume $(pactl get-sink-volume @DEFAULT_SINK@ \
+        | awk 'NR==1 {print $5}')\
+        "
+    fi
 }
 
 _keyboardMuteKey() {
@@ -77,15 +84,15 @@ _handleVolume() {
     right_vol=$5 # right channel volume (for balance)
     default_device="DEFAULT_${device^^}"
 
-    __setVolume() { pactl set-"${device}"-volume "@${default_device}@" "$1"; }
-    __setBalance() { pactl set-"${device}"-volume "@${default_device}@" "$1" "$2"; }
     __getVolume() { pactl get-"${device}"-mute "@${default_device}@"; }
+    __setVolume() { pactl set-"${device}"-volume "@${default_device}@" "$1"; }
     __toggleMute() { pactl set-"${device}"-mute "@${default_device}@" toggle; }
+    __setBalance() { pactl set-"${device}"-volume "@${default_device}@" "$1" "$2"; }
 
     case "$action" in
         balance)
             __setBalance "$left_vol%" "$right_vol%"
-            [[ $device == sink ]] && _notifyVolume
+            [[ $device == sink ]] && _notifyVolume balance
             _polybarHook "${device}" 1
         ;;
         up)

@@ -29,12 +29,9 @@ sudo systemctl restart dnsmasq.service
 
 # user init script and settings.
 xfsettingsd &
-cleanup &
-# xset r rate 660 25
 xset s off -dpms
 urxvtd -q -o -f &
 numlockx on &
-# autostart &
 
 # launch the session, commands below these lines will be ignored
 # Starting Xsession according on tty.

@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+#
+# Author: Barret E (2026) <https://github.com/archusXIV/>
+# Script name: fzf_man
+# description: Browse your man-pages collection
+# License: GPLv2
+
+if ! command -v fzf &> /dev/null; then
+    printf '%s\n' " 'fzf' is required. Install it with:" \
+    " sudo apt install fzf    # Ubuntu/Debian" \
+    " sudo pacman -Syu fzf    # Arch based"
+    exit 1
+fi
+
+export SHELL="/bin/bash"
+shopt -s checkwinsize
+
+export FZF_DEFAULT_OPTS="
+    --bind 'home:first,end:last,tab:down,shift-tab:up'
+    --bind esc:accept
+    --border=rounded
+    --color 'list-label:bold:cyan,input-label:bold:cyan'
+    --color 'bg:#1e1f29,bg+:#1e1f99'
+    --color='fg:#d0d0d0,fg+:#ffffff'
+    --exact
+    --ignore-case
+    --info=inline-right
+    --layout=reverse
+    --preview-window 'right:65%'
+    --pointer '|>'
+    --input-border=rounded
+    --input-label ' search box '
+    --input-label-pos=top
+    --list-border=rounded
+    --list-label-pos=top
+    --list-label ' manpages '
+    --scroll-off=5
+    --tiebreak=index --cycle
+"
+
+_awk_substitution() {
+    awk "{
+        gsub(/ *\\(.*/,\"\");
+        gsub(/,.*/,\"\");
+        gsub(/ *-[^-]*$/,\"\");
+        gsub(/  +/,\" \");
+        sub(/ *$/,\"\");
+        print
+    }"
+}
+
+export -f _awk_substitution
+
+touch /tmp/fzf_file
+
+while [[ -f /tmp/fzf_file ]]; do
+    man -k . | \
+    fzf -q "$1" \
+        --bind "esc:execute(killall fzf && rm /tmp/fzf_file)" \
+        --preview "echo {} \
+        | _awk_substitution | xargs -r man 2>/dev/null || echo No preview for this entry..." \
+        --bind "enter:execute(
+            echo {} | _awk_substitution | xargs -r man
+        )+abort"
+done
+
+export FZF_DEFAULT_OPTS=
+clear
+
