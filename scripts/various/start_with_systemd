@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+#
+# Author: Barret E (2026) <archus@protonmail.com>
+# https://github.com/archusXIV/dotfiles
+# Script name: start_with_systemd
+# License: GPLv2
+
+############################# Cleanup #############################
+[[ -d $HOME/.cache ]] && {
+    find "$HOME"/.cache -maxdepth 1 -type f -mtime +0 -exec rm -f {} \;
+    find "$HOME"/.cache -maxdepth 1 -type d -mtime +0 -exec rm -rf {} \;
+    find "$HOME"/.cache -maxdepth 1 -type d -empty -exec rmdir {} \;
+}
+
+find "$HOME"/.local/share/{*.xbel,/xorg/*} -type f -mtime +2 -exec rm -f {} \;
+[[ -d $HOME/.dotnet ]] && rm -rf "$HOME"/.dotnet
+rm -rf "$HOME"/.local/share/Trash/{files,info}
+mkdir -p "$HOME"/.local/share/Trash/{files,info}
+sed -i '/[[:graph:]]/d;/^\s*$/d' "$XDG_CONFIG_HOME"/{bash/bash_history,zsh/.cache/zsh_history}
+
+############################## Backup ##############################
+: "${USER:=archangel}"
+: "${SCRIPTDIR:=/home/$USER/.local/bin}"
+: "${XDG_CONFIG_HOME:=/home/$USER/.config}"
+
+command -v rsync >/dev/null && {
+    rsync -apq "$SCRIPTDIR"/* "$HOME"/Documents/scripts/
+    rsync -apq "$XDG_CONFIG_HOME"/* "$HOME"/Documents/configs/
+}
