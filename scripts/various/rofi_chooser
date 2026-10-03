@@ -1,9 +1,13 @@
-#!/bin/bash
-
+#!/usr/bin/env bash
+#
+# Author: Barret E (2026) <https://github.com/archusXIV/>
+# Script name: rofi_chooser
+# License: GPLv2
+#
 # shellcheck disable=SC2012
 declare -a choices=(
-    applications autoscript configs find
-    fonts keybindings pass record themes window
+    Applications Autoscript Configs Find Fonts
+    Keybindings Pass Record Themes Windows
 )
 
 choice=$(
@@ -28,7 +32,7 @@ _autoscript_menu() {
         script_file="$SCRIPTDIR/$1"
 
         if [[ -f $script_file ]]; then
-            $EDITOR "$script_file" &
+            "$EDITOR" "$script_file" & disown
         else
             cat > "$script_file" <<EOF
 #!/usr/bin/env bash
@@ -39,12 +43,17 @@ _autoscript_menu() {
 
 EOF
             chmod +x "$script_file"
-            $EDITOR "$script_file" &
+            "$EDITOR" "$script_file" & disown
         fi
     }
 
-    selected=$(find "$HOME"/.local/bin -maxdepth 1 -type f \
-        | sed 's,.*/,,' | sort | rofi -i \
+    selected=$(
+        find "$HOME"/.local/bin \
+        -maxdepth 1 \
+        -type f \
+        -printf '%f\n' \
+        | sort \
+        | rofi -i \
         -normal-window \
         -dmenu \
         -width 30 \
@@ -52,7 +61,8 @@ EOF
         -line-padding  \
         -padding 20 \
         -lines 10 \
-        -p "edit/create a script ")
+        -p "edit/create a script "
+    )
 
     [[ -z $selected ]] && exit
 
@@ -79,28 +89,28 @@ _passwd_copy() {
 
     [[ -z $selected ]] && exit
 
-    grep "$selected" "$list" | awk '{print $2" "$3}' | xclip -sel clip
-
+    awk -v SEL="$selected" '$0 ~ SEL { print $2" "$3 }' < "$list" | xclip -sel clip
+    exit
 }
 
 _rofi_configs() {
-    local confDir dirOptions dirChoice fileOptions fileChoice
+    local conf_dir dir_options dir_choice file_options file_choice
 
-    confDir="$HOME/.config/"
-    dirOptions=$(cd "${confDir}" && ls -d ./* | cut -d " " -f 1)
-    dirChoice=$(echo -e "${dirOptions[*]}\nquit" \
+    conf_dir="$HOME/.config/"
+    dir_options=$(cd "${conf_dir}" && ls -d ./* | cut -d " " -f 1)
+    dir_choice=$(echo -e "${dir_options[*]}\nquit" \
         | rofi -normal-window -dmenu -i -width 20 -hide-scrollbar \
         -line-padding 4 -padding 20 -lines 5 -p 'Config directories ')
-    fileOptions=$(cd "${confDir}${dirChoice}" && ls -Ap | cut -d " " -f 1 | grep -v / )
-    fileChoice=$(echo -e "${fileOptions[@]}" \
+    file_options=$(cd "${conf_dir}${dir_choice}" && ls -Ap | cut -d " " -f 1 | grep -v / )
+    file_choice=$(echo -e "${file_options[@]}" \
         | rofi -normal-window -dmenu -i -width 20 -hide-scrollbar \
         -line-padding 4 -padding 20 -lines 4 -p 'Edit this file: ')
 
-    if [[ -z $dirChoice ]]; then
+    if [[ -z $dir_choice ]]; then
         exit 0
     else
-        [[ -z $fileChoice ]] && exit 0
-        exec geany "${confDir}/${dirChoice}/${fileChoice}"
+        [[ -z $file_choice ]] && exit 0
+        exec geany "${conf_dir}/${dir_choice}/${file_choice}" & disown
         exit
     fi
 }
@@ -134,23 +144,28 @@ _theme_selector() {
     && restart_wm reloadmsg \
     && Terminal_theme_changer \
     && xre2rasi \
+    && polybar_start \
+    && sxhkd_start \
     && notify-send 'theme changed'
+    local config_dir="$HOME/.config/g810-led"
+    local profile="$config_dir/profiles/profile_$selected"
+    [[ -f $profile ]] && g810_switch_profile "$selected"
     exit 0
 }
 
 case "$choice" in
-    applications)
+    Applications)
         rofi -i -normal-window -modi run,drun \
         -show drun -line-padding 4 -columns 2 \
         -padding 50 -hide-scrollbar
     ;;
-    autoscript)
+    Autoscript)
         _autoscript_menu
     ;;
-    configs)
+    Configs)
         _rofi_configs
     ;;
-    find)
+    Find)
         if [[ $(systemctl status plocate-updatedb.timer \
             | awk '/Active:/{print $3}') = '(waiting)' ]]; then
             locate / | rofi -normal-window -threads 0 \
@@ -161,10 +176,10 @@ case "$choice" in
             -width 50 -dmenu -i -p "locate in system" | xargs -r -0 xdg-open
         fi
     ;;
-    fonts)
+    Fonts)
         fontawesomemenu -f "$HOME"/Documents/theming/fa4-icon-list.txt; exit
     ;;
-    keybindings)
+    Keybindings)
         WM_NAME=$(wmctrl -m | awk '/Name/{print $2}')
         awk '/^[a-zA-Z]/ && last {print $0,"\t",last} \
         {last=""} /^#/{last=$0}' ~/.config/sxhkd/"$WM_NAME"_sxhkdrc_memo \
@@ -172,8 +187,10 @@ case "$choice" in
         -width 1200 -location 0 -i -p "$WM_NAME keybindings memo"
         exit 0
     ;;
-    pass  ) _passwd_copy ;;
-    record) rofi-record & ;;
-    themes) _theme_selector ;;
-    window) rofi -modi window -show window -location 0 -width 850 & ;;
+    Pass  ) _passwd_copy ;;
+    Record) rofi-record & ;;
+    Themes) _theme_selector ;;
+    Windows) rofi -modi window -show window -location 0 -width 850 & ;;
 esac
+
+exit

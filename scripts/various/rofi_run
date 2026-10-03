@@ -11,9 +11,10 @@ usage() {
 
     OPTIONS:
     -h,--help          Display this message
-    -r,--run           Application launcher
-    -w,--window        Switch between windows
     -l,--logout        System logout dialog
+    -r,--run           Application launcher
+    -s,--sleep         Put monitor(s) in sleepping modes
+    -w,--window        Switch between windows
 
     Without any options the run dialog will be opened.
 
@@ -23,14 +24,6 @@ EOF
 for arg in "$@"; do
     case $arg in
         -h) usage ;;
-        -r|--run)
-            rofi -normal-window -modi run,drun -show drun -line-padding 4 \
-            -columns 2 -padding 50 -hide-scrollbar
-            ;;
-        -w|--window)
-            rofi -normal-window -modi window -show window -no-show-icons \
-            -hide-scrollbar -padding 70 -line-padding 4
-            ;;
         -l|--logout)
             if grep -q 'exec startx' "$HOME"/.*profile; then
                 ANS="$(rofi -normal-window -sep "|" -dmenu -i -p 'System' -width 20 \
@@ -39,7 +32,7 @@ for arg in "$@"; do
             else
                 ANS="$(rofi -normal-window -sep "|" -dmenu -i -p 'Power options' -width 250 \
                     -hide-scrollbar -line-padding  -padding 20 \
-                    -lines 5 <<< " Restart_WM| Lock| Exit| Reboot| Shutdown")"
+                    -lines 5 <<< " Restart WM| Lock| Exit| Reboot| Shutdown")"
             fi
 
             case "$ANS" in
@@ -49,6 +42,25 @@ for arg in "$@"; do
                 *Exit) session_exit ;;
                 *Restart) restart_wm restartmsg ;;
             esac
+            ;;
+        -r|--run)
+            rofi -normal-window -modi run,drun -show drun -line-padding 4 \
+            -columns 2 -padding 50 -hide-scrollbar
+            ;;
+        -s|--sleep)
+            _SleepOption() { xset +dpms; xset dpms force "$1"; }
+            ANS="$(rofi -normal-window -sep "|" -dmenu -i -p 'Monitors sleep options' -width 255 \
+                -hide-scrollbar -line-padding  -padding 20 \
+                -lines 3 <<< " StandBy| Suspend| Power_off")"
+            case "$ANS" in
+                *StandBy) _SleepOption standby ;;
+                *Suspend) _SleepOption suspend ;;
+                *Power_off) _SleepOption off ;;
+            esac
+            ;;
+        -w|--window)
+            rofi -normal-window -modi window -show window -no-show-icons \
+            -hide-scrollbar -padding 70 -line-padding 4
             ;;
         *)
             printf "\nOption does not exist: %s\n\n" "$arg"

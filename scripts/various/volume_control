@@ -18,6 +18,8 @@ sink_preset=5
 source_preset=1
 onthefly_preset="$3"
 default_source_vol="90%"
+kb_model=$(awk '/Keyboard/{print $9}' < <(lsusb))
+kb_modelBinary="${kb_model,}-led"
 
 _polybarHook() {
     # Make sure we have polybar running
@@ -49,26 +51,23 @@ _notifyVolume() {
 }
 
 _keyboardMuteKey() {
-    command -v g810-led >/dev/null 2>&1 || return 1
+    command -v "$kb_modelBinary" >/dev/null 2>&1 || return 1
     # variables used if g810-led package is installed.
-    local profile_rules profile_udev profiles_dir muteKeyOff muteKeyOn state key_state
+    local muteKeyOff muteKeyOn state key_state
 
-    profile_rules="/etc/udev/rules.d/g810-led.rules"
-    profile_udev=$(grep -e 'profile_' "$profile_rules" | sed 's,.*/,,;s/"//')
-    profiles_dir="/etc/g810-led/profiles"
-    muteKeyOff=$(awk '/^var color3/{print $NF}' "$profiles_dir"/"$profile_udev")
-    muteKeyOn=$(awk '/^var color1/{print $NF}' "$profiles_dir"/"$profile_udev")
+    muteKeyOff=$(awk '/^var color3/{print $NF}' /etc/g810-led/profile)
+    muteKeyOn=$(awk '/^var color1/{print $NF}' /etc/g810-led/profile)
     state=$1
     key_state=
 
     [[ $state == "on" ]] && key_state="$muteKeyOn" || key_state="$muteKeyOff"
 
     if [[ -s "$XDG_RUNTIME_DIR"/scratchpad_hidden.list ]]; then
-        sudo g815-led -k mute "$key_state"
-        sudo g815-led -fx breathing logo fb4934 5
+        sudo "$kb_modelBinary" -k mute "$key_state"
+        sudo "$kb_modelBinary" -fx breathing logo fb4934 5
         [[ $state == "on" ]] && notify-send 'Volume muted'
     else
-        sudo g815-led -k mute "$key_state"
+        sudo "$kb_modelBinary" -k mute "$key_state"
         [[ $state == "on" ]] && notify-send 'Volume muted'
     fi
 }

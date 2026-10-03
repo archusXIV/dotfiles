@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# Author: Barret E 2026 <archus@protonmail.com>
-# Script name: screencaster v1.2.1
+# Author: Barret E 2026 <https://github.com/archusXIV>
+# Script name: screencaster v1.2.2
 # License: GPlv2
 #
 # This script records the chosen screen with both video and audio
@@ -9,17 +9,19 @@
 # It requires command line arguments like:
 # screencaster -m HDMI-A-0 -a alsa_output.pci-0000_0a_00.4.analog-stereo.monitor
 # If -m or -a is not provided, we will be prompt to set those required parameters.
+# Recording multiple monitors at once can be done by providing the -r option
+# followed by the string 'max', so you won't be prompted to choose a monitor.
 # Use Ctrl+C to end the script if launched with -l or -w options
-# See the _Usage function for more options/info.
-# You can also check the filters parameters and change them in the FILTERS array.
+# See the _Usage function for more options/infos.
+# You can also check the filters parameters and change them in the FILTERS array @line 110.
 
 # colors
-grn=$'\e[32m'
 red=$'\e[31m'
+grn=$'\e[32m'
 noc=$'\e[0m'
 
 reset
-declare -a dependencies=( awk ffmpeg pulseaudio xrandr wmctrl )
+declare -a dependencies=( awk ffmpeg pulseaudio xrandr )
 
 for dependency in "${dependencies[@]}"; do
     command -v "${dependency}" >/dev/null || {
@@ -38,11 +40,15 @@ max_resolution=$(
     xrandr | awk '/current/{print $8 "x" substr($10, 1, length($10)-1)}'
 )
 
-mapfile -t audio_sources < <(pactl list sources short | awk '{print $2}')
+mapfile -t audio_sources < <(pactl list sources short | awk '{print  $2}')
+
+# getting actual terminal size
+read -r rows cols < <(stty size)
 
 _Usage() {
     # setting a minimum window size to display this _Usage function correctly
-    wmctrl -r :ACTIVE: -e "5,-1,-1,1100,700"
+    # wmctrl -r :ACTIVE: -e "5,-1,-1,1100,700" >/dev/null 2>&1
+    echo -ne '\e[8;30;108t'
     echo
     printf '%s\n' \
     " Usage: ${0##*/} [OPTIONS] [ARGS]" \
@@ -67,12 +73,14 @@ _Usage() {
     "${audio_sources[@]}" \
     "" \
     "  ${grn}Maximum screen resolution: ${noc}$max_resolution" \
-    "  (if you want to use this and have multiple monitors, choose your first monitor)" \
-    "  ${grn}Example: ${red}screencaster -r $max_resolution -m ${active_monitors[0]}${noc}"
+    "  (if you have multiple monitors and want to use them all, do not use -m monitor)" \
+    "  ${grn}Example: ${grn}screencaster ${red}-r max ${grn}etc...${noc}"
     exit 1
 }
 
 [[ $# -eq 0 || $1 =~ -h|--help ]] && _Usage
+
+trap '_EndScreencast' SIGINT SIGTERM EXIT
 
 # Parsing arguments
 while getopts "a:b:d:D:f:F:l:m:o:p:r:t:v:w:" opt; do
@@ -127,6 +135,13 @@ else
     filter=""
 fi
 
+# if we want to capture all our monitors or if we have only one,
+# we just have to use -r max and it'll make no difference for ffmpeg.
+[[ $resolution =~ 'max' ]] && {
+    resolution="$max_resolution"
+    monitor="${active_monitors[0]}"
+}
+
 # Giving a menu for monitor choice if not provided
 [[ -z $monitor ]] && {
     printf '\n'
@@ -157,7 +172,7 @@ fi
 }
 
 _IsPolybarActive() {
-    if [[ -n $(pgrep polybar) && $bar == "yes" ]]; then
+    if pgrep polybar >/dev/null && [[ $bar == "yes" ]]; then
         return 0
     else
         return 1
@@ -166,7 +181,7 @@ _IsPolybarActive() {
 
 _BarActions() {
     pid=$(pgrep -f "$(wmctrl -m | awk '/Name/{print $2}')"-bar-2)
-    case "$1" in
+    case $1 in
         on)
             if [[ $input == "on" ]]; then
                 polybar-msg -p "$pid" action "#mic-ipc.hook.1"
@@ -196,9 +211,14 @@ read -r currentvolume < <(
 )
 
 _SetVolume() {
-    case "$1" in
+    case $1 in
         on)
             if [[ $audio_source =~ input ]]; then
+                # when recording sound from logitech C920,
+                # disabling focus_automatic_continuous
+                # will prevent clicky sounds.
+                command -v v4l2-ctl &> /dev/null && \
+                v4l2-ctl --set-ctrl focus_automatic_continuous=0
                 _GetInputMute | grep -q 'yes' && _SetInputMute false
                 _GetOutputMute | grep -q 'no' && {
                     _SetOutputVolume 0%
@@ -247,55 +267,68 @@ monitor_position=$(
 )
 
 if [[ -z $monitor_position ]]; then
-    echo " ${red}Could not determine monitor position for $monitor${noc}"
+    printf '\n%s\n' " ${red}Could not determine monitor position for $monitor${noc}"
     exit 1
 else
     x=${monitor_position%,*}
     y=${monitor_position#*,}
 fi
 
-_EndScreencast() {
-    [[ -n $volume ]] && _SetVolume off
-    kill -TERM "$(cat /tmp/webcampid)" 2>/dev/null
-    kill -TERM "$(pidof ffmpeg)"
-    reset
-    notify-send 'screencast is over'
-    exit 0
-}
-
-[[ -n $volume ]] && _SetVolume on
-
-[[ -n $webcam ]] && {
-    "$webcam" &
-    webcam_pid=$!
-    echo "$webcam_pid" > /tmp/webcampid
-    trap 'kill -TERM "$(pidof ffmpeg)" "$webcam_pid"; _EndScreencast' SIGINT SIGTERM
-}
+_SetVolume on
 
 # Translating user input into seconds
 _TimeConverter() {
     IFS=":";
     if [[ $1 =~ ^[0-9]{2}:[0-9]{2}$ ]]; then
         read -r minutes seconds <<< "$1"
-        total_seconds=$((minutes * 60 + seconds))
+        # we should consider bash managing octals.
+        total_seconds=$(((10#$minutes * 60) + 10#$seconds))
     elif [[ $1 =~ ^[0-9]{2}:[0-9]{2}:[0-9]{2}$ ]]; then
         read -r hours minutes seconds <<< "$1"
-        total_seconds=$(((hours * 3600) + (minutes * 60 + seconds)))
+        total_seconds=$(((10#$hours * 3600) + (10#$minutes * 60 + 10#$seconds)))
     else
         unset IFS
         printf '\n%s\n' " ${red}Wrong duration format...${noc}"
+        sleep 2
         _Usage
     fi
     unset IFS
 }
 
+[[ -n $webcam ]] && {
+    "$webcam" &
+    echo $! > /tmp/screencast_pids
+}
+
 [[ -n $timer ]] && {
     _TimeConverter "$timer"
-    sleep "$total_seconds"
+    for ((i="$total_seconds";i>0;i--)); do
+        clear
+        printf '%s\n' " ${grn}screencast will start in: ${i} seconds" \
+            " on monitor: $monitor${noc}"
+        sleep 1
+    done
+    unset total_seconds
+}
+
+_EndScreencast() {
+    # restoring the previous terminal size
+    echo -ne "\e[8;${rows};${cols}t"
+    _SetVolume off
+    {
+        kill -TERM "$(pidof ffmpeg)"
+        while read -r line; do kill -TERM "$line"; done < /tmp/screencast_pids
+        rm /tmp/screencast_pids
+    } 2> /dev/null
+    reset
+    notify-send 'screencast is over'
+    exit
 }
 
 [[ -n $length ]] && {
-    _TimeConverter "$length" && sleep 0.2
+    _TimeConverter "$length"
+    printf '%s\n' " ${grn}Screencast will last for: $total_seconds seconds${noc}"
+    sleep 2
     # Start a background timer process and save its PID
     (
         for ((i=1;i<="$total_seconds";i++)); do
@@ -303,9 +336,11 @@ _TimeConverter() {
         done
         _EndScreencast
     ) &
-    timer_pid=$!
-    trap 'kill -TERM "$(pidof ffmpeg)" "$timer_pid"; _EndScreencast' SIGINT SIGTERM
+    echo $! >> /tmp/screencast_pids
 }
+
+# wmctrl -r :ACTIVE: -e "5,-1,-1,1350,130" >/dev/null 2>&1
+echo -ne '\e[8;5;133t'
 
 ffmpeg \
     -y \
@@ -315,8 +350,7 @@ ffmpeg \
     -f x11grab -i :0.0+"$x","$y" \
     -thread_queue_size 512 \
     -f pulse -i "$audio_source" \
-    -af "${audio_delay:+adelay=${audio_delay}|${audio_delay}}${audio_delay:+,}\
-        volume=${ndB}dB${filter:+,}${filter}" \
+    -af "${audio_delay:+adelay=${audio_delay}|${audio_delay}}${audio_delay:+,}volume=${ndB}dB${filter:+,}${filter}" \
     -c:v libx264 \
     -preset "$preset" \
     -crf 23 \
@@ -326,4 +360,4 @@ ffmpeg \
     -fps_mode cfr \
     "$output_file"
 
-_EndScreencast
+[[ -z $length ]] && _EndScreencast

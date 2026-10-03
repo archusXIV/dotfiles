@@ -22,6 +22,7 @@ export FZF_DEFAULT_OPTS="
     --color 'list-label:bold:cyan,input-label:bold:cyan'
     --color 'bg:#1e1f29,bg+:#1e1f99'
     --color='fg:#d0d0d0,fg+:#ffffff'
+    --cycle
     --exact
     --ignore-case
     --info=inline-right
@@ -35,35 +36,29 @@ export FZF_DEFAULT_OPTS="
     --list-label-pos=top
     --list-label ' manpages '
     --scroll-off=5
-    --tiebreak=index --cycle
+    --tiebreak=index
 "
 
-_awk_substitution() {
+_awkSubstitution() {
     awk "{
         gsub(/ *\\(.*/,\"\");
         gsub(/,.*/,\"\");
-        gsub(/ *-[^-]*$/,\"\");
+        gsub(/ +-[^-]*$/,\"\");
         gsub(/  +/,\" \");
         sub(/ *$/,\"\");
         print
     }"
 }
 
-export -f _awk_substitution
+export -f _awkSubstitution
 
-touch /tmp/fzf_file
-
-while [[ -f /tmp/fzf_file ]]; do
-    man -k . | \
-    fzf -q "$1" \
-        --bind "esc:execute(killall fzf && rm /tmp/fzf_file)" \
-        --preview "echo {} \
-        | _awk_substitution | xargs -r man 2>/dev/null || echo No preview for this entry..." \
-        --bind "enter:execute(
-            echo {} | _awk_substitution | xargs -r man
-        )+abort"
-done
+man -k . | \
+fzf -q "$1" \
+    --preview "echo {} \
+    | _awkSubstitution | xargs -r man 2>/dev/null || echo No preview for this entry..." \
+    --bind "enter:execute(
+        echo {} | _awkSubstitution | xargs -r man
+    )"
 
 export FZF_DEFAULT_OPTS=
-clear
-
+tput clear

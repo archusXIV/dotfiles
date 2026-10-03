@@ -1,61 +1,88 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 ##   Author: Barret E (2021) <archus@protonmail.com>
 ##   A simple colors converter. hex->rgb or rgb->hex
 
 _usage() {
-    echo ""
-    echo "Convert hex color code to RGB and RGB to HEX (Hexadecimal)"
-    echo "Usage: color_convert [HEX] or [RGB] color value"
-    echo "[HEX] example: color_convert 000000"
-    echo "[RGB] example color_convert 0,0,0"
-    echo ""
-    echo "Can also convert ~/.Xresources color values"
-    echo "(if you defined black as #000000)"
-    echo "Example color_convert black; will be (0, 0, 0)"
-    echo "Or: color_convert 0; where '0' is color0"
-    echo ""
+    printf '%s\n' \
+    " Convert hex color code to RGB and RGB to HEX (Hexadecimal)" \
+    " Usage: color_convert [HEX] or [RGB] color value" \
+    " [HEX] example: color_convert 000000" \
+    " [RGB] example color_convert 0,0,0" \
+    "" \
+    " Can also convert ~/.Xresources color values" \
+    " (if you defined black as #000000)" \
+    " Example color_convert black; will be (0, 0, 0)" \
+    " Or: color_convert 0; where '0' is color0" \
+    ""
     exit
 }
 
 if [[ $# -eq 0 ]]; then
-    echo "Invalid color value!"
+    echo -e " Invalid color value, or value is empty!\n"
     _usage
 fi
 
-if [[ $1 =~ ([[:xdigit:]]{2})([[:xdigit:]]{2})([[:xdigit:]]{2}) ]]; then
-    printf "(%d, %d, %d)\n" \
-    0x"${BASH_REMATCH[1]}" 0x"${BASH_REMATCH[2]}" 0x"${BASH_REMATCH[3]}"
-elif [[ $1 =~ ([[:digit:]]{1,3}),([[:digit:]]{1,3}),([[:digit:]]{1,3}) ]]; then
-    printf "#%02x%02x%02x\n" \
-    "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" "${BASH_REMATCH[3]}"
-fi
+_getXresColors() {
+    local color="$1"
+    xrdb -query \
+    | awk -v colour="$color" '
+        $0 ~ colour ":" { sub("[#]","",$2); print $2 }
+    '
+}
 
-_cnvrtXres() {
+# Prints the RGB triplet colorized with its own truecolor background.
+_rgb=""
+
+_colorized() {
+    local r g b
+
     if [[ $1 =~ ([[:xdigit:]]{2})([[:xdigit:]]{2})([[:xdigit:]]{2}) ]]; then
-        printf "(%d, %d, %d)\n" \
-        0x"${BASH_REMATCH[1]}" 0x"${BASH_REMATCH[2]}" 0x"${BASH_REMATCH[3]}"
+        r=$((16#${BASH_REMATCH[1]}))
+        g=$((16#${BASH_REMATCH[2]}))
+        b=$((16#${BASH_REMATCH[3]}))
+        _rgb="($r, $g, $b)"
+        printf '\e[48;2;%d;%d;%dm  %s  \e[0m\n' "$r" "$g" "$b" "$_rgb"
     fi
 }
 
+# Prints the HEX code colorized with its own truecolor background.
+_rgbToHex() {
+    local r g b
+
+    if [[ $1 =~ ([[:digit:]]{1,3}),([[:digit:]]{1,3}),([[:digit:]]{1,3}) ]]; then
+        r="${BASH_REMATCH[1]}"
+        g="${BASH_REMATCH[2]}"
+        b="${BASH_REMATCH[3]}"
+        printf '\e[48;2;%d;%d;%dm  #%02x%02x%02x  \e[0m\n' "$r" "$g" "$b" "$r" "$g" "$b"
+    fi
+}
+
+if [[ $1 =~ ([[:xdigit:]]{2})([[:xdigit:]]{2})([[:xdigit:]]{2}) ]]; then
+    _colorized "$1"
+    exit 0
+elif [[ $1 =~ ([[:digit:]]{1,3}),([[:digit:]]{1,3}),([[:digit:]]{1,3}) ]]; then
+    _rgbToHex "$1"
+    exit 0
+fi
+
 case "$1" in
-    foreground|fg)    _cnvrtXres "$(xrdb -query | awk '/foreground:/{sub("[#]",""); print $2}')" ;;
-    background|bg)    _cnvrtXres "$(xrdb -query | awk '/background:/{sub("[#]",""); print $2}')" ;;
-    black|blk|0)      _cnvrtXres "$(xrdb -query | awk '/color0:/{sub("[#]",""); print $2}')" ;;
-    red|1)            _cnvrtXres "$(xrdb -query | awk '/color1:/{sub("[#]",""); print $2}')" ;;
-    green|grn|2)      _cnvrtXres "$(xrdb -query | awk '/color2:/{sub("[#]",""); print $2}')" ;;
-    yellow|ylw|3)     _cnvrtXres "$(xrdb -query | awk '/color3:/{sub("[#]",""); print $2}')" ;;
-    blue|blu|4)       _cnvrtXres "$(xrdb -query | awk '/color4:/{sub("[#]",""); print $2}')" ;;
-    magenta|mag|5)    _cnvrtXres "$(xrdb -query | awk '/color5:/{sub("[#]",""); print $2}')" ;;
-    cyan|cyn|6)       _cnvrtXres "$(xrdb -query | awk '/color6:/{sub("[#]",""); print $2}')" ;;
-    white|wht|7)      _cnvrtXres "$(xrdb -query | awk '/color7:/{sub("[#]",""); print $2}')" ;;
-    black2|blk2|8)    _cnvrtXres "$(xrdb -query | awk '/color8:/{sub("[#]",""); print $2}')" ;;
-    red2|9)           _cnvrtXres "$(xrdb -query | awk '/color9:/{sub("[#]",""); print $2}')" ;;
-    green2|grn2|10)   _cnvrtXres "$(xrdb -query | awk '/color10:/{sub("[#]",""); print $2}')" ;;
-    yellow2|ylw2|11)  _cnvrtXres "$(xrdb -query | awk '/color11:/{sub("[#]",""); print $2}')" ;;
-    blue2|blu2|12)    _cnvrtXres "$(xrdb -query | awk '/color12:/{sub("[#]",""); print $2}')" ;;
-    magenta2|mag2|13) _cnvrtXres "$(xrdb -query | awk '/color13:/{sub("[#]",""); print $2}')" ;;
-    cyan2|cyn2|14)    _cnvrtXres "$(xrdb -query | awk '/color14:/{sub("[#]",""); print $2}')" ;;
-    white2|wht2|15)   _cnvrtXres "$(xrdb -query | awk '/color15:/{sub("[#]",""); print $2}')" ;;
+    foreground|fg)    _colorized "$(_getXresColors foreground)" ;;
+    background|bg)    _colorized "$(_getXresColors background)" ;;
+    black|blk|0)      _colorized "$(_getXresColors color0)" ;;
+    red|1)            _colorized "$(_getXresColors color1)" ;;
+    green|grn|2)      _colorized "$(_getXresColors color2)" ;;
+    yellow|ylw|3)     _colorized "$(_getXresColors color3)" ;;
+    blue|blu|4)       _colorized "$(_getXresColors color4)" ;;
+    magenta|mag|5)    _colorized "$(_getXresColors color5)" ;;
+    cyan|cyn|6)       _colorized "$(_getXresColors color6)" ;;
+    white|wht|7)      _colorized "$(_getXresColors color7)" ;;
+    black2|blk2|8)    _colorized "$(_getXresColors color8)" ;;
+    red2|9)           _colorized "$(_getXresColors color9)" ;;
+    green2|grn2|10)   _colorized "$(_getXresColors color10)" ;;
+    yellow2|ylw2|11)  _colorized "$(_getXresColors color11)" ;;
+    blue2|blu2|12)    _colorized "$(_getXresColors color12)" ;;
+    magenta2|mag2|13) _colorized "$(_getXresColors color13)" ;;
+    cyan2|cyn2|14)    _colorized "$(_getXresColors color14)" ;;
+    white2|wht2|15)   _colorized "$(_getXresColors color15)" ;;
     -h|--help)        _usage ;;
 esac
-
