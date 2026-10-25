@@ -19,6 +19,19 @@
 
 command -v xfce4-power-manager >/dev/null || exit 127
 
+_usage() {
+    # print help when no valid option is given
+    cat <<EOF
+    Usage: ${0##*/} [option]
+
+    Options:
+        --check-suspend          list current xfce4-power-manager settings
+        --enable-suspend <min>   set display sleep delay in minutes
+        --disable-suspend        reset display sleep delay
+        --system                 put the computer in suspend mode
+EOF
+}
+
 org="org.freedesktop.PowerManagement"
 org_path="/${org//./\/}"
 
@@ -32,12 +45,13 @@ _isPowerManagerRunnig() {
 }
 
 _xfconfCmd() {
+    # value is the amount of minutes before the display goes to sleep
     local value="$1"
     xfconf-query \
     -c xfce4-power-manager \
     -p /xfce4-power-manager/dpms-on-ac-sleep \
     -s "$value"
-    notify-send "DPMS is set at: $value"
+    notify-send "DPMS is set at: $value minutes"
 }
 
 _actions() {
@@ -46,6 +60,7 @@ _actions() {
         display-off) _xfconfCmd "$2" ;;
         reset      ) _xfconfCmd 0 ;;
         suspend)
+            command -v dbus-send >/dev/null || exit 127
             dbus-send --session --print-reply --dest="$org" "$org_path" "$org".Suspend
         ;;
     esac
@@ -56,6 +71,6 @@ case $1 in
     --enable-suspend ) _isPowerManagerRunnig && _actions display-off "$2" ;;
     --disable-suspend) _isPowerManagerRunnig && _actions reset ;;
     --system         ) _isPowerManagerRunnig && _actions suspend ;;
-    *) printf '%s\n' " wrong option $1" ;;
+    *) _usage ;;
 esac
 
