@@ -71,7 +71,7 @@ for arg in "$@"; do
                     ;;
                     *)
                         answer2=$((answer2 * 60))
-                        notify-send "timeout:$answer2"
+                        notify-send "timeout: $((answer2 / 60)) minutes"
                         xfce4-power-manager --quit 2>/dev/null
                         if [[ $option == "standby" ]]; then
                             xset +dpms; sleep 1; xset dpms "$answer2" 0 0
