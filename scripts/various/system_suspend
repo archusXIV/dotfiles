@@ -28,7 +28,8 @@ _usage() {
         --check-suspend          list current xfce4-power-manager settings
         --enable-suspend <min>   set display sleep delay in minutes
         --disable-suspend        reset display sleep delay
-        --system                 put the computer in suspend mode
+        --system-suspend         put the computer in suspend mode
+        --help                   display this help message
 EOF
 }
 
@@ -56,7 +57,8 @@ _xfconfCmd() {
 
 _actions() {
     # $2 is the number in minutes before the action takes place
-    case $1 in
+    local action="$1"
+    case $action in
         display-off) _xfconfCmd "$2" ;;
         reset      ) _xfconfCmd 0 ;;
         suspend)
@@ -70,7 +72,7 @@ case $1 in
     --check-suspend  ) xfconf-query -c xfce4-power-manager -lv ;;
     --enable-suspend ) _isPowerManagerRunnig && _actions display-off "$2" ;;
     --disable-suspend) _isPowerManagerRunnig && _actions reset ;;
-    --system         ) _isPowerManagerRunnig && _actions suspend ;;
+    --system-suspend ) _isPowerManagerRunnig && _actions suspend ;;
+    --help           ) _usage ;;
     *) _usage ;;
 esac
-
