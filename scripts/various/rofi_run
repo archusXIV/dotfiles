@@ -4,7 +4,7 @@ export XDG_CURRENT_DESKTOP=''
 
 NAME=$(basename "$0")
 
-usage() {
+_usage() {
     cat <<- EOF
 
     USAGE:  $NAME [OPTIONS]
@@ -23,41 +23,76 @@ EOF
 
 for arg in "$@"; do
     case $arg in
-        -h) usage ;;
+        -h) _usage ;;
         -l|--logout)
             if grep -q 'exec startx' "$HOME"/.*profile; then
-                ANS="$(rofi -normal-window -sep "|" -dmenu -i -p 'System' -width 20 \
+                answer="$(rofi -normal-window -sep "|" -dmenu -i -p 'System' -width 20 \
                     -hide-scrollbar -line-padding 4 -padding 20 \
                     -lines 3 <<< " Lock| Reboot| Shutdown")"
             else
-                ANS="$(rofi -normal-window -sep "|" -dmenu -i -p 'Power options' -width 250 \
+                WM=$(wmctrl -m | awk '/Name:/{print $NF}')
+                answer="$(
+                    rofi -normal-window -sep "|" -dmenu -i -p 'Power options' -width 250 \
                     -hide-scrollbar -line-padding  -padding 20 \
-                    -lines 5 <<< " Restart WM| Lock| Exit| Reboot| Shutdown")"
+                    -lines 6 <<< "   Restart $WM|   Lock|   Exit|   Suspend|   Reboot|   Shutdown"
+                )"
             fi
-
-            case "$ANS" in
+            case "$answer" in
+                *Restart) restart_wm restartmsg ;;
                 *Lock) scrot_lock ;;
+                *Exit) session_exit ;;
+                *Suspend) system_suspend --system ;;
                 *Reboot) sudo reboot ;;
                 *Shutdown) sudo poweroff ;;
-                *Exit) session_exit ;;
-                *Restart) restart_wm restartmsg ;;
             esac
             ;;
         -r|--run)
             rofi -normal-window -modi run,drun -show drun -line-padding 4 \
             -columns 2 -padding 50 -hide-scrollbar
             ;;
-        -s|--sleep)
-            _SleepOption() { xset +dpms; xset dpms force "$1"; }
-            ANS="$(rofi -normal-window -sep "|" -dmenu -i -p 'Monitors sleep options' -width 255 \
+                -s|--sleep)
+            _sleepOption() {
+                local option="$1"
+                answer2="$(
+                    rofi -normal-window -sep "|" \
+                    -dmenu -i -p "Timeout in minutes before $option" \
+                    -width 420 -hide-scrollbar -line-padding  -padding 20 \
+                    -lines 2 <<< "   Now|   Disable_DPMS|"
+                )"
+                case "$answer2" in
+                    *Now|[0])
+                        xfce4-power-manager --quit 2>/dev/null
+                        xset +dpms; sleep 1; xset dpms force "$option"
+                    ;;
+                    *Disable_DPMS)
+                        notify-send 'DPMS disabled'
+                        xfce4-power-manager --quit 2>/dev/null
+                        xset dpms 0 0 0; xset -dpms; xset s off -dpms
+                    ;;
+                    *)
+                        answer2=$((answer2 * 60))
+                        notify-send "timeout:$answer2"
+                        xfce4-power-manager --quit 2>/dev/null
+                        if [[ $option == "standby" ]]; then
+                            xset +dpms; sleep 1; xset dpms "$answer2" 0 0
+                        elif [[ $option == "suspend" ]]; then
+                            xset +dpms; sleep 1; xset dpms 0 "$answer2" 0
+                        else
+                            xset +dpms; sleep 1; xset dpms 0 0 "$answer2"
+                        fi
+                esac
+            }
+            answer="$(
+                rofi -normal-window -sep "|" \
+                -dmenu -i -p 'Monitors sleep options' -width 255 \
                 -hide-scrollbar -line-padding  -padding 20 \
-                -lines 3 <<< " StandBy| Suspend| Power_off")"
-            case "$ANS" in
-                *StandBy) _SleepOption standby ;;
-                *Suspend) _SleepOption suspend ;;
-                *Power_off) _SleepOption off ;;
+                -lines 3 <<< "   Standby|   Suspend|   Off")"
+            case "$answer" in
+                *Standby) _sleepOption standby ;;
+                *Suspend) _sleepOption suspend ;;
+                *Off) _sleepOption off ;;
             esac
-            ;;
+        ;;
         -w|--window)
             rofi -normal-window -modi window -show window -no-show-icons \
             -hide-scrollbar -padding 70 -line-padding 4

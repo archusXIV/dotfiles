@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+#
+# Author: Barret E (2026) <https://github.com/archusXIV/>
+# Script name: system_suspend
+# License: GPLv2
+#
+# Manage display & machine suspend modes
+# Usage:
+#    system_suspend --enable-suspend <minutes>
+#    system_suspend --disable-suspend
+#    system_suspend --system (put the computer in suspend mode)
+#
+# Put display to sleep after 10 minutes on AC
+#    xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/dpms-on-ac-sleep -s 10
+# Switch display off after 15 minutes on AC
+#    xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/dpms-on-ac-off -s 15
+# Enable/disable DPMS handling
+#    xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/dpms-enabled -s true
+
+command -v xfce4-power-manager >/dev/null || exit 127
+
+org="org.freedesktop.PowerManagement"
+org_path="/${org//./\/}"
+
+_isPowerManagerRunnig() {
+    if pidof xfce4-power-manager >/dev/null; then
+        return 0
+    else
+        notify-send -u critical "xfce4-power-manager isn't running"
+        return 1
+    fi
+}
+
+_xfconfCmd() {
+    local value="$1"
+    xfconf-query \
+    -c xfce4-power-manager \
+    -p /xfce4-power-manager/dpms-on-ac-sleep \
+    -s "$value"
+    notify-send "DPMS is set at: $value"
+}
+
+_actions() {
+    # $2 is the number in minutes before the action takes place
+    case $1 in
+        display-off) _xfconfCmd "$2" ;;
+        reset      ) _xfconfCmd 0 ;;
+        suspend)
+            dbus-send --session --print-reply --dest="$org" "$org_path" "$org".Suspend
+        ;;
+    esac
+}
+
+case $1 in
+    --check-suspend  ) xfconf-query -c xfce4-power-manager -lv ;;
+    --enable-suspend ) _isPowerManagerRunnig && _actions display-off "$2" ;;
+    --disable-suspend) _isPowerManagerRunnig && _actions reset ;;
+    --system         ) _isPowerManagerRunnig && _actions suspend ;;
+    *) printf '%s\n' " wrong option $1" ;;
+esac
+
