@@ -41,12 +41,12 @@
       "id": ""
     },
     {
-      "name": "5:R",
+      "name": "5:M",
       "number": 5,
       "focused": false,
       "active": false,
       "monitor": "DisplayPort-1",
-      "layout": "rtile",
+      "layout": "mono",
       "title": "",
       "id": ""
     },

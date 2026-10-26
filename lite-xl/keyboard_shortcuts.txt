@@ -2,6 +2,9 @@
 # core:quit
 ctrl+q
 
+# core:open-user-module (init.lua)
+alt + shift + i
+
 # core:find-command
 ctrl + shift + p
 
@@ -21,7 +24,7 @@ ctrl + shift + c
 ctrl + shift + o
 
 # core:restart
-alt + r
+alt + shift + r
 
 # doc:align-carets
 ctrl + shift + space
@@ -227,10 +230,19 @@ ctrl + f3
 # find-replace:select-previous
 ctrl + shift + f3
 
-# find-replace:select-add-next doc:select-word
+# search-replace:toggle
+alt + r
+
+# search-replace:previous
+shift + return
+
+# search-replace:toggle-in-selection
+ctrl + alt + i
+
+# doc:select-word
 ctrl + d
 
-# find-replace:select-add-all doc:select-word
+# doc:select-word
 ctrl + shift + l
 
 # root:split-left
@@ -284,20 +296,23 @@ ctrl + b
 # command:complete doc:indent
 tab
 
-# command:escape doc:select-none dialog:select-no
+# doc:select-none dialog:select-no
 escape
 
-# command:select-previous doc:move-to-previous-line
+# doc:move-to-previous-line
 up
 
-# command:select-next doc:move-to-next-line
+# doc:move-to-next-line
 down
 
-# command:submit doc:newline dialog:select
+# doc:newline dialog:select
 return
 
-# command:submit doc:newline dialog:select
+# doc:newline dialog:select
 keypad enter
+
+# show markdown preview
+alt + shift + m
 
 # minimap:toggle-visibility
 shift + delete
@@ -308,3 +323,26 @@ ctrl + shift + home
 # shfmt:format
 alt + shift + f
 
+# fold current block
+ctrl + alt + f
+
+# unfold current block
+ctrl + alt + u
+
+# toggle fold current block
+ctrl + alt + t
+
+# fold all blocks
+ctrl + alt + a
+
+# unfold all blocks
+ctrl + alt + g
+
+# fold selected block
+ctrl + alt + s
+
+# move to matching
+ctrl + m
+
+# select to matching
+ctrl + shift + m

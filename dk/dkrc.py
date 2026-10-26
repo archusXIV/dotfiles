@@ -112,7 +112,7 @@ class DKConfig:
             5: ['virt-manager', 'VirtualBox', 'Org.gnome.Boxes'],
             6: ['feh', 'Zathura'],
             8: ['Thunar', 'transmission-gtk', 'Worker'],
-            9: ['obs', 'SimpleScreenRecorder', 'vokoscreenNG']
+            9: ['obs', 'SimpleScreenRecorder', 'Shotcut', 'vokoscreenNG']
         }
 
         # Special cases
@@ -127,7 +127,7 @@ class DKConfig:
             'dkcmd rule class="^(URxvt|xterm|xterm-256color|Alacritty)$" terminal=true',
             'dkcmd rule class="^Org.gnome.five-or-more$" focus=true float=true w=434 h=488',
             'dkcmd rule class="^URxvt$" instance="^(bashterm|mpm)$" focus=true float=true w=1260 h=738',
-            'dkcmd rule class="^hu.irl.cameractrls$" instance="^python3.13$" focus=true float=true w=320 h=180',
+            'dkcmd rule class="^hu.irl.cameractrls$" instance="^python3.14$" focus=true float=true w=320 h=180',
             'dkcmd rule class="^Screenkey$" ignore_cfg=true ignore_msg=true',
             'dkcmd rule instance="^(aur-cli|Browser|cal|floaterm|pacman-cli|somabox)$" focus=true float=true',
             'dkcmd rule title="^Event Tester$" no_absorb=true'

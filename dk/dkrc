@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-####################### DK WINDOW MANAGER CONFIGURATION FILE version 2.3-1 ########################
+##################### DK WINDOW MANAGER CONFIGURATION FILE version 2.3-1 ######################
 # export DKSOCK="/tmp/$(command ls /tmp | awk '/dk__/{print $0}')"
 # Waiting for dk's socket to be a socket...
 until [[ -S $DKSOCK ]]; do
@@ -9,36 +9,42 @@ done
 
 #============= MONITORS/WORKSPACES/GAPS/PADDING/SPLIT_RATIO/LAYOUTS/BORDERS/ETC...=============#
 # Determine how many workspaces we want
-dkcmd set numws=9
+totalws=9
+dkcmd set numws=$totalws
 dkcmd set ws=_ apply layout=rtile master=1 stack=3 \
-pad {l,r,t,b}=6 gap=5 msplit=0.70 ssplit=0.5
+pad {left,right,top}=6 bottom=4 gap=5 msplit=0.70 ssplit=0.5
 
 dkcmd set static_ws=true
-dkcmd set ws=1 layout=grid pad {l,r,t,b}=25 gap=50
+dkcmd set ws=1 layout=grid pad {left,right,top,bottom}=25 gap=50
 dkcmd set ws=4 layout=tstack msplit=0.85
+dkcmd set ws=5 layout=mono
 dkcmd set ws=7 layout=tile msplit=0.50
 
 _Check() { command -v "$1" >/dev/null; }
 
-# Getting actually connected monitors names
 _Check xrandr && {
 
+    # Upper-case letters = layout names
+    # D=dwindle, G=grid, M=mono, N=none, R=rtile, S=spiral, T=tile, W=tstack
+    # Actual workspaces numbers:layouts
+    # 1:G 2:R 3:R 4:W 5:M 6:R 7:T 8:R 9:R
+    declare -a layouts=( G R R W M R T R R )
+
+    # Getting actually connected monitors names
     mapfile -t mons < <(
         xrandr --listactivemonitors | awk 'NR>1 { print $NF }'
     )
+
     for mon in "${mons[@]}"; do
         xrandr --output "$mon" --set TearFree on
     done
     unset mon
 
-    # Upper-case letters = layout names
-    # D=dwindle, G=grid, M=mono, N=none, R=rtile, S=spiral, T=tile, W=tstack
-    # 1:G 2:R 3:R 4:W 5:R 6:R 7:T 8:R 9:R
-    declare -a layouts=( G R R W R R T R R )
-
+    # we may have one or more monitors, so workspaces assignment should differ.
     case ${#mons[@]} in
         3)
-            totalws=$(awk -F= '/\<numws\>/ { print $2; exit }' "$DKRC")
+            # we use $totalws defined at the top of this file
+            # totalws=$(awk -F= '/\<numws\>/ { print $2; exit }' "$DKRC")
             MONITORS=(
                 "${mons[0]}" "${mons[0]}" "${mons[0]}"
                 "${mons[1]}" "${mons[1]}" "${mons[1]}"
@@ -47,25 +53,21 @@ _Check xrandr && {
         ;;
         2)
             # if we then have two monitors, we add a workspace and its layout
-            dkcmd set numws=10
+            ((totalws++))
+            dkcmd set numws=$totalws
             layouts+=( R )
-            totalws=$(
-                awk -F= '
-                    /\<numws\>/ {
-                        count++;
-                        if (count == 3) { print $2; exit }
-                    }
-                ' "$DKRC"
-            )
             MONITORS=(
                 "${mons[0]}" "${mons[0]}" "${mons[0]}" "${mons[0]}" "${mons[0]}"
                 "${mons[1]}" "${mons[1]}" "${mons[1]}" "${mons[1]}" "${mons[1]}"
             )
         ;;
-        1) MONITORS=() ;;
+        1)
+            # if one monitor, we use $totalws defined at the top of this file
+            MONITORS=( "${mons[0]}" )
+        ;;
     esac
 
-    # 'i' is the first part of the workspace name (@line 41)
+    # 'i' is the first part of the workspace name (@line 31)
     for ((i=1;i<="$totalws";i++)); do
         args=( ws="$i" name="${i}:${layouts[i-1]}" )
         (( ${#MONITORS[@]} > 1 )) && args+=( mon="${MONITORS[i-1]}" )
@@ -74,16 +76,21 @@ _Check xrandr && {
 
 }
 
-dkcmd set {focus_open,tile_tohead}=true
-dkcmd set {focus_{mouse,urgent},obey_motif,tile_hints,smart_{border,gap}}=false
-dkcmd set win_{minwh,minxy}=50
-dkcmd set mouse mod=super move=button1 resize=button2
-dkcmd set border width=1 outer_width=1
+# disabling monitors suspend mode
+_Check xset && xset s off -dpms
+
+#====================================== GLOBAL SETTINGS ======================================#
+dkcmd set \
+    {focus_open,tile_tohead}=true \
+    {focus_{mouse,urgent},obey_motif,tile_hints,smart_{border,gap}}=false \
+    win_{minwh,minxy}=50 \
+    mouse mod=super move=button1 resize=button2 \
+    border width=1 outer_width=0
 
 #=========================================== COLORS ===========================================#
-# if colors are not set or found, dk will use defaults (blu, red and black)
+# if colors are not set or found, dk will use defaults (blue, red and black)
 if _Check xrdb && [[ -e $HOME/.Xresources ]]; then
-    xrdb -load "$HOME"/.Xresources
+    xrdb -load ~/.Xresources
     red=$(xrdb -query | awk '/color1:/{print $NF}')
     ylw=$(xrdb -query | awk '/color3:/{print $NF}')
     blk=$(xrdb -query | awk '/color8:/{print $NF}')
@@ -106,15 +113,15 @@ done < "$HOME"/.config/dk/FloatingApps
 #========================== Add windows classes/instances in this list =======================#
 dkcmd rule class="^(Brave-browser|Chromium)$"                             ws=2 focus=true
 dkcmd rule class="^(file-roller|filezilla)$"                              ws=3 focus=true
-dkcmd rule class="^(code|Cursor|Geany|com.lite_xl.LiteXL)$"               ws=4 focus=true
-dkcmd rule class="^(virt-manager|VirtualBox|Org.gnome.Boxes)$"            ws=5 focus=true
+dkcmd rule class="^(com.microsoft.VSCode|Geany|com.lite_xl.LiteXL)$"      ws=4 focus=true
+dkcmd rule class="^(virt-manager|VirtualBox|Org.gnome.Boxes|Shotcut)$"    ws=5 focus=true
 dkcmd rule class="^mpv$" instance="^mpvk$"                                ws=5 focus=true
 dkcmd rule class="^(feh|Zathura)$"                                        ws=6 focus=true
 dkcmd rule class="^(Thunar|transmission-gtk|Worker)$"                     ws=8 focus=true
 dkcmd rule class="^(obs|SimpleScreenRecorder|vokoscreenNG)$"              ws=9 focus=true
 
 #======================================= Other rules ==========================================#
-dkcmd rule class="^(URxvt|xterm|xterm-256color|Alacritty)$"               terminal=true
+dkcmd rule class="^(URxvt|Xterm|xterm-256color|Alacritty)$"               terminal=true
 dkcmd rule class="^Org.gnome.five-or-more$"                               focus=true float=true w=434 h=488
 dkcmd rule class="^URxvt$" instance="^(bashterm|mpm)$"                    focus=true float=true w=1260 h=738
 dkcmd rule class="^URxvt$" instance="^nsc$"                               focus=true float=true w=722 h=197
@@ -125,19 +132,20 @@ dkcmd rule title="^Event Tester$"                                         no_abs
 
 # For some reason we have to echo those rules through socat so that dk takes them into account.
 # Let's say that's a dirthack but it works.
-_Check socat >/dev/null && {
+_Check socat && {
     echo "rule class=\"^URxvt$\" instance=\"^(cmus|ncmpcpp|pulsemixer|ripper)$\" ws=1 focus=true" | socat - "$DKSOCK"
     echo "rule class=\"^URxvt$\" instance=\"^(btop|htop|jnettop|newboat)$\" ws=7 focus=true" | socat - "$DKSOCK"
-    echo "rule class=\"^URxvt$\" instance=\"^(ranger|sudoranger)$\" ws=8 focus=true" | socat - "$DKSOCK"
+    echo "rule class=\"^URxvt$\" instance=\"^(fzfm|ranger|sudoranger)$\" ws=8 focus=true" | socat - "$DKSOCK"
 }
 
 dkcmd rule apply '*'
 
 #============================== CURRENT WM STATE IN .json FILES ==============================#
-# generated files can be used in variuous scripts.
+# generated files can be used in various scripts
 declare -a types=( full ws )
 for type in "${types[@]}"; do
-    dkcmd -p < <(dkcmd status type="$type" num=1) > "$XDG_CONFIG_HOME"/dk/dk_"$type".json
+    dkcmd -p < <(dkcmd status type="$type" num=1) \
+    | python3 "$XDG_CONFIG_HOME"/dk/fix_json.py > "$XDG_CONFIG_HOME"/dk/dk_"$type".json
 done
 
 #============================== STARTUP APPLICATIONS & SETTINGS ===============================#
@@ -147,6 +155,8 @@ for bin in polybar sxhkd; do
     }
 done
 
-_Check autostart && autostart & disown
+_Check updates-manager && {
+    [[ ! -f $XDG_RUNTIME_DIR/combined.list ]] && updates-manager --chck
+}
 
 exit 0
