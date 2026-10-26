@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# https://github.com/archusXIV/dotfiles/blob/main/scripts/various/rofi_run
+
 export XDG_CURRENT_DESKTOP=''
 
 NAME=$(basename "$0")
@@ -50,47 +52,69 @@ for arg in "$@"; do
             rofi -normal-window -modi run,drun -show drun -line-padding 4 \
             -columns 2 -padding 50 -hide-scrollbar
             ;;
-                -s|--sleep)
-            _sleepOption() {
+        -s|--sleep)
+            _setDpmsTimeout() {
+                # xset sets all three timeouts at once,
+                # so read the current ones first.
+                local option="$1" value="$2" line
+                local -i standby=0 suspend=0 off=0
+                while IFS= read -r line; do
+                    if [[ $line =~ Standby:\ *([0-9]+)\ +Suspend:\ *([0-9]+)\ +Off:\ *([0-9]+) ]]; then
+                        standby=${BASH_REMATCH[1]}
+                        suspend=${BASH_REMATCH[2]}
+                        off=${BASH_REMATCH[3]}
+                    fi
+                done < <(xset q)
+                case "$option" in
+                    standby) standby=$value ;;
+                    suspend) suspend=$value ;;
+                    *) off=$value ;;
+                esac
+                xset +dpms
+                sleep 1
+                xset dpms "$standby" "$suspend" "$off"
+            }
+            _setSleepOption() {
                 local option="$1"
                 answer2="$(
                     rofi -normal-window -sep "|" \
                     -dmenu -i -p "Timeout in minutes before $option" \
                     -width 420 -hide-scrollbar -line-padding  -padding 20 \
-                    -lines 2 <<< "   Now|   Disable_DPMS|"
+                    -lines 2 <<< "   Now|   Disable $option"
                 )"
                 case "$answer2" in
                     *Now|[0])
                         xfce4-power-manager --quit 2>/dev/null
                         xset +dpms; sleep 1; xset dpms force "$option"
                     ;;
-                    *Disable_DPMS)
-                        notify-send 'DPMS disabled'
+                    *Disable*)
                         xfce4-power-manager --quit 2>/dev/null
-                        xset dpms 0 0 0; xset -dpms; xset s off -dpms
+                        _setDpmsTimeout "$option" 0
+                        notify-send "$option disabled"
                     ;;
-                    *)
+                    [0-9]*)
+                        # This block catches the user input not the selected item,
+                        # for example: 10 (minutes)
+                        notify-send "timeout: $answer2 minutes"
                         answer2=$((answer2 * 60))
-                        notify-send "timeout: $((answer2 / 60)) minutes"
                         xfce4-power-manager --quit 2>/dev/null
-                        if [[ $option == "standby" ]]; then
-                            xset +dpms; sleep 1; xset dpms "$answer2" 0 0
-                        elif [[ $option == "suspend" ]]; then
-                            xset +dpms; sleep 1; xset dpms 0 "$answer2" 0
-                        else
-                            xset +dpms; sleep 1; xset dpms 0 0 "$answer2"
-                        fi
+                        _setDpmsTimeout "$option" "$answer2"
+                    ;;
+                    *) return 1 ;;
                 esac
             }
             answer="$(
                 rofi -normal-window -sep "|" \
-                -dmenu -i -p 'Monitors sleep options' -width 255 \
+                -dmenu -i -p 'Monitors sleep options' -width 420 \
                 -hide-scrollbar -line-padding  -padding 20 \
-                -lines 3 <<< "   Standby|   Suspend|   Off")"
+                -lines 5 <<< "   Enable DPMS|   Standby|   Suspend|   Off|   Disable DPMS"
+            )"
             case "$answer" in
-                *Standby) _sleepOption standby ;;
-                *Suspend) _sleepOption suspend ;;
-                *Off) _sleepOption off ;;
+                *enable*) xset dpms force on ;;
+                *Standby) _setSleepOption standby ;;
+                *Suspend) _setSleepOption suspend ;;
+                *Off) _setSleepOption off ;;
+                *Disable*) xset s off -dpms ;;
             esac
         ;;
         -w|--window)
