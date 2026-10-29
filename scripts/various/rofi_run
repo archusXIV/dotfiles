@@ -49,8 +49,8 @@ for arg in "$@"; do
             esac
             ;;
         -r|--run)
-            rofi -normal-window -modi run,drun -show drun -line-padding 4 \
-            -columns 2 -padding 50 -hide-scrollbar
+            rofi -normal-window -modi run,drun -show drun \
+            -line-padding 4 -columns 2 -padding 50 -hide-scrollbar
             ;;
         -s|--sleep)
             _setDpmsTimeout() {
@@ -70,9 +70,7 @@ for arg in "$@"; do
                     suspend) suspend=$value ;;
                     *) off=$value ;;
                 esac
-                xset +dpms
-                sleep 1
-                xset dpms "$standby" "$suspend" "$off"
+                xset +dpms; sleep 1; xset dpms "$standby" "$suspend" "$off"
             }
             _setSleepOption() {
                 local option="$1"
